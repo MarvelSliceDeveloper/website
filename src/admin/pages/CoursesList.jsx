@@ -34,7 +34,7 @@ export default function CoursesList() {
 
   async function loadCourses() {
     const [coursesRes, navRes] = await Promise.all([
-      supabase.from("courses").select("*").order("created_at", { ascending: false }),
+      supabase.from("courses").select("id, title, slug, status, nav_item_id, created_at").order("created_at", { ascending: false }),
       supabase.from("nav_items").select("id, parent_id, parent_label, label"),
     ]);
     if (!coursesRes.error) setCourses(coursesRes.data || []);

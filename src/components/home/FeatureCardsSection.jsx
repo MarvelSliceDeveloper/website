@@ -17,7 +17,7 @@ export default function FeatureCardsSection({ section }) {
           <Reveal>
             <div className="text-center mb-12">
               {heading && (
-                <h2 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-slate-900 mb-3 tracking-tight">
+                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-3 tracking-tight">
                   {heading}
                 </h2>
               )}

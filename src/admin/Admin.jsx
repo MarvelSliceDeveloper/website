@@ -26,12 +26,7 @@ import CareerPageEditor from './pages/CareerPageEditor';
 import JobsList from './pages/JobsList';
 import JobEditor from './pages/JobEditor';
 
-import TrainingManager from './pages/TrainingManager';
-import TrainingEditor from './pages/TrainingEditor';
-import TrainingCategoriesManager from './pages/TrainingCategoriesManager';
-import TrainingWizard from './pages/TrainingWizard';
 import ServicesPageEditor from './pages/ServicesPageEditor';
-import TrainingPageEditor from './pages/TrainingPageEditor';
 import CareerSubmissions from './pages/CareerSubmissions';
 import CareerContactSubmissions from './pages/CareerContactSubmissions';
 import InternshipsManager from './pages/InternshipsManager';
@@ -42,9 +37,12 @@ import UpcomingCoursesManager from './pages/UpcomingCoursesManager';
 import UpcomingClassAdd from './pages/UpcomingClassAdd';
 import UpcomingClassSubmissions from './pages/UpcomingClassSubmissions';
 import CourseInterests from './pages/CourseInterests';
+import BankingEnquiries from './pages/BankingEnquiries';
 import UpcomingCourseInterests from './pages/UpcomingCourseInterests';
 import TestimonialsManager from './pages/TestimonialsManager';
 import TestimonialEditor from './pages/TestimonialEditor';
+import BankingTestimonialsManager from './pages/BankingTestimonialsManager';
+import BankingTestimonialEditor from './pages/BankingTestimonialEditor';
 import NewsletterSubscribers from "./pages/NewsletterSubscribers";
 import ContactSubmissions from './pages/ContactSubmissions';
 import AboutSubmissions from './pages/AboutSubmissions';
@@ -150,13 +148,7 @@ export default function Admin() {
           <Route path="jobs/:id" element={<JobEditor />} />
           <Route path="internships" element={<InternshipsManager />} />
           <Route path="internships/:id" element={<InternEditor />} />
-          
-          <Route path="training" element={<TrainingManager />} />
-          <Route path="training/new" element={<TrainingWizard />} />
-          <Route path="training/:id" element={<TrainingEditor />} />
-          <Route path="training-categories" element={<TrainingCategoriesManager />} />
           <Route path="services-page" element={<ServicesPageEditor />} />
-          <Route path="training-page" element={<TrainingPageEditor />} />
           <Route path="career-submissions" element={<CareerSubmissions />} />
           <Route path="career-contact-submissions" element={<CareerContactSubmissions />} />
           <Route path="brochure-downloads" element={<BrochureDownloads />} />
@@ -167,8 +159,12 @@ export default function Admin() {
           <Route path="testimonials" element={<TestimonialsManager />} />
           <Route path="testimonials/new" element={<TestimonialEditor key="new" />} />
           <Route path="testimonials/:id" element={<TestimonialEditor key="edit" />} />
+          <Route path="banking-testimonials" element={<BankingTestimonialsManager />} />
+          <Route path="banking-testimonials/new" element={<BankingTestimonialEditor key="new" />} />
+          <Route path="banking-testimonials/:id" element={<BankingTestimonialEditor key="edit" />} />
           <Route path="upcoming-class-submissions" element={<UpcomingClassSubmissions />} />
           <Route path="course-interests" element={<CourseInterests />} />
+          <Route path="banking-enquiries" element={<BankingEnquiries />} />
           <Route path="upcoming-course-interests" element={<UpcomingCourseInterests />} />
           <Route path="newsletter-subscribers" element={<NewsletterSubscribers />} />
           <Route path="contact-submissions" element={<ContactSubmissions />} />

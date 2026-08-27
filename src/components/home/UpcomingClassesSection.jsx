@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiClock, FiLoader, FiX, FiCheckCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiClock, FiLoader, FiX, FiCheckCircle, FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
 import Reveal from '../ui/Reveal';
 import { supabase } from '../../lib/supabaseClient';
 import { trackRegister } from '../../lib/analytics';
@@ -299,15 +299,33 @@ export default function UpcomingClassesSection({ section }) {
                 </div>
               ) : (
                 <>
-                  <div className="px-6 pt-6 pb-4 border-b border-gray-100">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-brand-orange mb-1">Upcoming Class</p>
-                    <h3 className="text-lg font-bold text-[#1A1A2E]">{selectedClass.course_name}</h3>
-                    {selectedClass.date_time && (
-                      <p className="flex items-center gap-2 text-text-gray text-xs mt-1">
-                        <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
-                        <span>{formatDateTime(selectedClass.date_time)}</span>
-                      </p>
-                    )}
+                  <div className="px-6 py-5 bg-[#1E56C7] rounded-t-2xl flex items-start justify-between relative">
+                    <div className="pr-4">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+                        {selectedClass.course_name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {selectedClass.batch && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/15 text-white text-xs font-semibold">
+                            <FiCalendar className="w-3.5 h-3.5 text-brand-orange" />
+                            <span>{selectedClass.batch}</span>
+                          </span>
+                        )}
+                        {selectedClass.date_time && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/15 text-white text-xs font-semibold">
+                            <FiClock className="w-3.5 h-3.5 text-brand-orange" />
+                            <span>{formatDateTime(selectedClass.date_time)}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={closeModal}
+                      className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"
+                      aria-label="Close"
+                    >
+                      <FiX className="w-5 h-5 text-white" />
+                    </button>
                   </div>
                   <form onSubmit={handleSubmit} className="p-6 space-y-3">
                     <div>

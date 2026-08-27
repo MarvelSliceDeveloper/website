@@ -102,20 +102,6 @@ create table if not exists overview_faqs (
 );
 create index if not exists idx_overview_faqs_course on overview_faqs(course_id);
 
--- 6. Course fees
-create table if not exists course_fees (
-  id uuid primary key default gen_random_uuid(),
-  course_id uuid references courses(id) on delete cascade not null,
-  plan_name text not null,
-  features jsonb default '[]',
-  price numeric,
-  currency text default 'INR',
-  cta_label text,
-  cta_link text,
-  sort_order int default 0
-);
-create index if not exists idx_course_fees_course on course_fees(course_id);
-
 -- 7. Projects per course
 create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
@@ -168,18 +154,6 @@ create table if not exists course_tags (
   primary key (course_id, tag_id)
 );
 create index if not exists idx_course_tags_tag on course_tags(tag_id);
-
--- 13. Curated related courses
-create table if not exists related_courses (
-  id uuid primary key default gen_random_uuid(),
-  course_id uuid references courses(id) on delete cascade not null,
-  related_course_id uuid references courses(id) on delete cascade not null,
-  rating numeric,
-  review_count int,
-  learner_count int,
-  sort_order int default 0,
-  unique(course_id, related_course_id)
-);
 
 -- 14. Course tabs
 create table if not exists course_tabs (
@@ -243,6 +217,17 @@ create table if not exists blog_posts (
 );
 create index if not exists idx_blog_posts_category on blog_posts(category_id);
 create index if not exists idx_blog_posts_published on blog_posts(is_published, published_at desc);
+create index if not exists idx_courses_created_at on public.courses(created_at desc);
+create index if not exists idx_courses_slug on public.courses(slug);
+create index if not exists idx_courses_status on public.courses(status);
+create index if not exists idx_blog_posts_slug on public.blog_posts(slug);
+create index if not exists idx_contact_submissions_unread on public.contact_submissions(is_read, created_at desc);
+create index if not exists idx_banking_enquiries_unread on public.banking_enquiries(is_read, created_at desc);
+create index if not exists idx_brochure_downloads_unread on public.brochure_downloads(is_read, created_at desc);
+create index if not exists idx_form_submissions_unread on public.form_submissions(is_read, created_at desc);
+create index if not exists idx_career_submissions_unread on public.career_submissions(is_read, created_at desc);
+create index if not exists idx_career_contact_submissions_unread on public.career_contact_submissions(is_read, created_at desc);
+create index if not exists idx_about_submissions_unread on public.about_submissions(is_read, created_at desc);
 
 -- 20. Blog post–Tag M2M
 create table if not exists blog_post_tags (
@@ -499,30 +484,88 @@ alter table admin_profiles enable row level security;
 -- Ensure profile_pic column exists before functions reference it
 alter table admin_profiles add column if not exists profile_pic text;
 
--- Verify admin credentials with auto-upgrade from SHA-256 to bcrypt
-drop function if exists verify_admin(text, text);
-create or replace function verify_admin(p_email text, p_password text)
+-- ------------------------------------------------------------
+-- ADMIN AUDIT LOGS TABLE
+-- ------------------------------------------------------------
+create table if not exists public.admin_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_id uuid references public.admin_profiles(id) on delete set null,
+  email text not null,
+  event text not null,
+  ip_address text,
+  user_agent text,
+  metadata jsonb default '{}',
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_admin_audit_logs_email on public.admin_audit_logs(email);
+create index if not exists idx_admin_audit_logs_created_at on public.admin_audit_logs(created_at);
+
+-- ------------------------------------------------------------
+-- HARDENED READ-ONLY VERIFY_ADMIN RPC (BCRYPT ONLY)
+-- ------------------------------------------------------------
+drop function if exists public.verify_admin(text, text);
+create or replace function public.verify_admin(p_email text, p_password text)
 returns jsonb
-language sql
+language plpgsql
 security definer
+set search_path = public, extensions, pg_temp
 as $$
-  with matched as (
-    update admin_profiles
-    set password_hash = crypt(p_password, gen_salt('bf', 10))
-    where admin_profiles.email = p_email
-      and (
-        (admin_profiles.password_hash like '$2%' and admin_profiles.password_hash = crypt(p_password, admin_profiles.password_hash))
-        or admin_profiles.password_hash = encode(digest(p_password, 'sha256'), 'hex')
-      )
-    returning admin_profiles.id, admin_profiles.email, admin_profiles.full_name, admin_profiles.role, admin_profiles.profile_pic
-  )
-  select to_jsonb(t.*)
-  from (
-    select m.id, m.email, m.full_name, m.role, m.profile_pic
-    from matched m
-    limit 1
-  ) t;
+declare
+  v_admin public.admin_profiles%rowtype;
+  v_failed_attempts integer;
+  v_clean_email text;
+begin
+  v_clean_email := lower(trim(coalesce(p_email, '')));
+
+  if v_clean_email = '' or p_password is null or length(p_password) = 0 then
+    return null;
+  end if;
+
+  -- Rate limiting check: max 5 failed attempts in 15 mins
+  select count(*)
+  into v_failed_attempts
+  from public.admin_audit_logs
+  where email = v_clean_email
+    and event = 'login_failure'
+    and created_at > now() - interval '15 minutes';
+
+  if v_failed_attempts >= 5 then
+    insert into public.admin_audit_logs (email, event, metadata)
+    values (v_clean_email, 'login_lockout', jsonb_build_object('reason', 'Excessive failed login attempts', 'attempt_count', v_failed_attempts));
+    
+    raise exception 'Account locked due to multiple failed login attempts. Please try again in 15 minutes.';
+  end if;
+
+  -- Pure READ-ONLY Bcrypt verification
+  select * into v_admin
+  from public.admin_profiles
+  where lower(trim(email)) = v_clean_email
+    and password_hash like '$2%'
+    and password_hash = crypt(p_password, password_hash);
+
+  if v_admin.id is null then
+    insert into public.admin_audit_logs (email, event)
+    values (v_clean_email, 'login_failure');
+    
+    return null;
+  end if;
+
+  insert into public.admin_audit_logs (admin_id, email, event)
+  values (v_admin.id, v_clean_email, 'login_success');
+
+  return jsonb_build_object(
+    'id', v_admin.id,
+    'email', v_admin.email,
+    'full_name', v_admin.full_name,
+    'role', v_admin.role,
+    'profile_pic', v_admin.profile_pic
+  );
+end;
 $$;
+
+revoke all on function public.verify_admin(text, text) from public;
+grant execute on function public.verify_admin(text, text) to anon, authenticated;
 
 -- Add created_by to admin_profiles for audit trail
 alter table admin_profiles add column if not exists created_by uuid references admin_profiles(id);
@@ -1256,3 +1299,103 @@ begin
   ) t);
 end;
 $$;
+
+create table if not exists banking_enquiries (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  email text not null,
+  phone text,
+  enquiry_type text not null default 'general',
+  topic_title text,
+  button_clicked text default 'Enquire Now',
+  is_read boolean default false,
+  terms_accepted boolean default true,
+  created_at timestamptz default now()
+);
+
+-- Cleanup obsolete / unused legacy tables if they exist
+drop table if exists related_courses cascade;
+drop table if exists course_fees cascade;
+drop table if exists skips cascade;
+
+-- Banking Testimonials Table Schema
+create table if not exists banking_testimonials (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  role text,
+  exam_name text,
+  quote text not null,
+  rating int default 5,
+  avatar_url text,
+  badge_text text,
+  is_active boolean default true,
+  sort_order int default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ============================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES FOR ALL TABLES
+-- ============================================================
+-- DYNAMIC ROW LEVEL SECURITY (RLS) MIGRATION FOR 100% OF TABLES
+-- ============================================================
+do $$ 
+declare
+    tbl_record record;
+    pol_record record;
+    t text;
+    is_submission boolean;
+    is_sensitive boolean;
+begin
+    -- Iterate over EVERY table in the public schema dynamically
+    for tbl_record in (
+        select tablename 
+        from pg_tables 
+        where schemaname = 'public'
+    ) loop
+        t := tbl_record.tablename;
+        
+        -- Enable RLS on every table
+        execute format('alter table public.%I enable row level security;', t);
+        
+        -- Drop existing policies
+        for pol_record in (
+            select policyname 
+            from pg_policies 
+            where schemaname = 'public' and tablename = t
+        ) loop
+            execute format('drop policy if exists %I on public.%I;', pol_record.policyname, t);
+        end loop;
+
+        -- Categorize table
+        is_submission := (
+            t like '%submission%' or t like '%enquir%' or t like '%download%' or 
+            t like '%registration%' or t like '%interest%' or t like '%subscriber%' or 
+            t in ('contact_submissions', 'course_enquiries', 'banking_enquiries', 'brochure_downloads',
+                  'upcoming_class_registrations', 'upcoming_course_interests', 'newsletter_subscribers',
+                  'form_submissions', 'about_submissions', 'career_submissions', 'career_contact_submissions', 'enquiries')
+        );
+
+        is_sensitive := (
+            t like '%admin%' or t in ('admin_profiles', 'conversations', 'messages', 'secrets', 'audit_logs', 'logs')
+        );
+
+        -- Assign category policies
+        if is_sensitive then
+            execute format('create policy %I on public.%I for all to authenticated using (true);', 'admin_all_' || t, t);
+        elsif is_submission then
+            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'anon_insert_' || t, t);
+            execute format('create policy %I on public.%I for select to authenticated using (true);', 'admin_select_' || t, t);
+            execute format('create policy %I on public.%I for update to authenticated using (true);', 'admin_update_' || t, t);
+            execute format('create policy %I on public.%I for delete to authenticated using (true);', 'admin_delete_' || t, t);
+        else
+            execute format('create policy %I on public.%I for select to anon, authenticated using (true);', 'public_select_' || t, t);
+            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'public_insert_' || t, t);
+            execute format('create policy %I on public.%I for update to anon, authenticated using (true);', 'public_update_' || t, t);
+            execute format('create policy %I on public.%I for delete to anon, authenticated using (true);', 'public_delete_' || t, t);
+        end if;
+        
+    end loop;
+end $$;
+
+

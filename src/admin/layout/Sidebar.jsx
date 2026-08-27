@@ -1,7 +1,7 @@
 import { FiBriefcase } from "react-icons/fi";
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell } from "react-icons/fi";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell, FiCheckCircle, FiAward } from "react-icons/fi";
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 const navGroups = [
@@ -12,7 +12,6 @@ const navGroups = [
       { to: "/admin/home", label: "Home", icon: FiHome, catchSubRoutes: true },
       { to: "/admin/about-page", label: "About", icon: FiUser },
       { to: "/admin/services-page", label: "Services", icon: FiServer },
-      { to: "/admin/training-page", label: "Training", icon: FiZap },
       { to: "/admin/career-page", label: "Career", icon: FiBriefcase },
       { to: "/admin/blog-page", label: "Blog", icon: FiFileText },
       { to: "/admin/contact-page", label: "Contact", icon: FiMail },
@@ -24,14 +23,6 @@ const navGroups = [
     { to: "/admin/chats?tab=live", label: "Live Chat", icon: FiMessageCircle },
     { to: "/admin/chats?tab=history", label: "Chat History", icon: FiClock }
     ]},
-
-  {
-    label: "Training", icon: FiZap, items: [
-      { to: "/admin/training/new", label: "Add Program", icon: FiPlusCircle },
-      { to: "/admin/training", label: "All Programs", icon: FiZap, catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
-      { to: "/admin/training-categories", label: "Categories", icon: FiGrid }
-    ],
-  },
   {
     label: "Jobs", icon: FiBriefcase, items: [
       { to: "/admin/jobs/new", label: "Add Job", icon: FiPlusCircle },
@@ -50,6 +41,7 @@ const navGroups = [
     { to: "/admin/about-submissions", label: "About Submissions", icon: FiInfo },
     { to: "/admin/upcoming-class-submissions", label: "Upcoming Class Registrations", icon: FiCalendar },
     { to: "/admin/course-interests", label: "Course Enquiries", icon: FiMessageSquare },
+    { to: "/admin/banking-enquiries", label: "Banking Enquiries", icon: FiCheckCircle },
     { to: "/admin/upcoming-course-interests", label: "Upcoming Course Interests", icon: FiBell },
     { to: "/admin/chat-submissions", label: "Chat Submissions", icon: FiMessageCircle },
     { to: "/admin/courses/reports", label: "Reports", icon: FiBarChart2 }
@@ -82,6 +74,12 @@ const navGroups = [
     ],
   },
   {
+    label: "Banking Testimonial", icon: FiAward, items: [
+      { to: "/admin/banking-testimonials/new", label: "Add", icon: FiPlusCircle },
+      { to: "/admin/banking-testimonials", label: "View", icon: FiAward, catchSubRoutes: true, siblingRoutes: ["/admin/banking-testimonials/new"] }
+    ],
+  },
+  {
     label: "Blog", icon: FiFileText, items: [
       { to: "/admin/blog/new", label: "Add Blog", icon: FiPlusCircle },
       { to: "/admin/blog", label: "View Posts", icon: FiFileText, catchSubRoutes: true, siblingRoutes: ["/admin/blog/categories", "/admin/blog/new"] },
@@ -100,10 +98,6 @@ const navGroups = [
     { label: "Services", children: [
       { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu", icon: FiPlusCircle },
       { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu", icon: FiMenu }
-    ]},
-    { label: "Training", children: [
-      { to: "/admin/nav-menu?section=Training&tab=add", label: "Add Menu", icon: FiPlusCircle },
-      { to: "/admin/nav-menu?section=Training&tab=view", label: "View Menu", icon: FiMenu }
     ]}
     ]},
   { label: "Uploads", icon: FiLayers, items: [

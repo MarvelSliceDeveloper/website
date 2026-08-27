@@ -9,7 +9,12 @@ export const topNav = [
   { label: 'Home', path: '/' },
   { label: 'About', path: '/about' },
   { label: 'Software Learning' },
-  { label: 'Competitive Exam' },
+  {
+    label: 'Competitive Exam',
+    children: [
+      { label: 'Banking', path: '/banking' }
+    ]
+  },
   { label: 'Services', path: '/services' },
   { label: 'Career', path: '/career' },
   { label: 'Blog', path: '/blog' },

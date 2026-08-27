@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useParams, Link } from "react-router-dom";
+import { useSearchParams, useParams, Link, Navigate } from "react-router-dom";
 import {
   FiBookOpen,
   FiChevronDown,
@@ -31,21 +31,12 @@ import { Stagger, StaggerItem } from "../components/ui/Reveal";
 
 const PER_PAGE = 6;
 
-// Fixed top-level parents — these are the only two groups that should
-// ever appear in the SL/CE segmented control and drive the sidebar tree.
-// Do NOT derive this dynamically from nav_items; that caused every
-// category (Web Development, UPSC, Cybersecurity, etc.) to be treated
-// as a top-level parent and rendered as one long horizontal chip strip.
+// Fixed top-level parents — only Software Learning for now.
 const PARENTS = [
   {
     label: "Software Learning",
     slug: "software-learning",
     displayLabel: "Software",
-  },
-  {
-    label: "Competitive Exam",
-    slug: "competitive-exam",
-    displayLabel: "Competitive",
   },
 ];
 
@@ -275,11 +266,14 @@ export default function Courses() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
   const [search, setSearch] = useState("");
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [userExpanded, setUserExpanded] = useState(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
-  const parentParam = searchParams.get("parent") || PARENTS[0].slug;
+  const rawParent = searchParams.get("parent");
+  if (rawParent === "competitive-exam") {
+    return <Navigate to="/banking" replace />;
+  }
+  const parentParam = rawParent || PARENTS[0].slug;
   const activeCategory = searchParams.get("category") || categorySlug || null;
   const listOnly = searchParams.get("view") === "list";
   const page = parseInt(searchParams.get("page") || "1", 10);
@@ -485,6 +479,75 @@ export default function Courses() {
 
   const totalItems = searchedCourses.length;
 
+  const mobileCategorySections = useMemo(() => {
+    if (!currentTree || !courses) return [];
+
+    const sections = [];
+    const processedCourseIds = new Set();
+
+    currentTree.forEach((parentNode) => {
+      const parentCourses = (courseMap[parentNode.id] || []).filter((c) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+          (c.title || "").toLowerCase().includes(q) ||
+          (c.slug || "").toLowerCase().includes(q)
+        );
+      });
+
+      if (parentCourses.length > 0) {
+        sections.push({
+          id: parentNode.id,
+          label: parentNode.label,
+          courses: parentCourses,
+        });
+        parentCourses.forEach((c) => processedCourseIds.add(c.id));
+      }
+
+      if (parentNode.children && parentNode.children.length > 0) {
+        parentNode.children.forEach((child) => {
+          const childCourses = (courseMap[child.id] || []).filter((c) => {
+            if (!search) return true;
+            const q = search.toLowerCase();
+            return (
+              (c.title || "").toLowerCase().includes(q) ||
+              (c.slug || "").toLowerCase().includes(q)
+            );
+          });
+
+          if (childCourses.length > 0) {
+            sections.push({
+              id: child.id,
+              label: child.label,
+              courses: childCourses,
+            });
+            childCourses.forEach((c) => processedCourseIds.add(c.id));
+          }
+        });
+      }
+    });
+
+    const remainingCourses = courses.filter((c) => {
+      if (processedCourseIds.has(c.id)) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        (c.title || "").toLowerCase().includes(q) ||
+        (c.slug || "").toLowerCase().includes(q)
+      );
+    });
+
+    if (remainingCourses.length > 0) {
+      sections.push({
+        id: "other",
+        label: "Other Courses",
+        courses: remainingCourses,
+      });
+    }
+
+    return sections;
+  }, [currentTree, courseMap, courses, search]);
+
   function toggleParent(id) {
     setHasUserInteracted(true);
     setUserExpanded((prev) => (prev === id ? null : id));
@@ -662,30 +725,6 @@ export default function Courses() {
               : "max-w-[1600px] pt-0 lg:pt-6"
           }`}
         >
-          {/* Mobile sidebar selector */}
-          {!listOnly && (
-            <div className="lg:hidden pt-4 pb-2 px-4 sm:px-6">
-              <div className="flex bg-[#e2e8f0] p-1 rounded-2xl border border-slate-200 shadow-2xs">
-                {parents.map((p) => {
-                  const activeParent = parentParam === p.slug;
-                  return (
-                    <button
-                      key={p.slug}
-                      onClick={() => selectParent(p.slug)}
-                      className={`flex-1 py-3 sm:py-3.5 px-3 text-xs sm:text-sm font-extrabold text-center transition-all cursor-pointer rounded-xl ${
-                        activeParent
-                          ? "bg-[#f59e0b] text-white shadow-md"
-                          : "text-slate-700 hover:text-slate-900 hover:bg-slate-200/60"
-                      }`}
-                    >
-                      {p.displayLabel}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           <div
             className={`${
               listOnly
@@ -710,9 +749,18 @@ export default function Courses() {
               </div>
             )}
 
-            {/* Sidebar-mode header */}
+            {/* Mobile-mode header */}
             {!listOnly && (
-              <div className="hidden sm:block mb-6 text-center lg:text-left">
+              <div className="lg:hidden mb-4">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#1B365D] tracking-tight">
+                  Courses
+                </h1>
+              </div>
+            )}
+
+            {/* Desktop Sidebar-mode header */}
+            {!listOnly && (
+              <div className="hidden lg:block mb-6 text-left">
                 <h1 className="text-2xl lg:text-3xl font-extrabold text-[#1B365D] tracking-tight mb-1">
                   Find Your Courses related to{" "}
                   {parents.find((p) => p.slug === parentParam)?.label || "Software Learning"}
@@ -725,76 +773,8 @@ export default function Courses() {
               </div>
             )}
 
-            {/* Toolbar row: Filter Icon, Search Bar, View Toggle in 1 line on Mobile */}
+            {/* Toolbar row: Search Bar & View Toggle */}
             <div className="flex items-center justify-between gap-2 sm:gap-3 mb-6 pb-4 border-b border-slate-200 flex-nowrap w-full">
-              {/* 1. Filter Symbol Only Button (Mobile & Tablet view) */}
-              <div className="relative shrink-0 lg:hidden">
-                {mobileOpen && (
-                  <div
-                    className="fixed inset-0 z-20"
-                    onClick={() => setMobileOpen(false)}
-                    aria-hidden="true"
-                  />
-                )}
-                <button
-                  onClick={() => setMobileOpen((o) => !o)}
-                  className={`p-2.5 rounded-full border text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-2xs ${
-                    mobileOpen
-                      ? "border-blue-500 text-blue-600 ring-2 ring-blue-500/20"
-                      : "border-slate-300 hover:border-slate-400"
-                  }`}
-                  aria-label="Filter by category"
-                  aria-expanded={mobileOpen}
-                >
-                  <FiFilter className="w-4 h-4 text-slate-700" />
-                </button>
-
-                {mobileOpen && (
-                  <div className="absolute left-0 z-30 mt-2 w-64 sm:w-72 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-                    <div className="max-h-[60vh] overflow-y-auto p-2">
-                      {currentTree.length === 0 ? (
-                        <div className="px-2 py-4 text-center text-xs text-gray-400">
-                          No categories yet
-                        </div>
-                      ) : (
-                        <MobileCatList
-                          parentTree={currentTree}
-                          activeCategory={activeCategory}
-                          countFor={countFor}
-                          onSelectParent={(parentNode, parentSlug) => {
-                            if (parentNode.children.length === 0) {
-                              selectParentCategory(parentParam, parentSlug);
-                              setMobileOpen(false);
-                            }
-                          }}
-                          onSelectChild={(child, childSlug) => {
-                            selectParentCategory(parentParam, childSlug);
-                            setMobileOpen(false);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Minimal Professional White Popup Tooltip attached below Filter button */}
-                {searchedCourses.length === 0 && !mobileOpen && (
-                  <div
-                    onClick={() => setMobileOpen(true)}
-                    className="absolute left-0 top-12 z-30 bg-white text-slate-800 px-3.5 py-2.5 rounded-xl shadow-lg border border-slate-200 text-left cursor-pointer hover:bg-slate-50 transition-all active:scale-95 whitespace-nowrap"
-                  >
-                    <div className="absolute -top-1.5 left-3.5 w-2.5 h-2.5 bg-white border-t border-l border-slate-200 rotate-45" />
-                    <div className="flex items-start gap-2">
-                      <FiFilter className="w-4 h-4 text-[#f59e0b] shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900 leading-tight">Filter Courses</h4>
-                        <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">No courses available in this category</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Course Count for Desktop */}
               <p className="hidden lg:block text-sm font-semibold text-slate-600 shrink-0">
                 <span className="font-extrabold text-slate-900">
@@ -803,7 +783,7 @@ export default function Courses() {
                 {totalItems === 1 ? "course" : "courses"}
               </p>
 
-              {/* 2. Search Input */}
+              {/* Search Input */}
               <div className="relative flex-1 min-w-0">
                 <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
@@ -818,7 +798,7 @@ export default function Courses() {
                 />
               </div>
 
-              {/* 3. View Mode Toggle (Grid/List) */}
+              {/* View Mode Toggle (Grid/List) */}
               <div className="flex items-center gap-0.5 bg-slate-100 rounded-full p-1 shrink-0 border border-slate-200">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -845,63 +825,127 @@ export default function Courses() {
               </div>
             </div>
 
-            {searchedCourses.length === 0 ? (
-              <div className="min-h-[40vh] sm:min-h-[45vh] flex flex-col items-center justify-center text-center px-4 mx-auto max-w-md my-auto">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/70 mb-2.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  <span>Coming Soon</span>
+            {/* Desktop View */}
+            <div className="hidden lg:block">
+              {searchedCourses.length === 0 ? (
+                <div className="min-h-[40vh] sm:min-h-[45vh] flex flex-col items-center justify-center text-center px-4 mx-auto max-w-md my-auto">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/70 mb-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Coming Soon</span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1.5 text-center">
+                    {search ? `No courses match "${search}"` : "No Courses Available"}
+                  </h3>
+
+                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed text-center">
+                    {search
+                      ? "No courses match your search criteria. Please try a different query or select another category."
+                      : "There are currently no courses listed under this category. Please select another category to view available programs."}
+                  </p>
                 </div>
-
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1.5 text-center">
-                  {search ? `No courses match "${search}"` : "No Courses Available"}
-                </h3>
-
-                <p className="text-slate-500 text-xs sm:text-sm leading-relaxed text-center">
-                  {search
-                    ? "No courses match your search criteria. Please try a different query or select another category."
-                    : "There are currently no courses listed under this category. Please select another category to view available programs."}
-                </p>
-              </div>
-            ) : (
-              <>
-                {viewMode === "grid" ? (
-                  <Stagger
-                    key={`${activeNavId || "all"}-${search}-${page}`}
-                    className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-                  >
-                    {paginatedCourses.map((course) => (
-                      <StaggerItem key={course.id}>
-                        <CourseCard
-                          course={course}
-                          bannerSize="lg"
-                          showViewLink
-                        />
-                      </StaggerItem>
-                    ))}
-                  </Stagger>
-                ) : (
-                  <div className="space-y-3">
-                    {paginatedCourses.map((course) => (
-                      <CourseListItem key={course.id} course={course} />
-                    ))}
-                  </div>
-                )}
-                {!listOnly && (
-                  <Pagination page={page} total={totalItems} onPage={setPage} />
-                )}
-                {listOnly && totalItems > 0 && (
-                  <div className="flex justify-end mt-8">
-                    <Link
-                      to={`/courses?parent=${parentParam}`}
-                      className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+              ) : (
+                <>
+                  {viewMode === "grid" ? (
+                    <Stagger
+                      key={`${activeNavId || "all"}-${search}-${page}`}
+                      className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
-                      Explore more courses
-                      <FiChevronRight className="w-4 h-4" />
-                    </Link>
+                      {paginatedCourses.map((course) => (
+                        <StaggerItem key={course.id}>
+                          <CourseCard
+                            course={course}
+                            bannerSize="lg"
+                            showViewLink
+                          />
+                        </StaggerItem>
+                      ))}
+                    </Stagger>
+                  ) : (
+                    <div className="space-y-3">
+                      {paginatedCourses.map((course) => (
+                        <CourseListItem key={course.id} course={course} />
+                      ))}
+                    </div>
+                  )}
+                  {!listOnly && (
+                    <Pagination page={page} total={totalItems} onPage={setPage} />
+                  )}
+                  {listOnly && totalItems > 0 && (
+                    <div className="flex justify-end mt-8">
+                      <Link
+                        to={`/courses?parent=${parentParam}`}
+                        className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        Explore more courses
+                        <FiChevronRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Mobile View: Show all courses 1 by 1 ordered by category heading */}
+            <div className="lg:hidden">
+              {mobileCategorySections.length === 0 ? (
+                <div className="min-h-[40vh] flex flex-col items-center justify-center text-center px-4 mx-auto max-w-md my-8">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/70 mb-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Coming Soon</span>
                   </div>
-                )}
-              </>
-            )}
+
+                  <h3 className="text-xl font-bold text-slate-900 mb-1.5 text-center">
+                    {search ? `No courses match "${search}"` : "No Courses Available"}
+                  </h3>
+
+                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed text-center">
+                    {search
+                      ? "No courses match your search criteria. Please try a different query."
+                      : "There are currently no courses listed. Please check back later."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {mobileCategorySections.map((section) => {
+                    const Icon = CATEGORY_ICONS[section.label] || DEFAULT_ICON;
+                    return (
+                      <div key={section.id} className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+                          <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4" />
+                          </span>
+                          <h2 className="text-base sm:text-lg font-bold text-[#1B365D]">
+                            {section.label}
+                          </h2>
+                          <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                            {section.courses.length} {section.courses.length === 1 ? "course" : "courses"}
+                          </span>
+                        </div>
+                        {viewMode === "grid" ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {section.courses.map((course) => (
+                              <CourseCard
+                                key={course.id}
+                                course={course}
+                                bannerSize="lg"
+                                showViewLink
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {section.courses.map((course) => (
+                              <CourseListItem key={course.id} course={course} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

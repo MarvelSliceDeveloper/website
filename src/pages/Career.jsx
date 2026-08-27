@@ -629,8 +629,8 @@ export default function Career() {
     <div>
 
       {pageContent?.hero_image ? (
-        <div className="relative w-full max-w-[1900px] mx-auto h-auto sm:h-[400px] lg:h-[400px] overflow-hidden">
-          <img src={pageContent.hero_image} alt="" className="w-full h-full object-cover" />
+        <div className="relative w-full max-w-[1900px] mx-auto">
+          <img src={pageContent.hero_image} alt="" className="w-full h-auto" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
           <div className="absolute inset-0 flex items-end">
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 lg:pb-10">

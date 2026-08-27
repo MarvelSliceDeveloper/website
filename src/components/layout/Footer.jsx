@@ -7,16 +7,26 @@ import { useSiteSettings } from '../../hooks/useSupabase';
 import { topNav } from './Header';
 import { useNavChildren } from '../../hooks/useSupabase';
 
-function NavColumn({ parentLabel }) {
+function NavColumn({ parentLabel, defaultChildren }) {
   const { data: children } = useNavChildren(parentLabel);
-  if (!children || children.length === 0) return null;
+  const items = (children && children.length > 0)
+    ? [...children]
+    : (defaultChildren ? [...defaultChildren] : []);
+
+  if (parentLabel === 'Competitive Exam') {
+    if (!items.some(item => item.label === 'Banking')) {
+      items.push({ label: 'Banking', path: '/banking' });
+    }
+  }
+
+  if (items.length === 0) return null;
   return (
     <div className="lg:pt-10">
       <h4 className="font-semibold text-sm uppercase tracking-wider mb-3 text-white/80">
         {parentLabel}
       </h4>
       <ul className="space-y-2">
-        {children.map((child, i) => (
+        {items.map((child, i) => (
           <li key={i}>
             <Link to={child.path || '#'}
               className="text-sm text-gray-400 hover:text-brand-orange transition-colors">
@@ -100,7 +110,7 @@ export default function Footer() {
           </div>
 
           {columnItems.map((item) => (
-            <NavColumn key={item.label} parentLabel={item.label} />
+            <NavColumn key={item.label} parentLabel={item.label} defaultChildren={item.children} />
           ))}
 
           {(hours.weekday || hours.saturday) && (

@@ -21,7 +21,7 @@ const [confirm, confirmDialog] = useConfirm();
   useEffect(() => {
     supabase
       .from('blog_posts')
-      .select('*, blog_categories(name)')
+      .select('id, title, slug, is_published, published_at, created_at, category_id, blog_categories(name)')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error) setPosts(data || []);

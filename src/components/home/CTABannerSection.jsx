@@ -63,7 +63,7 @@ export default function CTABannerSection({ section }) {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
               {/* Left Column */}
               <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight text-white">
+                <h2 className="font-bold text-2xl sm:text-3xl leading-tight text-white">
                   {heading || (
                     <>
                       Ready to start your{' '}

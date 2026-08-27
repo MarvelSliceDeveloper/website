@@ -51,7 +51,7 @@ export default function TestimonialsSection({ section }) {
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true })
-        .limit(3);
+        .limit(6);
       if (error) {
         if (error.code === '42P01') return [];
         throw error;
@@ -64,10 +64,10 @@ export default function TestimonialsSection({ section }) {
   const [animate, setAnimate] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
   const timerRef = useRef(null);
-  const isSlider = items.length > 3;
   const n = items.length;
-  const visible = isSlider ? visibleCount : items.length;
-  const doubled = isSlider ? [...items, ...items] : items;
+  const isSlider = n > 0;
+  const visible = visibleCount;
+  const doubled = n > 0 ? [...items, ...items, ...items] : [];
 
   useEffect(() => {
     function update() {
@@ -80,26 +80,17 @@ export default function TestimonialsSection({ section }) {
   }, []);
 
   useEffect(() => {
-    if (!isSlider) {
-      setPos(0);
-      setAnimate(true);
-      return undefined;
-    }
+    if (n === 0) return undefined;
     startAutoScroll();
     return () => clearInterval(timerRef.current);
-  }, [isSlider]);
-
-  useEffect(() => {
-    setPos(0);
-    setAnimate(true);
-  }, [items.length, isSlider, visible]);
+  }, [n, visibleCount]);
 
   function startAutoScroll() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setAnimate(true);
       setPos((prev) => prev + 1);
-    }, 4000);
+    }, 7500);
   }
 
   function stopAutoScroll() {
@@ -107,10 +98,10 @@ export default function TestimonialsSection({ section }) {
     timerRef.current = null;
   }
 
-  function jumpTo(i) {
-    setAnimate(false);
-    setPos(i);
-    setTimeout(() => setAnimate(true), 100);
+  function jumpTo(dotIndex) {
+    setAnimate(true);
+    const stepSize = Math.max(1, Math.ceil(n / 3));
+    setPos(dotIndex * stepSize);
   }
 
   if (!section) return null;
@@ -120,6 +111,10 @@ export default function TestimonialsSection({ section }) {
   const subheading = content.subheading || section.subheading || '';
 
   if (items.length === 0) return null;
+
+  // Active dot calculation (always 3 dots max)
+  const groupSize = Math.max(1, Math.ceil(n / 3));
+  const activeDotIndex = Math.floor((pos % n) / groupSize);
 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50">
@@ -142,50 +137,45 @@ export default function TestimonialsSection({ section }) {
           </div>
         </Reveal>
 
-        {items.length > 0 && (
-          isSlider ? (
-            <div className="relative mx-auto w-full mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
-              <div className="overflow-hidden py-4">
-                <motion.div
-                  animate={{ x: `-${pos * (100 / visible)}%` }}
-                  transition={animate ? { duration: 0.5, ease: 'easeInOut' } : { duration: 0 }}
-                  onAnimationComplete={() => {
-                    if (isSlider && pos >= n) {
-                      setAnimate(false);
-                      setPos(0);
-                    }
-                  }}
-                  className="flex items-stretch"
-                >
-                  {doubled.map((item, i) => (
-                    <div key={`${item.id}-${i}`} className="h-full shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
-                      <TestimonialCard item={item} />
-                    </div>
-                  ))}
-                </motion.div>
-              </div>
-              <div className="flex justify-center gap-2 mt-6">
-                {items.slice(0, 3).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    aria-label={`Go to testimonial ${i + 1}`}
-                    onClick={() => jumpTo(i)}
-                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${i === pos % n ? 'w-6 bg-brand-orange' : 'w-2 bg-gray-300 hover:bg-gray-400'}`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
-              {items.map((item) => (
-                <div key={item.id} className="w-full h-full">
+        <div className="relative mx-auto w-full mt-12" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
+          <div className="overflow-hidden py-4">
+            <motion.div
+              animate={{ x: `-${pos * (100 / visible)}%` }}
+              transition={animate ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] } : { duration: 0 }}
+              onAnimationComplete={() => {
+                if (pos >= n) {
+                  setAnimate(false);
+                  setPos(0);
+                }
+              }}
+              className="flex items-stretch"
+            >
+              {doubled.map((item, i) => (
+                <div key={`${item.id}-${i}`} className="h-full shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
                   <TestimonialCard item={item} />
                 </div>
               ))}
-            </div>
-          )
-        )}
+            </motion.div>
+          </div>
+
+          {/* EXACTLY 3 PAGINATION DOT INDICATORS (...) */}
+          <div className="flex justify-center items-center gap-2.5 mt-8">
+            {[0, 1, 2].map((dotIndex) => {
+              const isActive = activeDotIndex === dotIndex;
+              return (
+                <button
+                  key={dotIndex}
+                  type="button"
+                  aria-label={`Go to slide group ${dotIndex + 1}`}
+                  onClick={() => jumpTo(dotIndex)}
+                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    isActive ? 'w-8 bg-brand-orange shadow-xs' : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );

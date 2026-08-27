@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FiCheckCircle } from 'react-icons/fi';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
 import { staggerContainer, staggerItem } from '../../lib/motion';
@@ -17,15 +17,17 @@ export default function HeroSection({ section }) {
   const slides = carouselEnabled ? content.slides : [];
 
   const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const next = useCallback(() => setCurrent(p => (p + 1) % (slides.length || 1)), [slides.length]);
   const prev = useCallback(() => setCurrent(p => (p - 1 + slides.length) % (slides.length || 1)), [slides.length]);
 
+  // Keep each slide for 5 seconds
   useEffect(() => {
-    if (!carouselEnabled || slides.length < 2) return;
+    if (!carouselEnabled || slides.length < 2 || isPaused) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [carouselEnabled, next, slides.length]);
+  }, [carouselEnabled, isPaused, next, slides.length]);
 
   if (!section) return null;
 
@@ -48,52 +50,97 @@ export default function HeroSection({ section }) {
   return (
     <section className="relative overflow-hidden">
       {bannerImage && (
-        <div className="relative w-full overflow-hidden">
-          <img src={bannerImage} alt="" className="w-full h-auto object-cover max-h-[350px] sm:max-h-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-          {(bannerHeading || bannerDescription) && (
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {bannerHeading && <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] text-pretty">{bannerHeading}</h1>}
-                {bannerDescription && <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/85 leading-relaxed max-w-xl">{bannerDescription}</p>}
-              </div>
-            </div>
-          )}
+        <div 
+          className="relative w-full overflow-hidden"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Base image dictates natural aspect ratio and natural image height automatically */}
+          <img src={bannerImage} alt="" className="w-full h-auto opacity-0 block pointer-events-none" />
+
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, filter: 'blur(6px)' }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="absolute inset-0 w-full h-full"
+            >
+              <img src={bannerImage} alt="" className="w-full h-auto" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              
+              {(bannerHeading || bannerDescription) && (
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {bannerHeading && (
+                      <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] text-pretty drop-shadow-md">
+                        {bannerHeading}
+                      </h1>
+                    )}
+                    {bannerDescription && (
+                      <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/90 leading-relaxed max-w-xl drop-shadow-sm">
+                        {bannerDescription}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
           {carouselEnabled && slides.length > 1 && (
-            <>
-              <button onClick={prev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40 transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              <button onClick={next}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/40 transition-colors cursor-pointer">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-              </button>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {slides.map((_, i) => (
-                  <button key={i} onClick={() => setCurrent(i)}
-                    className={`w-2 h-2 rounded-full transition-all cursor-pointer ${i === current ? 'bg-white w-5' : 'bg-white/50 hover:bg-white/70'}`} />
-                ))}
-              </div>
-            </>
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+              {slides.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrent(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    i === current ? 'bg-white w-7 shadow-sm' : 'bg-white/40 hover:bg-white/70 w-2.5'
+                  }`} 
+                />
+              ))}
+            </div>
           )}
         </div>
       )}
 
       {showGradient && (
-        <div style={{ background: 'linear-gradient(135deg, #f59e0b 50%, #1B3A6B 50%)' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center">
-            {bannerHeading && <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] text-pretty">{bannerHeading}</h1>}
-            {bannerDescription && <p className="mt-4 text-base sm:text-lg text-white/85 leading-relaxed max-w-2xl mx-auto">{bannerDescription}</p>}
-            {slides.length > 1 && (
-              <div className="flex justify-center gap-2 mt-8">
-                {slides.map((_, i) => (
-                  <button key={i} onClick={() => setCurrent(i)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${i === current ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'}`} />
-                ))}
-              </div>
-            )}
-          </div>
+        <div 
+          className="relative w-full min-h-[300px] flex flex-col justify-center"
+          style={{ background: 'linear-gradient(135deg, #f59e0b 50%, #1B3A6B 50%)' }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, filter: 'blur(6px)' }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center"
+            >
+              {bannerHeading && <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] text-pretty">{bannerHeading}</h1>}
+              {bannerDescription && <p className="mt-4 text-base sm:text-lg text-white/85 leading-relaxed max-w-2xl mx-auto">{bannerDescription}</p>}
+            </motion.div>
+          </AnimatePresence>
+
+          {slides.length > 1 && (
+            <div className="flex justify-center gap-2 pb-12">
+              {slides.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrent(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    i === current ? 'bg-white w-7 shadow-sm' : 'bg-white/40 hover:bg-white/60 w-2.5'
+                  }`} 
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

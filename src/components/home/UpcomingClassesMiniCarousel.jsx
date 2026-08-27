@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FiBookOpen, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 
-const SLIDE_MS = 450;
+const SLIDE_MS = 700;
 
 function formatDate(value) {
   if (!value) return '';
@@ -99,7 +99,7 @@ export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes'
         if (i >= count - 1) return count;
         return i + 1;
       });
-    }, 5000);
+    }, 7500);
     return () => clearInterval(t);
   }, [canSlide, paused, count]);
 

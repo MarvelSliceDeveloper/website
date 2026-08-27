@@ -36,7 +36,7 @@ export default function ServicesSection({ section }) {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-fit mx-auto text-center">
-          <Reveal as="h2" className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-dark-navy mb-6">
+          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6">
             {heading}
           </Reveal>
           <div className="w-4/5 h-[3px] bg-brand-orange mx-auto mb-6" />

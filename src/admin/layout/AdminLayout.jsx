@@ -36,7 +36,7 @@ function relativeTime(dateStr) {
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, showIdleWarning, extendSession } = useAuth();
   const { data: settings } = useSiteSettings();
   const logoUrl = settings?.logo_url || settings?.logo || "/apple-touch-icon.png";
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,6 +46,18 @@ export default function AdminLayout() {
   const [unreadByType, setUnreadByType] = useState({});
   const menuRef = useRef(null);
   const notifRef = useRef(null);
+
+  // Show welcome popup toast after login regarding 15m idle session timeout
+  useEffect(() => {
+    if (user && !sessionStorage.getItem('admin_login_welcome_shown')) {
+      sessionStorage.setItem('admin_login_welcome_shown', 'true');
+      toast({
+        type: 'success',
+        message: 'Signed in successfully. 15-minute idle session auto-logout active.',
+        duration: 5000,
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -261,6 +273,39 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* 15m Idle Session Warning Popup Modal */}
+      {showIdleWarning && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-8 max-w-md w-full text-center space-y-5">
+            <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+              <FiClock className="w-7 h-7" />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900">Session Expiring Soon</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                You have been idle for 13 minutes. For your security, your session will automatically log out in <strong>2 minutes</strong>.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={extendSession}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-brand-blue/20 transition-all"
+              >
+                Extend Session
+              </button>
+              <button
+                onClick={() => { trackLogout(); logout(); }}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToastContainer />
     </div>

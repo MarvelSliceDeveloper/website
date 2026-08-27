@@ -382,10 +382,10 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
             </div>
           </div>}
 
-          {extraFilters && extraFilters.map((f, i) => (
+          {extraFilters && extraFilters.map((f, i) => f.options && (
             <div key={i} className="flex-1 min-w-[140px]">
               <div className="relative">
-                <select value={f.value} onChange={e => { f.onChange(e.target.value); setPage(1); }}
+                <select value={f.value} onChange={e => { f.onChange?.(e.target.value); setPage(1); }}
                   className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
                 >
                   {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

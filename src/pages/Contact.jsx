@@ -75,7 +75,7 @@ export default function Contact() {
   return (
     <div>
       {data.hero_image && (
-        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto h-auto sm:h-[400px] lg:h-[400px] overflow-hidden"><img src={data.hero_image} alt="" className="w-full h-full object-cover" /></Reveal>
+        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto"><img src={data.hero_image} alt="" className="w-full h-auto" /></Reveal>
       )}
 
       {(data.heading || data.subheading) && (

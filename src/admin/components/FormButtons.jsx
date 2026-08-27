@@ -23,9 +23,9 @@ export function SubmitButton({ saving, saved, label = 'Save', savingLabel = 'Sav
         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
       ) : saved ? (
         <FiCheck className="w-4 h-4" />
-      ) : (
+      ) : Icon ? (
         <Icon className="w-4 h-4" />
-      )}
+      ) : null}
       {saving ? savingLabel : saved ? savedLabel : label}
     </button>
   );
