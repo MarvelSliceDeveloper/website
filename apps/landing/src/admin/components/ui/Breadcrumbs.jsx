@@ -31,12 +31,6 @@ const entityConfig = {
     edit: "Edit Internship",
     parent: "/admin/internships",
   },
-  training: {
-    list: "Training Programs",
-    new: "New Training Program",
-    edit: "Edit Training Program",
-    parent: "/admin/training",
-  },
   tags: {
     list: "Tags",
     new: "New Tag",
@@ -71,7 +65,6 @@ const singles = {
   "contact-page": "Edit Contact",
   "career-page": "Edit Career",
   "services-page": "Edit Services Page",
-  "training-page": "Edit Training Page",
   "blog-page": "Edit Blog Page",
   "career-submissions": "Career Submissions",
   "career-contact-submissions": "Career Enquiry Submissions",
@@ -81,7 +74,6 @@ const singles = {
   "contact-submissions": "Contact Submissions",
   "chat-submissions": "Chat Submissions",
   "service-categories": "Service Categories",
-  "training-categories": "Training Categories",
   profile: "Profile",
   chats: "Chats",
 };
