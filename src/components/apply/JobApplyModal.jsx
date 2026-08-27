@@ -189,7 +189,7 @@ export default function JobApplyModal({ job, onClose }) {
         className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
         onClick={e => e.stopPropagation()}
       >
-        <div className="bg-brand-orange px-6 py-4 text-white relative">
+        <div className="bg-brand-blue px-6 py-4 text-white relative">
           <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-slate-600 hover:text-slate-800 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
             <FiX className="w-4 h-4" />
           </button>
@@ -211,7 +211,7 @@ export default function JobApplyModal({ job, onClose }) {
               <h3 className="text-lg font-bold text-slate-800 mb-1">Application Submitted!</h3>
               <p className="text-sm text-slate-500 mb-6">{status.message}</p>
               <button onClick={closeModal}
-                className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
+                className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
                 Close
               </button>
             </motion.div>
@@ -239,19 +239,19 @@ export default function JobApplyModal({ job, onClose }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 sm:p-8">
               <Field label="Full Name" required error={errors.full_name}>
                 <input name="full_name" value={form.full_name} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.full_name ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder="John Doe" />
               </Field>
               <Field label="Email Address" required error={errors.email}>
                 <input name="email" type="email" value={form.email} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.email ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder="john@example.com" />
               </Field>
               <Field label="Phone Number" required error={errors.phone}>
                 <input name="phone" type="tel" value={form.phone} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.phone ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder="+1 234 567 890" />
               </Field>
@@ -268,7 +268,7 @@ export default function JobApplyModal({ job, onClose }) {
                     <>
                       <select name="category" value={form.category} onChange={handleChange}
                         style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
-                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none ${
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none ${
                           errors.category ? 'border-red-300' : 'border-slate-200'
                         } ${!form.category ? 'text-slate-400' : ''}`}>
                         <option value="" disabled>Select category</option>
@@ -282,7 +282,7 @@ export default function JobApplyModal({ job, onClose }) {
               <div className="sm:col-span-2">
                 <Field label="Description" required error={errors.description}>
                   <textarea name="description" value={form.description} onChange={handleChange} rows={3}
-                    className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 resize-y ${
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 resize-y ${
                       errors.description ? 'border-red-300' : 'border-slate-200'
                     }`} placeholder="Tell us about yourself..." />
                 </Field>
@@ -292,14 +292,14 @@ export default function JobApplyModal({ job, onClose }) {
                   <label className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all group ${
                     errors.file
                       ? 'border-red-300 bg-red-50/50'
-                      : 'border-brand-orange/40 hover:border-brand-orange bg-orange-50/40 hover:bg-orange-50/80'
+                      : 'border-brand-blue/40 hover:border-brand-blue bg-blue-50/40 hover:bg-blue-50/80'
                   }`}>
-                    <div className="w-10 h-10 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 bg-brand-blue/10 text-brand-blue rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                       <FiUpload className="w-5 h-5" />
                     </div>
                     <div className="text-center">
                       {file ? (
-                        <span className="text-sm font-semibold text-brand-orange">{file.name}</span>
+                        <span className="text-sm font-semibold text-brand-blue">{file.name}</span>
                       ) : (
                         <>
                           <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
@@ -326,19 +326,19 @@ export default function JobApplyModal({ job, onClose }) {
                   <input type="checkbox" checked={agreeTerms} onChange={(e) => {
                     setAgreeTerms(e.target.checked);
                     if (errors.agree) setErrors(prev => ({ ...prev, agree: '' }));
-                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-orange focus:ring-brand-orange/20" />
+                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20" />
                   <span className="text-sm text-slate-600 leading-relaxed">
                     I agree to the{' '}
-                    <a href="/terms" className="underline hover:opacity-80 text-brand-orange">Terms of Use</a>
+                    <a href="/terms" className="underline hover:opacity-80 text-brand-blue">Terms of Use</a>
                     {' '}and{' '}
-                    <a href="/privacy" className="underline hover:opacity-80 text-brand-orange">Privacy Policy</a>.
+                    <a href="/privacy" className="underline hover:opacity-80 text-brand-blue">Privacy Policy</a>.
                   </span>
                 </label>
                 {errors.agree && <p className="text-xs text-red-500 mt-1">{errors.agree}</p>}
               </div>
               <div className="sm:col-span-2 pt-1">
                 <button type="submit" disabled={submitting || uploading}
-                  className="w-fit mx-auto bg-brand-orange hover:bg-brand-orange/90 active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                  className="w-fit mx-auto bg-brand-blue hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                   {uploading ? (
                     <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Uploading...</>
                   ) : submitting ? (

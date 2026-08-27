@@ -36,12 +36,16 @@ export default function InternshipsManager() {
 
   async function loadData() {
     setLoading(true);
-    const [res, catRes] = await Promise.all([
-      supabase.from('internships').select('*, role_categories(name)').order('sort_order', { ascending: true }).order('created_at', { ascending: false }),
-      supabase.from('role_categories').select('*').order('display_order', { ascending: true })
-    ]);
-    if (res.data) setInternships(res.data);
-    if (catRes.data) setCategories(catRes.data);
+    try {
+      const [res, catRes] = await Promise.all([
+        supabase.from('internships').select('*, role_categories(name)').order('sort_order', { ascending: true }).order('created_at', { ascending: false }),
+        supabase.from('role_categories').select('*').order('display_order', { ascending: true })
+      ]);
+      if (res.data) setInternships(res.data);
+      if (catRes.data) setCategories(catRes.data);
+    } catch {
+      setInternships([]);
+    }
     setLoading(false);
   }
 

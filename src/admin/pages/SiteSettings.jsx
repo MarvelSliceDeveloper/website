@@ -66,6 +66,7 @@ const queryClient = useQueryClient();
     facebook: '',
     instagram: '',
     linkedin: '',
+    youtube: '',
     address: '',
     hours_weekday: '',
     hours_saturday: '',
@@ -103,6 +104,7 @@ const queryClient = useQueryClient();
             facebook: social.facebook || '',
             instagram: social.instagram || '',
             linkedin: social.linkedin || '',
+            youtube: social.youtube || '',
             address: data.address || '',
             hours_weekday: hours.weekday || '',
             hours_saturday: hours.saturday || '',
@@ -124,6 +126,7 @@ const queryClient = useQueryClient();
         facebook: form.facebook || null,
         instagram: form.instagram || null,
         linkedin: form.linkedin || null,
+        youtube: form.youtube || null,
       },
       address: form.address || null,
       working_hours: {
@@ -182,8 +185,9 @@ const queryClient = useQueryClient();
                   <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
                   <input type="text" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
                     className="w-full pl-9 pr-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-transparent transition-all"
-                    placeholder="+91 6380957390" />
+                    placeholder="+91 6380957390, +91 9876543210" />
                 </div>
+                <p className="text-[11px] text-neutral-400 mt-1">Separate multiple phone numbers with a comma (,)</p>
               </div>
             </div>
           </div>
@@ -198,6 +202,7 @@ const queryClient = useQueryClient();
                 { key: 'facebook', label: 'Facebook URL', placeholder: 'https://facebook.com/...' },
                 { key: 'instagram', label: 'Instagram URL', placeholder: 'https://instagram.com/...' },
                 { key: 'linkedin', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/...' },
+                { key: 'youtube', label: 'YouTube URL', placeholder: 'https://youtube.com/...' },
               ].map((s) => (
                 <div key={s.key}>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">{s.label}</label>

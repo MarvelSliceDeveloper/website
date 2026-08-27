@@ -63,22 +63,90 @@ export function useCourse(slug) {
   return useQuery({
     queryKey: ['course', slug],
     queryFn: async () => {
-      const { data: course, error } = await supabase
+      if (!slug) return null;
+
+      const cleanSlug = decodeURIComponent(String(slug)).trim();
+      const lastSegment = cleanSlug.includes('/') ? cleanSlug.split('/').pop().trim() : cleanSlug;
+
+      // 1. Exact match by slug
+      let { data: course, error } = await supabase
         .from('courses')
         .select(
           `*,
           highlights(*),
           overview_faqs(*),
-          course_fees(*),
           projects(*),
           certifications(*),
           course_tabs(*),
           faqs(*)`
         )
-        .eq('slug', slug)
+        .eq('slug', cleanSlug)
         .eq('is_published', true)
         .maybeSingle();
-      if (error) throw error;
+
+      if (error) console.warn('useCourse exact match error:', error);
+
+      // 2. Match by last path segment if different
+      if (!course && lastSegment && lastSegment !== cleanSlug) {
+        const res = await supabase
+          .from('courses')
+          .select(
+            `*,
+            highlights(*),
+            overview_faqs(*),
+            projects(*),
+            certifications(*),
+            course_tabs(*),
+            faqs(*)`
+          )
+          .eq('slug', lastSegment)
+          .eq('is_published', true)
+          .maybeSingle();
+        course = res.data;
+      }
+
+      // 3. Match by UUID id
+      if (!course && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastSegment)) {
+        const res = await supabase
+          .from('courses')
+          .select(
+            `*,
+            highlights(*),
+            overview_faqs(*),
+            projects(*),
+            certifications(*),
+            course_tabs(*),
+            faqs(*)`
+          )
+          .eq('id', lastSegment)
+          .eq('is_published', true)
+          .maybeSingle();
+        course = res.data;
+      }
+
+      // 4. Relaxed case-insensitive fallback
+      if (!course) {
+        const normalized = lastSegment.toLowerCase();
+        const { data: allCourses } = await supabase
+          .from('courses')
+          .select(
+            `*,
+            highlights(*),
+            overview_faqs(*),
+            projects(*),
+            certifications(*),
+            course_tabs(*),
+            faqs(*)`
+          )
+          .eq('is_published', true);
+
+        if (allCourses && allCourses.length > 0) {
+          course = allCourses.find(
+            (c) => c.slug?.toLowerCase() === normalized || c.id === lastSegment
+          ) || null;
+        }
+      }
+
       return course || null;
     },
     enabled: !!slug,

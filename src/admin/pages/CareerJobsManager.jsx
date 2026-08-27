@@ -176,7 +176,7 @@ const [jobs, setJobs] = useState([]);
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Salary Range</label>
-                    <input name="salary" value={jobForm.salary} onChange={handleJobChange} placeholder="e.g. $80k–$120k" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    <input name="salary" value={jobForm.salary} onChange={handleJobChange} placeholder="e.g. ₹6L–₹10L" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
                 </div>
                 <div>

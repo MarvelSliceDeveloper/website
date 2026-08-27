@@ -55,86 +55,92 @@ function PreChatForm({ onSubmit, initial }) {
 
   if (step === 1) {
     return (
-      <div className="flex-1 flex flex-col justify-center p-6 bg-gray-50/50">
-        <div className="text-center mb-5">
-          <div className="w-12 h-12 rounded-full bg-brand-green/10 flex items-center justify-center mx-auto mb-3">
-            <FiMessageCircle className="w-6 h-6 text-brand-green" />
+      <div className="flex-1 flex flex-col justify-between p-5 bg-gray-50/50">
+        <div>
+          <div className="text-center mb-4">
+            <div className="w-10 h-10 rounded-full bg-brand-green/10 flex items-center justify-center mx-auto mb-2">
+              <FiMessageCircle className="w-5 h-5 text-brand-green" />
+            </div>
+            <h3 className="text-sm font-bold text-dark-navy">Start a Conversation</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Share your details and we'll be right with you.</p>
           </div>
-          <h3 className="text-sm font-bold text-dark-navy">Start a Conversation</h3>
-          <p className="text-xs text-gray-500 mt-1">Share your details and we'll be right with you.</p>
+          <form id="prechat-step1-form" onSubmit={handleNext} className="space-y-3">
+            <div>
+              <input
+                value={name}
+                onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
+                placeholder="Your Name *"
+                className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors ${
+                  errors.name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
+                }`}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+            </div>
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }}
+                placeholder="Email Address *"
+                className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors ${
+                  errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
+                }`}
+              />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+            </div>
+            <div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }}
+                placeholder="Phone Number *"
+                className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors ${
+                  errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
+                }`}
+              />
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+            </div>
+          </form>
         </div>
-        <form onSubmit={handleNext} className="space-y-2.5">
-          <div>
-            <input
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
-              placeholder="Your Name *"
-              className={`w-full px-3 py-1.5 text-sm border rounded-lg outline-none transition-colors ${
-                errors.name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
-              }`}
-            />
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
-          </div>
-          <div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }}
-              placeholder="Email Address *"
-              className={`w-full px-3 py-1.5 text-sm border rounded-lg outline-none transition-colors ${
-                errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
-              }`}
-            />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-          </div>
-          <div>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }}
-              placeholder="Phone Number *"
-              className={`w-full px-3 py-1.5 text-sm border rounded-lg outline-none transition-colors ${
-                errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green'
-              }`}
-            />
-            {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-          </div>
-          <button
-            type="submit"
-            className="w-1/2 mx-auto block py-2.5 lg:py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors cursor-pointer"
-          >
-            Next
-          </button>
-        </form>
+        <button
+          type="submit"
+          form="prechat-step1-form"
+          className="w-full py-2.5 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors cursor-pointer mt-4"
+        >
+          Next
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-center p-6 bg-gray-50/50">
-      <div className="text-center mb-5">
-        <button onClick={() => setStep(1)} className="text-xs text-brand-green hover:underline mb-2 cursor-pointer">&larr; Back</button>
-        <h3 className="text-sm font-bold text-dark-navy">What brings you here?</h3>
-        <p className="text-xs text-gray-500 mt-1">Tell us how we can help you.</p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-2.5">
-        <div>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Describe your issue or question..."
-            rows={3}
-            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green resize-none"
-          />
+    <div className="flex-1 flex flex-col justify-between p-5 bg-gray-50/50">
+      <div>
+        <div className="text-center mb-4">
+          <button onClick={() => setStep(1)} className="text-xs text-brand-green hover:underline mb-1 cursor-pointer block text-left">&larr; Back</button>
+          <h3 className="text-sm font-bold text-dark-navy">What brings you here?</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Tell us how we can help you.</p>
         </div>
-        <button
-          type="submit"
-          disabled={!reason.trim() || submitting}
-          className="w-3/5 mx-auto block py-2.5 lg:py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors disabled:opacity-60 cursor-pointer"
-        >
-          {submitting ? 'Starting...' : 'Start Chat'}
-        </button>
-      </form>
+        <form id="prechat-step2-form" onSubmit={handleSubmit} className="space-y-2.5">
+          <div>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Describe your issue or question..."
+              rows={4}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green resize-none"
+            />
+          </div>
+        </form>
+      </div>
+      <button
+        type="submit"
+        form="prechat-step2-form"
+        disabled={!reason.trim() || submitting}
+        className="w-full py-2.5 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors disabled:opacity-60 cursor-pointer mt-4"
+      >
+        {submitting ? 'Starting...' : 'Start Chat'}
+      </button>
     </div>
   );
 }

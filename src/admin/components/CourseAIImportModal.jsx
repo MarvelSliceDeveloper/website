@@ -326,7 +326,7 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
       description: parsed.description || '',
       hero_image_url: '',
       video_url: '',
-      cta_left: parsed.cta_left || 'Talk to Advisor',
+      cta_left: parsed.cta_left || 'Talk to Advisor/Pay Now',
       cta_right: parsed.cta_right || 'Download Brochure',
       cta_heading: parsed.cta_heading || title || '',
       cta_description: parsed.cta_description || parsed.description || '',

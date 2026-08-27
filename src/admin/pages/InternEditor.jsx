@@ -151,7 +151,7 @@ export default function InternEditor() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Stipend <span className="text-destructive-500">*</span></label>
-            <input name="stipend" value={form.stipend} onChange={handleChange} placeholder="e.g. $500/month" required
+            <input name="stipend" value={form.stipend} onChange={handleChange} placeholder="e.g. ₹15,000/month" required
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
           </div>
         </div>

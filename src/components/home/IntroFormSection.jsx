@@ -134,15 +134,15 @@ export default function IntroFormSection({ section }) {
   return (
     <section className="relative overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 sm:py-16">
-        <div className="grid lg:grid-cols-6 gap-6 sm:gap-8 lg:gap-12">
-          <Reveal variant="up" className="lg:col-span-4 space-y-4 sm:space-y-6 self-start text-center lg:text-left">
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          <Reveal variant="up" className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6 text-center lg:text-left">
             {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy -mt-1 sm:-mt-2 text-center lg:text-left leading-tight sm:leading-snug max-w-2xl mx-auto lg:mx-0">
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug max-w-xl">
                 {heading}
               </h2>
             )}
             {introText && (
-              <p className="text-xs sm:text-base leading-relaxed text-center lg:text-justify text-text-gray max-w-2xl mx-auto lg:mx-0 px-1 sm:px-0">
+              <p className="text-sm sm:text-base leading-relaxed text-center lg:text-left text-slate-600 max-w-3xl px-1 sm:px-0">
                 {introText}
               </p>
             )}
@@ -153,74 +153,78 @@ export default function IntroFormSection({ section }) {
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="lg:col-span-2 self-start w-full max-w-md mx-auto lg:max-w-none">
-            <p className="text-sm sm:text-base font-[600] text-center mb-2" style={{ color: '#ef4444' }}>Book Your Demo Now!</p>
-            <div className="rounded-2xl overflow-hidden max-w-sm w-full mx-auto lg:ml-auto" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-              <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    clipPath: 'polygon(0 0, 55% 0, 35% 100%, 0 100%)',
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  <div className="h-full flex items-center pl-5">
-                    <span className="text-xl font-serif font-bold" style={{ color: '#f59e0b' }}>Career</span>
+          <Reveal variant="right" className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center lg:items-end">
+            <div className="max-w-sm w-full flex flex-col items-center text-center">
+              <p className="text-sm sm:text-base font-[600] text-center mb-1 w-full pt-3 sm:pt-5" style={{ color: '#ef4444' }}>
+                Book Your Demo Now!
+              </p>
+              <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+                <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      clipPath: 'polygon(0 0, 55% 0, 35% 100%, 0 100%)',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <div className="h-full flex items-center pl-5">
+                      <span className="text-xl font-serif font-bold" style={{ color: '#f59e0b' }}>Career</span>
+                    </div>
                   </div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-end">
-                  <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#f59e0b' }}>
-                    Counselling
-                  </span>
-                </div>
-              </div>
-
-              <div className="relative p-4 sm:p-5">
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-[0.04]"
-                  style={{
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 50 Q 30 20 50 50 T 90 50\' stroke=\'white\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")',
-                    backgroundSize: '120px 120px',
-                  }}
-                />
-                <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
-                  <div>
-                    <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
-                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`} />
-                    {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
-                  </div>
-                  <div>
-                    <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
-                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`} />
-                    {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
-                  </div>
-                  <div>
-                    <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
-                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.phone ? 'ring-2 ring-red-400' : ''}`} />
-                    {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
-                  </div>
-                  {formMsg?.type === 'error' && (
-                    <p className="!text-red-600 text-xs">{formMsg.text}</p>
-                  )}
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
-                    <span className="text-xs text-white/90 leading-relaxed">
-                      I agree to the{' '}
-                      <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
-                      {' '}and{' '}
-                      <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
+                  <div className="absolute inset-0 flex items-center justify-end">
+                    <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#f59e0b' }}>
+                      Counselling
                     </span>
-                  </label>
-                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
-                    {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
-                    {submitting ? 'Submitting...' : 'Send Message'}
-                  </button>
-                </form>
-              </div>
-            </div>
+                  </div>
+                </div>
 
-            <div className="mt-6 hidden lg:block max-w-md w-full mx-auto lg:ml-auto">
-              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+                <div className="relative p-4 sm:p-5">
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                    style={{
+                      backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 50 Q 30 20 50 50 T 90 50\' stroke=\'white\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")',
+                      backgroundSize: '120px 120px',
+                    }}
+                  />
+                  <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
+                    <div>
+                      <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
+                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`} />
+                      {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                      <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
+                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`} />
+                      {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
+                    </div>
+                    <div>
+                      <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
+                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.phone ? 'ring-2 ring-red-400' : ''}`} />
+                      {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
+                    </div>
+                    {formMsg?.type === 'error' && (
+                      <p className="!text-red-600 text-xs">{formMsg.text}</p>
+                    )}
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
+                      <span className="text-xs text-white/90 leading-relaxed">
+                        I agree to the{' '}
+                        <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
+                        {' '}and{' '}
+                        <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
+                      </span>
+                    </label>
+                    <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
+                      {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
+                      {submitting ? 'Submitting...' : 'Send Message'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <div className="mt-6 hidden lg:block w-full">
+                {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+              </div>
             </div>
           </Reveal>
 

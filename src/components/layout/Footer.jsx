@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowUp, FiPhone, FiMail, FiMapPin, FiClock } from 'react-icons/fi';
-import { FaTwitter, FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
+import { FaTwitter, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { topNav } from './Header';
@@ -77,19 +77,19 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-400">
               {address && (
                 <p className="flex items-start gap-2">
-                  <FiMapPin className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                  <FiMapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-brand-orange" />
                   <span>{address}</span>
                 </p>
               )}
-              {phone && (
-                <a href={`tel:${phone}`} className="flex items-center gap-2 hover:text-brand-orange transition-colors">
-                  <FiPhone className="w-4 h-4 shrink-0 text-brand-orange" />
-                  <span>{phone}</span>
+              {phone && phone.split(',').map(p => p.trim()).filter(Boolean).map((num, i) => (
+                <a key={i} href={`tel:${num.replace(/\s+/g, '')}`} className="flex items-center gap-2 hover:text-brand-orange transition-colors">
+                  <FiPhone className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
+                  <span>{num}</span>
                 </a>
-              )}
+              ))}
               {email && (
                 <a href={`mailto:${email}`} className="flex items-center gap-2 hover:text-brand-orange transition-colors">
-                  <FiMail className="w-4 h-4 shrink-0 text-brand-orange" />
+                  <FiMail className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                   <span>{email}</span>
                 </a>
               )}
@@ -119,7 +119,7 @@ export default function Footer() {
               <ul className="space-y-2 text-sm text-gray-400">
                 {hours.weekday && (
                   <li className="flex items-start gap-2">
-                    <FiClock className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                    <FiClock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-brand-orange" />
                     <div>
                       <p className="text-white/80 font-medium">Monday - Friday</p>
                       <p>{hours.weekday}</p>
@@ -128,7 +128,7 @@ export default function Footer() {
                 )}
                 {hours.saturday && (
                   <li className="flex items-start gap-2">
-                    <FiClock className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                    <FiClock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-brand-orange" />
                     <div>
                       <p className="text-white/80 font-medium">Saturday</p>
                       <p>{hours.saturday}</p>
@@ -137,11 +137,14 @@ export default function Footer() {
                 )}
               </ul>
               <h4 className="font-semibold text-sm uppercase tracking-wider mb-3 mt-10 text-white/80">Social Links</h4>
-              <div className="flex items-center gap-3 mt-4">
-                <a href={social.twitter || '#'} aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaTwitter className="w-3.5 h-3.5" /></a>
-                <a href={social.facebook || '#'} aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaFacebookF className="w-3.5 h-3.5" /></a>
-                <a href={social.instagram || '#'} aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaInstagram className="w-3.5 h-3.5" /></a>
-                <a href={social.linkedin || '#'} aria-label="LinkedIn" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaLinkedinIn className="w-3.5 h-3.5" /></a>
+              <div className="flex items-center gap-2.5 mt-4">
+                <a href={social.twitter || '#'} aria-label="Twitter" className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaTwitter className="w-3 h-3" /></a>
+                <a href={social.facebook || '#'} aria-label="Facebook" className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaFacebookF className="w-3 h-3" /></a>
+                <a href={social.instagram || '#'} aria-label="Instagram" className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaInstagram className="w-3 h-3" /></a>
+                <a href={social.linkedin || '#'} aria-label="LinkedIn" className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaLinkedinIn className="w-3 h-3" /></a>
+                {social.youtube && (
+                  <a href={social.youtube} aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="flex h-7.5 w-7.5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaYoutube className="w-3 h-3" /></a>
+                )}
               </div>
             </div>
           )}
