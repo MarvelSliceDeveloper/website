@@ -203,7 +203,7 @@ export const twoFactorController = {
           .json({ error: "2FA is not enabled for this user" });
       }
 
-      let otpResult = await verifyOtp({
+      const otpResult = await verifyOtp({
         secret: twoFactorAuth.secret,
         token: code,
       });

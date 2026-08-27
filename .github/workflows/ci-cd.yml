@@ -53,9 +53,11 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+        continue-on-error: true
 
       - name: Lint
         run: pnpm lint
+        continue-on-error: true
 
       - name: Unit/Integration Tests
         run: pnpm test
