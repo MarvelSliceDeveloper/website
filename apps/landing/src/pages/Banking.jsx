@@ -124,7 +124,7 @@ const EXAMS = [
 
 export default function Banking() {
   const navigate = useNavigate();
-  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [enquiryType, setEnquiryType] = useState('general');
   const [selectedTopic, setSelectedTopic] = useState('General Banking Enquiry');

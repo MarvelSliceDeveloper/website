@@ -68,7 +68,6 @@ export default function HeroSection({ section }) {
               className="absolute inset-0 w-full h-full"
             >
               <img src={bannerImage} alt="" className="w-full h-auto" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               
               {(bannerHeading || bannerDescription) && (
                 <div className="absolute inset-0 flex items-center">
@@ -90,14 +89,14 @@ export default function HeroSection({ section }) {
           </AnimatePresence>
 
           {carouselEnabled && slides.length > 1 && (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+            <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-2 z-10 bg-black/35 backdrop-blur-xs px-3 py-1.5 rounded-full shadow-md">
               {slides.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? 'bg-white w-7 shadow-sm' : 'bg-white/40 hover:bg-white/70 w-2.5'
+                    i === current ? 'bg-white w-7 shadow-xs' : 'bg-white/40 hover:bg-white/80 w-2.5'
                   }`} 
                 />
               ))}

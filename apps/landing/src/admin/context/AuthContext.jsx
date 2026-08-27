@@ -8,22 +8,66 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize session on mount: load stored admin user from localStorage to persist session across page refreshes
+  // Initialize session on mount: check browser session state or tab sync before restoring session
   useEffect(() => {
     let mounted = true;
+    let authChannel = null;
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      authChannel = new BroadcastChannel('admin_auth_channel');
+    }
 
     async function initAuth() {
       try {
         const stored = localStorage.getItem('adminUser') || localStorage.getItem('adminUser_cache');
+        const rememberMe = localStorage.getItem('admin_remember_me') === 'true';
+        const hasSessionFlag = sessionStorage.getItem('admin_session_active') === 'true';
+
         if (stored && mounted) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed.id) {
-              setUser(parsed);
+          let isValidSession = hasSessionFlag || rememberMe;
+
+          // If no session flag in current tab and rememberMe is false, query other open tabs
+          if (!isValidSession && authChannel) {
+            isValidSession = await new Promise((resolve) => {
+              let responded = false;
+              const handleMessage = (e) => {
+                if (e.data?.type === 'PONG_SESSION') {
+                  responded = true;
+                  authChannel.removeEventListener('message', handleMessage);
+                  resolve(true);
+                }
+              };
+              authChannel.addEventListener('message', handleMessage);
+              authChannel.postMessage({ type: 'PING_SESSION' });
+
+              setTimeout(() => {
+                authChannel.removeEventListener('message', handleMessage);
+                if (!responded) resolve(false);
+              }, 100);
+            });
+          }
+
+          if (isValidSession) {
+            try {
+              const parsed = JSON.parse(stored);
+              if (parsed && parsed.id) {
+                setUser(parsed);
+                sessionStorage.setItem('admin_session_active', 'true');
+              }
+            } catch {
+              localStorage.removeItem('adminUser');
+              localStorage.removeItem('adminUser_cache');
+              localStorage.removeItem('admin_remember_me');
+              sessionStorage.removeItem('admin_session_active');
             }
-          } catch {
+          } else {
+            // Browser was closed and reopened without 'Remember Me', logout
             localStorage.removeItem('adminUser');
             localStorage.removeItem('adminUser_cache');
+            localStorage.removeItem('admin_remember_me');
+            localStorage.removeItem('admin_last_activity');
+            sessionStorage.removeItem('admin_session_active');
+            setUser(null);
           }
         }
 
@@ -40,6 +84,22 @@ export function AuthProvider({ children }) {
 
     initAuth();
 
+    // Listen for tab sync messages
+    const handleChannelMessage = (e) => {
+      if (!mounted) return;
+      if (e.data?.type === 'PING_SESSION') {
+        if (sessionStorage.getItem('admin_session_active') === 'true') {
+          authChannel?.postMessage({ type: 'PONG_SESSION' });
+        }
+      } else if (e.data?.type === 'LOGOUT') {
+        setUser(null);
+        setSession(null);
+        sessionStorage.removeItem('admin_session_active');
+      }
+    };
+
+    authChannel?.addEventListener('message', handleChannelMessage);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
       setSession(newSession);
@@ -48,16 +108,20 @@ export function AuthProvider({ children }) {
         setUser(null);
         localStorage.removeItem('adminUser');
         localStorage.removeItem('adminUser_cache');
+        localStorage.removeItem('admin_remember_me');
+        sessionStorage.removeItem('admin_session_active');
       }
     });
 
     return () => {
       mounted = false;
+      authChannel?.removeEventListener('message', handleChannelMessage);
+      authChannel?.close();
       subscription?.unsubscribe();
     };
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, remember = false) => {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanPassword = String(password || '');
 
@@ -95,11 +159,19 @@ export function AuthProvider({ children }) {
       // Non-blocking fallback
     }
 
-    // Save session in localStorage for seamless persistence on page refresh
+    // Save session state
     localStorage.setItem('adminUser', JSON.stringify(userData));
     localStorage.setItem('adminUser_cache', JSON.stringify(userData));
     localStorage.setItem('admin_last_activity', String(Date.now()));
+    sessionStorage.setItem('admin_session_active', 'true');
     sessionStorage.removeItem('admin_session_expired');
+
+    if (remember) {
+      localStorage.setItem('admin_remember_me', 'true');
+    } else {
+      localStorage.removeItem('admin_remember_me');
+    }
+
     setUser(userData);
     return userData;
   }, []);
@@ -113,8 +185,20 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('adminUser');
       localStorage.removeItem('adminUser_cache');
       localStorage.removeItem('admin_last_activity');
+      localStorage.removeItem('admin_remember_me');
+      sessionStorage.removeItem('admin_session_active');
       setUser(null);
       setSession(null);
+
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('admin_auth_channel');
+          bc.postMessage({ type: 'LOGOUT' });
+          bc.close();
+        }
+      } catch {
+        // BroadcastChannel fallback
+      }
     }
   }, []);
 

@@ -42,15 +42,15 @@ function CoursesWithKey() {
   return <Courses key={search} />;
 }
 
-// Redirects /courses/sl/:slug and /courses/ce/:slug to the search-param
-// format so the listing page can filter without AnimatePresence re-mounts.
+// Redirects category nav paths (e.g. /courses/software-learning/:subSlug or /courses/sl/:subSlug)
+// to the search-param format so the listing page filters correctly.
 function CourseNavRedirect() {
   const { subSlug } = useParams();
   const loc = useLocation();
-  const parent = loc.pathname.startsWith("/courses/sl/")
-    ? "software-learning"
-    : "competitive-exam";
-  return <Navigate to={`/courses?parent=${parent}&category=${subSlug}&view=list`} replace />;
+  const isCE = loc.pathname.includes("competitive-exam") || loc.pathname.startsWith("/courses/ce/");
+  const parent = isCE ? "competitive-exam" : "software-learning";
+  const categoryParam = subSlug ? `&category=${subSlug}` : '';
+  return <Navigate to={`/courses?parent=${parent}${categoryParam}&view=list`} replace />;
 }
 
 // Fades/slides each page in and out on route changes.
@@ -67,9 +67,14 @@ function AnimatedRoutes() {
       <Route path="/blog/:slug" element={<Blog />} />
       <Route path="/courses" element={<CoursesWithKey />} />
       <Route path="/courses/category/:categorySlug" element={<CoursesWithKey />} />
+      <Route path="/courses/software-learning/:subSlug" element={<CourseNavRedirect />} />
+      <Route path="/courses/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
+      <Route path="/courses/competitive-exam/:subSlug" element={<CourseNavRedirect />} />
+      <Route path="/courses/competitive-exam" element={<Navigate to="/banking" replace />} />
       <Route path="/courses/sl/:subSlug" element={<CourseNavRedirect />} />
       <Route path="/courses/ce/:subSlug" element={<CourseNavRedirect />} />
       <Route path="/courses/:slug" element={<CourseDetail />} />
+      <Route path="/courses/:category/:slug" element={<CourseDetail />} />
       <Route path="/career" element={<Career />} />
       <Route path="/career/jobs" element={<AllJobs />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />

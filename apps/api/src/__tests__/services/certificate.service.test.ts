@@ -5,6 +5,7 @@ import { certificateService } from "../../modules/certificates/certificate.servi
 const mockPrisma = vi.hoisted(() => ({
   certificate: {
     findFirst: vi.fn(),
+    findFirstOrThrow: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
     count: vi.fn(),
@@ -15,8 +16,15 @@ const mockPrisma = vi.hoisted(() => ({
   enrollmentRequest: {
     findMany: vi.fn(),
   },
+  packageEnrollment: {
+    findMany: vi.fn(),
+  },
+  batchCourseVisibility: {
+    findMany: vi.fn(),
+  },
   course: {
     findMany: vi.fn(),
+    findUnique: vi.fn(),
   },
   packageCourse: {
     findMany: vi.fn(),
@@ -27,6 +35,19 @@ const mockPrisma = vi.hoisted(() => ({
   recording: {
     findMany: vi.fn(),
   },
+  quiz: {
+    findMany: vi.fn(),
+  },
+  assignment: {
+    findMany: vi.fn(),
+  },
+  quizAttempt: {
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+  },
+  assignmentSubmission: {
+    findMany: vi.fn(),
+  },
 }));
 
 vi.mock("../../utils/prisma", () => ({ prisma: mockPrisma }));
@@ -34,6 +55,16 @@ vi.mock("../../utils/prisma", () => ({ prisma: mockPrisma }));
 describe("certificateService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Defaults for models added after the initial mock was written — without
+    // these, buildCourseCompletionMap throws "Cannot read properties of
+    // undefined (reading 'findMany')" when it hits the missing mock.
+    mockPrisma.packageEnrollment.findMany.mockResolvedValue([]);
+    mockPrisma.batchCourseVisibility.findMany.mockResolvedValue([]);
+    mockPrisma.quiz.findMany.mockResolvedValue([]);
+    mockPrisma.assignment.findMany.mockResolvedValue([]);
+    mockPrisma.quizAttempt.findMany.mockResolvedValue([]);
+    mockPrisma.quizAttempt.findFirst.mockResolvedValue(null);
+    mockPrisma.assignmentSubmission.findMany.mockResolvedValue([]);
   });
 
   describe("claimCertificate", () => {

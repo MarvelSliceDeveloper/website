@@ -14,6 +14,25 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
+function FloatingShape({
+  className,
+  delay = 0,
+  duration = 10,
+}: {
+  className: string;
+  delay?: number;
+  duration?: number;
+}) {
+  return (
+    <div
+      className={`absolute rounded-full bg-white/10 ${className}`}
+      style={{
+        animation: `login-float ${duration}s ease-in-out ${delay}s infinite`,
+      }}
+    />
+  );
+}
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -120,12 +139,12 @@ function ResetPasswordForm() {
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="New password"
             required
-            className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 pr-11 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+            className="h-11 w-full rounded-md border border-input bg-white px-3 pr-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted/10 hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
@@ -142,7 +161,7 @@ function ResetPasswordForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm new password"
           required
-          className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+          className="h-11 w-full rounded-md border border-input bg-white px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
         />
 
         <div className="space-y-1.5 rounded-xl border border-border bg-muted/5 p-3">
@@ -178,7 +197,21 @@ function ResetPasswordForm() {
           disabled={!allPassed || submitting}
           className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
         >
-          {submitting ? "Resetting..." : "Reset Password"}
+          {!submitting && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(245,158,11,0.35), transparent)",
+                backgroundSize: "200% 100%",
+                animation: "login-button-shimmer 1.5s linear infinite",
+              }}
+            />
+          )}
+          <span className="relative z-10">
+            {submitting ? "Resetting..." : "Reset Password"}
+          </span>
         </button>
       </form>
 
@@ -196,62 +229,95 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-background">
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
+    <div className="login-page flex min-h-screen overflow-x-hidden bg-gradient-to-br from-blue-50 via-background to-background">
+      {/* ─── LEFT: Hero Panel ─── */}
+      <section
+        className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#1e40af] via-[#2551d9] to-[#3b82f6] px-12 lg:flex lg:w-[55%]"
+      >
+        {/* Diagonal stripe texture overlay */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0"
           style={{
-            backgroundImage:
-              "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.5) 10px, rgba(255,255,255,0.5) 11px)",
+            backgroundImage: "radial-gradient(white 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+            opacity: 0.08,
           }}
         />
-        <div
-          className="relative z-10 pt-14"
-          style={{
-            animation:
-              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
+
+        {/* Floating ambient shapes */}
+        <FloatingShape className="h-16 w-16 top-[12%] right-[18%]" delay={0} duration={10} />
+        <FloatingShape className="h-10 w-10 bottom-[28%] left-[8%]" delay={2} duration={12} />
+        <FloatingShape className="h-6 w-6 top-[55%] right-[8%]" delay={4} duration={9} />
+        <FloatingShape className="h-12 w-12 top-[8%] left-[30%]" delay={1} duration={11} />
+        <FloatingShape className="h-8 w-8 bottom-[15%] right-[30%]" delay={3} duration={13} />
+
+        {/* Content column — centered as one balanced block */}
+        <div className="relative z-10 flex h-full flex-col justify-center py-16">
+          {/* Logo + Brand */}
+          <div style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}>
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-xl shadow-black/15">
+                <Image
+                  src="/images/logo.svg"
+                  alt="Marvel Slice"
+                  width={48}
+                  height={48}
+                  priority
+                  loading="eager"
+                  className="h-12 w-auto object-contain"
+                />
+              </div>
+              <span className="text-4xl font-extrabold tracking-tight text-white">Marvel Slice</span>
+            </div>
+          </div>
+
+          {/* Headline + Tagline */}
+          <div
+            className="mt-14 max-w-lg"
+            style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both" }}
+          >
+            <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
+              Reset Your Password
+            </h1>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-white/70">
+              Choose a new password for your account. Make sure it is strong and
+              unique.
+            </p>
+          </div>
+
+          {/* Illustration */}
+          <div
+            className="relative mx-auto mt-10 w-full max-w-[440px] pt-4"
+            style={{ animation: "login-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both" }}
+          >
+            {/* Soft glow behind the scene */}
+            <div className="absolute left-1/2 top-1/2 h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 blur-2xl" />
+            <div style={{ animation: "login-float 10s ease-in-out infinite" }}>
               <Image
-                src="/images/logo.svg"
-                alt="Marvel Slice"
-                width={28}
-                height={28}
-                className="h-7 w-auto object-contain"
+                src="/images/login-hero.svg"
+                alt=""
+                width={440}
+                height={270}
+                unoptimized
+                priority
+                className="relative h-auto w-full"
               />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight text-white">
-              Marvel Slice
-            </span>
           </div>
         </div>
-        <div
-          className="relative z-10 mt-20 max-w-lg"
-          style={{
-            animation:
-              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
-          }}
-        >
-          <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
-            Reset Your Password
-          </h1>
-          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-white/70">
-            Choose a new password for your account. Make sure it is strong and
-            unique.
-          </p>
-        </div>
       </section>
-      <section className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
+
+      {/* ─── RIGHT: Form Card ─── */}
+      <section
+        className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div
-          className="w-full max-w-[420px]"
-          style={{
-            animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
-          }}
+          className="w-full max-w-[500px]"
+          style={{ animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both" }}
         >
-          <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
-            <div className="rounded-[14px] bg-card px-8 py-10">
+          <div className="rounded-xl border border-border bg-white shadow-md">
+            <div className="px-8 py-9 sm:px-10 sm:py-10">
               <Suspense
                 fallback={
                   <div className="text-center text-muted-foreground">

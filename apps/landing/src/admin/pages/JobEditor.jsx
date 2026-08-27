@@ -150,7 +150,7 @@ export default function JobEditor() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Salary Range <span className="text-destructive-500">*</span></label>
-            <input name="salary" value={jobForm.salary} onChange={handleChange} placeholder="e.g. $80k-$120k" required
+            <input name="salary" value={jobForm.salary} onChange={handleChange} placeholder="e.g. ₹6L–₹10L" required
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
           </div>
         </div>

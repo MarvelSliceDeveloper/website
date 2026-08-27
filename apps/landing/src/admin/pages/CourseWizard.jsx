@@ -179,8 +179,10 @@ export default function CourseWizard() {
     description: "",
     hero_image_url: "",
     video_url: "",
-    cta_left: "Talk to Advisor",
+    cta_left: "Talk to Advisor/Pay Now",
     cta_right: "Download Brochure",
+    cta_left_action: "choice_popup",
+    pay_now_url: "",
     cta_heading: '',
     cta_description: '',
     cta_text: '',
@@ -290,6 +292,9 @@ export default function CourseWizard() {
     if (!c.hero_image_url.trim()) add(STEPS[1].label, "Hero / Banner Image");
     if (!c.cta_left.trim()) add(STEPS[1].label, "CTA Left");
     if (!c.cta_right.trim()) add(STEPS[1].label, "CTA Right");
+    if ((c.cta_left_action === 'choice_popup' || c.cta_left_action === 'pay_now' || !c.cta_left_action) && (!c.pay_now_url?.trim() && !c.cta_link?.trim())) {
+      add(STEPS[1].label, "Pay Now Website Link (Mandatory)");
+    }
     if (!c.cta_heading.trim()) add(STEPS[1].label, "CTA Heading");
     if (!c.cta_description.trim()) add(STEPS[1].label, "CTA Description");
     if (!c.cta_text.trim()) add(STEPS[1].label, "Button Text");
@@ -363,12 +368,12 @@ export default function CourseWizard() {
         hero_image_url: c.hero_image_url,
         video_thumbnail_url: null,
         video_url: c.video_url || null,
-        cta_left: c.cta_left,
-        cta_right: c.cta_right,
+        cta_left: c.cta_left || 'Talk to Advisor/Pay Now',
+        cta_right: c.cta_right || 'Download Brochure',
         cta_heading: c.cta_heading,
         cta_description: c.cta_description,
         cta_text: c.cta_text,
-        cta_link: c.cta_link,
+        cta_link: c.pay_now_url || c.cta_link || null,
         cta_phone: c.cta_phone,
         cta_background_image: c.cta_background_image,
         is_published: c.is_published,
@@ -644,12 +649,52 @@ export default function CourseWizard() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-black mb-1">CTA Left <span className="text-destructive-500">*</span></label>
-                <input value={c.cta_left || ""} onChange={(e) => u("cta_left", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Enroll Now" />
+                <input value={c.cta_left || "Talk to Advisor/Pay Now"} onChange={(e) => u("cta_left", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Talk to Advisor/Pay Now" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-black mb-1">CTA Right <span className="text-destructive-500">*</span></label>
-                <input value={c.cta_right || ""} onChange={(e) => u("cta_right", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Download Brochure" />
+                <input value={c.cta_right || "Download Brochure"} onChange={(e) => u("cta_right", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Download Brochure" />
               </div>
+            </div>
+
+            {/* Left CTA Action Mode & Mandatory Pay Now URL */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 mt-2">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-1.5">
+                  Left Button Click Action
+                </label>
+                <select
+                  value={c.cta_left_action || 'choice_popup'}
+                  onChange={(e) => u('cta_left_action', e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-admin-500/20 cursor-pointer"
+                >
+                  <option value="choice_popup">Popup Choice (Pay Now OR Talk to Advisor)</option>
+                  <option value="pay_now">Direct Pay Now Website Redirect</option>
+                  <option value="enquiry">Talk to Advisor Form Only</option>
+                </select>
+              </div>
+
+              {(c.cta_left_action === 'choice_popup' || c.cta_left_action === 'pay_now' || !c.cta_left_action) && (
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#0052FF]">
+                    PAY NOW WEBSITE LINK <span className="text-red-500">* (MANDATORY)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={c.pay_now_url || c.cta_link || ''}
+                    onChange={(e) => {
+                      u('pay_now_url', e.target.value);
+                      u('cta_link', e.target.value);
+                    }}
+                    required
+                    className="w-full px-3.5 py-2.5 bg-white border border-blue-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    placeholder="https://checkout.razorpay.com/pay_course_123 or https://your-website.com/pay"
+                  />
+                  <p className="text-[11px] text-slate-500 font-normal">
+                    Mandatory field. When users click "Pay Now" in the course popup, they will be redirected directly to this website URL.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-admin-200 pt-6 mt-2">

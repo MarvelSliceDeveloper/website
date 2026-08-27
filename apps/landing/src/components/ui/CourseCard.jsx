@@ -25,7 +25,7 @@ export default function CourseCard({
         queryFn: () =>
           supabase
             .from('courses')
-            .select('*, highlights(*), overview_faqs(*), course_fees(*), projects(*), certifications(*), course_tabs(*), faqs(*)')
+            .select('*, highlights(*), overview_faqs(*), projects(*), certifications(*), course_tabs(*), faqs(*)')
             .eq('slug', course.slug)
             .eq('is_published', true)
             .maybeSingle()

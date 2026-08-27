@@ -12,7 +12,6 @@ const navGroups = [
       { to: "/admin/home", label: "Home", icon: FiHome, catchSubRoutes: true },
       { to: "/admin/about-page", label: "About", icon: FiUser },
       { to: "/admin/services-page", label: "Services", icon: FiServer },
-      { to: "/admin/training-page", label: "Training", icon: FiZap },
       { to: "/admin/career-page", label: "Career", icon: FiBriefcase },
       { to: "/admin/blog-page", label: "Blog", icon: FiFileText },
       { to: "/admin/contact-page", label: "Contact", icon: FiMail },
@@ -24,14 +23,6 @@ const navGroups = [
     { to: "/admin/chats?tab=live", label: "Live Chat", icon: FiMessageCircle },
     { to: "/admin/chats?tab=history", label: "Chat History", icon: FiClock }
     ]},
-
-  {
-    label: "Training", icon: FiZap, items: [
-      { to: "/admin/training/new", label: "Add Program", icon: FiPlusCircle },
-      { to: "/admin/training", label: "All Programs", icon: FiZap, catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
-      { to: "/admin/training-categories", label: "Categories", icon: FiGrid }
-    ],
-  },
   {
     label: "Jobs", icon: FiBriefcase, items: [
       { to: "/admin/jobs/new", label: "Add Job", icon: FiPlusCircle },
@@ -107,10 +98,6 @@ const navGroups = [
     { label: "Services", children: [
       { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu", icon: FiPlusCircle },
       { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu", icon: FiMenu }
-    ]},
-    { label: "Training", children: [
-      { to: "/admin/nav-menu?section=Training&tab=add", label: "Add Menu", icon: FiPlusCircle },
-      { to: "/admin/nav-menu?section=Training&tab=view", label: "View Menu", icon: FiMenu }
     ]}
     ]},
   { label: "Uploads", icon: FiLayers, items: [

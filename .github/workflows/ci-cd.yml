@@ -51,6 +51,14 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm prisma:generate
 
+      - name: Sync DB and Seed
+        run: pnpm prisma:reset
+        env:
+          DATABASE_URL: postgresql://lms_test:test@localhost:5432/lms_test
+          JWT_SECRET: test-jwt-secret-must-be-32-chars-long!!
+          CSRF_SECRET: test-csrf-secret-must-be-32-chars!!
+          TOKEN_ENCRYPTION_KEY: test-32-byte-encryption-key-12345
+
       - name: Typecheck
         run: pnpm typecheck
         continue-on-error: true
@@ -64,6 +72,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://lms_test:test@localhost:5432/lms_test
           REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-must-be-32-chars-long!!
+          CSRF_SECRET: test-csrf-secret-must-be-32-chars!!
+          TOKEN_ENCRYPTION_KEY: test-32-byte-encryption-key-12345
+          WEB_URL: http://localhost:3000
+          API_URL: http://localhost:4000
+          DISABLE_RATE_LIMIT: "true"
 
   build:
     name: Build & Push Images

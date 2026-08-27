@@ -14,6 +14,25 @@ import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 import type { SetPasswordInput } from "@lms/config";
 
+function FloatingShape({
+  className,
+  delay = 0,
+  duration = 10,
+}: {
+  className: string;
+  delay?: number;
+  duration?: number;
+}) {
+  return (
+    <div
+      className={`absolute rounded-full bg-white/10 ${className}`}
+      style={{
+        animation: `login-float ${duration}s ease-in-out ${delay}s infinite`,
+      }}
+    />
+  );
+}
+
 export default function SetPasswordPage() {
   usePageTitle("Set Password");
   const router = useRouter();
@@ -109,125 +128,150 @@ export default function SetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-background">
-      {/* Left panel */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
+    <div className="login-page flex min-h-screen overflow-x-hidden bg-gradient-to-br from-blue-50 via-background to-background">
+      {/* ─── LEFT: Hero Panel ─── */}
+      <section
+        className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#1e40af] via-[#2551d9] to-[#3b82f6] px-12 lg:flex lg:w-[55%]"
+      >
+        {/* Dotted grid overlay */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0"
           style={{
-            backgroundImage:
-              "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.5) 10px, rgba(255,255,255,0.5) 11px)",
+            backgroundImage: "radial-gradient(white 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+            opacity: 0.08,
           }}
         />
-        <div
-          className="relative z-10 pt-14"
-          style={{
-            animation:
-              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
+
+        {/* Floating ambient shapes */}
+        <FloatingShape className="h-16 w-16 top-[12%] right-[18%]" delay={0} duration={10} />
+        <FloatingShape className="h-10 w-10 bottom-[28%] left-[8%]" delay={2} duration={12} />
+        <FloatingShape className="h-6 w-6 top-[55%] right-[8%]" delay={4} duration={9} />
+        <FloatingShape className="h-12 w-12 top-[8%] left-[30%]" delay={1} duration={11} />
+        <FloatingShape className="h-8 w-8 bottom-[15%] right-[30%]" delay={3} duration={13} />
+
+        {/* Content column — centered as one balanced block */}
+        <div className="relative z-10 flex h-full flex-col justify-center py-16">
+          {/* Logo + Brand */}
+          <div style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}>
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-xl shadow-black/15">
+                <Image
+                  src="/images/logo.svg"
+                  alt="Marvel Slice"
+                  width={48}
+                  height={48}
+                  priority
+                  loading="eager"
+                  className="h-12 w-auto object-contain"
+                />
+              </div>
+              <span className="text-4xl font-extrabold tracking-tight text-white">Marvel Slice</span>
+            </div>
+          </div>
+
+          {/* Headline + Tagline */}
+          <div
+            className="mt-14 max-w-lg"
+            style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both" }}
+          >
+            <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
+              Set Your Password
+            </h1>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-white/70">
+              Your account was created with a temporary password. Please set a new
+              password to continue.
+            </p>
+          </div>
+
+          {/* Illustration */}
+          <div
+            className="relative mx-auto mt-10 w-full max-w-[440px] pt-4"
+            style={{ animation: "login-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both" }}
+          >
+            {/* Soft glow behind the scene */}
+            <div className="absolute left-1/2 top-1/2 h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 blur-2xl" />
+            <div
+              className="relative"
+              style={{ animation: "login-float 9s ease-in-out 0.5s infinite" }}
+            >
               <Image
-                src="/images/logo.svg"
-                alt="Marvel Slice"
-                width={28}
-                height={28}
-                className="h-7 w-auto object-contain"
+                src="/images/login-hero.svg"
+                alt="Set password illustration"
+                width={440}
+                height={270}
+                unoptimized
+                priority
+                className="relative h-auto w-full"
               />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight text-white">
-              Marvel Slice
-            </span>
           </div>
-        </div>
-        <div
-          className="relative z-10 mt-20 max-w-lg"
-          style={{
-            animation:
-              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
-          }}
-        >
-          <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
-            Set Your Password
-          </h1>
-          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-white/70">
-            Your account was created with a temporary password. Please set a new
-            password to continue.
-          </p>
-        </div>
-        <div
-          className="relative z-10 mt-16 grid grid-cols-3 gap-4 pb-14 max-w-lg"
-          style={{
-            animation:
-              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
-          }}
-        >
-          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <IconShieldCheck size={20} stroke={2} className="text-white" />
+
+          {/* Stats */}
+          <div
+            className="mt-10 grid max-w-lg grid-cols-3 gap-4"
+            style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both" }}
+          >
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <IconShieldCheck size={20} stroke={2} className="text-white" />
+              </div>
+              <span className="text-lg font-extrabold text-white">Secure</span>
+              <span className="text-[11px] font-medium text-white/70">
+                Encrypted
+              </span>
             </div>
-            <span className="text-lg font-extrabold text-white">Secure</span>
-            <span className="text-[11px] font-medium text-white/70">
-              Encrypted
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <IconLock size={20} stroke={2} className="text-white" />
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <IconLock size={20} stroke={2} className="text-white" />
+              </div>
+              <span className="text-lg font-extrabold text-white">Private</span>
+              <span className="text-[11px] font-medium text-white/70">
+                Your data
+              </span>
             </div>
-            <span className="text-lg font-extrabold text-white">Private</span>
-            <span className="text-[11px] font-medium text-white/70">
-              Your data
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <IconShieldCheck size={20} stroke={2} className="text-white" />
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <IconShieldCheck size={20} stroke={2} className="text-white" />
+              </div>
+              <span className="text-lg font-extrabold text-white">Quick</span>
+              <span className="text-[11px] font-medium text-white/70">
+                1-minute
+              </span>
             </div>
-            <span className="text-lg font-extrabold text-white">Quick</span>
-            <span className="text-[11px] font-medium text-white/70">
-              1-minute
-            </span>
           </div>
         </div>
       </section>
 
-      {/* Right panel */}
-      <section className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
+      {/* ─── RIGHT: Form ─── */}
+      <section
+        className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div
-          className="w-full max-w-[420px]"
-          style={{
-            animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
-          }}
+          className="w-full max-w-[500px]"
+          style={{ animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both" }}
         >
-          <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
-            <div className="rounded-[14px] bg-card px-8 py-10">
+          <div className="rounded-xl border border-border bg-white shadow-md">
+            <div className="px-8 py-9 sm:px-10 sm:py-10">
+              {/* Logo + Heading */}
               <div
-                className="flex items-center justify-center gap-2.5 lg:hidden"
-                style={{ animation: "logo-pulse 4s ease-in-out infinite" }}
+                className="flex flex-col items-center text-center"
+                style={{ animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}
               >
-                <Image
-                  src="/images/logo.svg"
-                  alt="Marvel Slice"
-                  width={44}
-                  height={44}
-                  className="h-11 w-auto object-contain"
-                />
-                <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-blue-600">Marvel</span>{" "}
-                  <span className="text-blue-500">Slice</span>
-                </span>
-              </div>
+                <div className="flex items-center gap-2.5 lg:hidden">
+                  <Image
+                    src="/images/logo.svg"
+                    alt="Marvel Slice"
+                    width={56} height={56} className="h-14 w-auto object-contain"
+                  />
+                  <span className="text-2xl font-extrabold tracking-tight">
+                    <span className="text-primary">Marvel</span>{" "}
+                    <span className="text-primary/80">Slice</span>
+                  </span>
+                </div>
 
-              <div
-                className="mt-6 text-center lg:mt-0"
-                style={{
-                  animation:
-                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both",
-                }}
-              >
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/15">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/15 lg:mt-0">
                   <IconLock size={22} stroke={1.5} className="text-blue-600" />
                 </div>
                 <h2 className="text-[22px] font-bold text-foreground">
@@ -253,12 +297,12 @@ export default function SetPasswordPage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="New password"
                     required
-                    className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 pr-11 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                    className="h-11 w-full rounded-md border border-input bg-white px-3 pr-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
+                    className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -277,7 +321,7 @@ export default function SetPasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
                   required
-                  className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                  className="h-11 w-full rounded-md border border-input bg-white px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                 />
 
                 {/* Password requirements */}
@@ -340,7 +384,7 @@ export default function SetPasswordPage() {
                 {error && <p className="text-sm text-danger">{error}</p>}
 
                 {/* Terms agreement */}
-                <label className="flex items-start gap-3 cursor-pointer">
+                <label className="flex cursor-pointer items-start gap-3">
                   <input
                     type="checkbox"
                     checked={agreed}

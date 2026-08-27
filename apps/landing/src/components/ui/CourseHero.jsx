@@ -41,6 +41,7 @@ export default function CourseHero({
   course,
   handleBackNavigation,
   openEnquiryModal,
+  onLeftCtaClick,
   videoPlaying,
   setVideoPlaying,
   trackVideoPlay,
@@ -114,10 +115,16 @@ export default function CourseHero({
               {/* Left CTA - Solid Orange */}
               <button
                 type="button"
-                onClick={() => openEnquiryModal?.(course.cta_left || 'Talk to Advisor')}
+                onClick={() => {
+                  if (onLeftCtaClick) {
+                    onLeftCtaClick();
+                  } else {
+                    openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
+                  }
+                }}
                 className="w-full sm:w-auto px-6 py-3 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold text-sm sm:text-base rounded-xl shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
               >
-                {course.cta_left || 'Talk to Advisor'}
+                {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
 
               {/* Right CTA - White with Blue Border */}
