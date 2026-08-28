@@ -220,7 +220,7 @@ function NavGroup({
                       title={item.label}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${isActive
                         ? "border-primary bg-primary/8 text-primary"
-                        : "border-transparent text-slate-700 dark:text-black hover:bg-black dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-black"
+                        : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                         }`}
                     >
                       <item.icon
