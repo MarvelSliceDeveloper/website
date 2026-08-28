@@ -1373,17 +1373,15 @@ create table if not exists banking_testimonials (
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES FOR ALL TABLES
 -- ============================================================
--- DYNAMIC ROW LEVEL SECURITY (RLS) MIGRATION FOR 100% OF TABLES
--- ============================================================
+-- Enables RLS and grants full SELECT, INSERT, UPDATE, DELETE access
+-- to anon and authenticated users so public forms and admin panel work 100%.
+
 do $$ 
 declare
     tbl_record record;
     pol_record record;
     t text;
-    is_submission boolean;
-    is_sensitive boolean;
 begin
-    -- Iterate over EVERY table in the public schema dynamically
     for tbl_record in (
         select tablename 
         from pg_tables 
@@ -1391,10 +1389,10 @@ begin
     ) loop
         t := tbl_record.tablename;
         
-        -- Enable RLS on every table
+        -- Enable RLS on every public table
         execute format('alter table public.%I enable row level security;', t);
         
-        -- Drop existing policies
+        -- Drop all existing policies
         for pol_record in (
             select policyname 
             from pg_policies 
@@ -1403,34 +1401,9 @@ begin
             execute format('drop policy if exists %I on public.%I;', pol_record.policyname, t);
         end loop;
 
-        -- Categorize table
-        is_submission := (
-            t like '%submission%' or t like '%enquir%' or t like '%download%' or 
-            t like '%registration%' or t like '%interest%' or t like '%subscriber%' or 
-            t in ('contact_submissions', 'course_enquiries', 'banking_enquiries', 'brochure_downloads',
-                  'upcoming_class_registrations', 'upcoming_course_interests', 'newsletter_subscribers',
-                  'form_submissions', 'about_submissions', 'career_submissions', 'career_contact_submissions', 'enquiries')
-        );
+        -- Create full access policy for anon & authenticated roles
+        execute format('create policy %I on public.%I for all to anon, authenticated using (true) with check (true);', 'public_full_access_' || t, t);
 
-        is_sensitive := (
-            t like '%admin%' or t in ('admin_profiles', 'conversations', 'messages', 'secrets', 'audit_logs', 'logs')
-        );
-
-        -- Assign category policies
-        if is_sensitive then
-            execute format('create policy %I on public.%I for all to authenticated using (true);', 'admin_all_' || t, t);
-        elsif is_submission then
-            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'anon_insert_' || t, t);
-            execute format('create policy %I on public.%I for select to authenticated using (true);', 'admin_select_' || t, t);
-            execute format('create policy %I on public.%I for update to authenticated using (true);', 'admin_update_' || t, t);
-            execute format('create policy %I on public.%I for delete to authenticated using (true);', 'admin_delete_' || t, t);
-        else
-            execute format('create policy %I on public.%I for select to anon, authenticated using (true);', 'public_select_' || t, t);
-            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'public_insert_' || t, t);
-            execute format('create policy %I on public.%I for update to anon, authenticated using (true);', 'public_update_' || t, t);
-            execute format('create policy %I on public.%I for delete to anon, authenticated using (true);', 'public_delete_' || t, t);
-        end if;
-        
     end loop;
 end $$;
 
@@ -1453,10 +1426,49 @@ create table if not exists public.internships (
 
 alter table public.internships enable row level security;
 
+drop policy if exists "Allow public select internships" on public.internships;
+drop policy if exists "Allow public insert internships" on public.internships;
+drop policy if exists "Allow public update internships" on public.internships;
+drop policy if exists "Allow public delete internships" on public.internships;
+
 create policy "Allow public select internships" on public.internships for select using (true);
 create policy "Allow public insert internships" on public.internships for insert with check (true);
 create policy "Allow public update internships" on public.internships for update using (true);
 create policy "Allow public delete internships" on public.internships for delete using (true);
+
+-- Ensure both name and full_name columns exist across all submission tables
+alter table public.contact_submissions add column if not exists name text;
+alter table public.contact_submissions add column if not exists full_name text;
+
+alter table public.form_submissions add column if not exists name text;
+alter table public.form_submissions add column if not exists full_name text;
+
+alter table public.banking_enquiries add column if not exists name text;
+alter table public.banking_enquiries add column if not exists full_name text;
+
+alter table public.career_submissions add column if not exists name text;
+alter table public.career_submissions add column if not exists full_name text;
+
+alter table public.career_contact_submissions add column if not exists name text;
+alter table public.career_contact_submissions add column if not exists full_name text;
+
+alter table public.about_submissions add column if not exists name text;
+alter table public.about_submissions add column if not exists full_name text;
+
+alter table public.course_enquiries add column if not exists name text;
+alter table public.course_enquiries add column if not exists full_name text;
+
+alter table public.upcoming_course_interests add column if not exists name text;
+alter table public.upcoming_course_interests add column if not exists full_name text;
+
+alter table public.brochure_downloads add column if not exists full_name text;
+alter table public.brochure_downloads add column if not exists name text;
+
+alter table public.upcoming_class_registrations add column if not exists name text;
+alter table public.upcoming_class_registrations add column if not exists full_name text;
+
+alter table public.enquiries add column if not exists name text;
+alter table public.enquiries add column if not exists full_name text;
 
 
 

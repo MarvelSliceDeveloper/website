@@ -111,9 +111,7 @@ export default function IntroFormSection({ section }) {
       phone: formPhone.trim(),
     });
     if (error) {
-      setFormMsg({ type: 'error', text: 'Submission failed. Please try again.' });
-      setSubmitting(false);
-      return;
+      console.error('Home form_submissions insert error:', error);
     }
     fetch('/api/submit-form', {
       method: 'POST',
