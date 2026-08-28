@@ -82,5 +82,8 @@ export const uploadAnswerFile = multer({
 export function buildAssignmentFileUrl(req: Request, filename: string) {
   const host = req.get("host");
   const protocol = req.protocol;
-  return `${protocol}://${host}/uploads/assignments/${filename}`;
+  const webUrl =
+    process.env.WEB_URL ||
+    `${protocol}://${host || "localhost:3000"}`;
+  return `${webUrl.replace(/\/$/, "")}/uploads/assignments/${filename}`;
 }

@@ -3,10 +3,6 @@ import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 
-declare global {
-  var prisma: PrismaClient | undefined;
-}
-
 // The Prisma client below is constructed at module-load time, but this module
 // can be evaluated before index.ts/app.ts have called dotenv.config() (ESM
 // import hoisting / require order). If DATABASE_URL isn't loaded yet the
@@ -46,11 +42,31 @@ function getPrismaUrl(): string {
   }
 }
 
-export const prisma =
-  global.prisma ||
-  new PrismaClient({
+// TS 5.9.3 overflows (RangeError in isDeeplyNestedType / structuredTypeRelatedTo)
+// whenever the full Prisma `PrismaClient` type is used as an explicit check target
+// (annotation, assignment, union, or a `declare global { var prisma: PrismaClient }`
+// augmentation that intersects into Node's Global type). The only construct that
+// survives is a cast whose source is `any`, recovering the type via `typeof` on an
+// inferred instance. So the global cache is stored opaquely on globalThis and the
+// real PrismaClient type is recovered with `as typeof freshClient` (a type query on
+// a value, which does not force ReturnType/structural materialization).
+function createPrismaClient() {
+  return new PrismaClient({
     datasources: { db: { url: getPrismaUrl() } },
     transactionOptions: { maxWait: 10000, timeout: 15000 },
   });
+}
 
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+const freshClient = createPrismaClient();
+
+// Deliberately `any` — never let PrismaClient appear as a checked type near the
+// global scope. This avoids the TS 5.9.3 recursion bug above.
+const globalForPrisma = globalThis as any;
+
+if (!globalForPrisma.__marvel_prisma__) {
+  globalForPrisma.__marvel_prisma__ = createPrismaClient();
+}
+
+export const prisma = globalForPrisma.__marvel_prisma__ as typeof freshClient;
+
+if (process.env.NODE_ENV !== "production") void freshClient;

@@ -8,6 +8,7 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { UserRole } from "@lms/types";
 import { authService } from "./auth.service";
 import { prisma } from "../../utils/prisma";
 import { handleControllerError } from "../../utils/errors";
@@ -207,7 +208,7 @@ export const authController = {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
       });
-      if (!user || user.role !== "SUPER_ADMIN") {
+      if (!user || user.role !== UserRole.SUPER_ADMIN) {
         return res.status(403).json({
           error: "Only Super Admin is allowed to link Microsoft accounts",
         });
@@ -280,7 +281,7 @@ export const authController = {
 
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) return res.status(404).json({ error: "User not found" });
-      if (user.role !== "SUPER_ADMIN") {
+      if (user.role !== UserRole.SUPER_ADMIN) {
         return res.status(403).json({
           error:
             "Access denied: Only Super Admin is allowed to link Microsoft accounts",

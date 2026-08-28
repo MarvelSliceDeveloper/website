@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
-import multer from "multer";
 import { z } from "zod";
 import { UserRole } from "@lms/types";
 import {
@@ -10,30 +9,22 @@ import {
 } from "../../middleware/auth.middleware";
 import {
   AI_GENERATION_TYPES,
-  ALLOWED_AI_MODELS,
+  AIProvider,
   AIGenerationContext,
   AIGenerationType,
-  deleteGeminiApiKey,
+  deleteProviderApiKey,
   generate,
-  generateAssignmentFromPdf,
+  getActiveProvider,
   getAIStatus,
   healthCheck,
-  saveAIModel,
-  saveGeminiApiKey,
+  listOpenRouterModels,
+  saveActiveProvider,
+  saveProviderApiKey,
+  saveProviderModel,
 } from "../../services/ai.service";
 import { AppError, handleControllerError } from "../../utils/errors";
 
 const router = Router();
-
-// PDF upload for assignment description generation (in-memory → Gemini)
-const aiPdfUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype === "application/pdf") cb(null, true);
-    else cb(new Error("Only PDF files are allowed"));
-  },
-});
 
 // Generation costs tokens — cap per user per minute
 const generateLimiter = rateLimit({
@@ -63,12 +54,44 @@ router.get(
   },
 );
 
+const providerSchema = z.enum(["gemini", "openrouter"]);
 const apiKeyBodySchema = z.object({
+  provider: providerSchema.optional(),
   apiKey: z.string().min(20).max(200),
 });
 const modelBodySchema = z.object({
-  model: z.enum(ALLOWED_AI_MODELS),
+  provider: providerSchema.optional(),
+  model: z.string().min(1).max(200),
 });
+
+async function resolveProvider(provider?: string): Promise<AIProvider> {
+  if (provider) {
+    const parsed = providerSchema.safeParse(provider);
+    if (!parsed.success) {
+      throw new AppError(400, "provider must be one of: gemini, openrouter");
+    }
+    return parsed.data;
+  }
+  return getActiveProvider();
+}
+
+router.post(
+  "/provider",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const parsed = providerSchema.safeParse(req.body?.provider);
+      if (!parsed.success) {
+        throw new AppError(400, "provider must be one of: gemini, openrouter");
+      }
+      await saveActiveProvider(parsed.data);
+      res.json({ message: `Provider set to ${parsed.data}` });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
 
 router.post(
   "/api-key",
@@ -79,7 +102,8 @@ router.post(
       if (!parsed.success) {
         throw new AppError(400, "apiKey is required");
       }
-      await saveGeminiApiKey(parsed.data.apiKey);
+      const provider = await resolveProvider(parsed.data.provider);
+      await saveProviderApiKey(provider, parsed.data.apiKey);
       res.json({ message: "API key saved" });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -93,7 +117,10 @@ router.delete(
   requireSuperAdmin,
   async (req: Request, res: Response) => {
     try {
-      await deleteGeminiApiKey();
+      const provider = await resolveProvider(
+        (req.query.provider as string) || undefined,
+      );
+      await deleteProviderApiKey(provider);
       res.json({ message: "API key removed" });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -109,13 +136,25 @@ router.post(
     try {
       const parsed = modelBodySchema.safeParse(req.body);
       if (!parsed.success) {
-        throw new AppError(
-          400,
-          `model must be one of: ${ALLOWED_AI_MODELS.join(", ")}`,
-        );
+        throw new AppError(400, "model is required");
       }
-      await saveAIModel(parsed.data.model);
+      const provider = await resolveProvider(parsed.data.provider);
+      await saveProviderModel(provider, parsed.data.model);
       res.json({ message: `Model set to ${parsed.data.model}` });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
+
+router.get(
+  "/openrouter/models",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const items = await listOpenRouterModels();
+      res.json({ provider: "openrouter", items });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       res.status(statusCode).json(body);
@@ -188,36 +227,5 @@ router.post(
   },
 );
 
-// ─── Assignment description from an uploaded question-paper PDF ──────────────
-
-const pdfNoteSchema = z.object({
-  note: z.string().max(2000).optional(),
-});
-
-router.post(
-  "/generate-from-pdf",
-  requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR]),
-  generateLimiter,
-  aiPdfUpload.single("file"),
-  async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        throw new AppError(
-          400,
-          "Attach the question paper PDF to generate from",
-        );
-      }
-      const parsed = pdfNoteSchema.safeParse(req.body);
-      const result = await generateAssignmentFromPdf({
-        pdfBase64: req.file.buffer.toString("base64"),
-        note: parsed.success ? parsed.data.note : undefined,
-      });
-      res.json(result);
-    } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, (req as any).log);
-      res.status(statusCode).json(body);
-    }
-  },
-);
-
 export { router as aiRouter };
+

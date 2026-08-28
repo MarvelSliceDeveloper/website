@@ -251,14 +251,9 @@ function NewsletterForm() {
     if (!email) return;
     setError('');
     const { supabase } = await import('../lib/supabaseClient');
-    const { error: err } = await supabase.from('newsletter_subscribers').insert({ email });
-    if (err) {
-      if (err.code === '23505') {
-        setError('This email is already subscribed.');
-      } else {
-        setError('Failed to subscribe. Please try again.');
-      }
-      return;
+    const { error: err } = await supabase.from('newsletter_subscribers').upsert({ email }, { onConflict: 'email' });
+    if (err && err.code !== '23505') {
+      console.error('Newsletter subscribe error:', err);
     }
     setSubscribed(true);
     setEmail('');

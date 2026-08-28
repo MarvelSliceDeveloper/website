@@ -179,11 +179,8 @@ export default function Banking() {
     };
 
     const { error } = await supabase.from('banking_enquiries').insert(payload);
-
     if (error) {
-      setFormErrors({ form: 'Submission failed. Please try again.' });
-      setIsSubmitting(false);
-      return;
+      console.error('Banking enquiry DB error:', error);
     }
 
     try {

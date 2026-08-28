@@ -123,6 +123,12 @@ async function main() {
       description: "Instructor session timeout in minutes",
     },
     {
+      key: "recording_sync_polling_enabled",
+      value: "true",
+      type: "boolean",
+      description: "Enable automatic Teams recording sync polling",
+    },
+    {
       key: "session_timeout_student",
       value: "480",
       type: "number",

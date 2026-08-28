@@ -37,7 +37,8 @@ export const uploadCourseThumbnail = multer({
 }).single(COURSE_THUMBNAIL_FIELD);
 
 export function buildCourseThumbnailUrl(req: Request, filename: string) {
-  const host = req.get("host");
-  const protocol = req.protocol;
-  return `${protocol}://${host}/uploads/courses/${filename}`;
+  const webUrl =
+    process.env.WEB_URL ||
+    `${req.protocol}://${req.get("host") || "localhost:3000"}`;
+  return `${webUrl.replace(/\/$/, "")}/uploads/courses/${filename}`;
 }

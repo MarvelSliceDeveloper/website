@@ -122,7 +122,10 @@ export function buildLessonResourceUrl(
 ) {
   const host = req.get("host");
   const protocol = req.protocol;
-  return `${protocol}://${host}/uploads/modules/${courseId}/lessons/${lessonId}/${filename}`;
+  const webUrl =
+    process.env.WEB_URL ||
+    `${protocol}://${host || "localhost:3000"}`;
+  return `${webUrl.replace(/\/$/, "")}/uploads/modules/${courseId}/lessons/${lessonId}/${filename}`;
 }
 
 const certPdfStorage = multer.diskStorage({
@@ -156,5 +159,8 @@ export function buildCertificationPdfUrl(
 ) {
   const host = req.get("host");
   const protocol = req.protocol;
-  return `${protocol}://${host}/uploads/courses/${courseId}/certification/pdfs/${filename}`;
+  const webUrl =
+    process.env.WEB_URL ||
+    `${protocol}://${host || "localhost:3000"}`;
+  return `${webUrl.replace(/\/$/, "")}/uploads/courses/${courseId}/certification/pdfs/${filename}`;
 }
