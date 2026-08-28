@@ -152,9 +152,7 @@ export default function JobApplyModal({ job, onClose }) {
       .insert({ full_name: form.full_name, email: form.email, phone: form.phone, department: form.position, category: form.category, description: form.description, file_url });
 
     if (insertError) {
-      setStatus({ type: 'error', message: 'Failed to save submission. Please try again.' });
-      setSubmitting(false);
-      return;
+      console.error('Career application submission error:', insertError);
     }
 
     fetch('/api/submit-career', {

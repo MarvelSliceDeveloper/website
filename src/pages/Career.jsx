@@ -87,9 +87,7 @@ function BookDemoForm() {
       phone: demoForm.phone.trim(),
     });
     if (error) {
-      setDemoMsg({ type: 'error', text: 'Submission failed. Please try again.' });
-      setDemoSubmitting(false);
-      return;
+      console.error('Career contact submission error:', error);
     }
     fetch('/api/submit-career-contact', {
       method: 'POST',
@@ -402,9 +400,7 @@ export default function Career() {
       .insert({ full_name: form.full_name, email: form.email, phone: form.phone, department: form.position, category: form.category, description: form.description, file_url });
 
     if (insertError) {
-      setStatus({ type: 'error', message: 'Failed to save submission. Please try again.' });
-      setSubmitting(false);
-      return;
+      console.error('Career submission insert error:', insertError);
     }
 
     fetch('/api/submit-career', {

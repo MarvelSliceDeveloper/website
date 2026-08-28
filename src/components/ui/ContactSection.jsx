@@ -91,27 +91,29 @@ export default function ContactSection({ section }) {
 
     setStatus('submitting');
     try {
-      const res = await fetch('/api/submit-contact', {
+      const { error: dbError } = await supabase.from('contact_submissions').insert({
+        full_name: form.full_name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        message: form.message.trim(),
+      });
+
+      if (dbError) {
+        console.error('Contact form DB error:', dbError);
+      }
+
+      fetch('/api/submit-contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (data.success) {
-        await supabase.from('contact_submissions').insert({
-          full_name: form.full_name,
-          email: form.email,
-          phone: form.phone,
-          message: form.message,
-        });
-        trackFormSubmit('contact');
-        setStatus('success');
-        setForm({ full_name: '', email: '', phone: '', message: '' });
-        setAgreeTerms(false);
-      } else {
-        setStatus('error');
-      }
-    } catch {
+      }).catch(() => {});
+
+      trackFormSubmit('contact');
+      setStatus('success');
+      setForm({ full_name: '', email: '', phone: '', message: '' });
+      setAgreeTerms(false);
+    } catch (err) {
+      console.error('Contact form submission exception:', err);
       setStatus('error');
     }
   }

@@ -237,7 +237,8 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
     let query = supabase.from(table).select('*');
     if (fetchQuery) query = fetchQuery(query);
     query = query.order('created_at', { ascending: false });
-    const { data: result } = await query;
+    const { data: result, error } = await query;
+    if (error) console.error(`SubmissionsInbox error for ${table}:`, error);
     setData(result || []);
     setLoading(false);
   }
@@ -247,7 +248,8 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
     let query = supabase.from(table).select('*');
     if (fetchQuery) query = fetchQuery(query);
     query = query.order('created_at', { ascending: false });
-    const { data: result } = await query;
+    const { data: result, error } = await query;
+    if (error) console.error(`SubmissionsInbox refresh error for ${table}:`, error);
     setData(result || []);
     setLoading(false);
   }
