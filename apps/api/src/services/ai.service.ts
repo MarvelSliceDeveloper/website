@@ -1,9 +1,13 @@
 /**
- * Gemini AI service — powers AI-assisted content generation for admins.
+ * AI service — powers AI-assisted content generation for admins, with pluggable
+ * providers (currently Google Gemini and OpenRouter).
  *
  * Features:
- * - API key stored encrypted (AES-256-GCM) in SystemSetting, editable by SUPER_ADMIN
- * - Structured JSON output enforced via responseSchema, validated with Zod
+ * - Each provider's API key stored encrypted (AES-256-GCM) in SystemSetting,
+ *   editable by SUPER_ADMIN
+ * - An active-provider switch persisted in SystemSetting (default "gemini")
+ * - Structured JSON output forced via provider-native schema config (Gemini) or
+ *   response_format json_object (OpenRouter), validated with Zod
  * - One automatic retry with validation feedback when output fails validation
  * - Health check endpoint support (latency + reachability)
  */
@@ -13,8 +17,11 @@ import { prisma } from "../utils/prisma";
 import { encryptToken, decryptToken } from "../utils/encryption";
 import { AppError } from "../utils/errors";
 
-const API_KEY_SETTING = "ai_gemini_api_key";
+const GEMINI_KEY_SETTING = "ai_gemini_api_key";
 const MODEL_SETTING = "ai_model";
+const OPENROUTER_KEY_SETTING = "ai_openrouter_api_key";
+const OPENROUTER_MODEL_SETTING = "ai_openrouter_model";
+const PROVIDER_SETTING = "ai_provider";
 
 export const DEFAULT_AI_MODEL = "gemini-2.5-flash";
 export const ALLOWED_AI_MODELS = [
@@ -22,6 +29,10 @@ export const ALLOWED_AI_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
 ] as const;
+
+/** AI providers supported by the platform. */
+export type AIProvider = "gemini" | "openrouter";
+export const AI_PROVIDERS: readonly AIProvider[] = ["gemini", "openrouter"];
 
 export const AI_GENERATION_TYPES = [
   "COURSE_OUTLINE",
@@ -307,30 +318,58 @@ async function readSetting(key: string): Promise<string | null> {
   return row?.value ?? null;
 }
 
-export async function saveGeminiApiKey(rawKey: string): Promise<void> {
-  const key = rawKey.trim();
-  if (key.length < 20) {
-    throw new AppError(400, "API key looks invalid (too short)");
-  }
-  const encrypted = encryptToken(key);
+async function writeSetting(
+  key: string,
+  value: string,
+  description: string,
+): Promise<void> {
   await prisma.systemSetting.upsert({
-    where: { key: API_KEY_SETTING },
-    update: { value: encrypted },
-    create: {
-      key: API_KEY_SETTING,
-      value: encrypted,
-      type: "string",
-      description: "Gemini API key (encrypted) used for AI content generation",
-    },
+    where: { key },
+    update: { value },
+    create: { key, value, type: "string", description },
   });
 }
 
-export async function deleteGeminiApiKey(): Promise<void> {
-  await prisma.systemSetting.deleteMany({ where: { key: API_KEY_SETTING } });
+const PROVIDER_KEY_SETTING: Record<AIProvider, string> = {
+  gemini: GEMINI_KEY_SETTING,
+  openrouter: OPENROUTER_KEY_SETTING,
+};
+
+const PROVIDER_MODEL_SETTING: Record<AIProvider, string> = {
+  gemini: MODEL_SETTING,
+  openrouter: OPENROUTER_MODEL_SETTING,
+};
+
+const PROVIDER_KEY_ENV: Record<AIProvider, string> = {
+  gemini: "GEMINI_API_KEY",
+  openrouter: "OPENROUTER_API_KEY",
+};
+
+const PROVIDER_LABEL: Record<AIProvider, string> = {
+  gemini: "Gemini",
+  openrouter: "OpenRouter",
+};
+
+export async function getActiveProvider(): Promise<AIProvider> {
+  const stored = await readSetting(PROVIDER_SETTING);
+  return stored === "openrouter" ? "openrouter" : "gemini";
 }
 
-async function getGeminiApiKey(): Promise<string | null> {
-  const stored = await readSetting(API_KEY_SETTING);
+export async function saveActiveProvider(provider: AIProvider): Promise<void> {
+  if (!(AI_PROVIDERS as readonly string[]).includes(provider)) {
+    throw new AppError(400, `Unsupported provider: ${provider}`);
+  }
+  await writeSetting(
+    PROVIDER_SETTING,
+    provider,
+    "Active AI provider (gemini | openrouter)",
+  );
+}
+
+/** Reads the (decrypted) API key for a provider, falling back to its env var. */
+async function getProviderApiKey(provider: AIProvider): Promise<string | null> {
+  const setting = PROVIDER_KEY_SETTING[provider];
+  const stored = await readSetting(setting);
   if (stored) {
     try {
       return decryptToken(stored);
@@ -338,11 +377,15 @@ async function getGeminiApiKey(): Promise<string | null> {
       // Stored value unreadable (e.g. TOKEN_ENCRYPTION_KEY changed) — fall through
     }
   }
-  const envKey = process.env.GEMINI_API_KEY?.trim();
+  const envKey = process.env[PROVIDER_KEY_ENV[provider]]?.trim();
   return envKey || null;
 }
 
-export async function getAIModel(): Promise<string> {
+async function getProviderModel(provider: AIProvider): Promise<string> {
+  if (provider === "openrouter") {
+    const stored = await readSetting(OPENROUTER_MODEL_SETTING);
+    return stored?.trim() || "";
+  }
   const stored = await readSetting(MODEL_SETTING);
   if (stored && (ALLOWED_AI_MODELS as readonly string[]).includes(stored)) {
     return stored;
@@ -350,40 +393,96 @@ export async function getAIModel(): Promise<string> {
   return DEFAULT_AI_MODEL;
 }
 
-export async function saveAIModel(model: string): Promise<void> {
-  if (!(ALLOWED_AI_MODELS as readonly string[]).includes(model)) {
-    throw new AppError(400, `Unsupported model: ${model}`);
+/** Min length guard — both Gemini and OpenRouter keys are comfortably > 20 chars. */
+export async function saveProviderApiKey(
+  provider: AIProvider,
+  rawKey: string,
+): Promise<void> {
+  const key = rawKey.trim();
+  if (key.length < 20) {
+    throw new AppError(400, "API key looks invalid (too short)");
   }
-  await prisma.systemSetting.upsert({
-    where: { key: MODEL_SETTING },
-    update: { value: model },
-    create: {
-      key: MODEL_SETTING,
-      value: model,
-      type: "string",
-      description: "Gemini model used for AI content generation",
-    },
+  const encrypted = encryptToken(key);
+  await writeSetting(
+    PROVIDER_KEY_SETTING[provider],
+    encrypted,
+    `${PROVIDER_LABEL[provider]} API key (encrypted) used for AI content generation`,
+  );
+}
+
+export async function deleteProviderApiKey(provider: AIProvider): Promise<void> {
+  await prisma.systemSetting.deleteMany({
+    where: { key: PROVIDER_KEY_SETTING[provider] },
   });
 }
 
+export async function saveProviderModel(
+  provider: AIProvider,
+  model: string,
+): Promise<void> {
+  const trimmed = model.trim();
+  if (provider === "gemini") {
+    if (!(ALLOWED_AI_MODELS as readonly string[]).includes(trimmed)) {
+      throw new AppError(400, `Unsupported model: ${model}`);
+    }
+  } else if (!trimmed) {
+    throw new AppError(400, "Model is required");
+  }
+  await writeSetting(
+    PROVIDER_MODEL_SETTING[provider],
+    trimmed,
+    `${PROVIDER_LABEL[provider]} model used for AI content generation`,
+  );
+}
+
+// Backward-compatible wrappers ------------------------------------------------
+
+/** @deprecated use provider-aware helpers */
+export async function saveGeminiApiKey(rawKey: string): Promise<void> {
+  await saveProviderApiKey("gemini", rawKey);
+}
+
+/** @deprecated use provider-aware helpers */
+export async function deleteGeminiApiKey(): Promise<void> {
+  await deleteProviderApiKey("gemini");
+}
+
+/** @deprecated use provider-aware helpers */
+export async function saveAIModel(model: string): Promise<void> {
+  await saveProviderModel("gemini", model);
+}
+
 export async function getAIStatus(): Promise<{
+  provider: AIProvider;
   configured: boolean;
   maskedKey: string | null;
   model: string;
+  providers: Record<
+    AIProvider,
+    { configured: boolean; maskedKey: string | null; model: string }
+  >;
 }> {
-  const apiKey = await getGeminiApiKey();
-  return {
-    configured: Boolean(apiKey),
-    maskedKey: apiKey ? `••••${apiKey.slice(-4)}` : null,
-    model: await getAIModel(),
-  };
+  const active = await getActiveProvider();
+  const providers = {} as Record<
+    AIProvider,
+    { configured: boolean; maskedKey: string | null; model: string }
+  >;
+  for (const p of AI_PROVIDERS) {
+    const apiKey = await getProviderApiKey(p);
+    providers[p] = {
+      configured: Boolean(apiKey),
+      maskedKey: apiKey ? `••••${apiKey.slice(-4)}` : null,
+      model: await getProviderModel(p),
+    };
+  }
+  return { ...providers[active], provider: active, providers };
 }
 
 export function isAIConfiguredSync(apiKey: string | null): boolean {
   return Boolean(apiKey && apiKey.length >= 20);
 }
 
-// ─── Gemini calls ────────────────────────────────────────────────────────────
+// ─── Shared generation plumbing ─────────────────────────────────────────────
 
 function withTimeout<T>(
   promise: Promise<T>,
@@ -414,19 +513,30 @@ function extractJson(raw: string): unknown {
   }
 }
 
-function geminiErrorMessage(err: unknown): string {
+function aiErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
 }
 
-interface GeminiCallResult {
-  text: string;
-  model: string;
+function requireConfigured(apiKey: string | null, provider: AIProvider): void {
+  if (!isAIConfiguredSync(apiKey)) {
+    throw new AppError(
+      400,
+      `AI is not configured. Ask your Super Admin to add a ${PROVIDER_LABEL[provider]} API key in Admin → Settings → AI Integration.`,
+    );
+  }
 }
+
+// ─── Gemini provider ─────────────────────────────────────────────────────────
 
 type GeminiContents =
   | string
   | Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+
+interface ProviderCallResult {
+  text: string;
+  model: string;
+}
 
 async function callGemini(opts: {
   apiKey: string;
@@ -435,7 +545,7 @@ async function callGemini(opts: {
   contents: GeminiContents;
   responseSchema?: Record<string, unknown>;
   timeoutMs?: number;
-}): Promise<GeminiCallResult> {
+}): Promise<ProviderCallResult> {
   const ai = new GoogleGenAI({ apiKey: opts.apiKey });
   const response = await withTimeout(
     ai.models.generateContent({
@@ -462,61 +572,112 @@ async function callGemini(opts: {
   return { text, model: opts.model };
 }
 
-const ASSIGNMENT_PDF_SYSTEM_PROMPT = `${BASE_PERSONA}
+// ─── OpenRouter provider (OpenAI-compatible chat completions) ────────────────
 
-The user has attached a question paper PDF for a course assignment. Read it carefully.
-Rules:
-- "title": short assignment name derived from what the paper covers (max 100 chars).
-- "description": a brief describing this assignment in plain text with line breaks — Objective, Tasks (numbered), Deliverables, Grading Criteria. Summarize the actual tasks from the PDF; do NOT invent unrelated requirements. If the admin note provides context, honor it.
-- "maxPoints": suggested total score (typically 100).`;
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1";
+
+async function callOpenRouter(opts: {
+  apiKey: string;
+  model: string;
+  systemInstruction: string;
+  userContent: string;
+  timeoutMs?: number;
+}): Promise<ProviderCallResult> {
+  const res = await withTimeout(
+    fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${opts.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: opts.model,
+        messages: [
+          { role: "system", content: opts.systemInstruction },
+          { role: "user", content: opts.userContent },
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+      }),
+    }),
+    opts.timeoutMs ?? 90_000,
+    "AI generation",
+  );
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new AppError(
+      502,
+      `OpenRouter request failed (${res.status}): ${detail.slice(0, 300)}`,
+    );
+  }
+
+  const json = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const text = json.choices?.[0]?.message?.content ?? "";
+  if (!text.trim()) {
+    throw new AppError(502, "AI returned an empty response");
+  }
+  return { text, model: opts.model };
+}
+
+/**
+ * Lists the models an OpenRouter key can access. Requires a stored OpenRouter
+ * key (or the OPENROUTER_API_KEY env var).
+ */
+export async function listOpenRouterModels(): Promise<
+  Array<{ id: string; name: string }>
+> {
+  const apiKey = await getProviderApiKey("openrouter");
+  if (!isAIConfiguredSync(apiKey)) {
+    throw new AppError(400, "OpenRouter API key not configured");
+  }
+  const res = await fetch(`${OPENROUTER_API_URL}/models`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new AppError(
+      502,
+      `OpenRouter models request failed (${res.status}): ${detail.slice(0, 300)}`,
+    );
+  }
+  const json = (await res.json()) as {
+    data?: Array<{ id?: string; name?: string }>;
+  };
+  return (json.data ?? [])
+    .filter((m) => typeof m.id === "string" && m.id)
+    .map((m) => ({ id: m.id!, name: m.name || m.id! }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ─── Generation orchestrator ─────────────────────────────────────────────────
 
 export interface AIGenerateResult {
   type: AIGenerationType;
   data: unknown;
   model: string;
+  provider: AIProvider;
 }
 
-/**
- * Generates an assignment brief (title/description/maxPoints) from an
- * uploaded question-paper PDF using Gemini document understanding.
- */
-export async function generateAssignmentFromPdf(opts: {
-  pdfBase64: string;
-  note?: string;
-  ctx?: AIGenerationContext;
-}): Promise<{ type: "ASSIGNMENT"; data: unknown; model: string }> {
-  const apiKey = await getGeminiApiKey();
-  if (!isAIConfiguredSync(apiKey)) {
-    throw new AppError(
-      400,
-      "AI is not configured. Ask your Super Admin to add a Gemini API key in Admin → Settings → AI Integration.",
-    );
-  }
-  const model = await getAIModel();
-  const contents: GeminiContents = [
-    {
-      inlineData: { mimeType: "application/pdf", data: opts.pdfBase64 },
-    },
-    {
-      text: `Write the assignment brief for this question paper.${
-        opts.note ? `\n\nAdmin note about this PDF: ${opts.note}` : ""
-      }`,
-    },
-  ];
-
+async function validateWithRetry(
+  type: AIGenerationType,
+  prompt: string,
+  provider: AIProvider,
+  call: (effectivePrompt: string) => Promise<ProviderCallResult>,
+): Promise<AIGenerateResult> {
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { text, model: usedModel } = await callGemini({
-      apiKey: apiKey!,
-      model,
-      systemInstruction: ASSIGNMENT_PDF_SYSTEM_PROMPT,
-      contents,
-      responseSchema: RESPONSE_SCHEMAS.ASSIGNMENT,
-    });
+    const effectivePrompt =
+      attempt === 0
+        ? prompt
+        : `${prompt}\n\nIMPORTANT: Your previous response failed validation (${aiErrorMessage(lastError)}). Follow the schema and rules exactly.`;
+    const { text, model } = await call(effectivePrompt);
     const parsed = extractJson(text);
-    const result = assignmentSchema.safeParse(parsed);
+    const result = OUTPUT_SCHEMAS[type].safeParse(parsed);
     if (result.success) {
-      return { type: "ASSIGNMENT", data: result.data, model: usedModel };
+      return { type, data: result.data, model, provider };
     }
     lastError = new Error(
       result.error.issues
@@ -526,7 +687,7 @@ export async function generateAssignmentFromPdf(opts: {
   }
   throw new AppError(
     502,
-    `AI response failed validation twice: ${geminiErrorMessage(lastError)}`,
+    `AI response failed validation twice: ${aiErrorMessage(lastError)}`,
   );
 }
 
@@ -535,74 +696,84 @@ export async function generate(
   prompt: string,
   ctx: AIGenerationContext = {},
 ): Promise<AIGenerateResult> {
-  const apiKey = await getGeminiApiKey();
-  if (!isAIConfiguredSync(apiKey)) {
-    throw new AppError(
-      400,
-      "AI is not configured. Ask your Super Admin to add a Gemini API key in Admin → Settings → AI Integration.",
-    );
-  }
-  const model = await getAIModel();
+  const provider = await getActiveProvider();
+  const apiKey = await getProviderApiKey(provider);
+  requireConfigured(apiKey, provider);
+  const model = await getProviderModel(provider);
   const systemInstruction = buildSystemPrompt(type, ctx);
 
-  let lastError: unknown = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const attemptPrompt =
-      attempt === 0
-        ? prompt
-        : `${prompt}\n\nIMPORTANT: Your previous response failed validation (${geminiErrorMessage(lastError)}). Follow the schema and rules exactly.`;
-    const { text, model: usedModel } = await callGemini({
+  if (provider === "openrouter") {
+    if (!model) {
+      throw new AppError(400, "No OpenRouter model selected");
+    }
+    return validateWithRetry(type, prompt, provider, (effectivePrompt) =>
+      callOpenRouter({
+        apiKey: apiKey!,
+        model,
+        systemInstruction,
+        userContent: effectivePrompt,
+      }),
+    );
+  }
+
+  return validateWithRetry(type, prompt, provider, (effectivePrompt) =>
+    callGemini({
       apiKey: apiKey!,
       model,
       systemInstruction,
-      contents: attemptPrompt,
+      contents: effectivePrompt,
       responseSchema: RESPONSE_SCHEMAS[type],
-    });
-    const parsed = extractJson(text);
-    const result = OUTPUT_SCHEMAS[type].safeParse(parsed);
-    if (result.success) {
-      return { type, data: result.data, model: usedModel };
-    }
-    lastError = new Error(
-      result.error.issues
-        .map((i) => `${i.path.join(".")}: ${i.message}`)
-        .join("; "),
-    );
-  }
-  throw new AppError(
-    502,
-    `AI response failed validation twice: ${geminiErrorMessage(lastError)}`,
+    }),
   );
 }
 
 export interface AIHealthResult {
   ok: boolean;
+  provider?: AIProvider;
   model?: string;
   latencyMs?: number;
   error?: string;
 }
+
 export async function healthCheck(): Promise<AIHealthResult> {
-  const apiKey = await getGeminiApiKey();
+  const provider = await getActiveProvider();
+  const apiKey = await getProviderApiKey(provider);
   if (!isAIConfiguredSync(apiKey)) {
-    return { ok: false, error: "No Gemini API key configured" };
+    return { ok: false, error: `No ${PROVIDER_LABEL[provider]} API key configured` };
   }
-  const model = await getAIModel();
+  const model = await getProviderModel(provider);
   const startedAt = Date.now();
   try {
-    await callGemini({
-      apiKey: apiKey!,
+    if (provider === "openrouter") {
+      await callOpenRouter({
+        apiKey: apiKey!,
+        model,
+        systemInstruction: "You are a health check probe.",
+        userContent: "Reply with exactly: OK",
+        timeoutMs: 20_000,
+      });
+    } else {
+      await callGemini({
+        apiKey: apiKey!,
+        model,
+        systemInstruction: "You are a health check probe.",
+        contents: "Reply with exactly: OK",
+        timeoutMs: 20_000,
+      });
+    }
+    return {
+      ok: true,
+      provider,
       model,
-      systemInstruction: "You are a health check probe.",
-      contents: "Reply with exactly: OK",
-      timeoutMs: 20_000,
-    });
-    return { ok: true, model, latencyMs: Date.now() - startedAt };
+      latencyMs: Date.now() - startedAt,
+    };
   } catch (err: unknown) {
     return {
       ok: false,
+      provider,
       model,
       latencyMs: Date.now() - startedAt,
-      error: geminiErrorMessage(err),
+      error: aiErrorMessage(err),
     };
   }
 }

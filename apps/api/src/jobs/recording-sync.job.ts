@@ -22,6 +22,16 @@ export const recordingSyncJob = {
    * then attempts to sync recordings from Microsoft Teams Graph API.
    */
   async runSync() {
+    const pollingSetting = await prisma.systemSetting.findUnique({
+      where: { key: "recording_sync_polling_enabled" },
+    });
+    if (pollingSetting?.value === "false") {
+      logger.info(
+        "[RecordingSyncJob] Polling disabled via system setting; skipping run.",
+      );
+      return;
+    }
+
     logger.info("[RecordingSyncJob] Starting automated recordings sync...");
     let dbError = false;
     try {

@@ -14,6 +14,7 @@ const superAdminPrefixes = [
   "/admin/settings/permissions",
   "/admin/settings/system",
   "/admin/settings/backup",
+  "/admin/settings/ai",
   "/admin/maintenance",
   "/admin/session-management",
   "/admin/users/login-history",
@@ -77,6 +78,10 @@ export async function middleware(request: NextRequest) {
   // Admins and super-admins can bypass maintenance
   if (token) {
     try {
+      // `decodeJwt` only decodes base64 claims — it does NOT verify the JWT
+      // signature or expiry, and the web server has no JWT_SECRET. So these
+      // role checks are UX-only routing hints. Real authorization is enforced
+      // server-side by the API's requireAuth/requireRole/requireSuperAdmin.
       const payload = decodeJwt(token);
       if (payload.role === "ADMIN" || payload.role === "SUPER_ADMIN") {
         return NextResponse.next();

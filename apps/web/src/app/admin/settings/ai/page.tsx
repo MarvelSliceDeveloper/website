@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconSparkles,
   IconRefresh,
@@ -21,40 +22,104 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type AIStatus = {
+type AIProvider = "gemini" | "openrouter";
+
+type ProviderStatus = {
   configured: boolean;
   maskedKey: string | null;
   model: string;
 };
 
+type AIStatus = ProviderStatus & {
+  provider: AIProvider;
+  providers: Record<AIProvider, ProviderStatus>;
+};
+
 type HealthResult = {
   ok: boolean;
+  provider?: AIProvider;
   model?: string;
   latencyMs?: number;
   error?: string;
 };
 
-const AI_MODELS = [
+type OpenRouterModel = { id: string; name: string };
+
+const GEMINI_MODELS = [
   { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (recommended)" },
   { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (cheapest)" },
   { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
 ];
 
+const PROVIDER_LABEL: Record<AIProvider, string> = {
+  gemini: "Google Gemini",
+  openrouter: "OpenRouter",
+};
+
+const PROVIDER_HINT: Record<AIProvider, string> = {
+  gemini: "Get a free key at Google AI Studio. The key is encrypted before storage and never exposed to browsers.",
+  openrouter:
+    "Get a key at openrouter.ai. The key is encrypted before storage and never exposed to browsers.",
+};
+
+const PROVIDER_KEY_URL: Record<AIProvider, string> = {
+  gemini: "https://aistudio.google.com/apikey",
+  openrouter: "https://openrouter.ai/keys",
+};
+
+const PROVIDER_KEY_LABEL: Record<AIProvider, string> = {
+  gemini: "Google AI Studio → Get API key",
+  openrouter: "OpenRouter → Get API key",
+};
+
 export default function AIIntegrationPage() {
   usePageTitle("AI Integration");
+  const confirmDelete = useConfirmDialog();
 
+  const [selectedProvider, setSelectedProvider] =
+    useState<AIProvider>("gemini");
+  const [selectionInitialized, setSelectionInitialized] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const statusQuery = useApiQuery<AIStatus>(
     ["admin", "ai", "status"],
     "/api/admin/ai/status",
   );
   const status = statusQuery.data;
+  const activeProvider = status?.provider ?? "gemini";
+
+  // Default the viewed provider to the active one once status loads.
+  useEffect(() => {
+    if (status?.provider && !selectionInitialized) {
+      setSelectedProvider(status.provider);
+      setSelectionInitialized(true);
+    }
+  }, [status?.provider, selectionInitialized]);
+
+  // Drive reads/mutations from this local value, not async `status`, so a
+  // delete/save can't target the wrong provider during the refetch after a switch.
+  const resolvedProvider = selectedProvider;
 
   const invalidateStatus = () => void statusQuery.refetch();
+
+  const handleSelectProvider = (p: AIProvider) => {
+    setSelectedProvider(p);
+    if (p !== status?.provider) switchProviderMutation.mutate(p);
+  };
+
+  const switchProviderMutation = useMutation({
+    mutationFn: (provider: AIProvider) =>
+      api.post<{ message: string }>("/api/admin/ai/provider", { provider }),
+    onSuccess: (res, provider) => {
+      toast.success(res.message || `Provider set to ${provider}`);
+      invalidateStatus();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const saveKeyMutation = useMutation({
     mutationFn: () =>
       api.post<{ message: string }>("/api/admin/ai/api-key", {
+        provider: resolvedProvider,
         apiKey: apiKeyInput.trim(),
       }),
     onSuccess: (res) => {
@@ -66,17 +131,34 @@ export default function AIIntegrationPage() {
   });
 
   const deleteKeyMutation = useMutation({
-    mutationFn: () => api.delete<{ message: string }>("/api/admin/ai/api-key"),
+    mutationFn: (provider: AIProvider) =>
+      api.delete<{ message: string }>(
+        `/api/admin/ai/api-key?provider=${provider}`,
+      ),
     onSuccess: () => {
       toast.success("API key removed");
+      setApiKeyInput("");
       invalidateStatus();
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
 
+  const handleRemoveKey = async () => {
+    const ok = await confirmDelete({
+      title: `Remove ${PROVIDER_LABEL[resolvedProvider]} API key?`,
+      message: `This deletes the stored ${PROVIDER_LABEL[resolvedProvider]} key and can't be undone. You'll need to paste it again to re-enable AI generation.`,
+      confirmLabel: "Remove key",
+      danger: true,
+    });
+    if (ok) deleteKeyMutation.mutate(resolvedProvider);
+  };
+
   const saveModelMutation = useMutation({
     mutationFn: (model: string) =>
-      api.post<{ message: string }>("/api/admin/ai/model", { model }),
+      api.post<{ message: string }>("/api/admin/ai/model", {
+        provider: resolvedProvider,
+        model,
+      }),
     onSuccess: () => {
       toast.success("Model updated");
       invalidateStatus();
@@ -88,13 +170,27 @@ export default function AIIntegrationPage() {
     mutationFn: () => api.post<HealthResult>("/api/admin/ai/health-check", {}),
     onSuccess: (res) => {
       if (res.ok) {
-        toast.success(`Gemini is healthy (${res.latencyMs ?? "?"} ms)`);
+        toast.success(
+          `${res.provider ?? resolvedProvider} is healthy (${
+            res.latencyMs ?? "?"
+          } ms)`,
+        );
       } else {
         toast.error(res.error || "Health check failed");
       }
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
+
+  const modelsQuery = useApiQuery<{ provider: string; items: OpenRouterModel[] }>(
+    ["admin", "ai", "openrouter-models"],
+    "/api/admin/ai/openrouter/models",
+    undefined,
+    { enabled: resolvedProvider === "openrouter" },
+  );
+  const openRouterModels = modelsQuery.data?.items ?? [];
+
+  const providerStatus = status?.providers?.[resolvedProvider];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -108,8 +204,8 @@ export default function AIIntegrationPage() {
             AI Integration
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Configure Google Gemini for AI-assisted course and content
-            generation.
+            Configure an AI provider (Google Gemini or OpenRouter) for
+            AI-assisted course and content generation.
           </p>
         </div>
         <button
@@ -118,6 +214,38 @@ export default function AIIntegrationPage() {
         >
           <IconRefresh size={14} /> Refresh
         </button>
+      </div>
+
+      {/* Active provider card */}
+      <div className="glass-card p-6 space-y-4">
+        <h2 className="text-base font-semibold text-foreground">
+          Active Provider
+        </h2>
+        <p className="text-xs text-muted">
+          Choose which provider generates AI content. Each provider keeps its
+          own API key and model.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {(["gemini", "openrouter"] as AIProvider[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => handleSelectProvider(p)}
+              disabled={
+                switchProviderMutation.isPending ||
+                p === resolvedProvider
+              }
+              className={`rounded-lg border px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+                p === resolvedProvider
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card-hover/30 text-muted-foreground hover:bg-card-hover"
+              }`}
+            >
+              {PROVIDER_LABEL[p]}
+              {p === activeProvider && " (active)"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Status card */}
@@ -129,17 +257,19 @@ export default function AIIntegrationPage() {
           ) : (
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold ${
-                status?.configured
+                providerStatus?.configured
                   ? "bg-success/10 text-success"
                   : "bg-danger/10 text-danger"
               }`}
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
-                  status?.configured ? "bg-success animate-pulse" : "bg-danger"
+                  providerStatus?.configured
+                    ? "bg-success animate-pulse"
+                    : "bg-danger"
                 }`}
               />
-              {status?.configured ? "Configured" : "Not configured"}
+              {providerStatus?.configured ? "Configured" : "Not configured"}
             </span>
           )}
         </div>
@@ -148,14 +278,16 @@ export default function AIIntegrationPage() {
             <dt className="text-xs uppercase tracking-wider text-muted">
               Provider
             </dt>
-            <dd className="mt-1 font-medium text-foreground">Google Gemini</dd>
+            <dd className="mt-1 font-medium text-foreground">
+              {PROVIDER_LABEL[resolvedProvider]}
+            </dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wider text-muted">
               API Key
             </dt>
             <dd className="mt-1 font-mono text-foreground">
-              {status?.maskedKey ?? "—"}
+              {providerStatus?.maskedKey ?? "—"}
             </dd>
           </div>
           <div>
@@ -163,7 +295,7 @@ export default function AIIntegrationPage() {
               Model
             </dt>
             <dd className="mt-1 font-mono text-foreground">
-              {status?.model ?? "—"}
+              {providerStatus?.model || "—"}
             </dd>
           </div>
         </dl>
@@ -173,13 +305,13 @@ export default function AIIntegrationPage() {
           <button
             type="button"
             onClick={() => healthMutation.mutate()}
-            disabled={healthMutation.isPending || !status?.configured}
+            disabled={healthMutation.isPending || !providerStatus?.configured}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5 disabled:opacity-50"
           >
             <IconActivity size={14} />
             {healthMutation.isPending ? "Checking…" : "Run Health Check"}
           </button>
-          {!status?.configured && (
+          {!providerStatus?.configured && (
             <p className="text-xs text-muted">
               Add an API key below to enable AI generation.
             </p>
@@ -225,19 +357,18 @@ export default function AIIntegrationPage() {
       <div className="glass-card p-6 space-y-4">
         <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
           <IconKey size={18} className="text-primary-hover" />
-          Gemini API Key
+          {PROVIDER_LABEL[resolvedProvider]} API Key
         </h2>
         <p className="text-xs text-muted">
-          Get a free key at{" "}
+          {PROVIDER_HINT[resolvedProvider]}{" "}
           <a
-            href="https://aistudio.google.com/apikey"
+            href={PROVIDER_KEY_URL[resolvedProvider]}
             target="_blank"
             rel="noreferrer"
             className="font-medium text-primary hover:underline"
           >
-            Google AI Studio → Get API key
+            {PROVIDER_KEY_LABEL[resolvedProvider]}
           </a>
-          . The key is encrypted before storage and never exposed to browsers.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -245,9 +376,13 @@ export default function AIIntegrationPage() {
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
             placeholder={
-              status?.configured
+              providerStatus?.configured
                 ? "Replace with a new API key…"
-                : "Paste your Gemini API key…"
+                : `Paste your ${
+                    resolvedProvider === "gemini"
+                      ? "Gemini"
+                      : "OpenRouter"
+                  } API key…`
             }
             className="field flex-1 font-mono text-xs"
             autoComplete="off"
@@ -262,14 +397,15 @@ export default function AIIntegrationPage() {
           >
             {saveKeyMutation.isPending ? "Saving…" : "Save Key"}
           </button>
-          {status?.configured && (
+          {providerStatus?.configured && (
             <button
               type="button"
-              onClick={() => deleteKeyMutation.mutate()}
+              onClick={() => void handleRemoveKey()}
               disabled={deleteKeyMutation.isPending}
               className="btn-secondary text-xs px-3 py-2 flex items-center justify-center gap-1 text-danger hover:text-danger"
             >
-              <IconTrash size={13} /> Remove
+              <IconTrash size={13} />{" "}
+              {deleteKeyMutation.isPending ? "Removing…" : "Remove"}
             </button>
           )}
         </div>
@@ -282,22 +418,56 @@ export default function AIIntegrationPage() {
           Used for all AI generation (courses, quizzes, assignments, lesson
           descriptions, notifications).
         </p>
+        {resolvedProvider === "openrouter" && (
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => void modelsQuery.refetch()}
+              disabled={
+                !providerStatus?.configured || modelsQuery.isFetching
+              }
+              className="btn-secondary w-fit text-xs py-2 flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <IconRefresh size={14} />
+              {modelsQuery.isFetching ? "Loading models…" : "Load available models"}
+            </button>
+            {modelsQuery.isError && (
+              <p className="text-xs text-danger">{getErrorMessage(modelsQuery.error)}</p>
+            )}
+            {modelsQuery.isSuccess && openRouterModels.length === 0 && (
+              <p className="text-xs text-muted">
+                No models returned. Load the list to populate this dropdown.
+              </p>
+            )}
+          </div>
+        )}
         <Select
-          value={status?.model ?? ""}
+          key={resolvedProvider}
+          value={providerStatus?.model || ""}
           onValueChange={(val) => {
-            if (val && val !== status?.model) saveModelMutation.mutate(val);
+            if (val && val !== providerStatus?.model)
+              saveModelMutation.mutate(val);
           }}
-          disabled={statusQuery.isPending}
+          disabled={
+            statusQuery.isPending ||
+            (resolvedProvider === "openrouter" && !providerStatus?.configured)
+          }
         >
           <SelectTrigger className="field w-full max-w-sm">
             <SelectValue placeholder="-- Select a model --" />
           </SelectTrigger>
           <SelectContent>
-            {AI_MODELS.map((m) => (
-              <SelectItem key={m.value} value={m.value}>
-                {m.label}
-              </SelectItem>
-            ))}
+            {resolvedProvider === "gemini"
+              ? GEMINI_MODELS.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))
+              : openRouterModels.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.name}
+                  </SelectItem>
+                ))}
           </SelectContent>
         </Select>
       </div>

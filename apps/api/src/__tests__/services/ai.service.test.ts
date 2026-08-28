@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   generate,
-  generateAssignmentFromPdf,
   healthCheck,
   saveGeminiApiKey,
   saveAIModel,
   getAIStatus,
+  getActiveProvider,
+  saveProviderApiKey,
+  saveActiveProvider,
+  listOpenRouterModels,
   DEFAULT_AI_MODEL,
 } from "../../services/ai.service";
 import { AppError } from "../../utils/errors";
@@ -304,53 +307,6 @@ describe("ai.service", () => {
     });
   });
 
-  describe("generateAssignmentFromPdf", () => {
-    it("sends the PDF as inline data and returns the assignment brief", async () => {
-      let savedEncrypted: string | null = null;
-      mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
-        savedEncrypted ??= update.value;
-        return {};
-      });
-      await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
-      mockPrisma.systemSetting.findUnique.mockResolvedValue({
-        value: savedEncrypted,
-      });
-
-      mockGenerateContent.mockResolvedValue(
-        geminiJsonResponse({
-          title: "Pandas Data Cleaning Assignment",
-          description:
-            "Clean the provided messy dataset and produce a summary report of every transformation applied.",
-          maxPoints: 100,
-        }),
-      );
-
-      const result = await generateAssignmentFromPdf({
-        pdfBase64: "JVBERi0xLjQ=",
-        note: "It is a Pandas practice paper",
-      });
-
-      expect(result.type).toBe("ASSIGNMENT");
-      expect((result.data as { title: string }).title).toContain("Pandas");
-
-      const call = mockGenerateContent.mock.calls[0][0];
-      const parts = Array.isArray(call.contents) ? call.contents : [];
-      expect(parts[0].inlineData).toEqual({
-        mimeType: "application/pdf",
-        data: "JVBERi0xLjQ=",
-      });
-      expect(parts[1].text).toContain("Pandas practice paper");
-    });
-
-    it("throws when AI is not configured", async () => {
-      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
-      delete process.env.GEMINI_API_KEY;
-      await expect(
-        generateAssignmentFromPdf({ pdfBase64: "abc" }),
-      ).rejects.toMatchObject({ statusCode: 400 });
-    });
-  });
-
   describe("healthCheck", () => {
     it("returns ok:false when not configured", async () => {
       mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
@@ -394,6 +350,212 @@ describe("ai.service", () => {
       const result = await healthCheck();
       expect(result.ok).toBe(false);
       expect(result.error).toContain("API key not valid");
+    });
+  });
+
+  describe("providers", () => {
+    it("defaults the active provider to gemini when unset", async () => {
+      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+      await expect(getActiveProvider()).resolves.toBe("gemini");
+    });
+
+    it("reads openrouter from the stored provider setting", async () => {
+      mockPrisma.systemSetting.findUnique.mockResolvedValue({
+        value: "openrouter",
+      });
+      await expect(getActiveProvider()).resolves.toBe("openrouter");
+    });
+
+    it("persists the active provider via saveActiveProvider", async () => {
+      mockPrisma.systemSetting.upsert.mockResolvedValue({});
+      await saveActiveProvider("openrouter");
+      expect(mockPrisma.systemSetting.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { key: "ai_provider" },
+          update: { value: "openrouter" },
+        }),
+      );
+    });
+
+    it("rejects unsupported providers", async () => {
+      await expect(
+        saveActiveProvider("openai" as "gemini"),
+      ).rejects.toThrow(AppError);
+    });
+
+    it("stores an OpenRouter key encrypted using its own setting key", async () => {
+      mockPrisma.systemSetting.upsert.mockResolvedValue({});
+      await saveProviderApiKey("openrouter", "sk-or-v1-1234567890abcdef");
+      const call = mockPrisma.systemSetting.upsert.mock.calls[0][0];
+      expect(call.where).toEqual({ key: "ai_openrouter_api_key" });
+      expect(call.update.value).not.toContain("sk-or-v1");
+    });
+
+    it("rejects short OpenRouter keys", async () => {
+      await expect(
+        saveProviderApiKey("openrouter", "too-short"),
+      ).rejects.toThrow(AppError);
+      expect(mockPrisma.systemSetting.upsert).not.toHaveBeenCalled();
+    });
+
+    it("getAIStatus reports per-provider states plus the active provider", async () => {
+      mockPrisma.systemSetting.upsert.mockResolvedValue({});
+      await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
+      const encrypted =
+        mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
+
+      mockPrisma.systemSetting.findUnique.mockImplementation(
+        async ({ where }) => {
+          if (where.key === "ai_gemini_api_key") return { value: encrypted };
+          return null;
+        },
+      );
+
+      const status = await getAIStatus();
+      expect(status.provider).toBe("gemini");
+      expect(status.providers.gemini.configured).toBe(true);
+      expect(status.providers.openrouter.configured).toBe(false);
+      expect(status.providers.openrouter.maskedKey).toBeNull();
+    });
+  });
+
+  describe("generate via OpenRouter", () => {
+    let mockFetch: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    async function primeOpenRouter(mode: "ok" | "invalid") {
+      mockPrisma.systemSetting.upsert.mockResolvedValue({});
+      await saveProviderApiKey("openrouter", "sk-or-v1-1234567890abcdef");
+
+      const orKeyEncrypted =
+        mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
+
+      mockPrisma.systemSetting.findUnique.mockImplementation(
+        async ({ where }) => {
+          if (where.key === "ai_provider") return { value: "openrouter" };
+          if (where.key === "ai_openrouter_api_key")
+            return { value: orKeyEncrypted };
+          if (where.key === "ai_openrouter_model")
+            return { value: "openai/gpt-4o-mini" };
+          return null;
+        },
+      );
+
+      const payload =
+        mode === "ok"
+          ? { description: "A concise lesson description for the quiz topic." }
+          : { unexpected: "shape" };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify({
+          choices: [{ message: { content: JSON.stringify(payload) } }],
+        }), { status: 200 }),
+      );
+    }
+
+    it("calls the OpenRouter chat endpoint and returns validated data", async () => {
+      await primeOpenRouter("ok");
+      const result = await generate("LESSON_DESCRIPTION", "quiz essentials");
+      expect(result.provider).toBe("openrouter");
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(String(url)).toContain("/chat/completions");
+      const body = JSON.parse(init.body);
+      expect(body.model).toBe("openai/gpt-4o-mini");
+      expect(body.response_format).toEqual({ type: "json_object" });
+      expect(body.messages[0].role).toBe("system");
+      expect(body.messages[1].role).toBe("user");
+      expect((result.data as { description: string }).description).toContain(
+        "concise",
+      );
+    });
+
+    it("throws 502 when the OpenRouter model list/request fails", async () => {
+      await primeOpenRouter("ok");
+      mockFetch.mockResolvedValue(
+        new Response("Unauthorized", { status: 401 }),
+      );
+      await expect(
+        generate("LESSON_DESCRIPTION", "quiz essentials"),
+      ).rejects.toMatchObject({ statusCode: 502 });
+    });
+
+    it("throws 400 when no OpenRouter model is selected", async () => {
+      let savedEncrypted: string | null = null;
+      mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
+        savedEncrypted ??= update.value;
+        return {};
+      });
+      await saveProviderApiKey("openrouter", "sk-or-v1-1234567890abcdef");
+      const orKeyEncrypted =
+        mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
+
+      mockPrisma.systemSetting.findUnique.mockImplementation(
+        async ({ where }) => {
+          if (where.key === "ai_provider") return { value: "openrouter" };
+          if (where.key === "ai_openrouter_api_key")
+            return { value: orKeyEncrypted };
+          return null;
+        },
+      );
+
+      await expect(
+        generate("LESSON_DESCRIPTION", "quiz essentials"),
+      ).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("listOpenRouterModels maps and sorts the fetched model list", async () => {
+      let savedEncrypted: string | null = null;
+      mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
+        savedEncrypted ??= update.value;
+        return {};
+      });
+      await saveProviderApiKey("openrouter", "sk-or-v1-1234567890abcdef");
+      const orKeyEncrypted =
+        mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
+
+      mockPrisma.systemSetting.findUnique.mockResolvedValue({
+        value: orKeyEncrypted,
+      });
+      mockFetch.mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: [
+              { id: "openai/gpt-4o-mini", name: "GPT-4o Mini" },
+              { id: "anthropic/claude-3.5-sonnet", name: "Claude Sonnet" },
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+
+      const models = await listOpenRouterModels();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(String(url)).toContain("/models");
+      expect(init.headers.Authorization).toContain("sk-or-v1");
+      expect(models.map((m) => m.id)).toEqual([
+        "anthropic/claude-3.5-sonnet",
+        "openai/gpt-4o-mini",
+      ]);
+    });
+
+    it("listOpenRouterModels throws when no key is configured", async () => {
+      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+      delete process.env.OPENROUTER_API_KEY;
+      await expect(listOpenRouterModels()).rejects.toMatchObject({
+        statusCode: 400,
+      });
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 });

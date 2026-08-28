@@ -103,16 +103,6 @@ export default function RootLayout({
       // prevents a hydration mismatch when browser extensions modify the DOM
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.documentElement.setAttribute('data-theme', 'light');
-              try { localStorage.setItem('lms-theme', 'light'); } catch (e) {}
-            `,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <Providers>{children}</Providers>
         <CookieConsentBanner />

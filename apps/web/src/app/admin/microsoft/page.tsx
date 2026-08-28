@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import {
   IconBrandWindows,
   IconCheck,
@@ -11,6 +14,7 @@ import {
   IconLink,
   IconClock,
   IconCode,
+  IconVideo,
 } from "@tabler/icons-react";
 
 type LogEntry = {
@@ -44,6 +48,28 @@ export default function MicrosoftIntegrationPage() {
     ["admin", "microsoft", "status"],
     "/api/auth/azure-ad/status",
   );
+  const settingsQuery = useApiQuery<{ settings: { key: string; value: string }[] }>(
+    ["admin", "settings"],
+    "/api/admin/settings",
+  );
+  const recordingSyncEnabled =
+    settingsQuery.data?.settings.find(
+      (s) => s.key === "recording_sync_polling_enabled",
+    )?.value !== "false";
+
+  const toggleRecordingSyncMutation = useMutation({
+    mutationFn: (enabled: boolean) =>
+      api.put("/api/admin/settings/recording_sync_polling_enabled", {
+        value: enabled ? "true" : "false",
+      }),
+    onSuccess: (_data, enabled) => {
+      toast.success(
+        `Recording sync polling ${enabled ? "enabled" : "disabled"}`,
+      );
+      void settingsQuery.refetch();
+    },
+    onError: () => toast.error("Failed to update recording sync polling"),
+  });
   const status = statusQuery.data ?? null;
   const loading = statusQuery.isPending;
 
@@ -228,6 +254,47 @@ export default function MicrosoftIntegrationPage() {
                 </a>
               </div>
             </div>
+          </div>
+
+          {/* Recording Sync Polling */}
+          <div className="glass-card p-5 border border-border/80">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <IconVideo size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Teams Recording Sync Polling
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically poll for Teams meeting recordings.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  void toggleRecordingSyncMutation.mutate(!recordingSyncEnabled)
+                }
+                disabled={toggleRecordingSyncMutation.isPending}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  recordingSyncEnabled ? "bg-primary" : "bg-border"
+                } ${
+                  toggleRecordingSyncMutation.isPending
+                    ? "opacity-50 pointer-events-none"
+                    : ""
+                }`}
+              >
+                <span
+                  className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    recordingSyncEnabled ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+            {settingsQuery.isPending && (
+              <p className="mt-3 text-xs text-muted animate-pulse">Loading...</p>
+            )}
           </div>
 
           {/* Activity Log */}
