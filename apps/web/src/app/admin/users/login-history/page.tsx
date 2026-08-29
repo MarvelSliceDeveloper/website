@@ -27,7 +27,7 @@ export default function LoginHistoryPage() {
     limit: "50",
   });
   const logs = loginHistoryQuery.data?.logs ?? [];
-  const total = loginHistoryQuery.data?.pagination.total ?? 0;
+  const total = loginHistoryQuery.data?.pagination?.total ?? logs.length ?? 0;
   const loading = loginHistoryQuery.isPending;
 
   return (

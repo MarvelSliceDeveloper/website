@@ -231,7 +231,7 @@ export default function AdminMentorshipPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px]">
+            <table className="w-full min-w-[980px]">
               <thead>
                 <tr className="border-b border-border bg-card-hover/50">
                   <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
@@ -248,6 +248,9 @@ export default function AdminMentorshipPage() {
                   </th>
                   <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Submitted
+                  </th>
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
+                    Preferred
                   </th>
                   <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Actions
@@ -315,11 +318,19 @@ export default function AdminMentorshipPage() {
                       <p className="text-sm text-foreground">
                         {timeAgo(ticket.createdAt)}
                       </p>
-                      {ticket.preferredDate && (
-                        <p className="text-[11px] text-muted">
+                      <p className="text-[11px] text-muted">
+                        {new Date(ticket.createdAt).toLocaleDateString()}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4">
+                      {ticket.preferredDate ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+                          <IconCalendar size={12} />
                           {new Date(ticket.preferredDate).toLocaleDateString()}
-                          {ticket.preferredTime && ` · ${ticket.preferredTime}`}
-                        </p>
+                          {ticket.preferredTime && ` ${ticket.preferredTime}`}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
                       )}
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -403,11 +414,37 @@ function TicketManageModal({
   onUpdate: () => void;
 }) {
   const [selectedMentor, setSelectedMentor] = useState(ticket.mentor?.id || "");
-  const [scheduledDate, setScheduledDate] = useState(
-    ticket.scheduledAt
-      ? new Date(ticket.scheduledAt).toISOString().slice(0, 16)
-      : "",
-  );
+  // Prefer student's requested date as default for scheduling — makes it one-click for admin
+  const getInitialScheduledDate = () => {
+    if (ticket.scheduledAt) return new Date(ticket.scheduledAt).toISOString().slice(0, 16);
+    if (ticket.preferredDate) {
+      const d = new Date(ticket.preferredDate);
+      // If student also gave a time like "10:00 AM", try to apply it
+      if (ticket.preferredTime) {
+        const timeStr = ticket.preferredTime.trim();
+        // parse "10:00 AM", "14:30", "10 AM" etc.
+        const m = timeStr.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/i);
+        if (m) {
+          let h = parseInt(m[1], 10);
+          const min = parseInt(m[2] || "0", 10);
+          const ap = (m[3] || "").toUpperCase();
+          if (ap === "PM" && h < 12) h += 12;
+          if (ap === "AM" && h === 12) h = 0;
+          if (h >= 0 && h < 24) {
+            d.setHours(h, min, 0, 0);
+          }
+        }
+      } else {
+        // default to 10:00 AM if only date given
+        d.setHours(10, 0, 0, 0);
+      }
+      // format as datetime-local without seconds
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    return "";
+  };
+  const [scheduledDate, setScheduledDate] = useState(getInitialScheduledDate());
   const [joinUrl, setJoinUrl] = useState(ticket.joinUrl || "");
   const [completionNotes, setCompletionNotes] = useState("");
   const [showNotesInput, setShowNotesInput] = useState(false);
@@ -552,11 +589,16 @@ function TicketManageModal({
               {ticket.description}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {ticket.preferredDate && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground">
-                  <IconCalendar size={13} className="text-muted" />
-                  {new Date(ticket.preferredDate).toLocaleDateString()}
+              {ticket.preferredDate ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                  <IconCalendar size={13} className="text-amber-600" />
+                  Student prefers: {new Date(ticket.preferredDate).toLocaleDateString()}
                   {ticket.preferredTime && ` · ${ticket.preferredTime}`}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted">
+                  <IconCalendar size={13} />
+                  No preferred date given
                 </span>
               )}
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted">
@@ -615,6 +657,27 @@ function TicketManageModal({
                       ? "Schedule Session"
                       : "Step 2: Schedule Session (Optional)"}
                 </h3>
+                {ticket.preferredDate && (
+                  <div className="mb-3 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                    <p className="text-xs text-amber-800">
+                      <span className="font-semibold">Student requested:</span>{" "}
+                      {new Date(ticket.preferredDate).toLocaleDateString("en-IN", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      {ticket.preferredTime && ` at ${ticket.preferredTime}`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setScheduledDate(getInitialScheduledDate())}
+                      className="shrink-0 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
+                    >
+                      Use this date
+                    </button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <div>
                     <label className="block text-xs text-muted mb-1">
@@ -626,6 +689,11 @@ function TicketManageModal({
                       onChange={(e) => setScheduledDate(e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                     />
+                    {ticket.preferredDate && !ticket.scheduledAt && (
+                      <p className="mt-1 text-[11px] text-muted">
+                        Pre-filled from student&apos;s preferred date — edit as needed.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs text-muted mb-1">
