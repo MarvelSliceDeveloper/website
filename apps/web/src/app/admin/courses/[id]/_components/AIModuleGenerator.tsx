@@ -29,7 +29,6 @@ export default function AIModuleGenerator({
   const [open, setOpen] = useState(false);
   const [topic, setTopic] = useState("");
   const [count, setCount] = useState(5);
-  const [difficulty, setDifficulty] = useState("beginner");
   const [proposed, setProposed] = useState<ProposedModule[]>([]);
   const [adding, setAdding] = useState(false);
 
@@ -49,7 +48,6 @@ export default function AIModuleGenerator({
           courseDescription,
           modules: courseModules,
           questionCount: count,
-          difficulty,
         },
       },
       {
@@ -145,38 +143,22 @@ export default function AIModuleGenerator({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">
-                Number of modules
-              </label>
-              <input
-                type="number"
-                value={count}
-                onChange={(e) =>
-                  setCount(
-                    Math.min(Math.max(parseInt(e.target.value) || 5, 2), 12),
-                  )
-                }
-                min={2}
-                max={12}
-                className="field w-full text-xs"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">
-                Level
-              </label>
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="field w-full text-xs"
-              >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Number of modules
+            </label>
+            <input
+              type="number"
+              value={count}
+              onChange={(e) =>
+                setCount(
+                  Math.min(Math.max(parseInt(e.target.value) || 5, 2), 20),
+                )
+              }
+              min={2}
+              max={20}
+              className="field w-full text-xs"
+            />
           </div>
 
           <button

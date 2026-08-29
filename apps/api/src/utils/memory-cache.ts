@@ -26,3 +26,7 @@ export function setCache<T>(
     }
   }
 }
+
+export function deleteCache(key: string): void {
+  cache.delete(key);
+}

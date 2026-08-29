@@ -36,6 +36,7 @@ export const AI_PROVIDERS: readonly AIProvider[] = ["gemini", "openrouter"];
 
 export const AI_GENERATION_TYPES = [
   "COURSE_OUTLINE",
+  "COURSE_TITLE",
   "MODULES",
   "QUIZ",
   "ASSIGNMENT",
@@ -66,6 +67,10 @@ export const courseOutlineSchema = z.object({
   objectives: z.array(z.string().min(8).max(200)).min(3).max(8),
 });
 
+export const courseTitleSchema = z.object({
+  title: z.string().min(4).max(120),
+});
+
 export const modulesSchema = z.object({
   modules: z
     .array(
@@ -75,7 +80,7 @@ export const modulesSchema = z.object({
       }),
     )
     .min(2)
-    .max(12),
+    .max(20),
 });
 
 export const assignmentSchema = z.object({
@@ -126,6 +131,7 @@ export const quizSchema = z
 
 const OUTPUT_SCHEMAS: Record<AIGenerationType, z.ZodTypeAny> = {
   COURSE_OUTLINE: courseOutlineSchema,
+  COURSE_TITLE: courseTitleSchema,
   MODULES: modulesSchema,
   QUIZ: quizSchema,
   ASSIGNMENT: assignmentSchema,
@@ -149,6 +155,11 @@ const RESPONSE_SCHEMAS: Record<AIGenerationType, Record<string, unknown>> = {
       objectives: strArray,
     },
     required: ["title", "description", "category", "tags", "objectives"],
+  },
+  COURSE_TITLE: {
+    type: Type.OBJECT,
+    properties: { title: str },
+    required: ["title"],
   },
   MODULES: {
     type: Type.OBJECT,
@@ -258,15 +269,27 @@ Rules:
 - "tags": 5-8 short topic tags, lowercase kebab-case (e.g. "python", "machine-learning").
 - "objectives": 4-6 learning outcomes starting with an action verb ("Write...", "Build...", "Analyze...").${difficultyLine(ctx)}${contextLines(ctx)}`;
 
-    case "MODULES":
+    case "COURSE_TITLE":
+      return `${BASE_PERSONA}
+
+Generate a concise, compelling course title based on the user's brief.
+Rules:
+- "title": max 60 characters, title case, no trailing punctuation, no quotes.
+- Must clearly reflect the topic, level, and audience from the user's prompt and any context provided.
+- Avoid generic filler like "Course" repetition — be specific (e.g. "Python for Data Analysis Beginners").${contextLines(ctx)}`;
+
+    case "MODULES": {
+      const moduleCount = Math.min(Math.max(ctx.questionCount ?? 5, 2), 20);
       return `${BASE_PERSONA}
 
 Propose a logical sequence of course modules for the topic given by the user.
 Rules:
+- Propose exactly ${moduleCount} module(s) — no more, no fewer.
 - Order modules from foundational to advanced.
 - Each module covers one coherent theme that builds on the previous ones.
 - If existing modules are provided in the context above, do not duplicate them — only propose new modules that come after them.
 - "title": max 60 characters. "description": 1-2 sentences on what the module teaches.${contextLines(ctx)}`;
+    }
 
     case "QUIZ": {
       const count = Math.min(Math.max(ctx.questionCount ?? 5, 1), 30);

@@ -132,7 +132,12 @@ export const authController = {
           console.error("[auth] Failed to update logoutAt:", err),
         );
     }
-    res.clearCookie("accessToken");
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
     return res.status(200).json({ message: "Logged out successfully" });
   },
 

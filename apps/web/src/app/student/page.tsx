@@ -557,6 +557,7 @@ export default function StudentPortalPage() {
 function StudentPortalContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isLoading, refetch } = usePortalData();
   const [batchCache, setBatchCache] = useState<Record<string, Batch>>({});
   const [courseDetailCache, setCourseDetailCache] = useState<
@@ -732,24 +733,30 @@ function StudentPortalContent() {
     { enabled: Boolean(meQuery.data?.user?.onboardingComplete) },
   );
 
-  // needsProfile is cleared by the onboarding wizard's completion handler, so
-  // it's local state synced from the dependent profile query.
+  // needsProfile reflects whether the required phone is missing.
+  // Previously this only ever set true and never cleared, causing the wizard
+  // to stick. Now it syncs both ways.
   useEffect(() => {
     if (!profileQuery.data) return;
-    if (!profileQuery.data.user?.phone?.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setNeedsProfile(true);
-    }
+    const hasPhone = Boolean(profileQuery.data.user?.phone?.trim());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNeedsProfile(!hasPhone);
   }, [profileQuery.data]);
 
-  // onboardingComplete is state (the wizard completion handler overrides it
-  // client-side), so sync it from the cached /api/auth/me query here.
+  // onboardingComplete is synced from /api/auth/me. The wizard also updates
+  // this optimistically via handleOnboardingComplete to avoid a stale cache
+  // flicker. Only override local state when the server says true or when we
+  // haven't yet optimistically set it true.
   useEffect(() => {
     const user = meQuery.data?.user;
     if (!user) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOnboardingComplete(user.onboardingComplete);
-  }, [meQuery.data]);
+    if (user.onboardingComplete !== onboardingComplete) {
+      // Don't flip an optimistic true back to false due to stale cache
+      if (onboardingComplete === true && user.onboardingComplete === false) return;
+      setOnboardingComplete(user.onboardingComplete);
+    }
+  }, [meQuery.data, onboardingComplete]);
 
   // Name/email are pure display values — derive them from the cached query
   // during render instead of copying into state.
@@ -851,6 +858,21 @@ function StudentPortalContent() {
 
   function handleOnboardingComplete() {
     setOnboardingComplete(true);
+    setNeedsProfile(false);
+    // Optimistically update the cached /api/auth/me so the gate doesn't
+    // flicker back to the wizard on the next render / background refetch.
+    queryClient.setQueryData<{ user: { onboardingComplete: boolean } }>(
+      ["auth", "me"],
+      (old: unknown) => {
+        const o = old as { user?: Record<string, unknown> } | undefined;
+        if (!o?.user) return o as { user: { onboardingComplete: boolean } };
+        return { ...o, user: { ...o.user, onboardingComplete: true } } as {
+          user: { onboardingComplete: boolean };
+        };
+      },
+    );
+    void queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    void queryClient.invalidateQueries({ queryKey: ["student", "profile"] });
   }
 
   // ── Loading / Error states ────────────────────────────────────────────────

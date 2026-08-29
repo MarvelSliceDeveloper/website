@@ -155,11 +155,11 @@ export const courseService = {
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
 
-    const [courses, total] = await Promise.all([
+    const [coursesRaw, total] = await Promise.all([
       prisma.course.findMany({
         where,
         include: {
-          _count: { select: { modules: true, batches: true } },
+          _count: { select: { modules: true } },
         },
         orderBy: { updatedAt: "desc" },
         skip,
@@ -167,6 +167,65 @@ export const courseService = {
       }),
       prisma.course.count({ where }),
     ]);
+
+    // Batches are now package-level (courseId=null) — _count.batches would
+    // be 0 for courses that live inside packages. Compute true count as:
+    // direct batches (batch.courseId == courseId) + package batches for any
+    // package that contains the course via PackageCourse.
+    const courseIds = coursesRaw.map((c) => c.id);
+    let batchesByCourse = new Map<string, number>();
+    if (courseIds.length) {
+      const [packageCourses, directCounts, allPackageBatches] = await Promise.all([
+        prisma.packageCourse.findMany({
+          where: { courseId: { in: courseIds } },
+          select: { courseId: true, packageId: true },
+        }),
+        prisma.batch.groupBy({
+          by: ["courseId"],
+          where: { courseId: { in: courseIds } },
+          _count: { _all: true },
+        }),
+        prisma.batch.findMany({
+          where: { packageId: { not: null } },
+          select: { packageId: true },
+        }),
+      ]);
+
+      const packageBatchCount = new Map<string, number>();
+      for (const b of allPackageBatches) {
+        if (b.packageId) {
+          packageBatchCount.set(b.packageId, (packageBatchCount.get(b.packageId) || 0) + 1);
+        }
+      }
+
+      const packagesByCourse = new Map<string, Set<string>>();
+      for (const pc of packageCourses) {
+        if (!packagesByCourse.has(pc.courseId)) packagesByCourse.set(pc.courseId, new Set());
+        packagesByCourse.get(pc.courseId)!.add(pc.packageId);
+      }
+
+      const directByCourse = new Map<string, number>();
+      for (const g of directCounts) {
+        if (g.courseId) directByCourse.set(g.courseId, g._count._all);
+      }
+
+      for (const id of courseIds) {
+        let count = directByCourse.get(id) || 0;
+        const pkgIds = packagesByCourse.get(id);
+        if (pkgIds) {
+          for (const pid of pkgIds) count += packageBatchCount.get(pid) || 0;
+        }
+        batchesByCourse.set(id, count);
+      }
+    }
+
+    const courses = coursesRaw.map((c) => ({
+      ...c,
+      _count: {
+        modules: (c as any)._count.modules,
+        batches: batchesByCourse.get(c.id) || 0,
+      },
+    }));
 
     return { courses, total, page, limit };
   },
@@ -200,6 +259,23 @@ export const courseService = {
     });
 
     if (!course) throw new AppError(404, "Course not found");
+    // Patch batches count same as listCourses: include package-level batches
+    const directCount = (course as any)._count?.batches ?? 0;
+    const packageCourses = await prisma.packageCourse.findMany({
+      where: { courseId: course.id },
+      select: { packageId: true },
+    });
+    let packageBatchCount = 0;
+    if (packageCourses.length) {
+      const packageIds = packageCourses.map((pc) => pc.packageId);
+      packageBatchCount = await prisma.batch.count({
+        where: { packageId: { in: packageIds } },
+      });
+    }
+    (course as any)._count = {
+      batches: directCount + packageBatchCount,
+      // preserve other counts if needed
+    };
     return course;
   },
 

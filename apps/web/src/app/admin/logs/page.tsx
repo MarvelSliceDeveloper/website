@@ -41,7 +41,7 @@ export default function ActivityLogsPage() {
     { refetchInterval: 10000 },
   );
   const logs = logsQuery.data?.logs ?? [];
-  const total = logsQuery.data?.pagination.total ?? 0;
+  const total = logsQuery.data?.pagination?.total ?? logs.length ?? 0;
   const loading = logsQuery.isPending;
 
   return (

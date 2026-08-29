@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 
 export type AIGenerationType =
   | "COURSE_OUTLINE"
+  | "COURSE_TITLE"
   | "MODULES"
   | "QUIZ"
   | "ASSIGNMENT"

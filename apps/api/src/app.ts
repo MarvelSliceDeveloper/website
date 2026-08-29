@@ -117,6 +117,31 @@ if (sentryDsn) {
 
 const app = express();
 
+// ── Security headers — XSS / clickjack / referrer / feature-policy ──
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  // CSP: lock down; API is JSON-only so `default-src 'none'` is safe
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; img-src 'self' data:; connect-src 'self' https:; script-src 'self'; style-src 'self' 'unsafe-inline'",
+  );
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)",
+  );
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload",
+    );
+  }
+  next();
+});
+
 // Sentry v10+ auto-instruments Express — no manual request/tracing handlers needed
 
 ensureUploadsDir(".");

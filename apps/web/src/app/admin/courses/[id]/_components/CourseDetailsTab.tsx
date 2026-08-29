@@ -57,6 +57,11 @@ export default function CourseDetailsTab({
     objectives: string[];
   }>();
 
+  const stripHtmlEarly = (html: string) =>
+    html.replace(/<[^>]*>/g, "").trim();
+
+  const aiTitleGenerate = useAIGenerate<{ title: string }>();
+
   const handleAiGenerate = () => {
     if (!aiTopic.trim()) {
       toast.error("Enter a course topic for the AI");
@@ -82,6 +87,42 @@ export default function CourseDetailsTab({
               : {}),
           }));
           toast.success("Course draft generated — review before saving");
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
+
+  const handleAiTitleGenerate = () => {
+    const promptSource =
+      aiTopic.trim() ||
+      stripHtmlEarly(form.description).trim() ||
+      form.category.trim() ||
+      form.tags.join(", ");
+    if (!promptSource || promptSource.length < 3) {
+      toast.error(
+        "Enter a topic or description first so the AI can generate a title",
+      );
+      return;
+    }
+    aiTitleGenerate.mutate(
+      {
+        type: "COURSE_TITLE",
+        prompt: promptSource,
+        context: {
+          ...(stripHtmlEarly(form.description).trim()
+            ? { courseDescription: stripHtmlEarly(form.description).trim() }
+            : {}),
+          ...(form.category.trim() ? { courseTitle: form.category } : {}),
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const t = res.data?.title?.trim();
+          if (t) {
+            setForm((p) => ({ ...p, title: t }));
+            toast.success("Title generated — review before saving");
+          }
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
       },
@@ -309,33 +350,60 @@ export default function CourseDetailsTab({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Title <span className="text-danger">*</span>
+        <label className="mb-1.5 flex items-center justify-between text-sm font-medium text-foreground">
+          <span>
+            Title <span className="text-danger">*</span>
+          </span>
+          <button
+            type="button"
+            onClick={handleAiTitleGenerate}
+            disabled={aiTitleGenerate.isPending}
+            className="inline-flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2 py-1 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+            title="Generate a title from your topic / description"
+          >
+            <IconSparkles size={12} className="text-violet-500" />
+            {aiTitleGenerate.isPending ? "Generating…" : "Generate title"}
+          </button>
         </label>
-        <Select
+        <input
+          type="text"
           value={form.title}
-          onValueChange={(val) =>
-            setForm((p: CourseFormData) => ({ ...p, title: val || "" }))
+          onChange={(e) =>
+            setForm((p: CourseFormData) => ({ ...p, title: e.target.value }))
           }
-        >
-          <SelectTrigger className="field w-full">
-            <SelectValue placeholder="-- Select a title --" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">
-              <span>-- Select a title --</span>
-            </SelectItem>
-            {titleOptions.map((title) => (
-              <SelectItem key={title} value={title}>
-                {title}
-              </SelectItem>
+          placeholder="e.g. Python for Data Analysis Beginners"
+          className="field w-full"
+          list="course-title-suggestions-edit"
+        />
+        <datalist id="course-title-suggestions-edit">
+          {titleOptions.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
+        {titleOptions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {titleOptions.slice(0, 8).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() =>
+                  setForm((p: CourseFormData) => ({ ...p, title: t }))
+                }
+                className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                  form.title === t
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {t}
+              </button>
             ))}
-            {form.title &&
-              !(titleOptions as readonly string[]).includes(form.title) && (
-                <SelectItem value={form.title}>{form.title}</SelectItem>
-              )}
-          </SelectContent>
-        </Select>
+          </div>
+        )}
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Top AI bar fills title + details together; &quot;Generate title&quot;
+          creates just the title from your topic/description.
+        </p>
       </div>
 
       <div>
