@@ -38,6 +38,10 @@ import type {
 } from "@/lib/api-types";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
+import { timeAgo } from "@/lib/time-ago";
+import { NotificationIcon } from "@/lib/notifications";
+import type { NotificationItem } from "@/lib/notifications";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 import LiveSessionBanner from "@/components/LiveSessionBanner";
 import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
@@ -113,6 +117,13 @@ export default function HomeView({
 
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
   const presence = useLiveSessionPresence();
+
+  // Live notification feed for General Feed panel
+  const notificationsFeedQuery = useApiQuery<{ notifications: NotificationItem[] }>(
+    ["notifications"],
+    "/api/notifications",
+  );
+  const generalFeed = (notificationsFeedQuery.data?.notifications ?? []).slice(0, 5);
 
   const activeLiveSessions = liveSessions.filter((s) => s.status === "LIVE");
   const liveCount = activeLiveSessions.length;
@@ -1133,39 +1144,55 @@ export default function HomeView({
               </div>
             </div>
 
-            {/* Notification History */}
+            {/* Notification History — live General Feed */}
             <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
-              <p className="sp-eyebrow">General Feed</p>
+              <div className="flex items-center justify-between">
+                <p className="sp-eyebrow">General Feed</p>
+                <button
+                  onClick={() => router.push("/student/inbox")}
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  View all
+                </button>
+              </div>
               <div className="space-y-3.5">
-                <div className="flex gap-3 text-left">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 mt-0.5">
-                    <IconBell size={15} />
+                {notificationsFeedQuery.isPending ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-14 animate-pulse rounded-xl bg-card-hover/60 border border-border/40" />
+                    ))}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-foreground">
-                      LMS Update Rolled Out
+                ) : generalFeed.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 mb-2">
+                      <IconBell size={18} />
+                    </div>
+                    <p className="text-xs font-semibold text-foreground">No updates yet</p>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-[220px]">
+                      Notifications about sessions, enrollments and grades will appear here.
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Check out the streamlined tabs, solid color stats, and
-                      updated branding!
-                    </p>
-                    <p className="text-[10px] text-muted mt-1">Today</p>
                   </div>
-                </div>
-                <div className="flex gap-3 text-left">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success border border-success/20 mt-0.5">
-                    <IconCertificate size={15} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-foreground">
-                      Certificate Earned
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Congratulations on completing Python Foundations Course!
-                    </p>
-                    <p className="text-[10px] text-muted mt-1">3 days ago</p>
-                  </div>
-                </div>
+                ) : (
+                  generalFeed.map((n) => (
+                    <div key={n.id} className="flex gap-3 text-left">
+                      <div className="mt-0.5">
+                        <NotificationIcon type={n.type} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                          {n.title || n.type.replace(/_/g, " ")}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                          {n.message}
+                        </p>
+                        <p className="text-[10px] text-muted mt-1">{timeAgo(n.createdAt)}</p>
+                      </div>
+                      {!n.read && (
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

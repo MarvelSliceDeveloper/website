@@ -51,6 +51,35 @@ const userWithRoleSelect = {
   role: true,
 } as const;
 
+async function autoCompleteExpiredMentorships(): Promise<void> {
+  try {
+    const now = new Date();
+    // Session is 60 min; auto-complete 60 min after scheduledAt
+    const threshold = new Date(now.getTime() - 60 * 60 * 1000);
+    const expired = await prisma.mentorshipTicket.findMany({
+      where: {
+        status: TicketStatus.SCHEDULED,
+        scheduledAt: { lte: threshold },
+      },
+      select: { id: true },
+    });
+    if (expired.length === 0) return;
+    const ids = expired.map((t) => t.id);
+    await prisma.$transaction([
+      prisma.mentorshipTicket.updateMany({
+        where: { id: { in: ids } },
+        data: { status: TicketStatus.COMPLETED, resolvedAt: now },
+      }),
+      prisma.liveSession.updateMany({
+        where: { mentorshipTicketId: { in: ids } },
+        data: { endedAt: now },
+      }),
+    ]);
+  } catch {
+    // best-effort — never block listing on auto-complete failure
+  }
+}
+
 export const ticketService = {
   // ─── CREATE ───
 
@@ -100,6 +129,10 @@ export const ticketService = {
     page?: number;
     limit?: number;
   }) {
+    // Auto-complete scheduled mentorships whose session time has passed
+    if (!params.type || params.type === "MENTORSHIP") {
+      await autoCompleteExpiredMentorships();
+    }
     const {
       skip,
       take,
@@ -443,6 +476,9 @@ export const ticketService = {
 
   // Gets ticket statistics by type
   async getStats(type: "MENTORSHIP" | "SUPPORT") {
+    if (type === "MENTORSHIP") {
+      await autoCompleteExpiredMentorships();
+    }
     if (type === "SUPPORT") {
       const [total, open, inProgress, resolved, closed] = await Promise.all([
         prisma.supportTicket.count(),
