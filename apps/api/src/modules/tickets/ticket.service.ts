@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TicketStatus, SupportTicketStatus } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { paginate } from "../../utils/paginate";
+import { deleteCache } from "../../utils/memory-cache";
 
 // Shared schemas
 export const CreateTicketSchema = z.object({
@@ -365,6 +366,10 @@ export const ticketService = {
 
       return [updated];
     });
+
+    // Invalidate the student's dashboard summary cache so the new
+    // calendar event appears immediately on their next /api/student/summary fetch
+    deleteCache(`student-summary:${ticket.studentId}`);
 
     return updatedTicket;
   },

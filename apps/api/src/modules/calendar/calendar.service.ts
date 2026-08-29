@@ -165,7 +165,7 @@ export async function getEventsForUser(
     where.OR = or;
   }
 
-  return prisma.calendarEvent.findMany({
+  const events = await prisma.calendarEvent.findMany({
     where,
     include: {
       session: {
@@ -175,11 +175,18 @@ export async function getEventsForUser(
           joinUrl: true,
           scheduledAt: true,
           endedAt: true,
+          mentorshipTicketId: true,
         },
       },
     },
     orderBy: { startAt: "asc" },
   });
+
+  // Attach a `type` hint so the student calendar can color mentorship correctly
+  return events.map((e) => ({
+    ...e,
+    type: e.session?.mentorshipTicketId ? "mentorship" : e.session ? "live" : "upcoming",
+  })) as typeof events & { type: string }[];
 }
 
 /**
