@@ -251,11 +251,11 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
 app.use(doubleCsrfProtection);
 app.use(express.json());
 
-// Behind a reverse proxy (nginx/Caddy), trust the first hop so req.ip reflects
-// the real client IP instead of ::ffff:127.0.0.1. Only in production to avoid
-// misattribution during local dev.
+// Behind 1-2 reverse proxies (host Apache -> Docker nginx -> api) trust
+// both hops so req.protocol / req.ip reflect the original client, not
+// the loopback nginx. `2` covers Apache + nginx; `true` would also work.
 if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
+  app.set("trust proxy", 2);
 }
 
 app.use("/uploads", express.static(uploadsRoot));
