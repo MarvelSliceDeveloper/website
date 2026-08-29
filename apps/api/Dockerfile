@@ -27,7 +27,8 @@ RUN cd apps/api && pnpm exec prisma generate && pnpm build
 # ─── Runner ───
 FROM base AS runner
 # Prisma 5.22.0 engine needs OpenSSL (node:22-alpine has libssl3, Prisma needs 1.1 compat)
-RUN apk add --no-cache openssl
+# Backup/restore needs pg_dump/pg_restore/psql (spawn ENOENT otherwise)
+RUN apk add --no-cache openssl postgresql-client
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 ENV GIT_COMMIT=$GIT_COMMIT

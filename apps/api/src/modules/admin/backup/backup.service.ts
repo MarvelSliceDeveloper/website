@@ -95,7 +95,14 @@ export async function createBackup(): Promise<BackupFile> {
   } catch (err: unknown) {
     // Clean up partial dump on failure so it doesn't show in the list.
     fs.rmSync(filepath, { force: true });
-    const msg = err instanceof Error ? err.message : "pg_dump failed";
+    const raw = err instanceof Error ? err.message : "pg_dump failed";
+    const isEnoent =
+      raw.includes("ENOENT") ||
+      raw.includes("not found") ||
+      (err as NodeJS.ErrnoException)?.code === "ENOENT";
+    const msg = isEnoent
+      ? "pg_dump not found — install PostgreSQL client (on Alpine: apk add postgresql-client; on Debian/Ubuntu: apt install postgresql-client) or run via Docker: docker compose exec postgres pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.dump"
+      : raw;
     throw new AppError(500, `Backup failed: ${msg}`);
   }
 
@@ -183,7 +190,14 @@ export async function restoreBackup(filepath: string): Promise<void> {
       );
     }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "restore failed";
+    const raw = err instanceof Error ? err.message : "restore failed";
+    const isEnoent =
+      raw.includes("ENOENT") ||
+      raw.includes("not found") ||
+      (err as NodeJS.ErrnoException)?.code === "ENOENT";
+    const msg = isEnoent
+      ? `${isCustom ? "pg_restore" : "psql"} not found — install PostgreSQL client (apk add postgresql-client / apt install postgresql-client) or restore via Docker: docker compose exec -T postgres ${isCustom ? "pg_restore --no-owner --no-acl -d $POSTGRES_DB < backup.dump" : "psql -U $POSTGRES_USER $POSTGRES_DB < backup.sql"}`
+      : raw;
     throw new AppError(500, `Restore failed: ${msg}`);
   }
 }
