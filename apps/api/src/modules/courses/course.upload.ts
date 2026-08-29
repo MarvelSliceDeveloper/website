@@ -37,8 +37,15 @@ export const uploadCourseThumbnail = multer({
 }).single(COURSE_THUMBNAIL_FIELD);
 
 export function buildCourseThumbnailUrl(req: Request, filename: string) {
-  const webUrl =
-    process.env.WEB_URL ||
-    `${req.protocol}://${req.get("host") || "localhost:3000"}`;
-  return `${webUrl.replace(/\/$/, "")}/uploads/courses/${filename}`;
+  const webUrl = process.env.WEB_URL?.trim();
+  if (webUrl) {
+    return `${webUrl.replace(/\/$/, "")}/uploads/courses/${filename}`;
+  }
+  // Behind 1-2 reverse proxies (host Apache -> Docker nginx -> api) the
+  // original proto is in X-Forwarded-Proto (may be "https, http" chain).
+  const forwardedProto = (req.headers["x-forwarded-proto"] as string) || "";
+  const proto =
+    forwardedProto.split(",")[0]?.trim() || req.protocol || "https";
+  const host = req.get("host") || "lms.marvelslice.com";
+  return `${proto}://${host.replace(/\/$/, "")}/uploads/courses/${filename}`;
 }

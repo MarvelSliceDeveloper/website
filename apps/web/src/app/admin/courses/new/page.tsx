@@ -68,8 +68,10 @@ export default function CreateCoursePage() {
     description: "",
     category: "",
     tags: [] as string[],
+    learningObjectives: [] as string[],
   });
   const [aiTopic, setAiTopic] = useState("");
+  const [newObjective, setNewObjective] = useState("");
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -101,6 +103,9 @@ export default function CreateCoursePage() {
             ...(d.category ? { category: d.category } : {}),
             ...(Array.isArray(d.tags) && d.tags.length
               ? { tags: [...d.tags] }
+              : {}),
+            ...(Array.isArray(d.objectives) && d.objectives.length
+              ? { learningObjectives: [...d.objectives] }
               : {}),
           }));
           toast.success("Course draft generated — review before adding");
@@ -176,6 +181,23 @@ export default function CreateCoursePage() {
 
   const removeTag = (tag: string) => {
     setForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
+  };
+
+  const addObjective = () => {
+    if (newObjective.trim()) {
+      setForm((p) => ({
+        ...p,
+        learningObjectives: [...p.learningObjectives, newObjective.trim()],
+      }));
+      setNewObjective("");
+    }
+  };
+
+  const removeObjective = (index: number) => {
+    setForm((p) => ({
+      ...p,
+      learningObjectives: p.learningObjectives.filter((_, i) => i !== index),
+    }));
   };
 
   useEffect(() => {
@@ -255,6 +277,7 @@ export default function CreateCoursePage() {
           description: form.description,
           category: form.category || undefined,
           tags: form.tags,
+          learningObjectives: form.learningObjectives,
           slug: form.title
             .toLowerCase()
             .replace(/\s+/g, "-")
@@ -339,8 +362,8 @@ export default function CreateCoursePage() {
               {aiGenerate.isPending ? "Generating…" : "Generate Draft"}
             </button>
             <p className="w-full text-[10px] text-muted-foreground">
-              Fills title, description, category, and tags below — review and
-              edit before adding.
+              Fills title, description, category, tags, and objectives below —
+              review and edit before adding.
             </p>
           </div>
 
@@ -545,6 +568,49 @@ export default function CreateCoursePage() {
             </div>
             <p className="mt-1 text-xs text-muted">
               Tags auto-fill from the course title. You can add or remove them.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Learning Objectives
+            </label>
+            <div className="space-y-2 mb-2">
+              {form.learningObjectives.map((obj, index) => (
+                <div key={`${obj}-${index}`} className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">•</span>
+                  <span className="text-sm flex-1">{obj}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeObjective(index)}
+                    className="text-muted hover:text-danger"
+                  >
+                    <IconX size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newObjective}
+                onChange={(e) => setNewObjective(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addObjective())
+                }
+                placeholder="Add a learning objective"
+                className="field flex-1"
+              />
+              <button
+                type="button"
+                onClick={addObjective}
+                className="btn-secondary text-xs px-3"
+              >
+                <IconPlus size={14} />
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              AI fills this from the draft — you can add or remove items before adding.
             </p>
           </div>
         </div>
