@@ -131,6 +131,8 @@ export default function HomeView({
     (t) => t.status === "OPEN" || t.status === "ASSIGNED",
   ).length;
 
+
+
   const pendingAssignments = overdueAssignments.filter(
     (item) =>
       item.status === "PENDING" &&
@@ -277,8 +279,8 @@ export default function HomeView({
               onClick: () => router.push("/student/notes"),
             },
             {
-              label: "Certificates",
-              sub: "View credentials",
+              label: "Check Your Progress",
+              sub: "View progress",
               icon: <IconCertificate size={20} />,
               color: "blue",
               onClick: () => navigate({ view: "CERTIFICATES" }),
