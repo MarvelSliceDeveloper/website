@@ -634,46 +634,49 @@ create or replace function create_admin(
 returns jsonb
 language plpgsql
 security definer
+set search_path = public, extensions, pg_temp
 as $$
 declare
   v_creator_role text;
   v_creator_rank integer;
   v_target_rank integer;
+  v_new_id uuid;
 begin
-  select admin_profiles.role into v_creator_role
-  from admin_profiles
-  where admin_profiles.id = p_creator_id;
+  select role into v_creator_role
+  from public.admin_profiles
+  where id = p_creator_id;
 
   if v_creator_role is null then
     raise exception 'Not authorized';
   end if;
 
-  v_creator_rank := role_rank(v_creator_role);
-  v_target_rank := role_rank(p_role);
+  v_creator_rank := public.role_rank(v_creator_role);
+  v_target_rank := public.role_rank(p_role);
 
-  -- Creator cannot assign a role above their own level (master_admin is exempt)
   if v_target_rank >= v_creator_rank and v_creator_role != 'master_admin' then
     raise exception 'You can only assign roles below your own level';
   end if;
 
-  if exists (select 1 from admin_profiles where admin_profiles.email = p_email) then
+  if exists (select 1 from public.admin_profiles where lower(email) = lower(trim(p_email))) then
     raise exception 'An admin with this email already exists';
   end if;
 
-  with inserted as (
-    insert into admin_profiles (id, email, full_name, role, password_hash, created_by)
-    values (
-      gen_random_uuid(),
-      p_email,
-      p_full_name,
-      p_role,
-      crypt(p_password, gen_salt('bf', 10)),
-      p_creator_id
-    )
-    returning id, email, full_name, role
-  )
-  select jsonb_build_object('id', i.id, 'email', i.email, 'full_name', i.full_name, 'role', i.role)
-  from inserted i;
+  v_new_id := gen_random_uuid();
+
+  insert into public.admin_profiles (id, email, full_name, role, password_hash, created_by)
+  values (
+    v_new_id,
+    lower(trim(p_email)),
+    trim(p_full_name),
+    p_role,
+    crypt(p_password, gen_salt('bf', 10)),
+    p_creator_id
+  );
+
+  insert into public.admin_audit_logs (admin_id, email, event, metadata)
+  values (p_creator_id, lower(trim(p_email)), 'admin_created', jsonb_build_object('role', p_role, 'new_admin_id', v_new_id));
+
+  return jsonb_build_object('id', v_new_id, 'email', lower(trim(p_email)), 'full_name', trim(p_full_name), 'role', p_role);
 end;
 $$;
 

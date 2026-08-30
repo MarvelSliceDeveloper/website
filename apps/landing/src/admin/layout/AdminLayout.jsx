@@ -72,11 +72,21 @@ export default function AdminLayout() {
     async function fetchUnread(type) {
       const { table, key } = type;
       if (key === 'chat') {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from(table)
           .select('id, user_name, last_message, last_message_sender, last_message_at, status')
           .eq('notified', true)
           .order('last_message_at', { ascending: false });
+        
+        if (error) {
+          // Fallback if notified or last_message columns do not exist yet in Supabase DB
+          const { data: fallback } = await supabase
+            .from(table)
+            .select('id, user_name, last_message_at, status')
+            .order('last_message_at', { ascending: false })
+            .limit(10);
+          return fallback || [];
+        }
         return data || [];
       }
       const { data } = await supabase

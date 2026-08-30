@@ -41,7 +41,8 @@ export default function NavItemChildren() {
 
   function openAdd() {
     setEditing(null);
-    setForm({ label: '', path: '', is_active: true, course_ids: new Set() });
+    const maxOrder = items.length > 0 ? Math.max(...items.map(i => Number(i.sort_order || 0))) : 0;
+    setForm({ label: '', path: '', sort_order: maxOrder + 1, is_active: true, course_ids: new Set() });
     setShowForm(true);
   }
 
@@ -50,6 +51,7 @@ export default function NavItemChildren() {
     setForm({
       label: item.label,
       path: item.path || '',
+      sort_order: Number(item.sort_order || 1),
       is_active: item.is_active !== false,
       course_ids: new Set(courses.filter(c => c.nav_item_id === item.id).map(c => c.id)),
     });
@@ -69,12 +71,34 @@ export default function NavItemChildren() {
     e.preventDefault();
     if (!form.label.trim()) return;
 
+    const targetOrder = Number(form.sort_order) || 1;
+    const conflictingItem = items.find(
+      (item) => item.id !== editing?.id && Number(item.sort_order || 0) === targetOrder
+    );
+
+    if (conflictingItem) {
+      const wantSwap = await confirm(
+        `Position #${targetOrder} is already assigned to "${conflictingItem.label}".\n\nDo you want to swap positions with "${conflictingItem.label}"?`
+      );
+
+      if (!wantSwap) {
+        return; // Decline swap -> abort save
+      }
+
+      const newOrderForConflict = editing ? Number(editing.sort_order || 1) : items.length + 1;
+      await supabase
+        .from("nav_items")
+        .update({ sort_order: newOrderForConflict })
+        .eq("id", conflictingItem.id);
+    }
+
     let childId;
     if (editing) {
       childId = editing.id;
       await supabase.from('nav_items').update({
         label: form.label.trim(),
         path: form.path.trim() || null,
+        sort_order: targetOrder,
         is_active: form.is_active,
       }).eq('id', childId);
     } else {
@@ -83,8 +107,8 @@ export default function NavItemChildren() {
         path: form.path.trim() || null,
         parent_id: id,
         parent_label: null,
+        sort_order: targetOrder,
         is_active: form.is_active,
-        sort_order: items.length,
       }).select('id').single();
       childId = data?.id;
     }
@@ -138,13 +162,18 @@ export default function NavItemChildren() {
           <p className="text-sm font-semibold text-black mb-4">
             {editing ? `Edit: ${editing.label}` : 'Add Child Item'}
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-3 sm:col-span-1">
               <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">Label *</label>
               <input value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))}
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500" required />
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div className="col-span-3 sm:col-span-1">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">Display Position (Sort Order)</label>
+              <input type="number" min="1" value={form.sort_order || 1} onChange={e => setForm(p => ({ ...p, sort_order: parseInt(e.target.value) || 1 }))}
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-admin-500" required />
+            </div>
+            <div className="col-span-3 sm:col-span-1">
               <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">Path</label>
               <input value={form.path} onChange={e => setForm(p => ({ ...p, path: e.target.value }))}
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-admin-500" />
