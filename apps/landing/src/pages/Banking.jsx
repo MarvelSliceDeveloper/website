@@ -40,8 +40,8 @@ const EXAMS = [
     subtitle: 'Start Your Journey as a Bank Officer',
     badge: 'OFFICER LEVEL',
     badgeStyle: 'bg-blue-50 text-brand-blue border-blue-200/80',
-    image: '/images/banking/banking_ibps_po_1787149162525.jpg',
-    imageAlt: 'IBPS PO Officer in modern bank office',
+    image: '/images/banking/1.png',
+    imageAlt: 'IBPS PO / MT Officer Overview',
     paragraphs: [
       'The IBPS Probationary Officer / Management Trainee examination is one of the most sought-after banking examinations for graduates who want to begin their career in an officer-level position.',
       'A Probationary Officer is exposed to different areas of banking during the early stages of their career. The role can involve customer service, account operations, loans and credit, branch administration, financial products, and day-to-day banking activities.',
@@ -57,8 +57,8 @@ const EXAMS = [
     subtitle: 'Be the First Point of Contact for Customers',
     badge: 'CLERICAL / CUSTOMER SERVICE',
     badgeStyle: 'bg-amber-50 text-brand-orange border-amber-200/80',
-    image: '/images/banking/banking_ibps_clerk_1787149180592.jpg',
-    imageAlt: 'IBPS Clerk Customer Service Associate assisting customer',
+    image: '/images/banking/2.png',
+    imageAlt: 'IBPS Clerk Customer Service Associate Overview',
     paragraphs: [
       'The IBPS Clerk recruitment, now associated with the Customer Service Associate role, is an excellent entry point into the banking sector.',
       'Customer Service Associates work closely with customers and support essential branch operations. Their responsibilities may include account services, cash-related activities, documentation, customer requests, and assisting customers with banking products and services.',
@@ -74,11 +74,10 @@ const EXAMS = [
     subtitle: 'Build a Career Closer to the Community',
     badge: 'REGIONAL RURAL BANK OFFICER',
     badgeStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-    image: '/images/banking/banking_rrb_officer_1787149492894.jpg',
-    imageAlt: 'IBPS RRB Officer interacting with rural community',
+    image: '/images/banking/3.png',
+    imageAlt: 'IBPS RRB Officer Scale I Overview',
     paragraphs: [
-      'Regional Rural Banks play an important role in providing banking and financial services to rural and semi-urban communities.',
-      'The IBPS RRB Officer Scale I examination is designed for candidates seeking an officer-level position in a Regional Rural Bank.',
+      'Regional Rural Banks play an important role in providing banking and financial services to rural and semi-urban communities. The IBPS RRB Officer Scale I examination is designed for candidates seeking an officer-level position in a Regional Rural Bank.',
       'An Officer Scale I can work across areas such as branch operations, customer services, agricultural and rural banking, credit-related activities, and other banking functions.',
       'The role offers the opportunity to combine a professional banking career with direct exposure to communities and local economic activity.'
     ],
@@ -92,8 +91,8 @@ const EXAMS = [
     subtitle: 'Begin with Strong Banking Fundamentals',
     badge: 'REGIONAL RURAL BANK ASSISTANT',
     badgeStyle: 'bg-purple-50 text-purple-700 border-purple-200/80',
-    image: '/images/banking/banking_hero_editorial_1787149136213.jpg',
-    imageAlt: 'IBPS RRB Office Assistant branch operations',
+    image: '/images/banking/4.png',
+    imageAlt: 'IBPS RRB Office Assistant Overview',
     paragraphs: [
       'The RRB Office Assistant role provides an opportunity to begin a banking career within the Regional Rural Banking ecosystem.',
       'Office Assistants support day-to-day branch activities and interact directly with customers. Their work can involve account-related services, documentation, cash and transaction support, customer assistance, and routine branch operations.',
@@ -109,13 +108,12 @@ const EXAMS = [
     subtitle: 'Turn Your Specialisation into a Banking Career',
     badge: 'SPECIALISED ROLES',
     badgeStyle: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-    image: '/images/banking/banking_ibps_po_1787149162525.jpg',
-    imageAlt: 'IBPS Specialist Officer IT & Finance expertise',
+    image: '/images/banking/5.png',
+    imageAlt: 'IBPS Specialist Officer Overview',
     paragraphs: [
       'Banking is not limited to general banking and customer service. Modern banks also require professionals with expertise in technology, agriculture, law, human resources, marketing, and other specialised fields.',
-      'IBPS Specialist Officer recruitment provides opportunities for candidates with specific educational backgrounds to enter banking through specialist positions.',
-      'Depending on the recruitment cycle, specialist roles can include IT Officer, Agriculture Field Officer, Law Officer, Rajbhasha Adhikari, HR/Personnel Officer, and Marketing Officer.',
-      'Instead of starting with a general banking profile, Specialist Officer candidates bring their existing academic or professional specialisation into the banking environment.'
+      'IBPS Specialist Officer recruitment provides opportunities for candidates with specific educational backgrounds to enter banking through specialist positions like IT Officer, Agriculture Field Officer, Law Officer, HR/Personnel Officer, and Marketing Officer.',
+      'Instead of starting with a general banking profile, Specialist Officer candidates bring their existing academic or professional specialisation directly into the banking environment.'
     ],
     difference: 'The eligibility requirements and examination content are linked to the specific specialist position. Candidates therefore need to meet the educational requirements of the post they are targeting.',
     idealFor: 'Graduates and professionals with a relevant specialist qualification who want to combine their technical or professional expertise with a career in banking.'
@@ -224,7 +222,7 @@ export default function Banking() {
     },
   });
 
-  const upcomingImage = upcomingSectionData?.image_url || '/images/banking/banking_hero_editorial_1787149136213.jpg';
+  const upcomingImage = upcomingSectionData?.image_url || '/images/banking/b.png';
   const upcomingLink = upcomingSectionData?.image_link || '';
 
   function handleBackNavigation(e) {
@@ -271,27 +269,10 @@ export default function Banking() {
                 >
                   <div className="relative rounded-2xl overflow-hidden shadow-md border border-white/80 aspect-[4/3] group">
                     <img
-                      src="/images/banking/banking_hero_editorial_1787149136213.jpg"
+                      src="/images/banking/b.png"
                       alt="Banking Career Overview"
                       className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-navy/60 via-transparent to-transparent opacity-60" />
-                    
-                    {/* Soft Floating Badge Accent */}
-                    <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-xl p-3 border border-white/80 flex items-center justify-between shadow-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-lg bg-brand-blue text-white flex items-center justify-center font-extrabold text-xs shadow-md">
-                          IBPS
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-dark-navy">Public Sector Banking</p>
-                          <p className="text-[10px] text-slate-500 font-semibold">5 Major Career Examinations</p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md bg-amber-50 text-brand-orange border border-brand-orange/30 shadow-xs">
-                        Official
-                      </span>
-                    </div>
                   </div>
                 </motion.div>
               </Reveal>
@@ -308,12 +289,12 @@ export default function Banking() {
                   whileHover={{ y: -6 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   id={exam.id}
-                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group"
+                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
                 >
-                  <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+                  <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
                     {/* LEFT — Image (~35% width / lg:col-span-4) */}
-                    <div className="lg:col-span-4 shrink-0">
-                      <div className="relative w-full h-56 lg:h-full min-h-[220px] rounded-2xl overflow-hidden shadow-xs border border-slate-100">
+                    <div className="lg:col-span-4 shrink-0 flex">
+                      <div className="relative w-full h-60 lg:h-full min-h-[260px] rounded-2xl overflow-hidden shadow-xs border border-slate-100">
                         <img
                           src={exam.image}
                           alt={exam.imageAlt}

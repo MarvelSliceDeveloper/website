@@ -6,7 +6,8 @@ import Card from "../components/ui/Card";
 import AddButton from "../components/AddButton";
 import {
   FiCheck, FiFolder, FiFile, FiEdit3, FiTrash2,
-  FiChevronDown, FiChevronRight, FiArrowLeft, FiBookOpen, FiSearch
+  FiChevronDown, FiChevronRight, FiArrowLeft, FiBookOpen, FiSearch,
+  FiArrowUp, FiArrowDown
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import PageShell from "../components/ui/PageShell";
@@ -211,7 +212,18 @@ export default function NavMenuManager() {
     setLockedParent(parentItem);
     setParentOpen(false);
     pathAuto.current = true;
-    setForm({ label: "", path: "", status: "on", parent_id: parentItem?.id || null });
+
+    const parentId = parentItem?.id || (drillStack.length > 0 ? drillStack[drillStack.length - 1] : null);
+    const siblings = parentId ? getChildItems(parentId) : getSectionItems(sectionLabel);
+    const maxOrder = siblings.length > 0 ? Math.max(...siblings.map(s => Number(s.sort_order || 0))) : 0;
+
+    setForm({
+      label: "",
+      path: "",
+      status: "on",
+      parent_id: parentId,
+      sort_order: maxOrder + 1,
+    });
     goToTab("add");
   }
 
@@ -221,7 +233,13 @@ export default function NavMenuManager() {
     setLockedParent(null);
     setParentOpen(false);
     pathAuto.current = false;
-    setForm({ label: item.label, path: item.path || "", status: item.is_active !== false ? "on" : "off", parent_id: null });
+    setForm({
+      label: item.label,
+      path: item.path || "",
+      status: item.is_active !== false ? "on" : "off",
+      parent_id: item.parent_id || null,
+      sort_order: Number(item.sort_order || 1),
+    });
     goToTab("add");
   }
 
@@ -230,38 +248,106 @@ export default function NavMenuManager() {
     if (!form.label.trim()) return;
 
     const now = formatTimestamp();
-    let savedId;
+    const targetOrder = Number(form.sort_order) || 1;
+    const parentId = form.parent_id || null;
 
+    // Siblings in current target scope
+    const siblings = parentId ? getChildItems(parentId) : getSectionItems(sectionLabel);
+
+    // Check if target position is already occupied by another item in this scope
+    const conflictingItem = siblings.find(
+      (item) => item.id !== editing?.id && Number(item.sort_order || 0) === targetOrder
+    );
+
+    if (conflictingItem) {
+      const wantSwap = await confirm(
+        `Position #${targetOrder} is already assigned to "${conflictingItem.label}".\n\nDo you want to swap positions with "${conflictingItem.label}"?`
+      );
+
+      if (!wantSwap) {
+        return; // Admin declined swap -> return early to adjust position manually
+      }
+
+      // Position to re-assign to the conflicting item
+      const newOrderForConflict = editing ? Number(editing.sort_order || 1) : siblings.length + 1;
+
+      await supabase
+        .from("nav_items")
+        .update({ sort_order: newOrderForConflict })
+        .eq("id", conflictingItem.id);
+
+      toast({
+        type: "info",
+        message: `Swapped position of "${conflictingItem.label}" to #${newOrderForConflict}`
+      });
+    }
+
+    let savedId;
     if (editing) {
       await supabase.from("nav_items").update({
-        label: form.label, path: form.path || null, is_active: form.status === "on",
+        label: form.label,
+        path: form.path || null,
+        is_active: form.status === "on",
+        parent_id: parentId,
+        sort_order: targetOrder,
       }).eq("id", editing.id);
       savedId = editing.id;
-      toast({ type: "success", message: "Nav item updated" });
+      toast({ type: "success", message: `Nav item updated at position #${targetOrder}` });
     } else {
       const { data } = await supabase.from("nav_items").insert({
-        label: form.label, path: form.path || null,
-        parent_label: form.parent_id ? null : sectionLabel,
-        parent_id: form.parent_id || null,
-        is_active: form.status === "on", sort_order: 0, created_at: now,
+        label: form.label,
+        path: form.path || null,
+        parent_label: parentId ? null : sectionLabel,
+        parent_id: parentId,
+        is_active: form.status === "on",
+        sort_order: targetOrder,
+        created_at: now,
       }).select("id").single();
       savedId = data?.id;
-      toast({ type: "success", message: "Nav item added" });
+      toast({ type: "success", message: `Nav item added at position #${targetOrder}` });
     }
 
     queryClient.invalidateQueries({ queryKey: ['topNavItems'] });
+    queryClient.invalidateQueries({ queryKey: ['navChildren'] });
     cancelForm();
     await fetchData();
 
-    // Auto-expand parent chain and highlight
     if (savedId) {
-      const parentItem = form.parent_id ? dbItems.find(i => i.id === form.parent_id) : null;
+      const parentItem = parentId ? dbItems.find(i => i.id === parentId) : null;
       if (parentItem) {
         setExpanded(p => ({ ...p, [parentItem.id]: true }));
       }
     }
     setPage(1);
     goToTab("view");
+  }
+
+  async function moveItem(item, direction, e) {
+    if (e) e.stopPropagation();
+    const parentId = item.parent_id || null;
+    const siblings = (parentId ? getChildItems(parentId) : getSectionItems(sectionLabel))
+      .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+    const currentIndex = siblings.findIndex(s => s.id === item.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+    const adjacentItem = siblings[targetIndex];
+    const currentOrder = Number(item.sort_order || (currentIndex + 1));
+    const adjacentOrder = Number(adjacentItem.sort_order || (targetIndex + 1));
+
+    // Swap sort orders in Supabase
+    await Promise.all([
+      supabase.from("nav_items").update({ sort_order: adjacentOrder }).eq("id", item.id),
+      supabase.from("nav_items").update({ sort_order: currentOrder }).eq("id", adjacentItem.id),
+    ]);
+
+    queryClient.invalidateQueries({ queryKey: ['topNavItems'] });
+    queryClient.invalidateQueries({ queryKey: ['navChildren'] });
+    toast({ type: "success", message: `Reordered "${item.label}"` });
+    fetchData();
   }
 
   async function handleDelete(item, e) {
@@ -546,12 +632,18 @@ export default function NavMenuManager() {
               )}
             </div>
 
-            <div className="col-span-4 truncate">
+            <div className="col-span-3 truncate">
               {item.path ? (
                 <span className="text-xs text-gray-500 font-mono truncate block bg-gray-50 px-2 py-1 rounded inline-block">{item.path}</span>
               ) : (
                 <span className="text-xs text-gray-300">—</span>
               )}
+            </div>
+
+            <div className="col-span-1 font-bold text-xs text-blue-700">
+              <span className="bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                #{item.sort_order || (idx + 1)}
+              </span>
             </div>
 
             <div className="col-span-1">
@@ -572,13 +664,21 @@ export default function NavMenuManager() {
               </span>
             </div>
 
-            <div className="col-span-2 flex items-center justify-end gap-1.5">
-              <button onClick={(e) => { e.stopPropagation(); drillInto(item.id); }}
-                className="p-1.5 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors" title="Manage">
+            <div className="col-span-2 flex items-center justify-end gap-1">
+              <button onClick={(e) => moveItem(item, 'up', e)} disabled={idx === 0}
+                className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-20 disabled:pointer-events-none rounded transition-colors" title="Move Up (# position)">
+                <FiArrowUp className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={(e) => moveItem(item, 'down', e)} disabled={idx === items.length - 1}
+                className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-20 disabled:pointer-events-none rounded transition-colors" title="Move Down (# position)">
+                <FiArrowDown className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); openEdit(item, e); }}
+                className="p-1 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors" title="Edit">
                 <FiEdit3 className="w-4 h-4" />
               </button>
               <button onClick={(e) => { e.stopPropagation(); handleDelete(item, e); }}
-                className="p-1.5 text-red-500 hover:text-white hover:bg-red-600 rounded transition-colors" title="Delete">
+                className="p-1 text-red-500 hover:text-white hover:bg-red-600 rounded transition-colors" title="Delete">
                 <FiTrash2 className="w-4 h-4" />
               </button>
             </div>
@@ -618,12 +718,25 @@ export default function NavMenuManager() {
               </label>
             </div>
             <div className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Label <span className="text-red-500">*</span></label>
                   <input value={form.label} onChange={(e) => handleLabelChange(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white transition-shadow"
                     placeholder="e.g. Web Development" autoFocus />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Display Position (Sort Order)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.sort_order || 1}
+                    onChange={(e) => setForm(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 1 }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white transition-shadow"
+                    placeholder="1, 2, 3..."
+                    required
+                  />
                 </div>
 
                 <div className="relative">
@@ -742,7 +855,8 @@ export default function NavMenuManager() {
                   <div className="grid grid-cols-12 gap-3 px-6 py-3 bg-blue-600 border-b border-gray-200 text-xs font-bold text-white uppercase tracking-wider min-w-[900px]">
                     <div className="col-span-1">SL NO</div>
                     <div className="col-span-3">LABEL</div>
-                    <div className="col-span-4">PATH</div>
+                    <div className="col-span-3">PATH</div>
+                    <div className="col-span-1">POS #</div>
                     <div className="col-span-1">SUBS</div>
                     <div className="col-span-1">STATUS</div>
                     <div className="col-span-2 text-right">ACTIONS</div>

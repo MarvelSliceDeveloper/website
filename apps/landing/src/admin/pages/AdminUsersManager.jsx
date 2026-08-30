@@ -133,7 +133,7 @@ const [confirm, confirmDialog] = useConfirm();
       } else {
         const { data, error: insertError } = await supabase.rpc(
           "create_admin",
-          { p_creator_id: currentUser.id, p_email: email.trim(), p_full_name: name.trim(), p_role, p_password: password },
+          { p_creator_id: currentUser.id, p_email: email.trim(), p_full_name: name.trim(), p_role: role, p_password: password },
         );
 
         if (insertError) {
