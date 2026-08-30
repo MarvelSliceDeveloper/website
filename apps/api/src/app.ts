@@ -120,8 +120,10 @@ const app = express();
 // ── Security headers — XSS / clickjack / referrer / feature-policy ──
 app.use((_req: Request, res: Response, next: NextFunction) => {
   // CSP: lock down; API is JSON-only so `default-src 'none'` is safe
-  // CSP removed — was blocking Supabase localhost:54321 on landing (re-add narrow allowlist later if needed)
-  // res.setHeader("Content-Security-Policy", "...")
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https: https://*.supabase.co https://nzwxelouyrfhliwrzevu.supabase.co https://nxlsxywqvvuiljsulito.supabase.co http://localhost:54321 ws://localhost:54321; script-src 'self'; style-src 'self' 'unsafe-inline'",
+  );
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader(
