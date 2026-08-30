@@ -122,7 +122,7 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   // CSP: lock down; API is JSON-only so `default-src 'none'` is safe
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; img-src 'self' data:; connect-src 'self' https:; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; form-action 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https: https://*.supabase.co https://nxlsxywqvvuiljsulito.supabase.co http://localhost:54321 ws://localhost:54321; script-src 'self'; style-src 'self' 'unsafe-inline'",
   );
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
