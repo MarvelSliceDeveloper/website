@@ -28,7 +28,7 @@ RUN cd apps/api && pnpm exec prisma generate && pnpm build
 FROM base AS runner
 # Prisma 5.22.0 engine needs OpenSSL (node:22-alpine has libssl3, Prisma needs 1.1 compat)
 # Backup/restore needs pg_dump/pg_restore/psql (spawn ENOENT otherwise)
-RUN apk add --no-cache openssl postgresql-client
+RUN apk add --no-cache openssl postgresql-client su-exec
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
@@ -57,8 +57,10 @@ RUN cd apps/api && node -e "['dotenv','express','@prisma/client'].forEach(m=>req
 COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
 # Ensure Node can resolve workspace root deps from /app/apps/api
 ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
-RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
-USER nodejs
+# Uploads directory must exist and be writable for bind-mounts.
+# The host bind-mount (./apps/api/uploads) overlays this path at runtime,
+# so permissions are fixed at container start by entrypoint.sh (runs as root).
+RUN mkdir -p /app/apps/api/uploads && chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
 WORKDIR /app/apps/api
 EXPOSE 4000
 ENTRYPOINT ["dumb-init", "./entrypoint.sh"]

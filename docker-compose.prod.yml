@@ -41,7 +41,14 @@ services:
       - REDIS_URL=redis://redis:6379
       - SKIP_DB_PUSH=${SKIP_DB_PUSH:-1}
     volumes:
-      - uploads_data:/app/apps/api/uploads
+      # ── Persistent uploads (PDFs, images, documents) ──
+      # Bind-mount to the host filesystem so files are visible on the device
+      # at ./apps/api/uploads (on server: /opt/lms/apps/api/uploads),
+      # survive `docker compose down -v`, and are easy to back up/inspect.
+      # Override the host path via UPLOADS_HOST_PATH env var if needed.
+      - ${UPLOADS_HOST_PATH:-./apps/api/uploads}:/app/apps/api/uploads
+      # Alternative (Docker-managed named volume):
+      # - uploads_data:/app/apps/api/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,6 +184,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  # uploads_data is kept for backwards-compatibility if you use the named
+  # volume alternative above. Remove if you use the bind-mount.
   uploads_data:
   certbot-webroot:
   certbot-conf:
