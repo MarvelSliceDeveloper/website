@@ -153,10 +153,15 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function deleteUser(id) {
     if (!(await confirm("Remove this admin?"))) return;
-    await supabase.rpc("delete_admin", {
+    const { error: delErr } = await supabase.rpc("delete_admin", {
       p_creator_id: currentUser.id,
       p_target_id: id,
     });
+    if (delErr) {
+      console.error("Failed to delete admin:", delErr);
+      setError(delErr.message);
+      return;
+    }
     setUsers(users.filter((u) => u.id !== id));
   }
 

@@ -80,10 +80,17 @@ const [jobs, setJobs] = useState([]);
       sort_order: jobForm.sort_order,
     };
 
+    let res;
     if (editingJob) {
-      await supabase.from('job_openings').update(payload).eq('id', editingJob.id);
+      res = await supabase.from('job_openings').update(payload).eq('id', editingJob.id);
     } else {
-      await supabase.from('job_openings').insert(payload);
+      res = await supabase.from('job_openings').insert(payload);
+    }
+    if (res?.error) {
+      console.error('Failed to save job opening:', res.error);
+      alert('Failed to save job: ' + res.error.message);
+      setJobSaving(false);
+      return;
     }
     setJobSaving(false);
     closeJobForm();
@@ -92,7 +99,12 @@ const [jobs, setJobs] = useState([]);
 
   async function deleteJob(id) {
     if (!(await confirm('Delete this job opening? This cannot be undone.'))) return;
-    await supabase.from('job_openings').delete().eq('id', id);
+    const { error } = await supabase.from('job_openings').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete job opening:', error);
+      alert('Failed to delete job: ' + error.message);
+      return;
+    }
     loadData();
   }
 

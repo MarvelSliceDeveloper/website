@@ -35,14 +35,24 @@ export default function UpcomingCoursesManager() {
 
   async function toggleActive(row) {
     if (!row?.id) return;
-    await supabase.from('upcoming_classes').update({ is_active: !row.is_active }).eq('id', row.id);
+    const { error } = await supabase.from('upcoming_classes').update({ is_active: !row.is_active }).eq('id', row.id);
+    if (error) {
+      console.error('Failed to toggle active status:', error);
+      alert('Failed to update status: ' + error.message);
+      return;
+    }
     loadData();
   }
 
   async function deleteClass(id) {
     if (!id) return;
     if (!(await confirm('Delete this class? This cannot be undone.'))) return;
-    await supabase.from('upcoming_classes').delete().eq('id', id);
+    const { error } = await supabase.from('upcoming_classes').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete upcoming class:', error);
+      alert('Failed to delete class: ' + error.message);
+      return;
+    }
     loadData();
   }
 

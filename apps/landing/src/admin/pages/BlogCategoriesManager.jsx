@@ -42,10 +42,16 @@ const [confirm, confirmDialog] = useConfirm();
     e.preventDefault();
     if (!form.name.trim()) return;
     const payload = { name: form.name, slug: form.slug || slugify(form.name) };
+    let res;
     if (editingId) {
-      await supabase.from('blog_categories').update(payload).eq('id', editingId);
+      res = await supabase.from('blog_categories').update(payload).eq('id', editingId);
     } else {
-      await supabase.from('blog_categories').insert({ ...payload, sort_order: categories.length });
+      res = await supabase.from('blog_categories').insert({ ...payload, sort_order: categories.length });
+    }
+    if (res?.error) {
+      console.error('Failed to save blog category:', res.error);
+      alert('Failed to save category: ' + res.error.message);
+      return;
     }
     queryClient.invalidateQueries({ queryKey: ['blogCategories'] });
     const { data } = await supabase.from('blog_categories').select('*').order('sort_order');
@@ -55,7 +61,12 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function deleteCategory(id) {
     if (!(await confirm('Delete this category?'))) return;
-    await supabase.from('blog_categories').delete().eq('id', id);
+    const { error } = await supabase.from('blog_categories').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete blog category:', error);
+      alert('Failed to delete category: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['blogCategories'] });
     setCategories(categories.filter((c) => c.id !== id));
   }

@@ -33,13 +33,23 @@ const [confirm, confirmDialog] = useConfirm();
     const payload = current
       ? { is_published: false }
       : { is_published: true, published_at: current ? undefined : new Date().toISOString() };
-    await supabase.from('blog_posts').update(payload).eq('id', id);
+    const { error } = await supabase.from('blog_posts').update(payload).eq('id', id);
+    if (error) {
+      console.error('Failed to toggle post publish status:', error);
+      alert('Failed to update post status: ' + error.message);
+      return;
+    }
     setPosts(posts.map((p) => (p.id === id ? { ...p, ...payload } : p)));
   }
 
   async function handleDelete(id, title) {
     if (!(await confirm(`Delete "${title}"?`))) return;
-    await supabase.from('blog_posts').delete().eq('id', id);
+    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete blog post:', error);
+      alert('Failed to delete post: ' + error.message);
+      return;
+    }
     setPosts(posts.filter((p) => p.id !== id));
   }
 

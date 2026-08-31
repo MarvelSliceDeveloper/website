@@ -108,10 +108,17 @@ export default function InternshipsManager() {
       sort_order: form.sort_order,
     };
 
+    let res;
     if (editing) {
-      await supabase.from('internships').update(payload).eq('id', editing.id);
+      res = await supabase.from('internships').update(payload).eq('id', editing.id);
     } else {
-      await supabase.from('internships').insert(payload);
+      res = await supabase.from('internships').insert(payload);
+    }
+    if (res?.error) {
+      console.error('Failed to save internship:', res.error);
+      alert('Failed to save internship: ' + res.error.message);
+      setSaving(false);
+      return;
     }
     setSaving(false);
     closeForm();
@@ -120,7 +127,12 @@ export default function InternshipsManager() {
 
   async function deleteItem(id) {
     if (!(await confirm('Delete Internship? This cannot be undone.'))) return;
-    await supabase.from('internships').delete().eq('id', id);
+    const { error } = await supabase.from('internships').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete internship:', error);
+      alert('Failed to delete internship: ' + error.message);
+      return;
+    }
     loadData();
   }
 

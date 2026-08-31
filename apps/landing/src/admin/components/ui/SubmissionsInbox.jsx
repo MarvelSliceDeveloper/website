@@ -256,20 +256,35 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
 
   async function remove(id) {
     if (!(await confirm('Delete this submission?'))) return;
-    await supabase.from(table).delete().eq('id', id);
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) {
+      console.error(`Failed to delete submission from ${table}:`, error);
+      alert('Failed to delete submission: ' + error.message);
+      return;
+    }
     setData(prev => prev.filter(s => s.id !== id));
     if (selected?.id === id) setSelected(null);
   }
 
   async function markRead(row, e) {
     e?.stopPropagation();
-    await supabase.from(table).update({ is_read: true }).eq('id', row.id);
+    const { error } = await supabase.from(table).update({ is_read: true }).eq('id', row.id);
+    if (error) {
+      console.error(`Failed to mark read in ${table}:`, error);
+      alert('Failed to mark read: ' + error.message);
+      return;
+    }
     setData(prev => prev.map(s => s.id === row.id ? { ...s, is_read: true } : s));
   }
 
   async function markUnread(row, e) {
     e?.stopPropagation();
-    await supabase.from(table).update({ is_read: false }).eq('id', row.id);
+    const { error } = await supabase.from(table).update({ is_read: false }).eq('id', row.id);
+    if (error) {
+      console.error(`Failed to mark unread in ${table}:`, error);
+      alert('Failed to mark unread: ' + error.message);
+      return;
+    }
     setData(prev => prev.map(s => s.id === row.id ? { ...s, is_read: false } : s));
   }
 
