@@ -22,7 +22,7 @@
     "@radix-ui/react-select": "2.3.7",
     "@sentry/react": "10.69.0",
     "@tabler/icons-react": "3.46.0",
-    "@tanstack/react-query": "5.101.4",
+    "@tanstack/react-query": "5.102.8",
     "@tinymce/tinymce-react": "5.1.1",
     "apexcharts": "5.16.0",
     "clsx": "2.1.1",
