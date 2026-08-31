@@ -43,10 +43,14 @@ services:
     volumes:
       # ── Persistent uploads (PDFs, images, documents) ──
       # Bind-mount to the host filesystem so files are visible on the device
-      # at ./apps/api/uploads (on server: /opt/lms/apps/api/uploads),
+      # at ./apps/api/uploads (on server: /opt/lms/website/apps/api/uploads),
       # survive `docker compose down -v`, and are easy to back up/inspect.
       # Override the host path via UPLOADS_HOST_PATH env var if needed.
+      # Two mounts cover both resolved paths seen in prod (api writes were
+      # observed at /app/apps/uploads vs /app/apps/api/uploads depending on
+      # build/loader). Host dir is the same, so both container paths stay in sync.
       - ${UPLOADS_HOST_PATH:-./apps/api/uploads}:/app/apps/api/uploads
+      - ${UPLOADS_HOST_PATH:-./apps/api/uploads}:/app/apps/uploads
       # Alternative (Docker-managed named volume):
       # - uploads_data:/app/apps/api/uploads
     depends_on:
