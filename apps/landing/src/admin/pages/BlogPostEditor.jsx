@@ -212,15 +212,23 @@ export default function BlogPostEditor() {
         window.history.replaceState(null, '', `/admin/blog/${data.id}`);
       }
     } else {
-      await supabase.from('blog_posts').update(payload).eq('id', id);
+      const { error: updateErr } = await supabase.from('blog_posts').update(payload).eq('id', id);
+      if (updateErr) {
+        savingRef.current = false;
+        setSaving(false);
+        setSaveError('Failed to update post: ' + updateErr.message);
+        return;
+      }
     }
 
     if (!insertError && postId && postId !== 'new') {
-      await supabase.from('blog_post_tags').delete().eq('post_id', postId);
+      const { error: tagDelErr } = await supabase.from('blog_post_tags').delete().eq('post_id', postId);
+      if (tagDelErr) console.error('Failed to clear old tags:', tagDelErr);
       if (selectedTags.length > 0) {
-        await supabase.from('blog_post_tags').insert(
+        const { error: tagInsErr } = await supabase.from('blog_post_tags').insert(
           selectedTags.map(tag_id => ({ post_id: postId, tag_id }))
         );
+        if (tagInsErr) console.error('Failed to save tags:', tagInsErr);
       }
     }
 

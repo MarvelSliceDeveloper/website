@@ -114,10 +114,16 @@ const [confirm, confirmDialog] = useConfirm();
       status: form.status,
       sort_order: editingId ? form.sort_order : categories.length,
     };
+    let res;
     if (editingId) {
-      await supabase.from('service_categories').update(payload).eq('id', editingId);
+      res = await supabase.from('service_categories').update(payload).eq('id', editingId);
     } else {
-      await supabase.from('service_categories').insert(payload);
+      res = await supabase.from('service_categories').insert(payload);
+    }
+    if (res?.error) {
+      console.error('Failed to save service category:', res.error);
+      alert('Failed to save category: ' + res.error.message);
+      return;
     }
     queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
     const { data } = await supabase.from('service_categories').select('*').order('sort_order');
@@ -127,7 +133,12 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function deleteCategory(id) {
     if (!(await confirm('Delete this category?'))) return;
-    await supabase.from('service_categories').delete().eq('id', id);
+    const { error } = await supabase.from('service_categories').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete service category:', error);
+      alert('Failed to delete category: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
     setCategories(categories.filter((c) => c.id !== id));
   }

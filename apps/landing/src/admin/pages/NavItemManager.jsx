@@ -44,7 +44,12 @@ const [items, setItems] = useState([]);
   async function toggleCourseLink(courseId, itemId) {
     const course = courses.find(c => c.id === courseId);
     const newNavItemId = course.nav_item_id === itemId ? null : itemId;
-    await supabase.from('courses').update({ nav_item_id: newNavItemId }).eq('id', courseId);
+    const { error } = await supabase.from('courses').update({ nav_item_id: newNavItemId }).eq('id', courseId);
+    if (error) {
+      console.error('Failed to link course to nav item:', error);
+      alert('Failed to link course: ' + error.message);
+      return;
+    }
     setCourses(prev => prev.map(c => c.id === courseId ? { ...c, nav_item_id: newNavItemId } : c));
   }
 

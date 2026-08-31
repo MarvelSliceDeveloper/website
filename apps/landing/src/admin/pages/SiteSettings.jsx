@@ -117,6 +117,8 @@ const queryClient = useQueryClient();
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
+    setSaved(false);
+    setSaveError('');
     const payload = {
       logo_url: form.logo_url || null,
       contact_email: form.contact_email || null,
@@ -135,17 +137,25 @@ const queryClient = useQueryClient();
       },
       updated_at: new Date().toISOString(),
     };
-    if (settingsId) {
-      await supabase.from('site_settings').update(payload).eq('id', settingsId);
-    } else {
-      const { data } = await supabase.from('site_settings').insert(payload).select().single();
-      if (data) setSettingsId(data.id);
+    try {
+      let res;
+      if (settingsId) {
+        res = await supabase.from('site_settings').update(payload).eq('id', settingsId);
+      } else {
+        res = await supabase.from('site_settings').insert(payload).select().single();
+        if (res.data?.id) setSettingsId(res.data.id);
+      }
+      if (res?.error) throw res.error;
+      queryClient.invalidateQueries({ queryKey: ['siteSettings'] });
+      setSaved(true);
+      reset();
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Error saving site settings:', err);
+      setSaveError(err.message || 'Failed to save site settings');
+    } finally {
+      setSaving(false);
     }
-    queryClient.invalidateQueries({ queryKey: ['siteSettings'] });
-    setSaving(false);
-    setSaved(true);
-    reset();
-    setTimeout(() => setSaved(false), 2000);
   }
 
   if (loading) {

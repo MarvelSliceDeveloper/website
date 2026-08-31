@@ -1133,37 +1133,50 @@ export default function HomePageEditor() {
     savingRef.current = true;
     setSaving(true);
     setSaved(false);
-    for (const section of sections) {
-      const payload = {
-        section_key: section.section_key,
-        heading: section.heading,
-        subheading: section.subheading,
-        content: section.content,
-        is_active: section.is_active,
-        sort_order: sectionDefs.findIndex((d) => d.key === section.section_key),
-      };
-      if (section.id) {
-        await supabase.from('home_sections').update(payload).eq('id', section.id);
-      } else {
-        await supabase.from('home_sections').insert(payload);
+    setSaveError('');
+    try {
+      for (const section of sections) {
+        const payload = {
+          section_key: section.section_key,
+          heading: section.heading,
+          subheading: section.subheading,
+          content: section.content,
+          is_active: section.is_active,
+          sort_order: sectionDefs.findIndex((d) => d.key === section.section_key),
+        };
+        let res;
+        if (section.id) {
+          res = await supabase.from('home_sections').update(payload).eq('id', section.id);
+        } else {
+          res = await supabase.from('home_sections').insert(payload).select().single();
+          if (res.data?.id) section.id = res.data.id;
+        }
+        if (res?.error) throw res.error;
       }
+      const { data: existingAlumni, error: alumniFetchErr } = await supabase.from('alumni_companies').select('id');
+      if (alumniFetchErr) throw alumniFetchErr;
+      const existingAlumniIds = existingAlumni?.map(c => c.id) || [];
+      if (existingAlumniIds.length > 0) {
+        const { error: delErr } = await supabase.from('alumni_companies').delete().in('id', existingAlumniIds);
+        if (delErr) throw delErr;
+      }
+      const newCompanies = alumniData.companies.map((c, i) => ({ name: c.name, sort_order: i }));
+      if (newCompanies.length > 0) {
+        const { error: insErr } = await supabase.from('alumni_companies').insert(newCompanies);
+        if (insErr) throw insErr;
+      }
+      setSaved(true);
+      reset();
+      queryClient.invalidateQueries({ queryKey: ['homeSections'] });
+      queryClient.invalidateQueries({ queryKey: ['alumniCompanies'] });
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Failed to save home page:', err);
+      setSaveError(err.message || 'Failed to save home page contents');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
-    const { data: existingAlumni } = await supabase.from('alumni_companies').select('id');
-    const existingAlumniIds = existingAlumni?.map(c => c.id) || [];
-    if (existingAlumniIds.length > 0) {
-      await supabase.from('alumni_companies').delete().in('id', existingAlumniIds);
-    }
-    const newCompanies = alumniData.companies.map((c, i) => ({ name: c.name, sort_order: i }));
-    if (newCompanies.length > 0) {
-      await supabase.from('alumni_companies').insert(newCompanies);
-    }
-    savingRef.current = false;
-    setSaving(false);
-    setSaved(true);
-    reset();
-    queryClient.invalidateQueries({ queryKey: ['homeSections'] });
-    queryClient.invalidateQueries({ queryKey: ['alumniCompanies'] });
-    setTimeout(() => setSaved(false), 2000);
   }
 
   if (loading) {

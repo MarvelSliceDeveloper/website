@@ -32,7 +32,12 @@ export default function TagsList() {
 
   async function deleteTag(id) {
     if (await confirm('Delete Tag', 'Are you sure you want to delete this tag?', 'Delete', 'destructive')) {
-      await supabase.from('tags').delete().eq('id', id);
+      const { error } = await supabase.from('tags').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to delete tag:', error);
+        alert('Failed to delete tag: ' + error.message);
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['popularTags'] });
       loadData();
     }
@@ -40,7 +45,12 @@ export default function TagsList() {
 
   async function saveTag() {
     if (!editTag || !editName.trim()) return;
-    await supabase.from('tags').update({ name: editName.trim() }).eq('id', editTag.id);
+    const { error } = await supabase.from('tags').update({ name: editName.trim() }).eq('id', editTag.id);
+    if (error) {
+      console.error('Failed to update tag:', error);
+      alert('Failed to update tag: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['popularTags'] });
     setEditTag(null);
     setEditName('');

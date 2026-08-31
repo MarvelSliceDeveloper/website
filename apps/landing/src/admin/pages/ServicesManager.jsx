@@ -48,20 +48,35 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function togglePublish(id, currentStatus) {
     const next = currentStatus === 'published' ? 'draft' : 'published';
-    await supabase.from('services').update({ status: next }).eq('id', id);
+    const { error } = await supabase.from('services').update({ status: next }).eq('id', id);
+    if (error) {
+      console.error('Failed to update service status:', error);
+      alert('Failed to update status: ' + error.message);
+      return;
+    }
     setServices((prev) => prev.map((s) => (s.id === id ? { ...s, status: next } : s)));
     queryClient.invalidateQueries({ queryKey: ['services'] });
   }
 
   async function toggleFeatured(id, current) {
-    await supabase.from('services').update({ is_featured: !current }).eq('id', id);
+    const { error } = await supabase.from('services').update({ is_featured: !current }).eq('id', id);
+    if (error) {
+      console.error('Failed to update featured status:', error);
+      alert('Failed to update featured: ' + error.message);
+      return;
+    }
     setServices((prev) => prev.map((s) => (s.id === id ? { ...s, is_featured: !current } : s)));
     queryClient.invalidateQueries({ queryKey: ['services'] });
   }
 
   async function handleDelete(id, title) {
     if (!(await confirm(`Delete "${title}"? This cannot be undone.`))) return;
-    await supabase.from('services').delete().eq('id', id);
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete service:', error);
+      alert('Failed to delete service: ' + error.message);
+      return;
+    }
     setServices((prev) => prev.filter((s) => s.id !== id));
     queryClient.invalidateQueries({ queryKey: ['services'] });
   }
