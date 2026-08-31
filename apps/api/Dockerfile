@@ -57,10 +57,11 @@ RUN cd apps/api && node -e "['dotenv','express','@prisma/client'].forEach(m=>req
 COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
 # Ensure Node can resolve workspace root deps from /app/apps/api
 ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
-# Uploads directory must exist and be writable for bind-mounts.
-# The host bind-mount (./apps/api/uploads) overlays this path at runtime,
+# Uploads directories must exist and be writable for bind-mounts.
+# Host bind-mount (./apps/api/uploads) overlays both paths at runtime
+# (/app/apps/api/uploads canonical + /app/apps/uploads legacy observed in prod),
 # so permissions are fixed at container start by entrypoint.sh (runs as root).
-RUN mkdir -p /app/apps/api/uploads && chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
+RUN mkdir -p /app/apps/api/uploads /app/apps/uploads && chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
 WORKDIR /app/apps/api
 EXPOSE 4000
 ENTRYPOINT ["dumb-init", "./entrypoint.sh"]

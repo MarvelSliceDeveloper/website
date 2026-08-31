@@ -1,16 +1,23 @@
 #!/bin/sh
 set -e
 
-# ── Ensure uploads directory is writable (bind-mount support) ──
+# ── Ensure uploads directories are writable (bind-mount support) ──
 # When using a host bind-mount (./apps/api/uploads → /app/apps/api/uploads),
 # Docker creates the host directory as root:root if it does not exist.
 # The api container historically ran as `nodejs` (uid 1001) and would get
 # EACCES on first upload. Fix ownership/permissions at boot while we are
 # still root (entrypoint runs as root; we drop to nodejs before exec).
-UPLOADS_DIR="/app/apps/api/uploads"
-mkdir -p "$UPLOADS_DIR"
-if [ "$(id -u)" = "0" ]; then
-  chown -R nodejs:nodejs "$UPLOADS_DIR" 2>/dev/null || chmod -R 775 "$UPLOADS_DIR" 2>/dev/null || true
+# Writes were observed at both /app/apps/api/uploads and /app/apps/uploads
+# (legacy) in prod, so both paths are mounted to the same host dir.
+for UPLOADS_DIR in "/app/apps/api/uploads" "/app/apps/uploads"; do
+  mkdir -p "$UPLOADS_DIR"
+  if [ "$(id -u)" = "0" ]; then
+    chown -R nodejs:nodejs "$UPLOADS_DIR" 2>/dev/null || chmod -R 775 "$UPLOADS_DIR" 2>/dev/null || true
+  fi
+done
+# Ensure any legacy files at /app/apps/uploads are visible under the canonical path
+if [ -d "/app/apps/uploads/courses" ] && [ ! -e "/app/apps/api/uploads/courses" ]; then
+  cp -a /app/apps/uploads/. /app/apps/api/uploads/ 2>/dev/null || true
 fi
 
 echo "Syncing database schema..."
