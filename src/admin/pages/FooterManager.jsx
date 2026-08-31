@@ -96,14 +96,25 @@ const [confirm, confirmDialog] = useConfirm();
     const newCols = [...columns];
     newCols[idx] = updated;
     setColumns(newCols);
-    await supabase.from('footer_columns').update({ [field]: value }).eq('id', col.id);
+    const { error } = await supabase.from('footer_columns').update({ [field]: value }).eq('id', col.id);
+    if (error) {
+      console.error('Failed to update footer column:', error);
+      toast?.({ type: 'error', message: 'Failed to update column: ' + error.message });
+      loadData();
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['footer'] });
   }
 
   async function deleteColumn(idx) {
     const col = columns[idx];
     if (!(await confirm(`Delete column "${col.title}" and all its links?`))) return;
-    await supabase.from('footer_columns').delete().eq('id', col.id);
+    const { error } = await supabase.from('footer_columns').delete().eq('id', col.id);
+    if (error) {
+      console.error('Failed to delete footer column:', error);
+      alert('Failed to delete column: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['footer'] });
     setColumns(columns.filter((_, i) => i !== idx));
   }
@@ -115,11 +126,14 @@ const [confirm, confirmDialog] = useConfirm();
       .insert({ column_id: col.id, label: 'New Link', url: '#', sort_order: (col.footer_links || []).length })
       .select()
       .single();
-    if (!error) {
-      const newCols = [...columns];
-      newCols[colIdx] = { ...col, footer_links: [...(col.footer_links || []), data] };
-      setColumns(newCols);
+    if (error) {
+      console.error('Failed to add footer link:', error);
+      alert('Failed to add link: ' + error.message);
+      return;
     }
+    const newCols = [...columns];
+    newCols[colIdx] = { ...col, footer_links: [...(col.footer_links || []), data] };
+    setColumns(newCols);
     queryClient.invalidateQueries({ queryKey: ['footer'] });
   }
 
@@ -132,14 +146,24 @@ const [confirm, confirmDialog] = useConfirm();
     const newCols = [...columns];
     newCols[colIdx] = { ...col, footer_links: newLinks };
     setColumns(newCols);
-    await supabase.from('footer_links').update({ [field]: value }).eq('id', link.id);
+    const { error } = await supabase.from('footer_links').update({ [field]: value }).eq('id', link.id);
+    if (error) {
+      console.error('Failed to update footer link:', error);
+      loadData();
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['footer'] });
   }
 
   async function deleteLink(colIdx, linkIdx) {
     const col = columns[colIdx];
     const link = col.footer_links[linkIdx];
-    await supabase.from('footer_links').delete().eq('id', link.id);
+    const { error } = await supabase.from('footer_links').delete().eq('id', link.id);
+    if (error) {
+      console.error('Failed to delete footer link:', error);
+      alert('Failed to delete link: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['footer'] });
     const newCols = [...columns];
     newCols[colIdx] = { ...col, footer_links: col.footer_links.filter((_, i) => i !== linkIdx) };

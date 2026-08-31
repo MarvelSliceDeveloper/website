@@ -244,6 +244,7 @@ export default function CourseWizard() {
 
   const handleSaveRef = useRef();
   handleSaveRef.current = handleSave;
+  const isSavingRef = useRef(false);
   useEffect(() => {
     function handleKeyDown(e) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -331,8 +332,6 @@ export default function CourseWizard() {
       u("slug", slugify(value));
     }
   }
-
-  const isSavingRef = useRef(false);
 
   async function handleSave() {
     if (isSavingRef.current || saving) return;

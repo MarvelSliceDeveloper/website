@@ -37,7 +37,12 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function deleteCompany(id) {
     if (!(await confirm('Delete this company?'))) return;
-    await supabase.from('alumni_companies').delete().eq('id', id);
+    const { error } = await supabase.from('alumni_companies').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete alumni company:', error);
+      alert('Failed to delete company: ' + error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['alumniCompanies'] });
     setCompanies(companies.filter((c) => c.id !== id));
   }

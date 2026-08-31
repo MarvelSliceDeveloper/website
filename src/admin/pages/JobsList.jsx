@@ -29,7 +29,12 @@ export default function JobsList() {
 
   async function deleteJob(id) {
     if (await confirm('Delete Job', 'Are you sure you want to delete this job opening?', 'Delete', 'destructive')) {
-      await supabase.from('job_openings').delete().eq('id', id);
+      const { error } = await supabase.from('job_openings').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to delete job:', error);
+        alert('Failed to delete job: ' + error.message);
+        return;
+      }
       loadData();
     }
   }

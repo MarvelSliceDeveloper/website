@@ -332,6 +332,7 @@ export default function CourseEditor() {
 
   const handleSaveRef = useRef(handleSave);
   handleSaveRef.current = handleSave;
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     function handler(e) {
@@ -432,8 +433,6 @@ export default function CourseEditor() {
       if (insErr) throw new Error(insErr.message);
     }
   }
-
-  const isSavingRef = useRef(false);
 
   async function handleSave() {
     if (isSavingRef.current || saving) return;
@@ -568,7 +567,8 @@ export default function CourseEditor() {
         await saveRelated("overview_faqs", course.overview_faqs);
         await saveRelated("projects", course.projects);
         await saveRelated("course_tabs", course.tabs);
-        await supabase.from("certifications").delete().eq("course_id", id);
+        const { error: certDelErr } = await supabase.from("certifications").delete().eq("course_id", id);
+        if (certDelErr) throw certDelErr;
         if (course.certifications.length > 0) {
           const cleanCert = course.certifications.map((c) => {
             const { id: _, ...rest } = c;
@@ -577,7 +577,8 @@ export default function CourseEditor() {
           const { error: certErr } = await supabase.from("certifications").insert(cleanCert);
           if (certErr) throw new Error(certErr.message);
         }
-        await supabase.from("faqs").delete().eq("course_id", id);
+        const { error: faqDelErr } = await supabase.from("faqs").delete().eq("course_id", id);
+        if (faqDelErr) throw faqDelErr;
         if (course.faqs.length > 0) {
           const cleanFaqs = course.faqs.map((f, i) => {
             const { id: _, ...rest } = f;
@@ -586,13 +587,15 @@ export default function CourseEditor() {
           const { error: faqsErr } = await supabase.from("faqs").insert(cleanFaqs);
           if (faqsErr) throw new Error(faqsErr.message);
         }
-        await supabase.from("course_tags").delete().eq("course_id", id);
+        const { error: tagDelErr } = await supabase.from("course_tags").delete().eq("course_id", id);
+        if (tagDelErr) throw tagDelErr;
         if (courseTags.length > 0) {
-          await supabase
+          const { error: tagInsErr } = await supabase
             .from("course_tags")
             .insert(
               courseTags.map((tagId) => ({ course_id: id, tag_id: tagId })),
             );
+          if (tagInsErr) throw tagInsErr;
         }
       }
       queryClient.invalidateQueries({ queryKey: ['course', course.slug] });

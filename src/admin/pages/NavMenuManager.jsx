@@ -99,20 +99,7 @@ export default function NavMenuManager() {
     cancelForm();
   }, [sectionLabel]);
 
-  // =============================================
-  // AUTH CHECK
-  // =============================================
 
-  if (currentUser?.role !== "admin" && currentUser?.role !== "manager" && currentUser?.role !== "master_admin") {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-lg border border-admin-200 bg-white p-6 text-center">
-          <h1 className="text-2xl font-bold text-black mb-4">Access Denied</h1>
-          <p className="text-neutral-500">You do not have permission to access this page.</p>
-        </div>
-      </div>
-    );
-  }
 
   // =============================================
   // HELPERS
@@ -284,17 +271,22 @@ export default function NavMenuManager() {
 
     let savedId;
     if (editing) {
-      await supabase.from("nav_items").update({
+      const { error } = await supabase.from("nav_items").update({
         label: form.label,
         path: form.path || null,
         is_active: form.status === "on",
         parent_id: parentId,
         sort_order: targetOrder,
       }).eq("id", editing.id);
+      if (error) {
+        console.error("Failed to update nav item:", error);
+        toast({ type: "error", message: `Failed to update nav item: ${error.message}` });
+        return;
+      }
       savedId = editing.id;
       toast({ type: "success", message: `Nav item updated at position #${targetOrder}` });
     } else {
-      const { data } = await supabase.from("nav_items").insert({
+      const { data, error } = await supabase.from("nav_items").insert({
         label: form.label,
         path: form.path || null,
         parent_label: parentId ? null : sectionLabel,
@@ -303,6 +295,11 @@ export default function NavMenuManager() {
         sort_order: targetOrder,
         created_at: now,
       }).select("id").single();
+      if (error) {
+        console.error("Failed to add nav item:", error);
+        toast({ type: "error", message: `Failed to add nav item: ${error.message}` });
+        return;
+      }
       savedId = data?.id;
       toast({ type: "success", message: `Nav item added at position #${targetOrder}` });
     }
@@ -339,10 +336,17 @@ export default function NavMenuManager() {
     const adjacentOrder = Number(adjacentItem.sort_order || (targetIndex + 1));
 
     // Swap sort orders in Supabase
-    await Promise.all([
+    const results = await Promise.all([
       supabase.from("nav_items").update({ sort_order: adjacentOrder }).eq("id", item.id),
       supabase.from("nav_items").update({ sort_order: currentOrder }).eq("id", adjacentItem.id),
     ]);
+
+    const firstErr = results.find(r => r.error)?.error;
+    if (firstErr) {
+      console.error("Failed to reorder nav items:", firstErr);
+      toast({ type: "error", message: `Reorder failed: ${firstErr.message}` });
+      return;
+    }
 
     queryClient.invalidateQueries({ queryKey: ['topNavItems'] });
     queryClient.invalidateQueries({ queryKey: ['navChildren'] });
@@ -356,7 +360,12 @@ export default function NavMenuManager() {
     const subText = totalSubs > 0 ? ` and its ${totalSubs} sub-item${totalSubs > 1 ? 's' : ''}` : '';
     if (!(await confirm(`Delete "${item.label}"${subText}?`))) return;
     
-    await supabase.from("nav_items").delete().eq("id", item.id);
+    const { error } = await supabase.from("nav_items").delete().eq("id", item.id);
+    if (error) {
+      console.error("Failed to delete nav item:", error);
+      toast({ type: "error", message: `Failed to delete nav item: ${error.message}` });
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ['topNavItems'] });
     toast({ type: "success", message: `"${item.label}" deleted` });
 
@@ -428,6 +437,21 @@ export default function NavMenuManager() {
   const drillBreadcrumbs = drillStack
     .map(id => dbItems.find(i => i.id === id))
     .filter(Boolean);
+
+  // =============================================
+  // AUTH CHECK
+  // =============================================
+
+  if (currentUser?.role !== "admin" && currentUser?.role !== "manager" && currentUser?.role !== "master_admin") {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="rounded-lg border border-admin-200 bg-white p-6 text-center">
+          <h1 className="text-2xl font-bold text-black mb-4">Access Denied</h1>
+          <p className="text-neutral-500">You do not have permission to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   // =============================================
   // LOADING
