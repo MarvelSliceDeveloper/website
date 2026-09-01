@@ -9,7 +9,8 @@ set -e
 cat > /usr/share/nginx/html/config.js <<EOF
 window.__ENV__ = {
   "VITE_SUPABASE_URL": "${VITE_SUPABASE_URL:-}",
-  "VITE_SUPABASE_ANON_KEY": "${VITE_SUPABASE_ANON_KEY:-}"
+  "VITE_SUPABASE_ANON_KEY": "${VITE_SUPABASE_ANON_KEY:-}",
+  "VITE_GA_MEASUREMENT_ID": "${VITE_GA_MEASUREMENT_ID:-}"
 };
 EOF
 

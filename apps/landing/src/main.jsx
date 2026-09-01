@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 
-const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const runtimeEnv = (typeof window !== 'undefined' && window.__ENV__) || {};
+const gaId = runtimeEnv.VITE_GA_MEASUREMENT_ID || import.meta.env.VITE_GA_MEASUREMENT_ID;
 if (gaId) {
   const script = document.createElement('script');
   script.async = true;
