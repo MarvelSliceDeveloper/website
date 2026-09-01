@@ -5,9 +5,15 @@ node_modules
 **/build
 **/coverage
 **/.turbo
+.turbo
 .git
 .gitignore
 .github
+.claude
+.agents
+.opencode
+.playwright-mcp
+.husky
 .env
 .env.*
 !.env.example
@@ -18,3 +24,13 @@ uploads
 **/uploads
 **/public/uploads
 .DS_Store
+# Docs / non-runtime large folders - reduce build context
+*.md
+docs
+scripts
+deploy
+screenshots
+.supabase
+apps/landing/supabase
+apps/landing/.env.local
+apps/landing/node_modules/.cache

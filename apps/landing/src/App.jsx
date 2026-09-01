@@ -13,7 +13,6 @@ import CourseDetail from './pages/CourseDetail';
 import Blog from './pages/Blog';
 import NavPage from './pages/NavPage';
 import Career from './pages/Career';
-import AllJobs from './pages/AllJobs';
 import AllUpcomingClasses from './pages/AllUpcomingClasses';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -76,14 +75,17 @@ function AnimatedRoutes() {
       <Route path="/courses/:slug" element={<CourseDetail />} />
       <Route path="/courses/:category/:slug" element={<CourseDetail />} />
       <Route path="/career" element={<Career />} />
-      <Route path="/career/jobs" element={<AllJobs />} />
+      <Route path="/career/jobs" element={<Navigate to="/career" replace />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/banking" element={<Banking />} />
       <Route path="/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
       <Route path="/competitive-exam" element={<Navigate to="/banking" replace />} />
       <Route path="/terms" element={<LegalPage pageKey="terms" />} />
+      <Route path="/terms-and-conditions" element={<LegalPage pageKey="terms" />} />
+      <Route path="/terms-of-service" element={<LegalPage pageKey="terms" />} />
       <Route path="/privacy" element={<LegalPage pageKey="privacy" />} />
+      <Route path="/privacy-policy" element={<LegalPage pageKey="privacy" />} />
       <Route path="/:slug/*" element={<NavPage />} />
     </Routes>
   );

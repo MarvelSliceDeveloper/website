@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 # Build context = repo root (monorepo). Use: docker build -f apps/landing/Dockerfile .
+# This is the PRODUCTION nginx image used by docker-compose.prod.yml (lms-landing).
+# For standalone Webuzo deployment (single-container Node server on 3001),
+# use Dockerfile.webuzo with: docker compose -f apps/landing/docker-compose.yml up --build
 FROM node:22-alpine AS base
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 WORKDIR /app

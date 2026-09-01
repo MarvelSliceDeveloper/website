@@ -117,7 +117,7 @@ function CourseTabs({ tabs, onApplyNow }) {
     return (
       <div className="space-y-6">
         {content.heading && (
-          <h2 className={`text-2xl font-bold text-dark-navy ${align("heading")}`}>
+          <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy ${align("heading")} whitespace-pre-line`}>
             {content.heading}
           </h2>
         )}
@@ -191,7 +191,7 @@ function OverviewSection({ course }) {
     <section id="overview" data-section="overview" className="py-16 bg-bg-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div>
-          <Reveal as="h2" className="text-2xl font-bold text-dark-navy text-center mb-10">Key Highlights</Reveal>
+          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy text-center mb-10 whitespace-pre-line">Key Highlights</Reveal>
           <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {highlights.map((h, i) => (
               <StaggerItem key={h.id || i}>
@@ -220,7 +220,7 @@ function ProjectsSection({ projects }) {
   return (
     <section id="projects" data-section="projects" className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal as="h2" className="text-2xl font-bold text-dark-navy mb-8">Hands-On Projects</Reveal>
+        <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-8 whitespace-pre-line">Hands-On Projects</Reveal>
         <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {projectList.map((p, i) => {
             const techs = ensureArray(p.technologies);
@@ -254,7 +254,7 @@ function CertificationSection({ certifications }) {
   return (
     <section id="certification" data-section="certification" className="py-16 bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal as="h2" className="text-2xl sm:text-3xl font-extrabold text-[#1B365D] mb-10 text-center">
+        <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-10 text-center whitespace-pre-line">
           Certification
         </Reveal>
         <div className="max-w-5xl mx-auto space-y-8">
@@ -332,7 +332,7 @@ function FAQSection({ faqs }) {
   return (
     <section id="faqs" data-section="faqs" className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">
+        <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center whitespace-pre-line">
           Frequently Asked Questions
         </Reveal>
         <Stagger className="space-y-2 w-full">
@@ -366,13 +366,6 @@ function RelatedCoursesWithId({ courseId }) {
           </StaggerItem>
         ))}
       </Stagger>
-      {related.length > 4 && (
-        <div className="text-center mt-8">
-          <Link to="/courses" className="inline-flex items-center gap-2 text-brand-orange font-semibold hover:underline">
-            View More Courses <FiArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -773,10 +766,10 @@ export default function CourseDetail() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <Reveal as="h2" className="text-2xl font-bold text-dark-navy">More Courses You Might Like</Reveal>
+            <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">More Courses You Might Like</Reveal>
             <Link
               to="/courses"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-orange hover:text-orange-600 transition-colors group shrink-0 w-fit"
+              className="inline-flex items-center gap-2 bg-brand-orange text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -891,11 +884,11 @@ export default function CourseDetail() {
               className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto cursor-default"
               onClick={e => e.stopPropagation()}
             >
-              <div className="px-5 py-4 bg-[#f59e0b] rounded-t-2xl flex items-start justify-between relative">
+              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl flex items-start justify-between relative">
                 <div className="pr-4 min-w-0">
                   <h2 className="text-lg sm:text-xl font-extrabold !text-white leading-snug" style={{ color: '#ffffff' }}>Enquire Now</h2>
                   <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-dark-navy text-[11px] sm:text-xs font-semibold shadow-2xs max-w-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] shrink-0"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-blue shrink-0"></span>
                     <span className="truncate">{course.title}</span>
                   </div>
                 </div>
@@ -916,10 +909,10 @@ export default function CourseDetail() {
                   <h3 className="text-lg font-bold text-gray-900 mb-1">Enquiry Submitted!</h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-6">
                     Thank you <strong className="text-gray-900">{enquiryForm.name}</strong>! Your enquiry for{' '}
-                    <strong className="text-gray-900">{course.title}</strong> via <span className="font-semibold text-brand-orange">"{enquirySource}"</span> has been recorded.
+                    <strong className="text-gray-900">{course.title}</strong> via <span className="font-semibold text-brand-blue">"{enquirySource}"</span> has been recorded.
                     Our course advisor will contact you shortly.
                   </p>
-                  <button onClick={() => setShowEnquiry(false)} className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors cursor-pointer">
+                  <button onClick={() => setShowEnquiry(false)} className="px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
                     Done
                   </button>
                 </div>
@@ -933,7 +926,7 @@ export default function CourseDetail() {
                       onChange={e => setEnquiryForm(p => ({ ...p, name: e.target.value }))}
                       placeholder="Enter your full name"
                       required
-                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all"
                     />
                   </div>
 
@@ -945,7 +938,7 @@ export default function CourseDetail() {
                       onChange={e => setEnquiryForm(p => ({ ...p, email: e.target.value }))}
                       placeholder="you@example.com"
                       required
-                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all"
                     />
                   </div>
 
@@ -957,7 +950,7 @@ export default function CourseDetail() {
                       onChange={e => setEnquiryForm(p => ({ ...p, phone: e.target.value }))}
                       placeholder="Enter 10-digit mobile number"
                       required
-                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all"
                     />
                   </div>
 
@@ -976,7 +969,7 @@ export default function CourseDetail() {
                         if (enquiryError) setEnquiryError('');
                       }}
                       required
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-orange focus:ring-brand-orange/20"
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue/20"
                     />
                     <span className="text-xs text-gray-600 leading-relaxed">
                       I agree to the{' '}
@@ -986,14 +979,16 @@ export default function CourseDetail() {
                     </span>
                   </label>
 
-                  <button
-                    type="submit"
-                    disabled={enquirySubmitting}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold rounded-xl bg-brand-orange text-white hover:bg-brand-orange/90 transition-all disabled:opacity-60 cursor-pointer shadow-md shadow-brand-orange/20 active:scale-95"
-                  >
-                    {enquirySubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-4 h-4" />}
-                    {enquirySubmitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
-                  </button>
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="submit"
+                      disabled={enquirySubmitting}
+                      className="inline-flex items-center justify-center gap-1.5 px-5 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
+                    >
+                      {enquirySubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
+                      {enquirySubmitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
+                    </button>
+                  </div>
                 </form>
               )}
             </motion.div>
@@ -1004,36 +999,40 @@ export default function CourseDetail() {
       {/* Choice Modal: Pay Now OR Talk to Advisor */}
       <AnimatePresence>
         {showChoicePopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" onClick={() => setShowChoicePopup(false)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs" onClick={() => setShowChoicePopup(false)}>
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 relative text-center"
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-[26px] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] max-w-[430px] w-full p-6 sm:p-7 relative border border-slate-100 overflow-hidden text-left"
               onClick={e => e.stopPropagation()}
             >
-              {/* Header Bar */}
-              <div className="bg-gradient-to-r from-[#0052FF] to-[#003FD5] px-6 py-5 text-white relative">
-                <button
-                  onClick={() => setShowChoicePopup(false)}
-                  className="absolute top-3.5 right-3.5 bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full transition-all cursor-pointer"
-                  aria-label="Close"
-                >
-                  <FiX className="w-4 h-4" />
-                </button>
-                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto mb-2">
-                  <FiZap className="w-6 h-6 text-white" />
+              {/* Close Button */}
+              <button
+                onClick={() => setShowChoicePopup(false)}
+                className="absolute top-4.5 right-4.5 w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Close modal"
+              >
+                <FiX className="w-4.5 h-4.5 stroke-[2.5]" />
+              </button>
+
+              {/* Header Info */}
+              <div className="mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3.5 border border-emerald-100">
+                  <FiZap className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white tracking-tight">How would you like to proceed?</h3>
-                <p className="text-xs text-white/80 mt-1 max-w-[280px] mx-auto">
-                  Select an option for <span className="font-semibold text-white">{course?.title}</span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  How would you like to proceed?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                  Select an option for <span className="font-semibold text-slate-800">{course?.title}</span>
                 </p>
               </div>
 
               {/* Modal Options */}
-              <div className="p-6 space-y-3.5">
-                {/* OPTION 1: PAY NOW */}
+              <div className="space-y-3.5">
+                {/* OPTION 1: PAY NOW & ENROLL ONLINE (BLUE THEME) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1049,47 +1048,51 @@ export default function CourseDetail() {
                       alert('Payment link is being configured by administrator. Please talk to an advisor.');
                     }
                   }}
-                  className="w-full p-4 rounded-2xl bg-gradient-to-r from-[#FF7A00] to-[#FF5500] hover:from-[#E66E00] hover:to-[#E64C00] text-white text-left transition-all duration-200 shadow-md shadow-orange-500/20 hover:shadow-lg hover:-translate-y-0.5 group cursor-pointer flex items-center justify-between"
+                  className="group relative w-full p-4.5 rounded-2xl border border-blue-200/90 bg-gradient-to-r from-blue-50/70 via-white to-sky-50/40 hover:from-blue-100/70 hover:to-sky-100/50 hover:border-brand-blue text-slate-900 transition-all duration-250 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 shrink-0 flex items-center justify-center">
-                      <FiCreditCard className="w-5 h-5 text-white" />
+                    <div className="w-11 h-11 rounded-xl bg-blue-100 text-brand-blue flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      <FiCreditCard className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-extrabold text-sm sm:text-base text-white leading-snug">
+                      <div className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-brand-blue transition-colors leading-snug">
                         Pay Now & Enroll Online
                       </div>
-                      <div className="text-xs text-white/80 font-medium">
+                      <div className="text-xs text-slate-500 font-medium mt-0.5">
                         Instant checkout & direct redirect
                       </div>
                     </div>
                   </div>
-                  <FiExternalLink className="w-5 h-5 text-white/90 group-hover:translate-x-1 transition-transform shrink-0" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 text-brand-blue flex items-center justify-center shrink-0 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                    <FiExternalLink className="w-4 h-4" />
+                  </div>
                 </button>
 
-                {/* OPTION 2: TALK TO ADVISOR */}
+                {/* OPTION 2: TALK TO AN ADVISOR (ORANGE THEME) */}
                 <button
                   type="button"
                   onClick={() => {
                     setShowChoicePopup(false);
                     openEnquiryModal('Talk to Advisor');
                   }}
-                  className="w-full p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-300 text-slate-800 text-left transition-all duration-200 group cursor-pointer flex items-center justify-between"
+                  className="group relative w-full p-4.5 rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/40 hover:from-amber-100/70 hover:to-orange-100/50 hover:border-brand-orange text-slate-900 transition-all duration-250 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-[#EBF2FF] text-[#0052FF] shrink-0 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-amber-100 text-brand-orange flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                       <FiMessageCircle className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-extrabold text-sm sm:text-base text-[#0B132B] leading-snug">
+                      <div className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-brand-orange transition-colors leading-snug">
                         Talk to an Advisor
                       </div>
-                      <div className="text-xs text-slate-500 font-medium">
+                      <div className="text-xs text-slate-500 font-medium mt-0.5">
                         Request a callback & details
                       </div>
                     </div>
                   </div>
-                  <FiArrowRight className="w-5 h-5 text-slate-400 group-hover:text-[#0052FF] group-hover:translate-x-1 transition-all shrink-0" />
+                  <div className="w-8 h-8 rounded-full bg-amber-100 text-brand-orange flex items-center justify-center shrink-0 group-hover:bg-brand-orange group-hover:text-white transition-all">
+                    <FiArrowRight className="w-4 h-4" />
+                  </div>
                 </button>
               </div>
             </motion.div>

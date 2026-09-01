@@ -91,11 +91,11 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
         <Reveal>
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
             )}
-            <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-14" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3" />
             {subheading && (
-              <p className="text-text-gray text-base sm:text-lg leading-relaxed max-w-2xl mt-4">{subheading}</p>
+              <p className="text-text-gray text-sm sm:text-base leading-relaxed max-w-2xl mt-3 whitespace-pre-line">{subheading}</p>
             )}
           </div>
         </Reveal>
@@ -139,14 +139,14 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               </div>
             </Reveal>
             {imageUrl && (
-              <Reveal className="lg:col-span-5 min-w-0 flex items-center justify-center">
+              <Reveal className="lg:col-span-5 min-w-0 flex items-center justify-center w-full">
                 {imageLink ? (
-                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full h-[320px] lg:w-[480px] lg:h-[400px] rounded-2xl overflow-hidden border border-gray-200 shadow-md group lg:-translate-y-[1%]">
-                    <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full max-h-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
+                    <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </a>
                 ) : (
-                  <div className="w-full h-[320px] lg:w-[480px] lg:h-[400px] rounded-2xl overflow-hidden border border-gray-200 shadow-md lg:-translate-y-[1%]">
-                    <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-contain" />
+                  <div className="w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full max-h-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-slate-50">
+                    <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover" />
                   </div>
                 )}
               </Reveal>
