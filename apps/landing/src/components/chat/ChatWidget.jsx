@@ -261,25 +261,62 @@ export default function ChatWidget() {
   }, [conversationId, open]);
 
   async function handlePreChatSubmit(info) {
-    const { data: conv } = await supabase
-      .from('conversations')
-      .insert({
+    try {
+      const fullPayload = {
         user_identifier: userId.current,
         user_name: info.name,
         user_email: info.email,
         user_phone: info.phone,
         reason: info.reason || '',
         status: 'open',
-      })
-      .select()
-      .single();
+      };
 
-    if (conv) {
-      trackChat('started');
-      setVisitorInfo(info);
-      setShowPreChat(false);
-      setMessages([]);
-      setConversationId(conv.id);
+      let { data: conv, error } = await supabase
+        .from('conversations')
+        .insert(fullPayload)
+        .select()
+        .maybeSingle();
+
+      // Fallback if columns like 'reason', 'user_email' or 'user_phone' are missing in Supabase schema
+      if (error && (error.code === 'PGRST204' || error.message?.includes('column') || error.message?.includes('reason'))) {
+        console.warn('Legacy conversations table schema detected, trying minimal payload:', error.message);
+        const minimalRes = await supabase
+          .from('conversations')
+          .insert({
+            user_identifier: userId.current,
+            user_name: info.name,
+            status: 'open',
+          })
+          .select()
+          .maybeSingle();
+        conv = minimalRes.data;
+        error = minimalRes.error;
+      }
+
+      if (error) {
+        console.error('Supabase chat error:', error);
+        alert(`Live Chat Error: ${error.message}\n\nPlease run the SQL alter table script in your Supabase SQL Editor.`);
+        return;
+      }
+
+      if (conv) {
+        trackChat('started');
+        setVisitorInfo(info);
+        setShowPreChat(false);
+        setMessages([]);
+        setConversationId(conv.id);
+
+        if (info.reason) {
+          await supabase.from('messages').insert({
+            conversation_id: conv.id,
+            sender: 'user',
+            content: info.reason,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Chat submit error:', err);
+      alert(`Chat Error: ${err.message}`);
     }
   }
 

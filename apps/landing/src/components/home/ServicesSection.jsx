@@ -36,14 +36,14 @@ export default function ServicesSection({ section }) {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-fit mx-auto text-center">
-          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6">
+          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">
             {heading}
           </Reveal>
-          <div className="w-4/5 h-[3px] bg-brand-orange mx-auto mb-6" />
+          <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
         </div>
         {intro && (
           <Reveal className="text-text-gray mb-12 text-center">
-            <p className="text-lg">{intro}</p>
+            <p className="text-sm sm:text-base leading-relaxed whitespace-pre-line">{intro}</p>
           </Reveal>
         )}
 
@@ -60,7 +60,7 @@ export default function ServicesSection({ section }) {
             )}
             <h3 className="font-bold text-xl mt-6 text-dark-navy text-center sm:text-left">{leftHeading}</h3>
             {leftDescription && (
-              <p className="text-text-gray mt-3 text-center sm:text-left">{leftDescription}</p>
+              <p className="text-text-gray text-sm leading-relaxed mt-3 text-center sm:text-left whitespace-pre-line">{leftDescription}</p>
             )}
             <Button
               variant="accent"
@@ -83,7 +83,7 @@ export default function ServicesSection({ section }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-dark-navy text-base">{service.title}</h4>
-                      <p className="text-text-gray text-base mt-1">{service.description}</p>
+                      <p className="text-text-gray text-sm leading-relaxed mt-1 whitespace-pre-line">{service.description}</p>
                     </div>
                   </div>
                   {i < servicesList.length - 1 && <div className="border-b border-gray-100" />}

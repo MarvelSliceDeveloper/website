@@ -36,13 +36,13 @@ const navGroups = [
     { to: "/admin/career-contact-submissions", label: "Career Enquiry", icon: FiMail },
     { to: "/admin/brochure-downloads", label: "Brochure Downloads", icon: FiDownload },
     { to: "/admin/form-submissions", label: "Form Submissions", icon: FiClipboard },
-    { to: "/admin/newsletter-subscribers", label: "Newsletter Subscribers", icon: FiMail },
+    { to: "/admin/newsletter-subscribers", label: "Newsletter", icon: FiMail },
     { to: "/admin/contact-submissions", label: "Contact Submissions", icon: FiMessageSquare },
     { to: "/admin/about-submissions", label: "About Submissions", icon: FiInfo },
-    { to: "/admin/upcoming-class-submissions", label: "Upcoming Class Registrations", icon: FiCalendar },
+    { to: "/admin/upcoming-class-submissions", label: "Upcoming Class", icon: FiCalendar },
     { to: "/admin/course-interests", label: "Course Enquiries", icon: FiMessageSquare },
-    { to: "/admin/banking-enquiries", label: "Banking Enquiries", icon: FiCheckCircle },
-    { to: "/admin/upcoming-course-interests", label: "Upcoming Course Interests", icon: FiBell },
+    { to: "/admin/banking-enquiries", label: "Banking Enrollments", icon: FiCheckCircle },
+    { to: "/admin/upcoming-course-interests", label: "Course Interest", icon: FiBell },
     { to: "/admin/chat-submissions", label: "Chat Submissions", icon: FiMessageCircle },
     { to: "/admin/courses/reports", label: "Reports", icon: FiBarChart2 }
     ]},
@@ -74,7 +74,7 @@ const navGroups = [
     ],
   },
   {
-    label: "Banking Testimonial", icon: FiAward, items: [
+    label: "Banking Testimonials", icon: FiAward, items: [
       { to: "/admin/banking-testimonials/new", label: "Add", icon: FiPlusCircle },
       { to: "/admin/banking-testimonials", label: "View", icon: FiAward, catchSubRoutes: true, siblingRoutes: ["/admin/banking-testimonials/new"] }
     ],
@@ -161,8 +161,7 @@ function saveGroupState(state) {
 }
 
 function useGroupOpen(pathname) {
-  const [groupState, setGroupState] = useState(() => {
-    const saved = loadGroupState();
+  const [openIdx, setOpenIdx] = useState(() => {
     const idx = navGroups.findIndex((g) =>
       g.items.some((item) => {
         if (item.to) return isActive(pathname, item);
@@ -170,15 +169,7 @@ function useGroupOpen(pathname) {
         return false;
       })
     );
-    const next = {};
-      navGroups.forEach((_, i) => { next[String(i)] = false; });
-      if (idx >= 0) next[String(idx)] = true;
-      else if (saved) {
-        const firstOpen = Object.keys(saved).find((k) => saved[k]);
-        if (firstOpen) next[firstOpen] = true;
-      }
-    saveGroupState(next);
-    return next;
+    return idx >= 0 ? idx : null;
   });
 
   useEffect(() => {
@@ -189,29 +180,16 @@ function useGroupOpen(pathname) {
         return false;
       })
     );
-    setGroupState((prev) => {
-      if (idx >= 0 && prev[String(idx)]) return prev;
-      const next = {};
-      navGroups.forEach((_, i) => { next[String(i)] = false; });
-      if (idx >= 0) next[String(idx)] = true;
-      saveGroupState(next);
-      return next;
-    });
+    if (idx >= 0) {
+      setOpenIdx(idx);
+    }
   }, [pathname]);
 
   const toggleGroup = useCallback((idx) => {
-    setGroupState((prev) => {
-      const key = String(idx);
-      const currentlyOpen = prev[key];
-      const next = {};
-      navGroups.forEach((_, i) => { next[String(i)] = false; });
-      if (!currentlyOpen) next[key] = true;
-      saveGroupState(next);
-      return next;
-    });
+    setOpenIdx((prev) => (prev === idx ? null : idx));
   }, []);
 
-  const isOpen = useCallback((idx) => !!groupState[String(idx)], [groupState]);
+  const isOpen = useCallback((idx) => openIdx === idx, [openIdx]);
 
   return [isOpen, toggleGroup];
 }
@@ -415,7 +393,7 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
           className="w-4 h-4 shrink-0 transition-colors duration-200"
           style={{ color: groupIconColor }}
         />
-        <span className="flex-1 text-left truncate" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+        <span className="flex-1 text-left whitespace-nowrap" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
         <FiChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${opened ? '' : '-rotate-90'}`}
           style={{ color: iconColor }}
@@ -503,7 +481,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
 
   return (
     <>
-      <aside className="hidden lg:flex lg:flex-col w-60 shrink-0 h-screen overflow-hidden shadow-elevated transition-all duration-300" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>{content}</aside>
+      <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 h-screen overflow-hidden shadow-elevated transition-all duration-300" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>{content}</aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div

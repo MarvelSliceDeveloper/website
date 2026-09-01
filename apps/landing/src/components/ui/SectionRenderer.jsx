@@ -114,8 +114,8 @@ export default function SectionRenderer({ section, className }) {
       const ha = section.headingAlign || 'center';
       const ca = section.contentAlign || 'center';
       const statIcons = ['LuGraduationCap', 'LuBookOpen', 'LuUsers', 'LuAward', 'LuTarget', 'LuTrendingUp', 'LuGlobe', 'LuHeartHandshake'];
-      const statIconBg = ['bg-brand-orange/10', 'bg-blue-100', 'bg-emerald-100', 'bg-purple-100', 'bg-pink-100', 'bg-cyan-100', 'bg-indigo-100', 'bg-teal-100'];
-      const statIconColor = ['text-brand-orange', 'text-blue-500', 'text-emerald-500', 'text-purple-500', 'text-pink-500', 'text-cyan-500', 'text-indigo-500', 'text-teal-500'];
+      const statIconBg = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-cyan-100', 'bg-indigo-100', 'bg-teal-100', 'bg-amber-100'];
+      const statIconColor = ['text-purple-500', 'text-blue-500', 'text-emerald-500', 'text-pink-500', 'text-cyan-500', 'text-indigo-500', 'text-teal-500', 'text-amber-500'];
       const statCard = (stat, i) => (
         <div key={i} className="text-center p-4 sm:p-6 lg:p-[30px] bg-white rounded-[18px] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-xl cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}>
           <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${statIconBg[i % 8]} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>

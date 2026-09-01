@@ -17,13 +17,13 @@ export default function FeatureCardsSection({ section }) {
           <Reveal>
             <div className="text-center mb-12">
               {heading && (
-                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-3 tracking-tight">
+                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight whitespace-pre-line">
                   {heading}
                 </h2>
               )}
-              <div className="w-24 h-[3px] bg-brand-orange mx-auto mb-4 rounded-full" />
+              <div className="w-16 h-[3px] bg-brand-orange mx-auto mt-3 mb-4 rounded-full" />
               {subheading && (
-                <p className="text-text-gray text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                <p className="text-text-gray text-sm sm:text-base max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
                   {subheading}
                 </p>
               )}
@@ -82,7 +82,7 @@ export default function FeatureCardsSection({ section }) {
 
                       {/* Dynamic Description */}
                       {cardDesc && (
-                        <p className="text-text-gray text-sm sm:text-base leading-relaxed line-clamp-3 mb-6">
+                        <p className="text-text-gray text-sm leading-relaxed mb-6 whitespace-pre-line">
                           {cardDesc}
                         </p>
                       )}
@@ -93,7 +93,7 @@ export default function FeatureCardsSection({ section }) {
                           {bullets.map((bullet, j) => (
                             <div key={j} className="flex items-start gap-2 min-w-0">
                               <FiCheckCircle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
-                              <span className="text-brand-blue text-xs sm:text-sm font-medium leading-tight truncate">
+                              <span className="text-brand-blue text-xs sm:text-sm font-medium leading-snug break-words">
                                 {bullet}
                               </span>
                             </div>

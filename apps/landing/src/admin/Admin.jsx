@@ -108,7 +108,7 @@ function PageEditorRedirect() {
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-admin-500 border-t-transparent rounded-full animate-spin" /></div>;
-  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!user) return <Login />;
   return children;
 }
 
@@ -116,7 +116,7 @@ export default function Admin() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="login" element={<Login />} />
+        <Route path="login" element={<Navigate to="/admin" replace />} />
         <Route element={
           <ProtectedRoute>
             <AdminLayout />

@@ -16,6 +16,7 @@ import {
   FiArrowLeft,
 } from "react-icons/fi";
 import useConfirm from "../hooks/useConfirm";
+import { validateStrongPassword, getPasswordRequirementsList } from "../../lib/passwordValidation";
 
 const ALL_ROLES = [
   { value: "master_admin", label: "Master Admin", desc: "Full access — can create all roles", rank: 4 },
@@ -96,9 +97,12 @@ const [confirm, confirmDialog] = useConfirm();
       setError("Name and email are required");
       return;
     }
-    if (!editingId && password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
+    if (!editingId || password) {
+      const strongErr = validateStrongPassword(password, { name: name.trim(), email: email.trim() });
+      if (strongErr) {
+        setError(strongErr);
+        return;
+      }
     }
 
     setSaving(true);
@@ -225,14 +229,29 @@ const [confirm, confirmDialog] = useConfirm();
               </label>
               <div className="relative">
                 <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
-                  minLength={editingId ? 0 : 6} required={!editingId} autoComplete="new-password"
+                  required={!editingId} autoComplete="new-password"
                   className="w-full px-3 py-2 pr-10 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all"
-                  placeholder={editingId ? "Leave blank to keep" : "Min 6 characters"} />
+                  placeholder={editingId ? "Leave blank to keep" : "Min 8 characters (preferably 12+)"} />
                 <button type="button" onClick={() => setShowPw(!showPw)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-admin-400 hover:text-admin-700 transition-colors">
                   {showPw ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {/* Password Requirements Checklist */}
+              {(!editingId || password) && (
+                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                  <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Strong Password Requirements:</p>
+                  <div className="grid sm:grid-cols-2 gap-1.5 text-xs">
+                    {getPasswordRequirementsList(password, { name: name.trim(), email: email.trim() }).map((req, i) => (
+                      <div key={i} className={`flex items-center gap-1.5 font-medium ${req.met ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        {req.met ? <FiCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <FiX className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                        <span>{req.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-3 pt-2">

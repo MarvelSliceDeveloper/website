@@ -47,7 +47,7 @@ const columns = [
     className: 'min-w-[200px]',
     cell: (row) => (
       <span className="font-bold text-neutral-900">
-        {row.topic_title || 'General Banking Enquiry'}
+        {row.topic_title || 'General Banking Enrollment'}
       </span>
     ),
   },
@@ -60,14 +60,14 @@ const columns = [
     className: 'min-w-[170px]',
     cell: (row) => (
       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-        {row.button_clicked || 'Enquire Now'}
+        {row.button_clicked || 'Enroll Now'}
       </span>
     ),
   },
 ];
 
 const detailFields = [
-  { label: 'Enquiry Type', value: (row) => (row.enquiry_type === 'topic' ? 'Topic-Specific Enquiry' : 'General CTA Enquiry') },
+  { label: 'Enrollment Type', value: (row) => (row.enquiry_type === 'topic' ? 'Topic-Specific Enrollment' : 'General CTA Enrollment') },
   { label: 'Exam / Topic Title', accessor: 'topic_title' },
   { label: 'Button Clicked', accessor: 'button_clicked' },
   { label: 'Full Name', accessor: 'full_name' },
@@ -98,9 +98,9 @@ export default function BankingEnquiries() {
       value: typeFilter,
       onChange: setTypeFilter,
       options: [
-        { label: 'All Enquiry Types', value: 'all' },
-        { label: 'General CTA Enquiries', value: 'general' },
-        { label: 'Topic-Specific Enquiries', value: 'topic' },
+        { label: 'All Enrollment Types', value: 'all' },
+        { label: 'General CTA Enrollments', value: 'general' },
+        { label: 'Topic-Specific Enrollments', value: 'topic' },
       ],
       apply: (row) => {
         if (typeFilter === 'all') return true;
@@ -115,10 +115,10 @@ export default function BankingEnquiries() {
     <PageShell backTo="/admin">
       <SubmissionsInbox
         table="banking_enquiries"
-        title="Banking Enquiries"
+        title="Banking Enrollments"
         columns={columns}
         detailFields={detailFields}
-        exportFilename="banking-enquiries"
+        exportFilename="banking-enrollments"
         extraFilters={extraFilters}
       />
     </PageShell>
