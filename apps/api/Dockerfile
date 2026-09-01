@@ -56,9 +56,13 @@ COPY --from=builder /tmp/api-deploy/package.json ./package.json
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-# Prisma client was generated at build time — copy generated client from builder's store
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Prisma client was generated before `pnpm deploy` and is already inside
+# /tmp/api-deploy/node_modules/.prisma — no extra copy needed.
+# If the client is missing (edge: pnpm deploy with isolated store), regenerate in runner:
+RUN if [ ! -d ./node_modules/.prisma ]; then \
+      echo "Prisma client not in deploy, regenerating..."; \
+      npx --yes prisma@5.22.0 generate --schema apps/api/prisma/schema.prisma; \
+    fi
 # Public assets (if any)
 COPY public ./public
 # Entrypoint
