@@ -153,14 +153,12 @@ export default function UpcomingClassesSection({ section }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">
-            <div className="inline-flex flex-col items-center">
-              {heading && (
-                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
-              )}
-              <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-4/5" />
-            </div>
+            {heading && (
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
+            )}
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
             {subheading && (
-              <p className="text-text-gray text-base sm:text-lg leading-relaxed mt-4 mb-10">{subheading}</p>
+              <p className="text-text-gray text-sm sm:text-base leading-relaxed mt-3 mb-10 whitespace-pre-line">{subheading}</p>
             )}
           </div>
         </Reveal>

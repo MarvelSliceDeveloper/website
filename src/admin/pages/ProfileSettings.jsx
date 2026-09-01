@@ -3,7 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/ui/PageShell';
 import { SubmitButton } from '../components/FormButtons';
-import { FiUpload, FiTrash2 } from 'react-icons/fi';
+import { FiUpload, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
+import { validateStrongPassword, getPasswordRequirementsList } from '../../lib/passwordValidation';
 
 export default function ProfileSettings() {
   const { user, updateUser } = useAuth();
@@ -60,8 +61,9 @@ export default function ProfileSettings() {
       setPwMessage({ type: 'error', text: 'Passwords do not match' });
       return;
     }
-    if (newPassword.length < 6) {
-      setPwMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+    const strongErr = validateStrongPassword(newPassword, { name: user?.name, email: user?.email });
+    if (strongErr) {
+      setPwMessage({ type: 'error', text: strongErr });
       return;
     }
     setPwSaving(true);
@@ -146,6 +148,19 @@ export default function ProfileSettings() {
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Confirm New Password</label>
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6}
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-transparent transition-all" />
+            </div>
+          </div>
+
+          {/* Password Requirements Checklist */}
+          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Strong Password Requirements:</p>
+            <div className="grid sm:grid-cols-2 gap-1.5 text-xs">
+              {getPasswordRequirementsList(newPassword, { name: user?.name, email: user?.email }).map((req, i) => (
+                <div key={i} className={`flex items-center gap-1.5 font-medium ${req.met ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {req.met ? <FiCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <FiX className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                  <span>{req.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 

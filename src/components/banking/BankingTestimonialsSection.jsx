@@ -10,21 +10,21 @@ function TestimonialCard({ item }) {
   const subtitle = item.role || item.exam_name || item.badge_text || '';
 
   return (
-    <div className="group relative flex h-[240px] w-full flex-col overflow-hidden rounded-[18px] border border-[#E5E7EB] bg-white p-5 shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_2px_6px_rgba(0,0,0,0.07),0_18px_44px_rgba(0,0,0,0.15)]">
-      <div className="flex flex-1 min-h-0 items-start gap-3">
+    <div className="group relative flex min-h-[250px] h-full w-full flex-col justify-between overflow-hidden rounded-[18px] border border-[#E5E7EB] bg-white p-5 sm:p-6 shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_2px_6px_rgba(0,0,0,0.07),0_18px_44px_rgba(0,0,0,0.15)]">
+      <div className="flex flex-1 items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue/10">
           <span aria-hidden="true" className="select-none font-serif text-xl font-bold leading-none text-brand-blue">&ldquo;</span>
         </div>
-        <blockquote className="flex-1 text-[15px] leading-[1.6] text-text-gray line-clamp-4">
+        <blockquote className="flex-1 text-[14px] sm:text-[15px] leading-[1.6] text-text-gray font-normal">
           “{item.quote}”
         </blockquote>
       </div>
-      <div className="mt-3 flex items-start gap-3 border-t border-gray-100 pt-3">
+      <div className="mt-4 flex items-center gap-3 border-t border-gray-100 pt-3">
         <div className="shrink-0 rounded-full bg-gradient-to-br from-brand-blue to-brand-orange p-[2px]">
           {item.avatar_url ? (
-            <img src={item.avatar_url} alt={item.name} className="h-14 w-14 rounded-full object-cover" />
+            <img src={item.avatar_url} alt={item.name} className="h-12 w-12 rounded-full object-cover" />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-base font-bold text-brand-blue">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-sm font-bold text-brand-blue">
               {(item.name || '?').charAt(0).toUpperCase()}
             </div>
           )}
@@ -66,6 +66,7 @@ export default function BankingTestimonialsSection() {
   const [visibleCount, setVisibleCount] = useState(3);
   const timerRef = useRef(null);
   const n = items.length;
+  const tripled = n > 0 ? [...items, ...items, ...items] : [];
 
   useEffect(() => {
     function update() {
@@ -89,8 +90,8 @@ export default function BankingTestimonialsSection() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setAnimate(true);
-      setPos((prev) => (prev + 1) % n);
-    }, 7500);
+      setPos((prev) => prev + 1);
+    }, 7000);
   }
 
   function stopAutoScroll() {
@@ -104,6 +105,8 @@ export default function BankingTestimonialsSection() {
   }
 
   if (items.length === 0) return null;
+
+  const activeIndex = pos % n;
 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50 border-t border-gray-100">
@@ -125,23 +128,29 @@ export default function BankingTestimonialsSection() {
         </Reveal>
 
         {!shouldScroll ? (
-          /* Grid mode when items are <= visibleCount (No Duplicates) */
+          /* Grid mode when items are <= visibleCount */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-4 max-w-7xl mx-auto">
             {items.map((item) => (
               <TestimonialCard key={item.id} item={item} />
             ))}
           </div>
         ) : (
-          /* Carousel mode when items > visibleCount (No Duplicates) */
+          /* Seamless Carousel mode when items > visibleCount */
           <div className="relative mx-auto w-full mt-6" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
             <div className="overflow-hidden py-4">
               <motion.div
                 animate={{ x: `-${pos * (100 / visibleCount)}%` }}
                 transition={animate ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] } : { duration: 0 }}
+                onAnimationComplete={() => {
+                  if (pos >= n) {
+                    setAnimate(false);
+                    setPos(0);
+                  }
+                }}
                 className="flex items-stretch"
               >
-                {items.map((item) => (
-                  <div key={item.id} className="h-full shrink-0 px-3" style={{ width: `${100 / visibleCount}%` }}>
+                {tripled.map((item, idx) => (
+                  <div key={`${item.id}-${idx}`} className="h-full shrink-0 px-3 flex" style={{ width: `${100 / visibleCount}%` }}>
                     <TestimonialCard item={item} />
                   </div>
                 ))}
@@ -151,7 +160,7 @@ export default function BankingTestimonialsSection() {
             {/* Pagination Indicators */}
             <div className="flex justify-center items-center gap-2.5 mt-8">
               {items.map((t, idx) => {
-                const isActive = pos === idx;
+                const isActive = activeIndex === idx;
                 return (
                   <button
                     key={t.id || idx}

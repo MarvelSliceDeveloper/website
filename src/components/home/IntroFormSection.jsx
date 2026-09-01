@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
+import AnimatedNumber from '../ui/AnimatedNumber';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit } from '../../lib/analytics';
 
@@ -35,19 +36,30 @@ function CourseButtons() {
   );
 }
 
+const statIconBg = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-cyan-100', 'bg-indigo-100', 'bg-teal-100', 'bg-amber-100'];
+const statIconColor = ['text-purple-500', 'text-blue-500', 'text-emerald-500', 'text-pink-500', 'text-cyan-500', 'text-indigo-500', 'text-teal-500', 'text-amber-500'];
+
 function StatsGrid({ stats }) {
+  if (!stats || stats.length === 0) return null;
+
   return (
-    <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md sm:max-w-none mx-auto">
+    <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 w-full max-w-md sm:max-w-none mx-auto">
       {stats.map((stat, i) => {
         const Icon = getStatIcon(stat.label);
+        const bgClass = statIconBg[i % statIconBg.length];
+        const colorClass = statIconColor[i % statIconColor.length];
+
         return (
           <StaggerItem key={i} className="w-full">
-            <div className="bg-white rounded-xl border border-gray-100 p-3.5 sm:p-4 text-center hover:-translate-y-1 transition-all duration-300 w-full h-full min-h-[88px] sm:min-h-[104px] flex flex-col items-center justify-center shadow-md">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-1.5 sm:mb-2 shrink-0">
-                <Icon className="w-4 h-4 text-brand-orange" />
+            <div
+              className="text-center p-3 sm:p-4 bg-white rounded-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:shadow-xl cursor-default flex flex-col items-center justify-center w-full h-full min-h-[96px] sm:min-h-[104px]"
+              style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}
+            >
+              <div className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full ${bgClass} flex items-center justify-center mx-auto mb-1.5 sm:mb-2 shrink-0`}>
+                <Icon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${colorClass}`} />
               </div>
-              <p className="text-lg sm:text-2xl font-extrabold text-brand-blue leading-none">{stat.value}</p>
-              <p className="text-[11px] sm:text-xs mt-1 text-slate-800 font-medium leading-snug">{stat.label}</p>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-brand-orange leading-none"><AnimatedNumber value={stat.value} /></div>
+              <div className="text-[11px] sm:text-xs lg:text-sm text-gray-600 mt-1 sm:mt-1.5">{stat.label}</div>
             </div>
           </StaggerItem>
         );
@@ -61,11 +73,11 @@ function PillGrid({ pills }) {
     <Stagger className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full max-w-md sm:max-w-none mx-auto">
       {pills.map((label, i) => (
         <StaggerItem key={i} className="min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-white rounded-lg border border-gray-100 px-2.5 sm:px-3 py-2.5 shadow-sm min-w-0 h-full min-h-[48px]">
+          <div className="flex items-center justify-start text-left gap-1.5 sm:gap-2 bg-white rounded-lg border border-gray-100 px-2.5 sm:px-3 py-2.5 shadow-sm min-w-0 h-full min-h-[48px]">
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
               <FiCheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-blue" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-brand-blue leading-tight whitespace-nowrap flex-1 min-w-0 truncate">{label}</span>
+            <span className="text-[11px] sm:text-xs font-bold text-brand-blue leading-snug flex-1 min-w-0 break-words text-left">{label}</span>
           </div>
         </StaggerItem>
       ))}
@@ -75,7 +87,7 @@ function PillGrid({ pills }) {
 
 export default function IntroFormSection({ section }) {
   const content = section?.content || {};
-  const heading = section?.heading || '';
+  const heading = section?.heading || content.heading || '';
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
@@ -135,12 +147,12 @@ export default function IntroFormSection({ section }) {
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           <Reveal variant="up" className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6 text-center lg:text-left">
             {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug max-w-xl">
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug max-w-none whitespace-pre-line">
                 {heading}
               </h2>
             )}
             {introText && (
-              <p className="text-sm sm:text-base leading-relaxed text-center lg:text-left text-slate-600 max-w-3xl px-1 sm:px-0">
+              <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10">
                 {introText}
               </p>
             )}
@@ -153,7 +165,7 @@ export default function IntroFormSection({ section }) {
 
           <Reveal variant="right" className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center lg:items-end">
             <div className="max-w-sm w-full flex flex-col items-center text-center">
-              <p className="text-sm sm:text-base font-[600] text-center mb-1 w-full pt-3 sm:pt-5" style={{ color: '#ef4444' }}>
+              <p className="text-[24px] sm:text-[32px] font-bold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
                 Book Your Demo Now!
               </p>
               <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
@@ -220,7 +232,7 @@ export default function IntroFormSection({ section }) {
                 </div>
               </div>
 
-              <div className="mt-6 hidden lg:block w-full">
+              <div className="mt-6 lg:mt-8 hidden lg:block w-full">
                 {rawPills.length > 0 && <PillGrid pills={rawPills} />}
               </div>
             </div>

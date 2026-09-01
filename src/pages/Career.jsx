@@ -1,17 +1,47 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { trackFormSubmit, trackDownload } from '../lib/analytics';
 import Reveal from '../components/ui/Reveal';
 import CTABannerSection from '../components/home/CTABannerSection';
 import {
   FiMapPin, FiClock, FiDollarSign,
-  FiSearch, FiExternalLink, FiChevronRight,
+  FiSearch, FiExternalLink, FiChevronRight, FiChevronLeft,
   FiBriefcase, FiUpload, FiSend, FiCheck,
   FiAlertCircle, FiX, FiArrowRight,
 } from 'react-icons/fi';
+
+const carouselVariants = {
+  enter: (dir) => ({
+    x: dir > 0 ? '60%' : '-60%',
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: 'spring', stiffness: 260, damping: 28 },
+      opacity: { duration: 0.3 },
+      staggerChildren: 0.04,
+    },
+  },
+  exit: (dir) => ({
+    x: dir > 0 ? '-60%' : '60%',
+    opacity: 0,
+    transition: {
+      x: { type: 'spring', stiffness: 260, damping: 28 },
+      opacity: { duration: 0.22 },
+    },
+  }),
+};
+
+const cardVariants = {
+  enter: { opacity: 0, y: 15, scale: 0.96 },
+  center: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -10, scale: 0.96, transition: { duration: 0.2 } },
+};
 
 function getFieldConfig(formConfig, key, defaults) {
   return { ...defaults, ...(formConfig?.fields?.[key] || {}) };
@@ -66,117 +96,60 @@ function Field({ label, required, error, children }) {
   );
 }
 
-function BookDemoForm() {
-  const [demoForm, setDemoForm] = useState({ name: '', email: '', phone: '' });
-  const [demoSubmitting, setDemoSubmitting] = useState(false);
-  const [demoDone, setDemoDone] = useState(false);
-  const [demoMsg, setDemoMsg] = useState(null);
-  const [demoAgree, setDemoAgree] = useState(false);
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
 
-  async function handleDemoSubmit(e) {
-    e.preventDefault();
-    if (!demoAgree) {
-      setDemoMsg({ type: 'error', text: 'Please agree to the terms and conditions.' });
-      return;
+  const pages = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) {
+      pages.push(p);
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...');
     }
-    setDemoSubmitting(true);
-    setDemoMsg(null);
-    const { error } = await supabase.from('career_contact_submissions').insert({
-      full_name: demoForm.name.trim(),
-      email: demoForm.email.trim(),
-      phone: demoForm.phone.trim(),
-    });
-    if (error) {
-      console.error('Career contact submission error:', error);
-    }
-    fetch('/api/submit-career-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ full_name: demoForm.name.trim(), email: demoForm.email.trim(), phone: demoForm.phone.trim() }),
-    }).catch(() => {});
-    trackFormSubmit('career_contact');
-    setDemoDone(true);
-    setDemoSubmitting(false);
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-      <div className="bg-brand-blue px-6 py-4">
-        <h3 className="text-xl font-bold text-white">Enquiry</h3>
-        <div className="text-white text-xs mt-0.5">Fill the form and our team will contact you shortly.</div>
-      </div>
-      <div className="p-6">
-        {demoDone ? (
-          <div className="text-center py-8">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-              <FiCheck className="w-7 h-7 text-emerald-600" />
-            </div>
-            <h4 className="text-lg font-bold text-slate-900 mb-1">Thank You!</h4>
-            <p className="text-sm text-slate-500">We have received your request. Our team will get in touch with you shortly.</p>
-            <button onClick={() => { setDemoDone(false); setDemoForm({ name: '', email: '', phone: '' }); setDemoAgree(false); }} className="mt-6 text-sm font-semibold text-brand-blue hover:underline">
-              Send Another Message
-            </button>
-          </div>
+    <div className="flex items-center justify-end gap-1 sm:gap-1.5 mt-6 sm:mt-8 flex-wrap">
+      <button
+        onClick={() => onChange(page - 1)}
+        disabled={page <= 1}
+        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+        aria-label="Previous page"
+      >
+        <FiChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      </button>
+      {pages.map((p, i) => (
+        p === '...' ? (
+          <span key={`ellipsis-${i}`} className="w-6 h-7 sm:w-7 sm:h-8 flex items-center justify-center text-gray-400 text-xs">…</span>
         ) : (
-          <form onSubmit={handleDemoSubmit} className="space-y-4">
-            <div>
-              <input
-                type="text"
-                value={demoForm.name}
-                onChange={(e) => setDemoForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="Your Name *"
-                required
-                className="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-colors border-gray-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
-              />
-            </div>
-            <div>
-              <input
-                type="email"
-                value={demoForm.email}
-                onChange={(e) => setDemoForm(p => ({ ...p, email: e.target.value }))}
-                placeholder="Email Address *"
-                required
-                className="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-colors border-gray-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
-              />
-            </div>
-            <div>
-              <input
-                type="tel"
-                value={demoForm.phone}
-                onChange={(e) => setDemoForm(p => ({ ...p, phone: e.target.value }))}
-                placeholder="Phone Number *"
-                required
-                className="w-full px-4 py-3 text-sm border rounded-lg outline-none transition-colors border-gray-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
-              />
-            </div>
-            {demoMsg && (
-              <p className="!text-red-500 text-xs">{demoMsg.text}</p>
-            )}
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={demoAgree} onChange={(e) => {
-                setDemoAgree(e.target.checked);
-                if (demoMsg?.type === 'error') setDemoMsg(null);
-              }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20" />
-              <span className="text-xs text-slate-600 leading-relaxed">
-                I agree to the{' '}
-                <a href="/terms" className="text-brand-blue underline hover:text-brand-blue/80">Terms of Use</a>
-                {' '}and{' '}
-                <a href="/privacy" className="text-brand-blue underline hover:text-brand-blue/80">Privacy Policy</a>.
-              </span>
-            </label>
-            <button
-              type="submit"
-              disabled={demoSubmitting}
-              className="w-1/2 mx-auto block py-2.5 rounded-lg bg-brand-blue text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 cursor-pointer"
-            >
-              {demoSubmitting ? 'Submitting...' : 'Send'}
-            </button>
-          </form>
-        )}
-      </div>
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center ${
+              p === page ? 'bg-brand-blue text-white shadow-xs' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {p}
+          </button>
+        )
+      ))}
+      <button
+        onClick={() => onChange(page + 1)}
+        disabled={page >= totalPages}
+        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+        aria-label="Next page"
+      >
+        <FiChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      </button>
     </div>
   );
 }
+
+const TABS = [
+  { key: 'all', label: 'All' },
+  { key: 'jobs', label: 'Jobs' },
+  { key: 'interns', label: 'Internships' },
+];
 
 export default function Career() {
   const formRef = useRef(null);
@@ -199,7 +172,10 @@ export default function Career() {
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const visibleJobs = 4;
+  const [tab, setTab] = useState('all');
+  const [page, setPage] = useState(1);
+  const [direction, setDirection] = useState(1);
+  const perPage = 6;
 
   const { data: pageContent, isLoading: pageLoading } = useQuery({
     queryKey: ['career-page-content'],
@@ -335,6 +311,34 @@ export default function Career() {
 
   const isLoading = pageLoading || catsLoading || jobsLoading || internshipsLoading;
   const isInternship = form.category === 'Internship';
+
+  const allJobsList = (jobs || []).map(j => ({ ...j, _type: 'job' }));
+  const allInternsList = (internships || []).map(i => ({ ...i, _type: 'intern' }));
+
+  const filteredItems = tab === 'all'
+    ? [...allJobsList, ...allInternsList].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    : tab === 'jobs' ? allJobsList : allInternsList;
+
+  const totalPages = Math.ceil(filteredItems.length / perPage);
+  const start = (page - 1) * perPage;
+  const pageItems = filteredItems.slice(start, start + perPage);
+
+  function handleTabChange(t) {
+    if (t === tab) return;
+    setDirection(1);
+    setTab(t);
+    setPage(1);
+  }
+
+  function handlePageChange(newPage) {
+    if (newPage === page) return;
+    setDirection(newPage > page ? 1 : -1);
+    setPage(newPage);
+    if (jobsRef.current) {
+      const topOffset = jobsRef.current.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, topOffset), behavior: 'smooth' });
+    }
+  }
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -723,83 +727,109 @@ export default function Career() {
 
       <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className={`mb-10 text-${section2HeadingAlign}`}>
+          <div className={`mb-8 text-${section2HeadingAlign}`}>
             {pageContent?.section2_heading && (
-              <h2 className="text-3xl font-extrabold text-slate-900 mt-2">
+              <h2 className="text-3xl font-extrabold text-slate-900 mt-2 whitespace-pre-line">
                 {pageContent.section2_heading}
               </h2>
             )}
             {pageContent?.section2_subheading && (
-              <p className="text-slate-600 text-sm mt-1">
+              <p className="text-slate-600 text-sm mt-1 whitespace-pre-line">
                 {pageContent.section2_subheading}
               </p>
             )}
-            <div className="w-12 h-1 bg-brand-orange mx-auto rounded-full mt-3" />
+            <div className="w-16 h-[3px] bg-brand-orange mx-auto rounded-full mt-3" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-            <div className="order-2 lg:order-1">
-          {(jobs?.length > 0 || internships?.length > 0) ? (
+          {/* Category Tabs: All, Jobs, Internships */}
+          <div className="flex items-center justify-center gap-2.5 mb-10 flex-wrap">
+            {TABS.map(t => {
+              const count = t.key === 'all'
+                ? (jobs?.length || 0) + (internships?.length || 0)
+                : t.key === 'jobs'
+                  ? (jobs?.length || 0)
+                  : (internships?.length || 0);
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => handleTabChange(t.key)}
+                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer shadow-xs ${
+                    tab === t.key
+                      ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20'
+                      : 'bg-white text-slate-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  {t.label} <span className={tab === t.key ? 'text-white/80' : 'text-slate-400 font-normal'}>({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {pageItems.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(() => {
-                  const allItems = [];
-                  const maxLen = Math.max(jobs?.length || 0, internships?.length || 0);
-                  for (let i = 0; i < maxLen; i++) {
-                    if (internships?.[i]) allItems.push({ ...internships[i], _type: 'intern' });
-                    if (jobs?.[i]) allItems.push({ ...jobs[i], _type: 'job' });
-                  }
-                  return allItems.slice(0, visibleJobs).map((item, i) => {
-                    if (item._type === 'intern') {
+              <div className="relative overflow-hidden w-full min-h-[380px] py-1">
+                <AnimatePresence mode="wait" custom={direction} initial={false}>
+                  <motion.div
+                    key={`${tab}-${page}`}
+                    custom={direction}
+                    variants={carouselVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  >
+                    {pageItems.map((item, i) => {
+                      const isIntern = item._type === 'intern';
                       return (
                         <motion.div
-                          key={`intern-${item.id}`}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: i * 0.05 }}
-                          className="bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-md transition-all p-4 flex flex-col justify-between"
+                          key={`${item._type}-${item.id}`}
+                          variants={cardVariants}
+                          whileHover={{ y: -5 }}
+                          className="bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all p-5 flex flex-col justify-between"
                         >
                           <div>
-                            {/* TOP ROW: Name + Badge (Left) | Stipend (Right Top) */}
+                            {/* TOP ROW: Name + Badge (Left) | Stipend / Salary (Right Top) */}
                             <div className="flex items-center justify-between gap-3 mb-3">
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <h3 className="font-bold text-slate-800 text-base leading-snug truncate whitespace-nowrap min-w-0" title={item.title}>
+                                <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 break-words min-w-0 flex-1" title={item.title}>
                                   {item.title}
                                 </h3>
-                                <span className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-full shrink-0">Internship</span>
+                                <span className="text-[10px] font-bold text-brand-orange bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full shrink-0">
+                                  {isIntern ? 'Internship' : 'Job'}
+                                </span>
                               </div>
 
-                              {/* RIGHT SIDE TOP: Stipend */}
-                              {item.stipend && (
+                              {/* RIGHT SIDE TOP: Salary or Stipend */}
+                              {(item.salary || item.stipend) && (
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-md bg-blue-50 text-brand-blue text-xs font-bold border border-blue-200/60">
-                                    {item.stipend.startsWith('₹') ? item.stipend : `₹${item.stipend}`}
+                                  <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-md bg-orange-50 text-brand-orange text-xs font-bold border border-orange-200/60">
+                                    {(item.salary || item.stipend).startsWith('₹') ? (item.salary || item.stipend) : `₹${item.salary || item.stipend}`}
                                   </span>
                                 </div>
                               )}
                             </div>
 
-                            {/* FULL DESCRIPTION (NOT HIDDEN) */}
+                            {/* FULL DESCRIPTION */}
                             {item.description && (
-                              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-3">
+                              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
                                 {item.description}
                               </p>
                             )}
                           </div>
 
                           {/* BOTTOM ROW: Experience/Duration + Location (Left) & Apply Button (Right) */}
-                          <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-auto gap-2 flex-wrap">
-                            <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto gap-3 w-full">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0 flex-1">
                               {(item.experience || item.duration) && (
-                                <span className="text-slate-600 text-xs flex items-center gap-1 font-semibold">
-                                  <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-blue" />
+                                <span className="text-slate-600 text-xs flex items-center gap-1 font-semibold shrink-0">
+                                  <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                                   {item.experience || item.duration}
                                 </span>
                               )}
                               {item.location && (
-                                <span className="text-slate-500 text-xs flex items-center gap-1 font-medium">
-                                  <FiMapPin className="w-3.5 h-3.5 shrink-0 text-slate-400" />{item.location}
+                                <span className="text-slate-500 text-xs flex items-start gap-1 font-medium min-w-0">
+                                  <FiMapPin className="w-3.5 h-3.5 shrink-0 text-slate-400 mt-0.5" />
+                                  <span className="line-clamp-2 leading-tight break-words" title={item.location}>{item.location}</span>
                                 </span>
                               )}
                             </div>
@@ -812,105 +842,32 @@ export default function Career() {
                                   setShowForm(true);
                                 }
                               }}
-                              className="inline-flex items-center gap-1.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-4 py-1.5 rounded-full text-xs transition-all cursor-pointer">
-                              Apply Now <FiArrowRight className="w-3.5 h-3.5" />
+                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue hover:bg-blue-700 text-white font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm shadow-sm shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
+                            >
+                              Apply Now <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </motion.div>
                       );
-                    }
-                    return (
-                      <motion.div
-                        key={`job-${item.id}`}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.05 }}
-                        className="bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-md transition-all p-4 flex flex-col justify-between"
-                      >
-                        <div>
-                          {/* TOP ROW: Name + Badge (Left) | Salary (Right Top) */}
-                          <div className="flex items-center justify-between gap-3 mb-3">
-                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <h3 className="font-bold text-slate-800 text-base leading-snug truncate whitespace-nowrap min-w-0" title={item.title}>
-                                {item.title}
-                              </h3>
-                              <span className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-full shrink-0">Job</span>
-                            </div>
-
-                            {/* RIGHT SIDE TOP: Salary */}
-                            {item.salary && (
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-md bg-blue-50 text-brand-blue text-xs font-bold border border-blue-200/60">
-                                  {item.salary.startsWith('₹') ? item.salary : `₹${item.salary}`}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* FULL DESCRIPTION (NOT HIDDEN) */}
-                          {item.description && (
-                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-3">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* BOTTOM ROW: Experience (Left of Location) & Apply Button */}
-                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-auto gap-2 flex-wrap">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            {item.experience && (
-                              <span className="text-slate-600 text-xs flex items-center gap-1 font-semibold">
-                                <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-blue" />
-                                {item.experience}
-                              </span>
-                            )}
-                            {item.location && (
-                              <span className="text-slate-500 text-xs flex items-center gap-1 font-medium">
-                                <FiMapPin className="w-3.5 h-3.5 shrink-0 text-slate-400" />{item.location}
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => {
-                              if (item.apply_url?.trim()) {
-                                window.open(item.apply_url.trim(), '_blank', 'noopener,noreferrer');
-                              } else {
-                                setSelectedJob(item);
-                                setShowForm(true);
-                              }
-                            }}
-                            className="inline-flex items-center gap-1.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-4 py-1.5 rounded-full text-xs transition-all cursor-pointer">
-                            Apply Now <FiArrowRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    );
-                  });
-                })()}
+                    })}
+                  </motion.div>
+                </AnimatePresence>
               </div>
-              {(jobs?.length || 0) + (internships?.length || 0) > visibleJobs && (
-                <div className="flex justify-end mt-4">
-                  <Link
-                    to="/career/jobs"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-blue-700 transition-colors cursor-pointer"
-                  >
-                    View More <FiArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              )}
+
+              {/* Pagination when exceeding 6 items */}
+              <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
             </>
           ) : (
-            <div className="text-center py-16">
-              <FiSearch className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-              <p className="text-slate-500 font-medium">No openings right now — check back soon!</p>
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 p-8 max-w-lg mx-auto shadow-xs">
+              <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="font-bold text-slate-800 text-base mb-1">
+                No {tab === 'jobs' ? 'Jobs' : tab === 'interns' ? 'Internships' : 'Openings'} Available
+              </h3>
+              <p className="text-slate-500 text-sm">
+                Check back soon for new opportunities or browse other categories.
+              </p>
             </div>
           )}
-            </div>
-            <aside className="order-1 lg:order-2 pt-5 lg:pt-10">
-              <BookDemoForm />
-            </aside>
-          </div>
         </Reveal>
       </div>
 

@@ -70,7 +70,7 @@ const singles = {
   "career-contact-submissions": "Career Enquiry Submissions",
   "brochure-downloads": "Brochure Downloads",
   "form-submissions": "Form Submissions",
-  "newsletter-subscribers": "Newsletter Subscribers",
+  "newsletter-subscribers": "Newsletter",
   "contact-submissions": "Contact Submissions",
   "chat-submissions": "Chat Submissions",
   "service-categories": "Service Categories",

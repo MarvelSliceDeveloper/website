@@ -163,14 +163,14 @@ export default function Banking() {
 
     setIsSubmitting(true);
 
-    const buttonClicked = enquiryType === 'topic' ? `Enquire Now (${selectedTopic})` : 'Explore Banking Paths';
+    const buttonClicked = enquiryType === 'topic' ? `Enroll Now (${selectedTopic})` : 'Explore Banking Paths';
 
     const payload = {
       full_name: formName.trim(),
       email: formEmail.trim(),
       phone: formPhone.trim(),
       enquiry_type: enquiryType,
-      topic_title: selectedTopic || 'General Banking Enquiry',
+      topic_title: selectedTopic || 'General Banking Enrollment',
       button_clicked: buttonClicked,
       terms_accepted: true,
       is_read: false,
@@ -250,12 +250,11 @@ export default function Banking() {
 
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
-                <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-brand-blue leading-[1.18] tracking-tight">
-                  Build Your Career <br className="hidden sm:inline" />
-                  in Banking
+                <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
+                  Build Your Career in Banking
                 </h1>
 
-                <p className="text-slate-600 text-base sm:text-lg leading-[1.8] font-normal">
+                <p className="text-sm sm:text-base leading-relaxed text-slate-600 w-full">
                   Banking is one of India's most popular career paths for graduates who are looking for stability, professional growth, and opportunities to work across different areas of financial services. The Institute of Banking Personnel Selection (IBPS) conducts recruitment examinations for several public-sector banking positions. These examinations open doors to roles ranging from customer-facing branch operations to officer-level responsibilities and specialised banking functions. Explore the major IBPS examinations below and find the path that matches your career goals.
                 </p>
               </Reveal>
@@ -367,13 +366,13 @@ export default function Banking() {
                         </div>
                       </div>
 
-                      {/* Enquire Action Button */}
+                      {/* Enroll Action Button */}
                       <button
                         type="button"
                         onClick={() => openApplyModal('topic', exam.title)}
                         className="w-full py-2.5 px-4 bg-brand-blue hover:bg-brand-orange text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:shadow-brand-orange/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-1.5 group/btn cursor-pointer mt-2"
                       >
-                        <span>Enquire Now</span>
+                        <span>Enroll Now</span>
                         <FiArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:translate-x-1.5" />
                       </button>
                     </div>
@@ -452,13 +451,12 @@ export default function Banking() {
             {/* Left Column: Heading & 4 Course Bullet Points */}
             <Reveal variant="left" className="lg:col-span-7 space-y-6">
               <div>
-                <h2 className="font-extrabold text-2xl sm:text-3xl lg:text-4xl text-brand-blue leading-tight">
-                  Why Prepare for Banking <br />
-                  Exams with Us?
+                <h2 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight">
+                  Why Prepare for Banking Exams with Us?
                 </h2>
               </div>
 
-              <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+              <p className="text-sm sm:text-base leading-relaxed text-slate-600 w-full">
                 Our specialized Banking & IBPS coaching program is designed to build strong concepts, enhance speed and accuracy, and provide end-to-end guidance from Prelims to Final Interviews.
               </p>
 
@@ -605,42 +603,43 @@ export default function Banking() {
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
             >
               {/* Modal Header */}
-              <div className="bg-brand-blue text-white px-6 py-5 flex items-center justify-between relative border-b border-blue-600/30">
+              <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 flex items-center justify-between relative border-b border-blue-600/30">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-extrabold leading-snug">
-                    Banking Enquiry
+                  <h3 className="text-base sm:text-lg font-extrabold leading-tight">
+                    Banking Enrollment
                   </h3>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="bg-white/15 text-white border border-white/25 text-xs font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
-                      {enquiryType === 'topic' ? `Exam: ${selectedTopic}` : 'General Banking Enquiry'}
+                      {enquiryType === 'topic' ? `Exam: ${selectedTopic}` : 'General Banking Enrollment'}
                     </span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={closeApplyModal}
-                  className="p-1.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-white text-red-500 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                  aria-label="Close modal"
                 >
-                  <FiX className="w-5 h-5" />
+                  <FiX className="w-4 h-4 stroke-[2.5]" />
                 </button>
               </div>
 
               {/* Modal Form Content */}
-              <div className="p-6 sm:p-7 bg-[#F8FAFD]">
+              <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
                   <div className="text-center py-6 space-y-4">
                     <div className="w-14 h-14 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mx-auto border border-blue-200 shadow-sm">
                       <FiCheckCircle className="w-8 h-8 text-brand-blue" />
                     </div>
-                    <h4 className="text-xl font-bold text-dark-navy">Application Submitted!</h4>
+                    <h4 className="text-xl font-bold text-dark-navy">Enrollment Submitted!</h4>
                     <p className="text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
-                      Thank you for applying. Our banking academic advisors will reach out to you shortly.
+                      Thank you for enrolling. Our banking academic advisors will reach out to you shortly.
                     </p>
                     <button
                       type="button"
                       onClick={closeApplyModal}
-                      className="mt-2 w-full py-3 bg-brand-blue hover:bg-brand-orange text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
+                      className="mt-2 px-8 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm rounded-full transition-all shadow-md cursor-pointer mx-auto block"
                     >
                       Done
                     </button>
@@ -662,7 +661,7 @@ export default function Banking() {
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
                         placeholder="Enter your full name"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
                           formErrors.name
                             ? 'border-red-400 focus:border-red-500 bg-red-50/30'
                             : 'border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 bg-white'
@@ -682,7 +681,7 @@ export default function Banking() {
                         value={formEmail}
                         onChange={(e) => setFormEmail(e.target.value)}
                         placeholder="Enter your email address"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
                           formErrors.email
                             ? 'border-red-400 focus:border-red-500 bg-red-50/30'
                             : 'border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 bg-white'
@@ -702,7 +701,7 @@ export default function Banking() {
                         value={formPhone}
                         onChange={(e) => setFormPhone(e.target.value)}
                         placeholder="Enter your phone number"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-colors ${
                           formErrors.phone
                             ? 'border-red-400 focus:border-red-500 bg-red-50/30'
                             : 'border-slate-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 bg-white'
@@ -713,11 +712,11 @@ export default function Banking() {
                       )}
                     </div>
 
-                    <div className="pt-2">
+                    <div className="pt-2 flex justify-center">
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-3.5 bg-brand-blue hover:bg-brand-orange text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg hover:shadow-brand-orange/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                        className="px-8 sm:px-10 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm rounded-full shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 active:scale-95 mx-auto"
                       >
                         {isSubmitting ? (
                           <>

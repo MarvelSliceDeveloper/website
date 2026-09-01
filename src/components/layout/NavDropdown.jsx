@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { useNavChildren } from "../../hooks/useSupabase";
@@ -10,6 +10,94 @@ function hasChildren(item) {
 
 function hasNavChildren(item) {
   return item._navChildren && item._navChildren.length > 0;
+}
+
+function isItemOrSubtreeActive(item, currentPath, parentParam, resolvedChildren) {
+  if (!currentPath) return false;
+
+  // 1. Direct path match
+  if (item.path) {
+    if (currentPath === item.path) return true;
+    if (item.path !== '/' && currentPath.startsWith(item.path + '/')) return true;
+  }
+
+  const label = item.label || '';
+  const labelSlug = label.toLowerCase().replace(/\s+/g, '-');
+
+  // 2. Query param match (e.g. ?parent=software-learning or ?parent=competitive-exam)
+  if (parentParam && (parentParam === labelSlug || (parentParam === 'sl' && labelSlug === 'software-learning') || (parentParam === 'ce' && labelSlug === 'competitive-exam'))) {
+    return true;
+  }
+
+  // 3. Category & Course route matching for Software Learning
+  if (label === 'Software Learning') {
+    const isCompetitive = currentPath === '/banking' || currentPath.startsWith('/banking') || currentPath.includes('competitive-exam') || currentPath.startsWith('/courses/ce/') || parentParam === 'competitive-exam' || parentParam === 'ce';
+    if (!isCompetitive && (
+      currentPath.startsWith('/courses') ||
+      currentPath.startsWith('/software-learning')
+    )) {
+      return true;
+    }
+  }
+
+  // 4. Competitive Exam matching
+  if (label === 'Competitive Exam') {
+    if (currentPath === '/banking' || currentPath.startsWith('/banking') || currentPath.includes('competitive-exam') || currentPath.startsWith('/courses/ce/') || parentParam === 'competitive-exam' || parentParam === 'ce') {
+      return true;
+    }
+  }
+
+  // 5. Services matching (e.g. /services, /services/:slug)
+  if (label === 'Services') {
+    if (currentPath === '/services' || currentPath.startsWith('/services/')) {
+      return true;
+    }
+  }
+
+  // 6. Blog matching (e.g. /blog, /blog/:slug)
+  if (label === 'Blog') {
+    if (currentPath === '/blog' || currentPath.startsWith('/blog/')) {
+      return true;
+    }
+  }
+
+  // 7. Career matching (e.g. /career, /career/:id)
+  if (label === 'Career') {
+    if (currentPath === '/career' || currentPath.startsWith('/career/')) {
+      return true;
+    }
+  }
+
+  // 8. Contact matching
+  if (label === 'Contact') {
+    if (currentPath === '/contact' || currentPath.startsWith('/contact/')) {
+      return true;
+    }
+  }
+
+  // 9. About matching
+  if (label === 'About') {
+    if (currentPath === '/about' || currentPath.startsWith('/about/')) {
+      return true;
+    }
+  }
+
+  // 10. Check if any resolved children match
+  function checkChildren(childrenList) {
+    if (!childrenList || !Array.isArray(childrenList)) return false;
+    return childrenList.some(child => {
+      if (child.path && (currentPath === child.path || (child.path !== '/' && currentPath.startsWith(child.path + '/')))) {
+        return true;
+      }
+      if (child.children && checkChildren(child.children)) return true;
+      if (child._navChildren && checkChildren(child._navChildren)) return true;
+      return false;
+    });
+  }
+
+  if (resolvedChildren && checkChildren(resolvedChildren)) return true;
+
+  return false;
 }
 
 function DesktopNavItem({
@@ -24,6 +112,8 @@ function DesktopNavItem({
 }) {
   const containerRef = useRef(null);
   const closeTimer = useRef(null);
+  const location = useLocation();
+  const path = currentPath || location.pathname;
   const [searchParams] = useSearchParams();
   const parentParam = searchParams.get("parent");
 
@@ -94,7 +184,7 @@ function DesktopNavItem({
   }
 
   if (!hasSub) {
-    const isActive = item.path && currentPath === item.path;
+    const isActive = isItemOrSubtreeActive(item, path, parentParam, null);
     return (
       <Link
         to={item.path || "#"}
@@ -113,8 +203,7 @@ function DesktopNavItem({
   }
 
   if (depth === 0) {
-    const parentSlug = item.label.toLowerCase().replace(/\s+/g, "-");
-    const hasActiveChild = parentParam === parentSlug;
+    const hasActiveChild = isItemOrSubtreeActive(item, path, parentParam, resolvedChildren);
 
     return (
       <div
@@ -133,10 +222,8 @@ function DesktopNavItem({
           aria-haspopup="true"
           aria-expanded={isOpen}
           className={`group flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap rounded-t-md transition-all duration-200 ease-out cursor-pointer ${
-              isOpen
-              ? "text-brand-blue"
-              : hasActiveChild
-              ? "text-brand-blue"
+              isOpen || hasActiveChild
+              ? "text-brand-blue font-semibold"
               : "text-gray-500 hover:text-brand-blue"
           }`}
           onClick={() => (isOpen ? onClose() : onOpen())}
@@ -170,7 +257,7 @@ function DesktopNavItem({
               <SubmenuItems
                 items={resolvedChildren}
                 depth={1}
-                currentPath={currentPath}
+                currentPath={path}
                 onItemClick={onItemClick}
                 closeDelay={cd}
               />
@@ -289,10 +376,12 @@ export default function NavDropdown({
   items,
   currentPath,
   onItemClick,
-  closeDelay = 250,
+  closeDelay = 150,
 }) {
   const [openIdx, setOpenIdx] = useState(null);
   const openTimer = useRef(null);
+  const [searchParams] = useSearchParams();
+  const parentParam = searchParams.get("parent");
 
   const handleOpen = useCallback((idx) => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -317,6 +406,9 @@ export default function NavDropdown({
     };
   }, []);
 
+  const location = useLocation();
+  const path = currentPath || location.pathname;
+
   return (
     <nav role="menubar" className="flex items-center gap-0.5">
       {items.map((item, idx) => {
@@ -324,22 +416,23 @@ export default function NavDropdown({
         if (!item.path && !hasChildrenFromNav) {
           return null;
         }
+        const isActive = isItemOrSubtreeActive(item, path, parentParam, item.children);
         return item.path ? (
           <Link
             key={idx}
             to={item.path}
             role="menuitem"
             className={`group relative px-3 py-2 text-sm font-medium whitespace-nowrap rounded-t-md transition-all duration-200 ease-out ${
-              currentPath === item.path
+              isActive
                 ? "text-brand-blue"
                 : "text-gray-500 hover:text-brand-blue"
             }`}
             onClick={onItemClick}
           >
             <span className="relative inline-block pb-[3px]">
-              {item.label}
+              <span className={isActive ? "text-brand-blue font-semibold" : ""}>{item.label}</span>
               <span className={`absolute left-0 bottom-0 w-full h-[2px] bg-brand-blue rounded-full origin-left transition-transform duration-300 ease-in-out ${
-                currentPath === item.path ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
               }`} />
             </span>
           </Link>
@@ -348,6 +441,7 @@ export default function NavDropdown({
             key={idx}
             item={item}
             depth={0}
+            currentPath={path}
             isOpen={openIdx === idx}
             onOpen={() => handleOpen(idx)}
             onClose={() => handleClose(idx)}
@@ -372,6 +466,8 @@ function MobileNavItem({
   isOpen,
   onToggle,
 }) {
+  const location = useLocation();
+  const path = currentPath || location.pathname;
   const [searchParams] = useSearchParams();
   const parentParam = searchParams.get("parent");
   const { data: navChildren } = useNavChildren(
@@ -383,7 +479,7 @@ function MobileNavItem({
   const [childOpenIdx, setChildOpenIdx] = useState(null);
 
   if (!hasSub) {
-    const isActive = item.path && currentPath === item.path;
+    const isActive = isItemOrSubtreeActive(item, path, parentParam, null);
 
     return (
       <Link
@@ -400,8 +496,7 @@ function MobileNavItem({
     );
   }
 
-  const parentSlug = item.slug || item.label.toLowerCase().replace(/\s+/g, "-");
-  const hasActiveChild = parentParam === parentSlug;
+  const hasActiveChild = isItemOrSubtreeActive(item, path, parentParam, resolvedChildren);
 
   return (
     <div>
@@ -439,7 +534,7 @@ function MobileNavItem({
                   key={idx}
                   item={child}
                   depth={depth + 1}
-                  currentPath={currentPath}
+                  currentPath={path}
                   onItemClick={onItemClick}
                   isOpen={childOpenIdx === idx}
                   onToggle={() =>
@@ -457,6 +552,8 @@ function MobileNavItem({
 
 export function MobileNav({ items, currentPath, onItemClick }) {
   const [openIdx, setOpenIdx] = useState(null);
+  const location = useLocation();
+  const path = currentPath || location.pathname;
   return (
     <div className="px-2 py-4 space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
       {items.map((item, idx) => (
@@ -464,7 +561,7 @@ export function MobileNav({ items, currentPath, onItemClick }) {
           key={idx}
           item={item}
           depth={0}
-          currentPath={currentPath}
+          currentPath={path}
           onItemClick={onItemClick}
           isOpen={openIdx === idx}
           onToggle={() => setOpenIdx(openIdx === idx ? null : idx)}

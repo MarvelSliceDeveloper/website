@@ -16,10 +16,8 @@ export default function FAQSection({ section }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">
-            <div className="inline-flex flex-col items-center">
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
-              <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-4/5" />
-            </div>
+            <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
           </div>
         </Reveal>
         <Stagger className="space-y-2 mt-16 w-full">

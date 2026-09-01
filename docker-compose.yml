@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  marvel-slice-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marvel_slice_webuzo
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SMTP_EMAIL=${SMTP_EMAIL}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    env_file:
+      - .env

@@ -103,6 +103,8 @@ const sectionDefs = [
   },
   {
     key: 'intro_form', label: 'Intro', icon: FiMail, color: 'from-emerald-400 to-emerald-600',
+    noSubheading: true,
+    multilineHeading: true,
     fields: [
       { name: 'intro_text', label: 'Intro Paragraph', type: 'textarea' },
       { name: 'pill_buttons', label: 'Pill Buttons (one per line)', type: 'multiline' },
@@ -875,20 +877,45 @@ function FieldEditor({ def, data, onChange }) {
   function updateContent(name, value) {
     onChange({ ...data, content: { ...content, [name]: value } });
   }
+  const showSubheading = !def.noSubheading;
+  const isMultilineHeading = def.multilineHeading;
+
   return (
     <div className="space-y-4">
       {!def.contentOnly && (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className={showSubheading ? "grid sm:grid-cols-2 gap-4" : "w-full"}>
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Heading</label>
-            <input type="text" value={heading} onChange={(e) => onChange({ ...data, heading: e.target.value })}
-              className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" placeholder="Section heading" />
+            {isMultilineHeading ? (
+              <textarea
+                rows={2}
+                value={heading}
+                onChange={(e) => onChange({ ...data, heading: e.target.value })}
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500"
+                placeholder="Section heading (supports 2-line formatting)"
+              />
+            ) : (
+              <input
+                type="text"
+                value={heading}
+                onChange={(e) => onChange({ ...data, heading: e.target.value })}
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500"
+                placeholder="Section heading"
+              />
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Subheading</label>
-            <input type="text" value={subheading} onChange={(e) => onChange({ ...data, subheading: e.target.value })}
-              className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" placeholder="Section subheading" />
-          </div>
+          {showSubheading && (
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Subheading</label>
+              <input
+                type="text"
+                value={subheading}
+                onChange={(e) => onChange({ ...data, subheading: e.target.value })}
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500"
+                placeholder="Section subheading"
+              />
+            </div>
+          )}
         </div>
       )}
       {(def.fields || []).map((f) => (
