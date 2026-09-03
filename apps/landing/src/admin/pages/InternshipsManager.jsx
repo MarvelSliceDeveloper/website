@@ -24,8 +24,9 @@ export default function InternshipsManager() {
   const [categories, setCategories] = useState([]);
 
   const defaultForm = {
-    title: '', role_category_id: null, location: '', type: 'Internship',
+    title: '', division: '', role_category_id: null, location: '', type: 'Internship',
     duration: '', stipend: '', experience: '', apply_url: '', description: '',
+    key_requirements: '', responsibilities: '', qualifications: '',
     is_active: true, sort_order: 0,
   };
   const [form, setForm] = useState(defaultForm);
@@ -54,6 +55,7 @@ export default function InternshipsManager() {
       setEditing(item);
       setForm({
         title: item.title || '',
+        division: item.division || item.department || '',
         role_category_id: item.role_category_id || null,
         location: item.location || '',
         type: item.type || 'Internship',
@@ -62,6 +64,9 @@ export default function InternshipsManager() {
         experience: item.experience || '',
         apply_url: item.apply_url || '',
         description: item.description || '',
+        key_requirements: item.key_requirements || '',
+        responsibilities: item.responsibilities || '',
+        qualifications: item.qualifications || '',
         is_active: item.is_active ?? true,
         sort_order: item.sort_order || 0,
       });
@@ -90,12 +95,11 @@ export default function InternshipsManager() {
     if (!form.role_category_id) return;
     if (!form.location?.trim()) return;
     if (!form.duration?.trim()) return;
-    if (!form.stipend?.trim()) return;
-    if (!form.experience?.trim()) return;
     if (!form.description?.trim()) return;
     setSaving(true);
     const payload = {
       title: form.title.trim(),
+      division: form.division?.trim() || null,
       role_category_id: form.role_category_id && form.role_category_id !== '' ? form.role_category_id : null,
       location: form.location?.trim() || null,
       type: form.type?.trim() || null,
@@ -103,17 +107,34 @@ export default function InternshipsManager() {
       stipend: form.stipend?.trim() || null,
       experience: form.experience?.trim() || null,
       description: form.description?.trim() || null,
+      key_requirements: form.key_requirements?.trim() || null,
+      responsibilities: form.responsibilities?.trim() || null,
+      qualifications: form.qualifications?.trim() || null,
       apply_url: form.apply_url?.trim() || null,
       is_active: form.is_active,
       sort_order: form.sort_order,
     };
 
+    let currentPayload = { ...payload };
     let res;
-    if (editing) {
-      res = await supabase.from('internships').update(payload).eq('id', editing.id);
-    } else {
-      res = await supabase.from('internships').insert(payload);
+    for (let attempt = 0; attempt < 6; attempt++) {
+      if (editing) {
+        res = await supabase.from('internships').update(currentPayload).eq('id', editing.id);
+      } else {
+        res = await supabase.from('internships').insert(currentPayload);
+      }
+      if (res?.error) {
+        const match = res.error.message?.match(/Could not find the '([^']+)' column/i);
+        if (match && match[1] && currentPayload[match[1]] !== undefined) {
+          delete currentPayload[match[1]];
+          continue;
+        }
+        break;
+      } else {
+        break;
+      }
     }
+
     if (res?.error) {
       console.error('Failed to save internship:', res.error);
       alert('Failed to save internship: ' + res.error.message);
@@ -168,6 +189,7 @@ export default function InternshipsManager() {
   const exportColumns = [
     { header: 'SL NO', accessor: 'slno', exportValue: (_, i) => i + 1 },
     { header: 'Title', accessor: 'title' },
+    { header: 'Division / Department', accessor: 'division', exportValue: (row) => row.division || row.department || '-' },
     { header: 'Category', accessor: 'role_categories', exportValue: (row) => row.role_categories?.name || 'Uncategorized' },
     { header: 'Location', accessor: 'location' },
     { header: 'Type', accessor: 'type' },
@@ -175,7 +197,10 @@ export default function InternshipsManager() {
     { header: 'Stipend', accessor: 'stipend' },
     { header: 'Experience', accessor: 'experience' },
     { header: 'Apply URL', accessor: 'apply_url' },
-    { header: 'Description', accessor: 'description' },
+    { header: 'Description / Overview', accessor: 'description' },
+    { header: 'Key Requirements', accessor: 'key_requirements' },
+    { header: 'Responsibilities', accessor: 'responsibilities' },
+    { header: 'Qualification & Experience', accessor: 'qualifications' },
     { header: 'Status', accessor: 'is_active', exportValue: (row) => row.is_active ? 'Active' : 'Inactive' },
   ];
 
@@ -205,7 +230,7 @@ export default function InternshipsManager() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 pt-12 sm:pt-20 cursor-pointer" onClick={closeForm}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 pt-8 sm:pt-12 cursor-pointer" onClick={closeForm}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col cursor-auto overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-admin-200 bg-gray-50/50 shrink-0">
               <h3 className="font-semibold text-black">{editing ? 'Edit Internship' : 'Add Internship'}</h3>
@@ -217,9 +242,15 @@ export default function InternshipsManager() {
               <form id="internshipForm" onSubmit={save} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Title *</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Position / Title *</label>
                     <input name="title" value={form.title} onChange={handleChange} placeholder="e.g. Frontend Developer Intern" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" required />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Division / Department</label>
+                    <input name="division" value={form.division} onChange={handleChange} placeholder="e.g. Marketing" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Category *</label>
                     <select name="role_category_id" value={form.role_category_id || ''} onChange={handleChange} required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all bg-white">
@@ -227,35 +258,57 @@ export default function InternshipsManager() {
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Location *</label>
-                    <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Remote / New York" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Type</label>
+                    <select name="type" value={form.type} onChange={handleChange} className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all bg-white">
+                      <option value="Internship">Internship</option>
+                      <option value="Summer Internship">Summer Internship</option>
+                      <option value="Winter Internship">Winter Internship</option>
+                      <option value="Part-time Internship">Part-time Internship</option>
+                    </select>
                   </div>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Duration *</label>
                     <input name="duration" value={form.duration} onChange={handleChange} placeholder="e.g. 3 months" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Minimum Experience</label>
+                    <input name="experience" value={form.experience} onChange={handleChange} placeholder="e.g. Freshers / 0-1 year" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Stipend</label>
+                    <input name="stipend" value={form.stipend} onChange={handleChange} placeholder="e.g. ₹15,000/month" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Stipend *</label>
-                    <input name="stipend" value={form.stipend} onChange={handleChange} placeholder="e.g. $500/month" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Experience *</label>
-                    <input name="experience" value={form.experience} onChange={handleChange} placeholder="e.g. Freshers / 0-1 year" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Location *</label>
+                  <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Remote / New York" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Main Duties &amp; Responsibilities (Overview / Summary) *</label>
+                  <textarea name="description" value={form.description} onChange={handleChange} rows={3} required
+                    placeholder="We are looking for a motivated Intern to join our team..." className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Key Requirements</label>
+                  <textarea name="key_requirements" value={form.key_requirements} onChange={handleChange} rows={4}
+                    placeholder="• Familiarity with HTML, CSS, JavaScript&#10;• Good problem solving skills&#10;• Eager to learn" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Responsibilities</label>
+                  <textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={4}
+                    placeholder="• Assist the development team in building features&#10;• Write clean code&#10;• Participate in code reviews" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Qualification &amp; Experience</label>
+                  <textarea name="qualifications" value={form.qualifications} onChange={handleChange} rows={4}
+                    placeholder="• Pursuing/Completed Bachelor's in CS or IT&#10;• Good communication skills" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>
                   <input name="apply_url" value={form.apply_url} onChange={handleChange} placeholder="e.g. https://apply.example.com/internship" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
-                </div>
-                <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Description *</label>
-                    <textarea name="description" value={form.description} onChange={handleChange} rows={4} required
-                      placeholder="Brief description or requirements..." className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y" />
                 </div>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">

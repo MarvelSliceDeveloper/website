@@ -402,13 +402,6 @@ export default function Blog() {
           <div className="text-center py-20 text-text-gray"><p className="text-lg">No articles found.</p></div>
         ) : (
           <div>
-            {/* MOBILE VIEW ONLY: Recent Posts at Top (Shown only when 'All' category is active) */}
-            {!category && (
-              <div className="block lg:hidden mb-6">
-                <RecentPostsWidget posts={recentPosts || []} />
-              </div>
-            )}
-
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
               <div className="lg:w-[70%] space-y-6 sm:space-y-8">
                 {isAllPage && featured && <FeaturedPost post={featured} />}
@@ -422,11 +415,18 @@ export default function Blog() {
                 <Pagination page={page} total={total} perPage={perPage} onChange={handlePageChange} />
               </div>
               <Reveal variant="left" as="aside" className="lg:w-[30%] space-y-6">
-                <div className="hidden lg:block">
+                {/* Desktop View Sidebar (Original Order) */}
+                <div className="hidden lg:block space-y-6">
                   <RecentPostsWidget posts={recentPosts || []} />
+                  <NewsletterForm />
+                  <PopularTags tags={popularTags || []} activeTag={tag} onTagClick={(t) => { const next = new URLSearchParams(searchParams); if (t === tag) next.delete('tag'); else next.set('tag', t); next.delete('category'); next.delete('page'); setSearchParams(next); }} />
                 </div>
-                <NewsletterForm />
-                <PopularTags tags={popularTags || []} activeTag={tag} onTagClick={(t) => { const next = new URLSearchParams(searchParams); if (t === tag) next.delete('tag'); else next.set('tag', t); next.delete('category'); next.delete('page'); setSearchParams(next); }} />
+
+                {/* Mobile View Sidebar */}
+                <div className="block lg:hidden space-y-6">
+                  <PopularTags tags={popularTags || []} activeTag={tag} onTagClick={(t) => { const next = new URLSearchParams(searchParams); if (t === tag) next.delete('tag'); else next.set('tag', t); next.delete('category'); next.delete('page'); setSearchParams(next); }} />
+                  <NewsletterForm />
+                </div>
               </Reveal>
             </div>
           </div>

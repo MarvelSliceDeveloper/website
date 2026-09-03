@@ -7,7 +7,6 @@ import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import LearningJourney from '../components/ui/LearningTimeline';
 
-
 const serviceStyles = [
   {
     accent: 'text-orange-500',
@@ -87,17 +86,20 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
         h-full
         min-h-[285px]
         overflow-hidden
-        rounded-[22px]
+        rounded-[24px]
         border
         ${style.border}
         bg-white
-        px-7
-        py-6
-        shadow-[0_8px_30px_rgba(15,23,42,0.06)]
+        px-6 sm:px-7
+        py-7 sm:py-8
+        shadow-[0_4px_20px_rgba(0,0,0,0.04)]
         transition-all
         duration-300
-        hover:-translate-y-2
-        hover:shadow-[0_12px_24px_rgba(15,23,42,0.10),0_24px_56px_rgba(15,23,42,0.12)]
+        hover:-translate-y-1.5
+        hover:shadow-[0_14px_34px_rgba(15,23,42,0.1)]
+        flex
+        flex-col
+        justify-between
       `}
     >
       {/* Soft decorative shape */}
@@ -114,28 +116,20 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
           transition-all
           duration-300
           group-hover:scale-125
+          pointer-events-none
         `}
       />
 
-      {/* Service number */}
+      {/* Header Number & Underline */}
       <div className="relative z-10 transition-transform duration-300 group-hover:-translate-y-1">
-        <span
-          className={`
-            text-2xl
-            font-semibold
-            tracking-tight
-            ${style.accent}
-          `}
-        >
+        <span className={`text-2xl font-semibold tracking-tight ${style.accent}`}>
           {String(colorIdx + 1).padStart(2, '0')}
         </span>
 
-        <div
-          className={`mt-2 h-[3px] w-9 rounded-full ${style.underline} transition-all duration-300 group-hover:w-14`}
-        />
+        <div className={`mt-2 h-[2.5px] w-9 rounded-full ${style.underline} transition-all duration-300 group-hover:w-14`} />
       </div>
 
-      {/* Icon */}
+      {/* Icon Badge */}
       <div
         className={`
           absolute
@@ -162,26 +156,25 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
         )}
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 mt-8">
-        <h3 className="max-w-[85%] text-[17px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-slate-700">
-          {title}
-        </h3>
+      {/* Content Area - Fixed height title for 100% even card alignment */}
+      <div className="relative z-10 mt-6 flex-1 flex flex-col justify-between">
+        <div className="min-h-[52px] sm:min-h-[56px] flex flex-col justify-center">
+          <h3 className="text-base sm:text-[17px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-slate-700">
+            {title}
+          </h3>
+        </div>
 
         {description && (
-          <p className="mt-3 text-[13.5px] leading-6 text-slate-500">
+          <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-500 font-normal">
             {description}
           </p>
         )}
       </div>
 
       {/* Decorative dots */}
-      <div className="absolute bottom-5 right-6 grid grid-cols-3 gap-1.5 opacity-70">
+      <div className="absolute bottom-5 right-6 grid grid-cols-3 gap-1.5 opacity-70 pointer-events-none">
         {Array.from({ length: 9 }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-1.5 w-1.5 rounded-full ${style.dots}`}
-          />
+          <span key={i} className={`h-1.5 w-1.5 rounded-full ${style.dots}`} />
         ))}
       </div>
     </div>
@@ -254,16 +247,17 @@ export default function ServicesPage() {
         <section className="py-16 sm:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="div" className="mb-4 text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-blue-700">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
                 {heading}
               </h2>
-              <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-brand-orange" />
+              <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
               {subheading && (
-                <p className="mx-auto mt-4 max-w-2xl text-base text-slate-500 sm:text-lg">
+                <p className="mx-auto max-w-2xl text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
                   {subheading}
                 </p>
               )}
             </Reveal>
+
             <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mt-12">
               {services.map((service, i) => (
                 <StaggerItem key={`service-card-${i}`} className="h-full">
@@ -286,17 +280,18 @@ export default function ServicesPage() {
         <section className="pt-12 pb-16 bg-neutral-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="div" className="mb-4 text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-blue-700">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
                 {faqHeading || 'Frequently Asked Questions'}
               </h2>
-              <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-brand-orange" />
+              <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
               {faqSubheading && (
-                <p className="mx-auto mt-4 max-w-2xl text-base text-slate-500 sm:text-lg">
+                <p className="mx-auto max-w-2xl text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
                   {faqSubheading}
                 </p>
               )}
             </Reveal>
-            <Stagger className="space-y-2 mt-16">
+
+            <Stagger className="space-y-2 mt-10">
               {faqs.map((faq, i) => (
                 <StaggerItem key={`faq-item-${i}`}>
                   <AccordionItem
@@ -304,7 +299,7 @@ export default function ServicesPage() {
                     isOpen={faqOpen === i}
                     onToggle={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <p className="text-gray-500 text-base leading-relaxed">{faq.answer}</p>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
                   </AccordionItem>
                 </StaggerItem>
               ))}

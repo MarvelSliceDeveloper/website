@@ -7,6 +7,7 @@ import AccordionItem from './AccordionItem';
 import Reveal, { Stagger, StaggerItem } from './Reveal';
 import ContactSection from './ContactSection';
 import AnimatedNumber from './AnimatedNumber';
+import { extractPhoneNumbers, cleanTelHref } from '../../lib/phoneUtils';
 
 function safeParse(val) {
   if (Array.isArray(val)) return val;
@@ -61,26 +62,29 @@ export default function SectionRenderer({ section, className }) {
       if (blocks) {
         const contentBlocks = blocks.map((b, i) =>
           b.type === 'heading' ? (
-            <h2 key={i} className={`text-3xl sm:text-4xl font-bold text-blue-700 mb-6 text-${ha}`}>{b.text}</h2>
+            <div key={i} className="mb-6">
+              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line text-${ha}`}>{b.text}</h2>
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
+            </div>
           ) : (
-            <div key={i} className={`text-gray-700 text-base leading-relaxed text-${ca} ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
+            <div key={i} className={`text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
           )
         );
         if (section.image_url) {
           const heading = blocks.find(b => b.type === 'heading')?.text || '';
           const paragraphs = blocks.filter(b => b.type === 'paragraph');
           return (
-            <Reveal className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {heading && (
-                <div className="mb-10">
-                  <h2 className="text-3xl sm:text-4xl font-bold text-blue-700 text-center">{heading}</h2>
-                  <div className="w-16 h-1 bg-brand-orange mt-3 mx-auto" />
+                <div className="mb-8 text-center lg:text-left">
+                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight">{heading}</h2>
+                  <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto lg:mx-0" />
                 </div>
               )}
               <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div className="space-y-4">
                   {paragraphs.map((b, i) => (
-                    <div key={i} className="text-gray-700 text-base leading-relaxed text-left">{b.text}</div>
+                    <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{b.text}</div>
                   ))}
                 </div>
                 <div className="flex justify-center">
@@ -91,7 +95,7 @@ export default function SectionRenderer({ section, className }) {
           );
         }
         return (
-          <Reveal className="py-16 max-w-4xl mx-auto">{contentBlocks}</Reveal>
+          <Reveal className="py-12 max-w-4xl mx-auto">{contentBlocks}</Reveal>
         );
       }
       const paragraphs = safeParse(section.content);
@@ -99,9 +103,20 @@ export default function SectionRenderer({ section, className }) {
         ? paragraphs.join('\n\n')
         : safeString(section.content);
       return (
-        <Reveal className={`py-16 max-w-4xl mx-auto text-${ca}`}>
-          {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-blue-700 mb-6 text-${ha}`}>{section.heading}</h2>}
-          {content && <div className="text-gray-700 text-base leading-relaxed">{content}</div>}
+        <Reveal className={`py-12 max-w-4xl mx-auto text-${ca}`}>
+          {section.heading && (
+            <div className="mb-6">
+              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy text-${ha}`}>{section.heading}</h2>
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
+            </div>
+          )}
+          {content && (
+            <div className="space-y-4">
+              {content.split('\n\n').filter(Boolean).map((p, i) => (
+                <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</div>
+              ))}
+            </div>
+          )}
         </Reveal>
       );
     }
@@ -111,7 +126,6 @@ export default function SectionRenderer({ section, className }) {
         ? paragraphs.join('\n\n')
         : safeString(section.content);
       const items = safeParse(section.items);
-      const ha = section.headingAlign || 'center';
       const ca = section.contentAlign || 'center';
       const statIcons = ['LuGraduationCap', 'LuBookOpen', 'LuUsers', 'LuAward', 'LuTarget', 'LuTrendingUp', 'LuGlobe', 'LuHeartHandshake'];
       const statIconBg = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-cyan-100', 'bg-indigo-100', 'bg-teal-100', 'bg-amber-100'];
@@ -126,23 +140,22 @@ export default function SectionRenderer({ section, className }) {
         </div>
       );
       return (
-        <div className={`relative ${className || 'py-[100px]'}`}>
+        <div className={`relative ${className || 'py-[80px]'}`}>
           {section.image_url ? (
             <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid lg:grid-cols-[55fr_45fr] gap-y-12 lg:gap-x-[70px] items-start">
                 <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
                   {section.heading && (
-                    <>
-                      <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
-                        <span className="block text-blue-700">{section.heading.split(' ')[0]}</span>
-                        <span className="block text-brand-orange">{section.heading.split(' ').slice(1).join(' ')}</span>
+                    <div className="mb-6 text-center lg:text-left">
+                      <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight">
+                        <span>{section.heading}</span>
                       </h2>
-                      <div className="w-20 h-1.5 bg-brand-orange mt-5 mb-[30px] lg:mb-[50px] mx-auto lg:mx-0" />
-                    </>
+                      <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto lg:mx-0" />
+                    </div>
                   )}
                   <div className="max-w-[600px] space-y-6 mx-auto lg:mx-0">
                     {content.split('\n\n').filter(Boolean).map((p, i) => (
-                      <p key={i} className="text-gray-700 text-base leading-relaxed text-center lg:text-left">{p}</p>
+                      <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</p>
                     ))}
                   </div>
                 </div>
@@ -256,7 +269,16 @@ export default function SectionRenderer({ section, className }) {
           {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
           <div className="space-y-4">
             {section.address && <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMapPin className="w-5 h-5 text-brand-orange" /></div><div className="text-text-gray text-base whitespace-pre-line">{section.address}</div></div>}
-            {section.phone && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiPhone className="w-5 h-5 text-brand-orange" /></div><a href={`tel:${section.phone}`} className="text-text-gray text-base hover:text-brand-orange transition-colors">{section.phone}</a></div>}
+            {section.phone && extractPhoneNumbers(section.phone).map((ph, idx) => (
+              <div key={idx} className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                  <FiPhone className="w-5 h-5 text-brand-orange" />
+                </div>
+                <a href={cleanTelHref(ph)} className="text-text-gray text-base hover:text-brand-orange transition-colors">
+                  {ph}
+                </a>
+              </div>
+            ))}
             {section.email && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMail className="w-5 h-5 text-brand-orange" /></div><a href={`mailto:${section.email}`} className="text-text-gray text-base hover:text-brand-orange transition-colors">{section.email}</a></div>}
           </div>
         </Reveal>
@@ -386,13 +408,23 @@ export default function SectionRenderer({ section, className }) {
                 const s = accentStyles[i % accentStyles.length];
                 return (
                   <StaggerItem key={i} className="h-full">
-                    <div className="group relative h-full overflow-hidden rounded-[20px] border border-gray-100 bg-white px-6 sm:px-7 py-6 sm:py-7 shadow-[0_1px_3px_rgba(15,23,42,0.05),0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.11)]">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full mx-auto bg-white transition-transform duration-300 group-hover:scale-105" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-                        {item.icon ? <DynamicIcon name={item.icon} className={`h-7 w-7 ${s.accent}`} /> : <FiBriefcase className={`h-7 w-7 ${s.accent}`} />}
+                    <div className="group relative h-full overflow-hidden rounded-[24px] border border-slate-100 bg-white px-6 sm:px-7 py-7 sm:py-8 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.1)] flex flex-col items-center text-center justify-between">
+                      <div className="flex flex-col items-center text-center w-full">
+                        {/* 1. ICON CONTAINER */}
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full mx-auto bg-white transition-transform duration-300 group-hover:scale-105 shrink-0" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
+                          {item.icon ? <DynamicIcon name={item.icon} className={`h-7 w-7 ${s.accent}`} /> : <FiBriefcase className={`h-7 w-7 ${s.accent}`} />}
+                        </div>
+
+                        {/* 2. TITLE CONTAINER - FIXED HEIGHT FOR 100% EVEN ALIGNMENT */}
+                        <div className="mt-5 min-h-[52px] sm:min-h-[56px] flex flex-col items-center justify-center w-full">
+                          <h3 className="text-base sm:text-[17px] font-bold leading-snug text-slate-900 text-center">{item.title}</h3>
+                          <div className={`mt-2 h-[2.5px] w-8 rounded-full mx-auto ${s.underline} transition-all duration-300 group-hover:w-11`} />
+                        </div>
+
+                        {/* 3. DESCRIPTION TEXT - UNIFORM BASELINE ACROSS ALL CARDS */}
+                        <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-500 text-center font-normal">{item.description}</p>
                       </div>
-                      <h3 className="mt-5 text-[18px] font-bold leading-snug text-gray-900 text-center">{item.title}</h3>
-                      <div className={`mt-2.5 h-[3px] w-8 rounded-full mx-auto ${s.underline} transition-all duration-300 group-hover:w-11`} />
-                      <p className="mt-3.5 text-[14px] leading-relaxed text-gray-500 text-center">{item.description}</p>
+
                       <div className={`absolute -bottom-10 -right-10 h-28 w-28 rounded-full ${s.blob} opacity-60 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none`} />
                       <div className="absolute bottom-4 right-5 grid grid-cols-3 gap-1 opacity-50 pointer-events-none">
                         {Array.from({ length: 9 }).map((_, d) => (

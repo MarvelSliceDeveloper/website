@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FiPhone, FiX, FiSend, FiCheck } from 'react-icons/fi';
 import { supabase } from '../lib/supabaseClient';
-import { trackFormSubmit } from '../lib/analytics';
+import { trackFormSubmit, trackCtaClick } from '../lib/analytics';
 
 const SUBJECT_OPTIONS = ['Course Enquiry', 'Intern Enquiry', 'Other Enquiry'];
 
@@ -73,7 +73,7 @@ export default function FloatingContactButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       }).catch(() => {});
-      trackFormSubmit('about');
+      trackFormSubmit('floating_enquiry', { subject: form.subject });
       setSent(true);
       setTimeout(() => {
         setOpen(false);
@@ -131,7 +131,10 @@ export default function FloatingContactButton() {
       <div className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-40">
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            trackCtaClick('Floating Quick Contact', 'floating_bubble');
+            setOpen(true);
+          }}
           aria-label="Contact us"
           className="fcb-btn relative flex h-14 w-14 items-center justify-center rounded-full bg-brand-blue text-white shadow-lg shadow-brand-blue/30 hover:bg-brand-blue/90 transition-colors cursor-pointer"
         >

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { FiMapPin, FiPhone, FiMail, FiClock, FiCheckCircle, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
-import Reveal from './Reveal';
 import { supabase } from '../../lib/supabaseClient';
-import { trackFormSubmit } from '../../lib/analytics';
+import { trackFormSubmit, trackPhoneClick, trackEmailClick } from '../../lib/analytics';
+
+import { extractPhoneNumbers, cleanTelHref } from '../../lib/phoneUtils';
 
 function FloatingCircles() {
   return (
@@ -30,9 +31,9 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function ContactDetailItem({ icon: Icon, label, value, href, textColor }) {
+function ContactDetailItem({ icon: Icon, label, value, href, textColor, onClick }) {
   const content = href ? (
-    <a href={href} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
+    <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
   ) : (
     <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
   );
@@ -60,7 +61,6 @@ export default function ContactSection({ section }) {
   const leftSubtitle = c.left_subtitle || 'We\'d love to hear from you. Reach out to us and we\'ll get back to you as soon as possible.';
   const address = c.address || '';
   const displayPhone = c.display_phone || c.phone || '';
-  const telLink = c.tel_link || c.phone || '';
   const companyEmail = c.email || '';
   const businessHours = c.business_hours || '';
 
@@ -142,8 +142,10 @@ export default function ContactSection({ section }) {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-3.5 sm:gap-5 text-left w-full mx-auto lg:mx-0">
               {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} textColor={textColor} />}
-              {displayPhone && <ContactDetailItem icon={FiPhone} label="Phone" value={displayPhone} href={`tel:${telLink}`} textColor={textColor} />}
-              {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} textColor={textColor} />}
+              {extractPhoneNumbers(displayPhone).map((ph, idx) => (
+                <ContactDetailItem key={idx} icon={FiPhone} label={idx === 0 ? "Phone" : "Alt Phone"} value={ph} href={cleanTelHref(ph)} onClick={() => trackPhoneClick(ph, 'contact_section')} textColor={textColor} />
+              ))}
+              {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} onClick={() => trackEmailClick(companyEmail, 'contact_section')} textColor={textColor} />}
               {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} textColor={textColor} />}
             </div>
           </div>
@@ -151,8 +153,8 @@ export default function ContactSection({ section }) {
 
         {/* Right: Send us a Message Form */}
         <div className="bg-white p-6 sm:p-10 flex flex-col justify-center border-t border-gray-200 lg:border-t-0">
-          <h3 className="text-xl sm:text-2xl font-bold text-[#0B2D6B] mb-1 text-center lg:text-left">Send us a Message</h3>
-          <p className="text-xs sm:text-sm text-neutral-500 mb-6 text-center lg:text-left">Fill out the form below and we'll get back to you shortly.</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-dark-navy mb-1 text-center lg:text-left">Send us a Message</h3>
+          <p className="text-xs sm:text-sm text-slate-500 mb-6 text-center lg:text-left leading-relaxed">Fill out the form below and we'll get back to you shortly.</p>
 
           <AnimatePresence mode="wait">
             {status === 'success' ? (
@@ -166,9 +168,9 @@ export default function ContactSection({ section }) {
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
                   <FiCheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-green-500" />
                 </div>
-                <h4 className="text-lg font-bold text-[#0B2D6B] mb-2">Thank You!</h4>
-                <p className="text-xs sm:text-sm text-neutral-500 max-w-xs">{successMessage}</p>
-                <button onClick={() => setStatus('idle')} className="mt-6 text-sm font-semibold text-[#1E56C7] hover:underline">
+                <h4 className="text-base sm:text-lg font-bold text-dark-navy mb-2">Thank You!</h4>
+                <p className="text-xs sm:text-sm text-slate-600 max-w-xs leading-relaxed">{successMessage}</p>
+                <button onClick={() => setStatus('idle')} className="mt-6 text-xs sm:text-sm font-semibold text-brand-blue hover:underline">
                   Send Another Message
                 </button>
               </motion.div>
@@ -183,58 +185,58 @@ export default function ContactSection({ section }) {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Full Name <span className="text-red-400">*</span></label>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Full Name <span className="text-red-400">*</span></label>
                     <input
                       type="text"
                       required
                       value={form.full_name}
                       onChange={(e) => handleChange('full_name', e.target.value)}
                       placeholder="John Doe"
-                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                        errors.full_name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-xl text-xs sm:text-sm text-slate-800 outline-none transition-colors ${
+                        errors.full_name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                       }`}
                     />
                     {errors.full_name && <p className="text-xs text-red-500 mt-1 text-left">{errors.full_name}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Email Address <span className="text-red-400">*</span></label>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Email Address <span className="text-red-400">*</span></label>
                     <input
                       type="email"
                       required
                       value={form.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       placeholder="john@example.com"
-                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                        errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-xl text-xs sm:text-sm text-slate-800 outline-none transition-colors ${
+                        errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                       }`}
                     />
                     {errors.email && <p className="text-xs text-red-500 mt-1 text-left">{errors.email}</p>}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Phone Number <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Phone Number <span className="text-red-400">*</span></label>
                   <input
                     type="tel"
                     required
                     value={form.phone}
                     onChange={(e) => handleChange('phone', e.target.value)}
                     placeholder="+1 (555) 019-2834"
-                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                      errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-xl text-xs sm:text-sm text-slate-800 outline-none transition-colors ${
+                      errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                     }`}
                   />
                   {errors.phone && <p className="text-xs text-red-500 mt-1 text-left">{errors.phone}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Message <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Message <span className="text-red-400">*</span></label>
                   <textarea
                     value={form.message}
                     required
                     onChange={(e) => handleChange('message', e.target.value)}
                     rows={4}
                     placeholder="Write your message here..."
-                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors resize-none ${
-                      errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-xl text-xs sm:text-sm text-slate-800 outline-none transition-colors resize-none ${
+                      errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                     }`}
                   />
                   {errors.message && <p className="text-xs text-red-500 mt-1 text-left">{errors.message}</p>}
@@ -243,12 +245,12 @@ export default function ContactSection({ section }) {
                   <input type="checkbox" checked={agreeTerms} onChange={(e) => {
                     setAgreeTerms(e.target.checked);
                     if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
-                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20 shrink-0" />
+                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20 shrink-0" />
                   <span className="text-xs text-slate-600 leading-relaxed">
                     I agree to the{' '}
-                    <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                    <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
                     {' '}and{' '}
-                    <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                    <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
                   </span>
                 </label>
                 {errors.agree && <p className="text-xs text-red-500 mt-1 text-left">{errors.agree}</p>}
@@ -256,7 +258,7 @@ export default function ContactSection({ section }) {
                   <button
                     type="submit"
                     disabled={status === 'submitting'}
-                    className="min-h-[48px] sm:min-h-[52px] px-8 sm:px-[36px] py-3 sm:py-[15px] rounded-full bg-[#1E56C7] text-white font-semibold text-sm hover:bg-[#1642a0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                    className="min-h-[44px] sm:min-h-[48px] px-8 sm:px-9 py-2.5 sm:py-3 rounded-full bg-[#1E56C7] text-white font-bold text-xs sm:text-sm hover:bg-[#1642a0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {status === 'submitting' ? (
                       <>

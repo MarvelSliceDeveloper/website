@@ -15,9 +15,21 @@ function NavColumn({ parentLabel, defaultChildren }) {
     : (defaultChildren ? [...defaultChildren] : []);
 
   if (parentLabel === 'Competitive Exam') {
-    if (!items.some(item => item.label === 'Banking')) {
-      items.push({ label: 'Banking', path: '/banking' });
-    }
+    const ceDefaults = [
+      { label: 'About Banking', path: '/banking' },
+      { label: 'Aptitude', path: '/aptitude' },
+      { label: 'Reasoning', path: '/reasoning' },
+      { label: 'English', path: '/english' },
+      { label: 'Banking Awareness', path: '/banking-awareness' },
+      { label: 'Current Affairs', path: '/current-affairs' },
+      { label: "Today's Affairs", path: '/todays-affairs' },
+      { label: 'Mock Exam', path: '/mock-exam' }
+    ];
+    ceDefaults.forEach(def => {
+      if (!items.some(item => item.label === def.label)) {
+        items.push(def);
+      }
+    });
   }
 
   if (items.length === 0) return null;
@@ -40,11 +52,14 @@ function NavColumn({ parentLabel, defaultChildren }) {
   );
 }
 
+import { extractPhoneNumbers, cleanTelHref } from '../../lib/phoneUtils';
+import { trackPhoneClick, trackEmailClick, trackSocialClick } from '../../lib/analytics';
+
 export default function Footer() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { data: settings } = useSiteSettings();
 
-  const phone = settings?.contact_phone || '';
+  const phoneNumbers = extractPhoneNumbers(settings?.contact_phone || '+91 63809 57390, +91 80882 18609');
   const email = settings?.contact_email || '';
   const address = settings?.address || '';
   const hours = settings?.working_hours || {};
@@ -83,14 +98,23 @@ export default function Footer() {
                   <span>{address}</span>
                 </p>
               )}
-              {phone && phone.split(',').map(p => p.trim()).filter(Boolean).map((num, i) => (
-                <a key={i} href={`tel:${num.replace(/\s+/g, '')}`} className="flex items-center gap-2.5 hover:text-brand-orange transition-colors">
+              {phoneNumbers.map((num, i) => (
+                <a
+                  key={i}
+                  href={cleanTelHref(num)}
+                  onClick={() => trackPhoneClick(num, 'footer')}
+                  className="flex items-center gap-2.5 hover:text-brand-orange transition-colors"
+                >
                   <FiPhone className="w-4 h-4 shrink-0 text-brand-orange" />
                   <span>{num}</span>
                 </a>
               ))}
               {email && (
-                <a href={`mailto:${email}`} className="flex items-center gap-2.5 hover:text-brand-orange transition-colors">
+                <a 
+                  href={`mailto:${email}`}
+                  onClick={() => trackEmailClick(email, 'footer')}
+                  className="flex items-center gap-2.5 hover:text-brand-orange transition-colors"
+                >
                   <FiMail className="w-4 h-4 shrink-0 text-brand-orange" />
                   <span>{email}</span>
                 </a>
@@ -143,11 +167,11 @@ export default function Footer() {
               </ul>
               <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 mt-8 text-white/90 text-left">Social Links</h4>
               <div className="flex items-center gap-3 mt-3 justify-start">
-                <a href={social.twitter || '#'} aria-label="X (Twitter)" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaXTwitter className="w-3.5 h-3.5" /></a>
-                <a href={social.facebook || '#'} aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaFacebookF className="w-3.5 h-3.5" /></a>
-                <a href={social.instagram || '#'} aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaInstagram className="w-3.5 h-3.5" /></a>
-                <a href={social.linkedin || '#'} aria-label="LinkedIn" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaLinkedinIn className="w-3.5 h-3.5" /></a>
-                <a href={social.youtube || '#'} aria-label="YouTube" target={social.youtube ? "_blank" : undefined} rel={social.youtube ? "noopener noreferrer" : undefined} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaYoutube className="w-3.5 h-3.5" /></a>
+                <a href={social.twitter || '#'} onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaXTwitter className="w-3.5 h-3.5" /></a>
+                <a href={social.facebook || '#'} onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaFacebookF className="w-3.5 h-3.5" /></a>
+                <a href={social.instagram || '#'} onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaInstagram className="w-3.5 h-3.5" /></a>
+                <a href={social.linkedin || '#'} onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaLinkedinIn className="w-3.5 h-3.5" /></a>
+                <a href={social.youtube || '#'} onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" target={social.youtube ? "_blank" : undefined} rel={social.youtube ? "noopener noreferrer" : undefined} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaYoutube className="w-3.5 h-3.5" /></a>
               </div>
             </div>
           )}

@@ -6,19 +6,27 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import FloatingContactButton from './components/FloatingContactButton';
-import { trackPageView } from './lib/analytics';
+import { trackPageView, initAnalytics } from './lib/analytics';
 import Home from './pages/Home';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import Blog from './pages/Blog';
 import NavPage from './pages/NavPage';
 import Career from './pages/Career';
+import JobDetail from './pages/JobDetail';
 import AllUpcomingClasses from './pages/AllUpcomingClasses';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ServicesPage from './pages/ServicesPage';
 import LegalPage from './pages/LegalPage';
 import Banking from './pages/Banking';
+import Aptitude from './pages/Aptitude';
+import Reasoning from './pages/Reasoning';
+import English from './pages/English';
+import BankingAwareness from './pages/BankingAwareness';
+import CurrentAffairs from './pages/CurrentAffairs';
+import CurrentAffairsDetail from './pages/CurrentAffairsDetail';
+import MockExam from './pages/MockExam';
 import { pageTransition } from './lib/motion';
 
 const Admin = lazy(() => import('./admin/Admin'));
@@ -31,7 +39,18 @@ function ScrollToTop() {
 
 function PageTracker() {
   const { pathname } = useLocation();
-  useEffect(() => { trackPageView(pathname); }, [pathname]);
+
+  useEffect(() => {
+    const gaId = import.meta.env?.VITE_GA_MEASUREMENT_ID;
+    if (gaId) {
+      initAnalytics(gaId);
+    }
+  }, []);
+
+  useEffect(() => {
+    trackPageView(pathname, document.title);
+  }, [pathname]);
+
   return null;
 }
 
@@ -47,7 +66,17 @@ function CourseNavRedirect() {
   const { subSlug } = useParams();
   const loc = useLocation();
   const isCE = loc.pathname.includes("competitive-exam") || loc.pathname.startsWith("/courses/ce/");
-  const parent = isCE ? "competitive-exam" : "software-learning";
+  if (isCE) {
+    if (subSlug === 'aptitude') return <Navigate to="/aptitude" replace />;
+    if (subSlug === 'reasoning') return <Navigate to="/reasoning" replace />;
+    if (subSlug === 'english') return <Navigate to="/english" replace />;
+    if (subSlug === 'banking-awareness') return <Navigate to="/banking-awareness" replace />;
+    if (subSlug === 'current-affairs') return <Navigate to="/current-affairs" replace />;
+    if (subSlug === 'todays-affairs') return <Navigate to="/todays-affairs" replace />;
+    if (subSlug === 'banking') return <Navigate to="/banking" replace />;
+    return <Navigate to="/banking" replace />;
+  }
+  const parent = "software-learning";
   const categoryParam = subSlug ? `&category=${subSlug}` : '';
   return <Navigate to={`/courses?parent=${parent}${categoryParam}&view=list`} replace />;
 }
@@ -75,10 +104,20 @@ function AnimatedRoutes() {
       <Route path="/courses/:slug" element={<CourseDetail />} />
       <Route path="/courses/:category/:slug" element={<CourseDetail />} />
       <Route path="/career" element={<Career />} />
+      <Route path="/career/job/:type/:id" element={<JobDetail />} />
+      <Route path="/career/job/:id" element={<JobDetail />} />
       <Route path="/career/jobs" element={<Navigate to="/career" replace />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/banking" element={<Banking />} />
+      <Route path="/aptitude" element={<Aptitude />} />
+      <Route path="/reasoning" element={<Reasoning />} />
+      <Route path="/english" element={<English />} />
+      <Route path="/banking-awareness" element={<BankingAwareness />} />
+      <Route path="/current-affairs" element={<CurrentAffairs />} />
+      <Route path="/todays-affairs" element={<CurrentAffairs isTodayOnly={true} />} />
+      <Route path="/current-affairs/:id" element={<CurrentAffairsDetail />} />
+      <Route path="/mock-exam" element={<MockExam />} />
       <Route path="/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
       <Route path="/competitive-exam" element={<Navigate to="/banking" replace />} />
       <Route path="/terms" element={<LegalPage pageKey="terms" />} />
@@ -108,12 +147,12 @@ function AnimatedRoutes() {
 
 function PublicLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen overflow-x-hidden w-full max-w-full">
       <ScrollToTop />
       <PageTracker />
       <TopBar />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <AnimatedRoutes />
       </main>
       <Footer />

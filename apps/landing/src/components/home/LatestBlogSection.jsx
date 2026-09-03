@@ -35,9 +35,9 @@ export default function LatestBlogSection({ section }) {
             </div>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 bg-brand-blue text-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-blue-700 transition-all shrink-0 pt-2.5"
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer shrink-0"
             >
-              {linkText} <FiArrowRight className="w-4 h-4" />
+              <span>{linkText}</span> <FiArrowRight className="w-4 h-4 text-white" />
             </Link>
           </div>
         </Reveal>

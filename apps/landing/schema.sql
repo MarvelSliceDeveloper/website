@@ -1078,6 +1078,11 @@ create table if not exists job_openings (
   updated_at timestamptz default now()
 );
 alter table job_openings alter column department drop not null;
+alter table job_openings add column if not exists division text;
+alter table job_openings add column if not exists key_requirements text;
+alter table job_openings add column if not exists responsibilities text;
+alter table job_openings add column if not exists qualifications text;
+alter table job_openings add column if not exists apply_url text;
 
 -- 29. Career page content table (hero, section headings, form config)
 create table if not exists career_page_content (
@@ -1472,6 +1477,36 @@ alter table public.upcoming_class_registrations add column if not exists full_na
 
 alter table public.enquiries add column if not exists name text;
 alter table public.enquiries add column if not exists full_name text;
+
+-- Current Affairs Automated RSS Table
+create table if not exists public.current_affairs (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  summary text,
+  content text,
+  category text not null default 'National Affairs',
+  source text default 'News',
+  source_url text unique,
+  image_url text,
+  published_at timestamptz default now(),
+  importance text default 'Medium',
+  is_published boolean default true,
+  created_at timestamptz default now()
+);
+
+alter table public.current_affairs enable row level security;
+drop policy if exists "Allow public select current_affairs" on public.current_affairs;
+create policy "Allow public select current_affairs" on public.current_affairs for select to anon, authenticated using (true);
+drop policy if exists "Allow public insert current_affairs" on public.current_affairs;
+create policy "Allow public insert current_affairs" on public.current_affairs for insert to anon, authenticated with check (true);
+drop policy if exists "Allow public update current_affairs" on public.current_affairs;
+create policy "Allow public update current_affairs" on public.current_affairs for update to anon, authenticated using (true);
+drop policy if exists "Allow public delete current_affairs" on public.current_affairs;
+create policy "Allow public delete current_affairs" on public.current_affairs for delete to anon, authenticated using (true);
+
+create index if not exists idx_current_affairs_category_published on public.current_affairs (category, published_at desc);
+create index if not exists idx_current_affairs_published_at on public.current_affairs (published_at desc);
+
 
 
 

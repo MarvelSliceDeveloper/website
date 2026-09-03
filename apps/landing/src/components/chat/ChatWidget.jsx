@@ -182,15 +182,48 @@ export default function ChatWidget() {
   const [showPreChat, setShowPreChat] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const messagesEnd = useRef(null);
+  const chatScrollContainer = useRef(null);
   const userId = useRef(getOrCreateUserId());
 
-  const scrollToBottom = useCallback(() => {
-    messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = useCallback((instant = false) => {
+    requestAnimationFrame(() => {
+      if (messagesEnd.current) {
+        messagesEnd.current.scrollIntoView({
+          behavior: instant ? 'auto' : 'smooth',
+          block: 'end',
+        });
+      }
+      if (chatScrollContainer.current) {
+        chatScrollContainer.current.scrollTop = chatScrollContainer.current.scrollHeight;
+      }
+    });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottom(false);
+    const timer = setTimeout(() => scrollToBottom(false), 80);
+    return () => clearTimeout(timer);
   }, [messages, scrollToBottom]);
+
+  // Merge messages avoiding duplicates by id or content+sender timestamp
+  const mergeMessageList = useCallback((existing, incoming) => {
+    const map = new Map();
+    existing.forEach((m) => {
+      map.set(m.id || `temp_${m.content}_${m.created_at}`, m);
+    });
+    incoming.forEach((m) => {
+      // If temporary message with same content exists, replace with DB item
+      for (const [key, val] of map.entries()) {
+        if (key.startsWith('temp_') && val.content === m.content && val.sender === m.sender) {
+          map.delete(key);
+        }
+      }
+      map.set(m.id, m);
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+    );
+  }, []);
 
   const initChat = useCallback(async (reset) => {
     if (reset) {
@@ -200,37 +233,44 @@ export default function ChatWidget() {
       setLoading(true);
     }
 
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('user_identifier', userId.current)
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (existing?.length > 0) {
-      const conv = existing[0];
-      setConversationId(conv.id);
-      setVisitorInfo({ name: conv.user_name || '', email: conv.user_email || '', phone: conv.user_phone || '' });
-      setShowPreChat(false);
-
-      const { data: msgs } = await supabase
-        .from('messages')
+    try {
+      const { data: existing } = await supabase
+        .from('conversations')
         .select('*')
-        .eq('conversation_id', conv.id)
-        .order('created_at');
-      setMessages(msgs || []);
-    } else {
-      setShowPreChat(true);
-    }
+        .eq('user_identifier', userId.current)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    setLoading(false);
-  }, []);
+      if (existing?.length > 0) {
+        const conv = existing[0];
+        setConversationId(conv.id);
+        setVisitorInfo({ name: conv.user_name || '', email: conv.user_email || '', phone: conv.user_phone || '' });
+        setShowPreChat(false);
+
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conv.id)
+          .order('created_at');
+        setMessages(msgs || []);
+        setTimeout(() => scrollToBottom(true), 100);
+      } else {
+        setShowPreChat(true);
+      }
+    } catch (err) {
+      console.warn('Chat initialization warning:', err);
+      setShowPreChat(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [scrollToBottom]);
 
   useEffect(() => {
     initChat(false);
   }, [initChat]);
 
+  // Realtime Supabase subscription
   useEffect(() => {
     if (!conversationId) return;
 
@@ -239,14 +279,45 @@ export default function ChatWidget() {
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          setMessages((prev) => mergeMessageList(prev, [payload.new]));
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(msgChannel); };
-  }, [conversationId]);
+  }, [conversationId, mergeMessageList]);
 
+  // Fallback polling every 3 seconds to guarantee no messages are hidden/lost
+  useEffect(() => {
+    if (!conversationId || !open) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data: latest } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
+
+        if (latest && latest.length > 0) {
+          setMessages((prev) => {
+            const prevIds = new Set(prev.map(m => m.id));
+            const hasNew = latest.some(m => !prevIds.has(m.id));
+            if (hasNew || latest.length !== prev.length) {
+              return mergeMessageList(prev, latest);
+            }
+            return prev;
+          });
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [conversationId, open, mergeMessageList]);
+
+  // Heartbeat last seen update
   useEffect(() => {
     if (!conversationId || !open) return;
 
@@ -303,15 +374,33 @@ export default function ChatWidget() {
         trackChat('started');
         setVisitorInfo(info);
         setShowPreChat(false);
-        setMessages([]);
         setConversationId(conv.id);
 
         if (info.reason) {
-          await supabase.from('messages').insert({
+          const initMsg = {
+            id: `temp_${Date.now()}`,
             conversation_id: conv.id,
             sender: 'user',
             content: info.reason,
-          });
+            created_at: new Date().toISOString(),
+          };
+          setMessages([initMsg]);
+
+          const { data: savedMsg } = await supabase
+            .from('messages')
+            .insert({
+              conversation_id: conv.id,
+              sender: 'user',
+              content: info.reason,
+            })
+            .select()
+            .maybeSingle();
+
+          if (savedMsg) {
+            setMessages((prev) => mergeMessageList(prev, [savedMsg]));
+          }
+        } else {
+          setMessages([]);
         }
       }
     } catch (err) {
@@ -328,21 +417,51 @@ export default function ChatWidget() {
     setSending(true);
     setInput('');
 
-    const { error } = await supabase.from('messages').insert({
+    // Optimistically show message immediately so it's never hidden to the user
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const tempMsg = {
+      id: tempId,
       conversation_id: conversationId,
       sender: 'user',
       content: text,
-    });
+      created_at: new Date().toISOString(),
+    };
 
-    if (!error) {
-      trackChat('message_sent');
-      await supabase
-        .from('conversations')
-        .update({ last_message: text, last_message_sender: 'user', last_message_at: new Date().toISOString(), notified: true })
-        .eq('id', conversationId);
+    setMessages((prev) => [...prev, tempMsg]);
+    scrollToBottom(false);
+
+    try {
+      const { data: insertedMsg, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender: 'user',
+          content: text,
+        })
+        .select()
+        .maybeSingle();
+
+      if (!error) {
+        trackChat('message_sent');
+        if (insertedMsg) {
+          setMessages((prev) => mergeMessageList(prev, [insertedMsg]));
+        }
+        await supabase
+          .from('conversations')
+          .update({
+            last_message: text,
+            last_message_sender: 'user',
+            last_message_at: new Date().toISOString(),
+            notified: true,
+          })
+          .eq('id', conversationId);
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    } finally {
+      setSending(false);
+      setTimeout(() => scrollToBottom(false), 50);
     }
-
-    setSending(false);
   }
 
   async function handleCloseClick() {
@@ -393,27 +512,39 @@ export default function ChatWidget() {
         <div
           className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fade-in-up"
           style={{
-            width: maximized ? 'calc(100vw - 2rem)' : 'min(72vw, 288px)',
-            maxWidth: maximized ? 'none' : '320px',
-            height: maximized ? 'calc(100vh - 2rem)' : '440px',
-            maxHeight: maximized ? 'none' : '80vh',
-            bottom: maximized ? '1rem' : '1rem',
-            right: maximized ? '1rem' : '44px',
+            width: maximized ? 'calc(100vw - 2rem)' : 'min(90vw, 340px)',
+            maxWidth: maximized ? 'none' : '360px',
+            height: maximized ? 'calc(100vh - 2rem)' : '480px',
+            maxHeight: maximized ? 'none' : '82vh',
+            bottom: '1rem',
+            right: maximized ? '1rem' : '1.25rem',
           }}
         >
-          <div className="bg-brand-green text-white flex items-center justify-between px-3 py-2 shrink-0">
+          {/* Header */}
+          <div className="bg-brand-green text-white flex items-center justify-between px-3.5 py-2.5 shrink-0 shadow-sm">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-9 h-9 lg:w-7 lg:h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <FiMessageCircle className="w-4 h-4" />
               </div>
-              <span className="text-sm font-semibold">Online</span>
+              <div className="min-w-0">
+                <span className="text-sm font-semibold block leading-tight truncate">Live Support</span>
+                <span className="text-[10px] text-white/80 block leading-tight">We typically reply in a few minutes</span>
+              </div>
             </div>
-            <div className="flex items-center gap-0.5">
-              <button onClick={() => setMaximized((p) => !p)} className="w-9 h-9 lg:w-7 lg:h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setMaximized((p) => !p)}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                title={maximized ? "Minimize" : "Maximize"}
+              >
                 {maximized ? <FiMinimize2 className="w-3.5 h-3.5" /> : <FiMaximize2 className="w-3.5 h-3.5" />}
               </button>
-              <button onClick={handleCloseClick} className="w-9 h-9 lg:w-7 lg:h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                <FiX className="w-3.5 h-3.5" />
+              <button
+                onClick={handleCloseClick}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                title="Close chat"
+              >
+                <FiX className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -426,39 +557,61 @@ export default function ChatWidget() {
             <PreChatForm onSubmit={handlePreChatSubmit} initial={visitorInfo} />
           ) : (
             <>
-
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
-
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      msg.sender === 'user'
-                        ? 'bg-gray-200 text-dark-navy rounded-br-md'
-                        : 'bg-white border border-gray-200 text-dark-navy rounded-bl-md shadow-sm'
-                    }`}>
-
-                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                      <p className="text-[10px] mt-1 opacity-60 text-right">{formatTime(msg.created_at)}</p>
-                    </div>
+              {/* Message List */}
+              <div
+                ref={chatScrollContainer}
+                className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/70 min-h-0 overscroll-contain"
+              >
+                {messages.length === 0 ? (
+                  <div className="text-center text-xs text-gray-400 py-8">
+                    Send a message to start the conversation!
                   </div>
-                ))}
-                <div ref={messagesEnd} />
+                ) : (
+                  messages.map((msg) => {
+                    const isUser = msg.sender === 'user';
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed break-words overflow-hidden ${
+                            isUser
+                              ? 'bg-brand-blue text-white rounded-br-sm shadow-sm'
+                              : 'bg-white border border-gray-200 text-dark-navy rounded-bl-sm shadow-sm'
+                          }`}
+                          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                        >
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                          <p
+                            className={`text-[10px] mt-1 text-right select-none ${
+                              isUser ? 'text-white/70' : 'text-gray-400'
+                            }`}
+                          >
+                            {formatTime(msg.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEnd} className="h-0 w-0" />
               </div>
 
-              <form onSubmit={handleSend} className="shrink-0 px-4 py-3 border-t border-gray-200 bg-white">
+              {/* Chat Input */}
+              <form onSubmit={handleSend} className="shrink-0 px-3.5 py-2.5 border-t border-gray-200 bg-white">
                 <div className="relative flex items-center">
                   <input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type your message..."
-                    className="w-full px-4 py-2.5 pr-11 text-sm border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-gray-500/40"
+                    className="w-full pl-3.5 pr-10 py-2 text-sm border border-gray-300 rounded-full outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all"
                     disabled={sending}
                   />
                   <button
                     type="submit"
                     disabled={!input.trim() || sending}
-                    className="absolute right-1 w-10 h-10 lg:w-8 lg:h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
+                    className="absolute right-1 w-8 h-8 rounded-full bg-brand-orange text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:opacity-40 cursor-pointer shadow-sm"
                   >
                     {sending ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
                   </button>

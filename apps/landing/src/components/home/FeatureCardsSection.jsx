@@ -82,7 +82,7 @@ export default function FeatureCardsSection({ section }) {
 
                       {/* Dynamic Description */}
                       {cardDesc && (
-                        <p className="text-text-gray text-sm leading-relaxed mb-6 whitespace-pre-line">
+                        <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mb-6">
                           {cardDesc}
                         </p>
                       )}
@@ -106,10 +106,10 @@ export default function FeatureCardsSection({ section }) {
                     <div className="pt-2 mt-auto">
                       <a
                         href={buttonLink}
-                        className="group/btn inline-flex items-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-semibold text-sm px-4 py-2 rounded-full shadow-md shadow-brand-orange/20 hover:shadow-lg hover:shadow-brand-orange/30 transition-all duration-200 active:scale-[0.99]"
+                        className="group/btn inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
                       >
                         <span>{buttonText}</span>
-                        <FiArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200 shrink-0" />
+                        <FiArrowRight className="w-4 h-4 text-white group-hover/btn:translate-x-1 transition-transform duration-200 shrink-0" />
                       </a>
                     </div>
 

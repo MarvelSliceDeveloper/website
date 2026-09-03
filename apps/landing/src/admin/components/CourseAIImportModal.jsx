@@ -10,8 +10,9 @@ import {
   FiCpu,
   FiAlertCircle,
   FiCode,
-  FiInfo
+  FiLoader
 } from 'react-icons/fi';
+import { generateFullCourseWithAI, synthesizeFallbackCourse } from '../../lib/courseAIService';
 
 function slugify(text) {
   return (text || '').toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -21,7 +22,7 @@ const SAMPLE_JSON = {
   "_SCHEMA_RULES_": {
     "title": "Required course name",
     "description": "Required course summary (2-4 sentences)",
-    "cta_left": "Talk to Advisor",
+    "cta_left": "Talk to Advisor/Pay Now",
     "cta_right": "Download Brochure",
     "cta_heading": "Required banner CTA heading",
     "cta_description": "Required banner CTA description",
@@ -31,13 +32,14 @@ const SAMPLE_JSON = {
     "projects": "EXACTLY 3 objects with title and description",
     "overview_faqs": "Minimum 2 Tabmenu Q&A objects with multi-sentence answers",
     "faqs": "EXACTLY 4 general FAQ objects",
-    "tabs": "4 tab objects (Overview, Curriculum, Projects, Certification) with title, heading, and paragraph",
+    "tabs": "4 tab objects (Overview, Curriculum, Projects, Certification) with title, heading, paragraph, and qa array",
     "note": "Do NOT include image URLs or tags in JSON"
   },
   title: "UI/UX Design Masterclass",
   slug: "ui-ux-design-masterclass",
+  subtitle: "Master UI/UX Design from Scratch with User Research, Wireframing, and Figma Systems",
   description: "Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.",
-  cta_left: "Talk to Advisor",
+  cta_left: "Talk to Advisor/Pay Now",
   cta_right: "Download Brochure",
   cta_heading: "Design Better Digital Experiences with UI/UX",
   cta_description: "Learn user research, wireframing, prototyping, and visual design with expert mentors.",
@@ -93,91 +95,137 @@ const SAMPLE_JSON = {
   ],
   tabs: [
     {
+      label: "Overview",
       title: "Overview",
-      heading: "Overview",
-      paragraph: "Learn the fundamentals of UI/UX design, user-centered thinking, design principles, and modern product design workflows.",
-      qa: [
-        {
-          question: "What key design tools will I master?",
-          answers: [
-            "Figma for UI Design & Modern Design Systems",
-            "Miro & FigJam for User Research & Journey Mapping",
-            "Protopie for Micro-Interactions & Prototyping"
-          ]
-        },
-        {
-          question: "Who is this program designed for?",
-          answers: [
-            "Aspiring UI/UX Designers building a job-ready portfolio",
-            "Frontend Developers mastering UX design principles",
-            "Product Managers enhancing user interface design skills"
-          ]
-        }
-      ]
+      content_type: "overview",
+      content: {
+        heading: "Course Overview & Learning Objectives",
+        paragraph: "Learn the fundamentals of UI/UX design, user-centered thinking, design principles, and modern product design workflows.",
+        subheading: "Key Competencies & Learning Methodology",
+        subparagraph: "Over 70% of program time is dedicated to live design sprints, Figma prototypes, and portfolio deliverables.",
+        qa: [
+          {
+            question: "What key design tools will I master?",
+            answers: [
+              "Figma for UI Design & Modern Design Systems",
+              "Miro & FigJam for User Research & Journey Mapping",
+              "Protopie for Micro-Interactions & Prototyping"
+            ]
+          }
+        ]
+      }
     },
     {
+      label: "Curriculum",
       title: "Curriculum",
-      heading: "Curriculum",
-      paragraph: "Structured learning from UX research and information architecture to wireframing, UI design, Figma, prototyping, and design systems.",
-      qa: [
-        {
-          question: "Module 1: User Research & IA",
-          answers: [
-            "User Personas & Customer Journey Maps",
-            "Information Architecture & Card Sorting"
-          ]
-        },
-        {
-          question: "Module 2: Figma & Design Systems",
-          answers: [
-            "Auto-Layout, Components & Variants",
-            "Color Palettes & Typography Scales"
-          ]
-        }
-      ]
+      content_type: "overview",
+      content: {
+        heading: "Structured In-Depth Curriculum",
+        paragraph: "Structured learning from UX research and information architecture to wireframing, UI design, Figma, prototyping, and design systems.",
+        subheading: "Phase-by-Phase Technical Mastery",
+        subparagraph: "Every module combines design theory with hands-on Figma lab assignments.",
+        qa: [
+          {
+            question: "Module 1: User Research & Information Architecture",
+            answers: [
+              "User Personas & Customer Journey Maps",
+              "Information Architecture & Card Sorting"
+            ]
+          }
+        ]
+      }
     },
     {
+      label: "Projects",
       title: "Projects",
-      heading: "Projects",
-      paragraph: "Build real-world portfolio projects including e-commerce interfaces, mobile applications, and SaaS dashboards.",
-      qa: [
-        {
-          question: "Capstone Project 1: E-Commerce App",
-          answers: [
-            "End-to-end shopping experience design",
-            "High-fidelity mobile and desktop prototypes"
-          ]
-        }
-      ]
+      content_type: "overview",
+      content: {
+        heading: "Industry Capstone Projects",
+        paragraph: "Build real-world portfolio projects including e-commerce interfaces, mobile applications, and SaaS dashboards.",
+        subheading: "Portfolio-Ready Design Applications",
+        subparagraph: "Every project includes Figma prototypes ready to showcase to hiring managers.",
+        qa: [
+          {
+            question: "Capstone Project 1: E-Commerce App",
+            answers: [
+              "End-to-end shopping experience design",
+              "High-fidelity mobile and desktop prototypes"
+            ]
+          }
+        ]
+      }
     },
     {
+      label: "Certification",
       title: "Certification",
-      heading: "Certification",
-      paragraph: "Earn a verified UI/UX skill certification after successfully completing the course.",
-      qa: [
-        {
-          question: "Verification & Industry Recognition",
-          answers: [
-            "Shareable digital certificate badge",
-            "Recognized by leading design agencies"
-          ]
-        }
-      ]
+      content_type: "overview",
+      content: {
+        heading: "Verified Industry Credential",
+        paragraph: "Earn a verified UI/UX skill certification after successfully completing the course.",
+        subheading: "Credential Validation & Career Support",
+        subparagraph: "Shareable credential badge recognized across top product companies.",
+        qa: [
+          {
+            question: "Verification & Industry Recognition",
+            answers: [
+              "Shareable digital certificate badge",
+              "Recognized by leading design agencies"
+            ]
+          }
+        ]
+      }
     }
   ]
 };
 
 const SAMPLE_CSV = `title,description,cta_left,cta_right,cta_heading,cta_description,cta_text,checklist_items,duration,mode
-"UI/UX Design Masterclass","Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.","Talk to Advisor","Download Brochure","Design Better Digital Experiences with UI/UX","Learn user research, wireframing, prototyping, and visual design with expert mentors.","Apply Now","UI Design Principles | UX Research | Wireframing | Figma Design Systems","3 months","Online"`;
+"UI/UX Design Masterclass","Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.","Talk to Advisor/Pay Now","Download Brochure","Design Better Digital Experiences with UI/UX","Learn user research, wireframing, prototyping, and visual design with expert mentors.","Apply Now","UI Design Principles | UX Research | Wireframing | Figma Design Systems","3 months","Online"`;
 
-export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
-  const [activeTab, setActiveTab] = useState('templates');
+export default function CourseAIImportModal({ isOpen, onClose, onImportData, initialCourseName = '' }) {
+  const [activeTab, setActiveTab] = useState('ai_prompt');
+  const [courseName, setCourseName] = useState(initialCourseName);
+  const [keyPoints, setKeyPoints] = useState('');
+  const [duration, setDuration] = useState('3 to 6 months');
+  const [mode, setMode] = useState('Online');
+  const [generating, setGenerating] = useState(false);
+
   const [pastedContent, setPastedContent] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
+
+  async function handleAIGenerate() {
+    if (!courseName.trim()) {
+      setError('Please enter a Course Name (e.g. "Full Stack Java Developer" or "Data Science & AI").');
+      return;
+    }
+    setError('');
+    setSuccessMsg('');
+    setGenerating(true);
+
+    try {
+      const generatedCourse = await generateFullCourseWithAI({
+        courseName: courseName.trim(),
+        keyPoints: keyPoints.trim(),
+        duration,
+        mode,
+      });
+
+      onImportData(generatedCourse);
+      setSuccessMsg(`Successfully generated all fields and tabs for "${generatedCourse.title}"!`);
+      setTimeout(() => {
+        setSuccessMsg('');
+        onClose();
+      }, 1000);
+    } catch (err) {
+      console.error('AI Generation error:', err);
+      setError(`Generation failed: ${err.message || 'Unknown error'}`);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   function handleDownloadFile(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType });
@@ -209,48 +257,52 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
       throw new Error('JSON is missing required field: "title".');
     }
 
-    // Normalize highlights (must have 9 items)
+    const fallbackCourse = synthesizeFallbackCourse({ courseName: title });
+
     let rawHighlights = parsed.highlights || [];
-    if (!Array.isArray(rawHighlights)) rawHighlights = [];
+    if (!Array.isArray(rawHighlights) || rawHighlights.length === 0) {
+      rawHighlights = fallbackCourse.highlights;
+    }
     const formattedHighlights = Array.from({ length: 9 }, (_, index) => {
       const existing = rawHighlights[index];
       if (existing) {
         return {
-          icon: existing.icon || 'star',
-          label: typeof existing === 'string' ? existing : (existing.label || '')
+          icon: existing.icon || fallbackCourse.highlights[index]?.icon || 'star',
+          label: typeof existing === 'string' ? existing : (existing.label || fallbackCourse.highlights[index]?.label || '')
         };
       }
-      return { icon: 'star', label: '' };
+      return fallbackCourse.highlights[index] || { icon: 'star', label: '' };
     });
 
-    // Normalize projects (must have 3 items)
     let rawProjects = parsed.projects || [];
-    if (!Array.isArray(rawProjects)) rawProjects = [];
+    if (!Array.isArray(rawProjects) || rawProjects.length === 0) {
+      rawProjects = fallbackCourse.projects;
+    }
     const formattedProjects = Array.from({ length: 3 }, (_, index) => {
       const existing = rawProjects[index];
       if (existing) {
         return {
-          title: existing.title || '',
-          description: existing.description || ''
+          title: existing.title || fallbackCourse.projects[index]?.title || '',
+          description: existing.description || fallbackCourse.projects[index]?.description || ''
         };
       }
-      return { title: '', description: '' };
+      return fallbackCourse.projects[index] || { title: '', description: '' };
     });
 
-    // Parse Course Tabs directly from JSON matching CourseWizard expected format
     let formattedTabs = [];
-    if (Array.isArray(parsed.tabs)) {
-      formattedTabs = parsed.tabs.map(t => {
-        const titleStr = typeof t === 'string' ? t : (t.title || t.label || '');
-        const headingStr = typeof t === 'object' && t.content?.heading ? t.content.heading : (t.heading || titleStr);
-        const paragraphStr = typeof t === 'object' ? (typeof t.content === 'string' ? t.content : (t.content?.paragraph || t.paragraph || t.description || '')) : '';
+    if (Array.isArray(parsed.tabs) && parsed.tabs.length > 0) {
+      formattedTabs = parsed.tabs.map((t, idx) => {
+        const titleStr = typeof t === 'string' ? t : (t.label || t.title || fallbackCourse.tabs[idx]?.label || `Tab ${idx + 1}`);
+        const headingStr = typeof t === 'object' && t.content?.heading ? t.content.heading : (t.heading || fallbackCourse.tabs[idx]?.content?.heading || titleStr);
+        const paragraphStr = typeof t === 'object' ? (typeof t.content === 'string' ? t.content : (t.content?.paragraph || t.paragraph || t.description || fallbackCourse.tabs[idx]?.content?.paragraph || '')) : (fallbackCourse.tabs[idx]?.content?.paragraph || '');
 
-        // Extract QA / Features items for this tab
         let rawQa = [];
         if (typeof t === 'object') {
-          rawQa = t.qa || t.content?.qa || t.items || t.features || t.questions || [];
+          rawQa = t.qa || t.content?.qa || t.items || t.features || t.questions || fallbackCourse.tabs[idx]?.content?.qa || [];
         }
-        if (!Array.isArray(rawQa)) rawQa = [];
+        if (!Array.isArray(rawQa) || rawQa.length === 0) {
+          rawQa = fallbackCourse.tabs[idx]?.content?.qa || [];
+        }
 
         const formattedQa = rawQa.map(qItem => {
           if (typeof qItem === 'string') {
@@ -273,8 +325,8 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
           content: {
             heading: headingStr,
             paragraph: paragraphStr,
-            subheading: typeof t === 'object' && t.content?.subheading ? t.content.subheading : (t.subheading || ''),
-            subparagraph: typeof t === 'object' && t.content?.subparagraph ? t.content.subparagraph : (t.subparagraph || ''),
+            subheading: typeof t === 'object' && t.content?.subheading ? t.content.subheading : (t.subheading || fallbackCourse.tabs[idx]?.content?.subheading || ''),
+            subparagraph: typeof t === 'object' && t.content?.subparagraph ? t.content.subparagraph : (t.subparagraph || fallbackCourse.tabs[idx]?.content?.subparagraph || ''),
             headingAlign: 'left',
             paragraphAlign: 'left',
             subheadingAlign: 'left',
@@ -285,51 +337,64 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
       }).filter(t => (t.label || t.title).trim());
     }
 
-    // Parse Tabmenu Questions (overview_faqs: minimum 2 items)
+    if (formattedTabs.length === 0) {
+      formattedTabs = fallbackCourse.tabs;
+    }
+
     let formattedOverviewFaqs = [];
     let rawOverviewFaqs = parsed.overview_faqs || parsed.tabmenu_faqs || [];
-    if (Array.isArray(rawOverviewFaqs)) {
+    if (Array.isArray(rawOverviewFaqs) && rawOverviewFaqs.length > 0) {
       formattedOverviewFaqs = rawOverviewFaqs.map(f => ({
         question: f.question || f.q || '',
         answer: f.answer || f.a || ''
       })).filter(f => f.question.trim());
     }
+    if (formattedOverviewFaqs.length === 0) {
+      formattedOverviewFaqs = fallbackCourse.overview_faqs;
+    }
 
-    // Parse General FAQs (faqs: 4 items)
     let formattedFaqs = [];
-    if (Array.isArray(parsed.faqs)) {
+    if (Array.isArray(parsed.faqs) && parsed.faqs.length > 0) {
       formattedFaqs = parsed.faqs.map(f => ({
         question: f.question || f.q || '',
         answer: f.answer || f.a || ''
       })).filter(f => f.question.trim());
     }
-
-    // Parse Certifications directly from JSON if provided (without image URLs)
-    let formattedCertifications = [];
-    if (Array.isArray(parsed.certifications)) {
-      formattedCertifications = parsed.certifications.map(c => ({
-        description: c.description || '',
-        certificate_image_url: '',
-        recognized_companies: Array.isArray(c.recognized_companies) ? c.recognized_companies.filter(Boolean) : []
-      }));
+    if (formattedFaqs.length === 0) {
+      formattedFaqs = fallbackCourse.faqs;
     }
 
-    // Normalize checklist items
+    let formattedCertifications = [];
+    if (Array.isArray(parsed.certifications) && parsed.certifications.length > 0) {
+      formattedCertifications = parsed.certifications.map(c => ({
+        description: c.description || fallbackCourse.certifications[0]?.description || '',
+        certificate_image_url: '',
+        recognized_companies: Array.isArray(c.recognized_companies) ? c.recognized_companies.filter(Boolean) : fallbackCourse.certifications[0]?.recognized_companies || []
+      }));
+    }
+    if (formattedCertifications.length === 0) {
+      formattedCertifications = fallbackCourse.certifications;
+    }
+
     let checklist = parsed.checklist_items || parsed.checklist || [];
     if (typeof checklist === 'string') {
       checklist = checklist.split('|').map(s => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(checklist) || checklist.length === 0) {
+      checklist = fallbackCourse.checklist_items;
     }
 
     const courseData = {
       title: title,
       slug: parsed.slug || slugify(title),
-      description: parsed.description || '',
+      subtitle: parsed.subtitle || fallbackCourse.subtitle,
+      description: parsed.description || fallbackCourse.description,
       hero_image_url: '',
       video_url: '',
       cta_left: parsed.cta_left || 'Talk to Advisor/Pay Now',
       cta_right: parsed.cta_right || 'Download Brochure',
-      cta_heading: parsed.cta_heading || title || '',
-      cta_description: parsed.cta_description || parsed.description || '',
+      cta_heading: parsed.cta_heading || fallbackCourse.cta_heading,
+      cta_description: parsed.cta_description || fallbackCourse.cta_description,
       cta_text: parsed.cta_text || 'Apply Now',
       cta_link: parsed.cta_link || '',
       cta_background_image: '',
@@ -340,7 +405,7 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
       certifications: formattedCertifications,
       overview_faqs: formattedOverviewFaqs,
       faqs: formattedFaqs,
-      duration: parsed.duration || '3 months',
+      duration: parsed.duration || '3 to 6 months',
       mode: parsed.mode || 'Online',
     };
 
@@ -349,7 +414,7 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
     setTimeout(() => {
       setSuccessMsg('');
       onClose();
-    }, 1200);
+    }, 1000);
   }
 
   function handleProcessText() {
@@ -434,7 +499,7 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
         onClick={onClose}
       >
         <motion.div
@@ -446,14 +511,14 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
           onClick={e => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/70">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/80">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600">
-                <HiSparkles className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-orange/20 to-orange-500/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange">
+                <HiSparkles className="w-5 h-5 text-brand-orange" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-neutral-900 leading-tight">Course Data Import</h3>
-                <p className="text-xs text-neutral-500">Download templates, paste JSON, or upload JSON/CSV</p>
+                <h3 className="text-base font-bold text-neutral-900 leading-tight">AI Course Creator &amp; Auto-Fill</h3>
+                <p className="text-xs text-neutral-500">Provide course name &amp; key points to generate all fields instantly</p>
               </div>
             </div>
             <button
@@ -467,9 +532,10 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
           {/* Navigation Tabs */}
           <div className="flex items-center border-b border-neutral-200 bg-neutral-100/50 px-6 gap-2 pt-2">
             {[
-              { id: 'templates', label: '1. Download Templates', icon: FiFileText },
+              { id: 'ai_prompt', label: '1. AI Prompt Generator', icon: HiSparkles },
               { id: 'paste', label: '2. Paste JSON', icon: FiCpu },
               { id: 'upload', label: '3. Upload File', icon: FiUpload },
+              { id: 'templates', label: '4. Templates', icon: FiFileText },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -477,13 +543,13 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setError(''); setSuccessMsg(''); }}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all cursor-pointer border-b-2 ${
+                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-t-xl transition-all cursor-pointer border-b-2 ${
                     isActive
-                      ? 'bg-white text-neutral-900 border-amber-500 shadow-2xs'
+                      ? 'bg-white text-neutral-900 border-brand-orange shadow-2xs'
                       : 'text-neutral-500 border-transparent hover:text-neutral-800'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5" />
                   {tab.label}
                 </button>
               );
@@ -506,33 +572,85 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
               </div>
             )}
 
-            {/* TAB 1: 2 TEMPLATES ONLY */}
-            {activeTab === 'templates' && (
+            {/* TAB 1: AI PROMPT GENERATOR */}
+            {activeTab === 'ai_prompt' && (
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider">
-                    Download Official Course Templates
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800 mb-1">
+                    Course Name / Title <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={handleDownloadJSONTemplate}
-                      className="flex flex-col items-center justify-center p-5 bg-neutral-50 hover:bg-amber-50/40 border border-neutral-200 hover:border-amber-400 rounded-2xl text-center transition-all group cursor-pointer"
-                    >
-                      <FiCode className="w-7 h-7 text-neutral-600 group-hover:text-amber-600 mb-2 transition-colors" />
-                      <span className="text-xs font-bold text-neutral-800">JSON Template</span>
-                      <span className="text-[11px] text-neutral-400 mt-0.5">Pre-filled .json format with rules</span>
-                    </button>
+                  <input
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    placeholder="e.g. Python Full Stack with Django & React"
+                    className="w-full h-10 px-3.5 border border-neutral-300 rounded-xl text-sm font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all"
+                  />
+                </div>
 
-                    <button
-                      onClick={handleDownloadCSVTemplate}
-                      className="flex flex-col items-center justify-center p-5 bg-neutral-50 hover:bg-amber-50/40 border border-neutral-200 hover:border-amber-400 rounded-2xl text-center transition-all group cursor-pointer"
+                <div>
+                  <label className="block text-xs font-bold text-neutral-800 mb-1">
+                    Key Topics, Syllabus Points &amp; Instructions <span className="text-neutral-400 font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    value={keyPoints}
+                    onChange={(e) => setKeyPoints(e.target.value)}
+                    rows={4}
+                    placeholder="e.g. Cover Python 3.12, Django REST Framework, React Hooks, PostgreSQL, Docker, AWS EC2, automated tests, for freshers and IT professionals with 3 capstone projects..."
+                    className="w-full p-3 border border-neutral-300 rounded-xl text-xs text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-800 mb-1">Duration</label>
+                    <select
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full h-9 px-3 border border-neutral-300 rounded-xl text-xs bg-white text-neutral-800 focus:outline-none focus:border-brand-orange"
                     >
-                      <FiDownload className="w-7 h-7 text-neutral-600 group-hover:text-amber-600 mb-2 transition-colors" />
-                      <span className="text-xs font-bold text-neutral-800">CSV Template</span>
-                      <span className="text-[11px] text-neutral-400 mt-0.5">Spreadsheet .csv headers</span>
-                    </button>
+                      <option value="1 month">1 month</option>
+                      <option value="2 months">2 months</option>
+                      <option value="3 months">3 months</option>
+                      <option value="4 months">4 months</option>
+                      <option value="6 months">6 months</option>
+                      <option value="8 months">8 months</option>
+                      <option value="12 months">12 months</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-800 mb-1">Mode</label>
+                    <select
+                      value={mode}
+                      onChange={(e) => setMode(e.target.value)}
+                      className="w-full h-9 px-3 border border-neutral-300 rounded-xl text-xs bg-white text-neutral-800 focus:outline-none focus:border-brand-orange"
+                    >
+                      <option value="Online">Online</option>
+                      <option value="Offline">Offline</option>
+                      <option value="Hybrid">Hybrid</option>
+                    </select>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleAIGenerate}
+                  disabled={generating}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
+                >
+                  {generating ? (
+                    <>
+                      <FiLoader className="w-4 h-4 animate-spin" />
+                      <span>Generating Deep Course Tabs &amp; Content via AI...</span>
+                    </>
+                  ) : (
+                    <>
+                      <HiSparkles className="w-4 h-4 text-amber-200" />
+                      <span>Generate &amp; Fill Course Details</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
@@ -540,18 +658,18 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
             {activeTab === 'paste' && (
               <div className="space-y-3">
                 <p className="text-xs text-neutral-600">
-                  Paste JSON data below. The form will parse and auto-populate all course fields!
+                  Paste raw JSON data below. The form will parse and auto-populate all course fields!
                 </p>
                 <textarea
                   value={pastedContent}
                   onChange={(e) => setPastedContent(e.target.value)}
                   rows={9}
                   placeholder={`Paste JSON here...\n\nExample:\n{\n  "title": "UI/UX Design Masterclass",\n  "description": "...",\n  "cta_heading": "..."\n}`}
-                  className="w-full p-3.5 border border-neutral-300 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all bg-neutral-50/50"
+                  className="w-full p-3.5 border border-neutral-300 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all bg-neutral-50/50"
                 />
                 <button
                   onClick={handleProcessText}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-brand-orange hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
                 >
                   <HiSparkles className="w-4 h-4" /> Auto-Fill Course Form
                 </button>
@@ -563,9 +681,9 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
               <div className="space-y-4 text-center py-4">
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50 hover:bg-amber-50/30 rounded-2xl p-8 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group"
+                  className="border-2 border-dashed border-neutral-300 hover:border-brand-orange bg-neutral-50 hover:bg-orange-50/30 rounded-2xl p-8 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group"
                 >
-                  <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-full bg-brand-orange/10 text-brand-orange flex items-center justify-center group-hover:scale-110 transition-transform">
                     <FiUpload className="w-6 h-6" />
                   </div>
                   <div>
@@ -581,6 +699,36 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData }) {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
+              </div>
+            )}
+
+            {/* TAB 4: TEMPLATES */}
+            {activeTab === 'templates' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+                    Download Official Course Templates
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={handleDownloadJSONTemplate}
+                      className="flex flex-col items-center justify-center p-5 bg-neutral-50 hover:bg-orange-50/40 border border-neutral-200 hover:border-brand-orange rounded-2xl text-center transition-all group cursor-pointer"
+                    >
+                      <FiCode className="w-7 h-7 text-neutral-600 group-hover:text-brand-orange mb-2 transition-colors" />
+                      <span className="text-xs font-bold text-neutral-800">JSON Template</span>
+                      <span className="text-[11px] text-neutral-400 mt-0.5">Pre-filled .json format</span>
+                    </button>
+
+                    <button
+                      onClick={handleDownloadCSVTemplate}
+                      className="flex flex-col items-center justify-center p-5 bg-neutral-50 hover:bg-orange-50/40 border border-neutral-200 hover:border-brand-orange rounded-2xl text-center transition-all group cursor-pointer"
+                    >
+                      <FiDownload className="w-7 h-7 text-neutral-600 group-hover:text-brand-orange mb-2 transition-colors" />
+                      <span className="text-xs font-bold text-neutral-800">CSV Template</span>
+                      <span className="text-[11px] text-neutral-400 mt-0.5">Spreadsheet .csv format</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
