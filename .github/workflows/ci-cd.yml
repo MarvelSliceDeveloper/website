@@ -86,11 +86,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto Version Tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          tag_prefix: v
+
+      - name: Log Version
+        run: echo "New version → ${{ steps.tag_version.outputs.new_tag }} (was ${{ steps.tag_version.outputs.previous_tag }})"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -108,7 +121,7 @@ jobs:
           context: .
           file: ./apps/api/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ steps.tag_version.outputs.new_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -118,10 +131,10 @@ jobs:
           context: .
           file: ./apps/web/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ steps.tag_version.outputs.new_tag }}
           build-args: |
             NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
-            NEXT_PUBLIC_APP_VERSION=1.0.1
+            NEXT_PUBLIC_APP_VERSION=${{ steps.tag_version.outputs.new_version }}
             GIT_COMMIT=${{ github.sha }}
             BUILD_TIME=${{ github.run_started_at }}
           cache-from: type=gha
@@ -133,7 +146,7 @@ jobs:
           context: .
           file: ./apps/landing/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing:${{ steps.tag_version.outputs.new_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -143,7 +156,7 @@ jobs:
           context: .
           file: ./apps/landing/Dockerfile.api
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing-api:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing-api:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing-api:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing-api:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing-api:${{ steps.tag_version.outputs.new_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
