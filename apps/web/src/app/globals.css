@@ -159,13 +159,12 @@ button {
   font: inherit;
 }
 
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+/* Focus-visible blue outline removed per design — auth inputs use
+   parent focus-within:ring-[#FF5E14] instead. */
+.auth-input:focus-visible,
+.auth-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .glass-card {
