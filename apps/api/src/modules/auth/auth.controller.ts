@@ -553,10 +553,10 @@ export const authController = {
         where: { email: email.trim().toLowerCase() },
       });
 
-      // Always return success to avoid email enumeration
+      // Check if user exists in database
       if (!user || !user.passwordHash) {
-        return res.json({
-          message: "If the account exists, a reset link has been sent.",
+        return res.status(404).json({
+          error: "No account found with this email address.",
         });
       }
 
