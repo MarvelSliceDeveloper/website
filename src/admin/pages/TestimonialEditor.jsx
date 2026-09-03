@@ -5,7 +5,8 @@ import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import PageShell from '../components/ui/PageShell';
 import useDirty from '../hooks/useDirty';
-import { FiUpload, FiStar } from 'react-icons/fi';
+import { FiUpload, FiStar, FiCrop } from 'react-icons/fi';
+import ImageCropperModal from '../components/ImageCropperModal';
 
 export default function TestimonialEditor() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export default function TestimonialEditor() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
 
   const defaultForm = {
     name: '', role: '', quote: '', rating: 5, avatar_url: '', is_active: true, sort_order: 0,
@@ -61,6 +63,20 @@ export default function TestimonialEditor() {
     } else {
       const { data } = supabase.storage.from('pages').getPublicUrl(path);
       setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
+    }
+    setUploading(false);
+  }
+
+  async function handleCropSave(croppedFile) {
+    setUploading(true);
+    setSaveError('');
+    const path = `testimonials/cropped_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+    const { error } = await supabase.storage.from('pages').upload(path, croppedFile);
+    if (!error) {
+      const { data } = supabase.storage.from('pages').getPublicUrl(path);
+      setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
+    } else {
+      setSaveError('Crop save failed: ' + error.message);
     }
     setUploading(false);
   }
@@ -146,16 +162,27 @@ export default function TestimonialEditor() {
 
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Avatar Image</label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               {form.avatar_url ? (
                 <img src={form.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover shrink-0 border border-admin-200" />
               ) : null}
               <input type="text" name="avatar_url" value={form.avatar_url} onChange={handleChange} placeholder="Paste image URL or upload..."
-                className="flex-1 px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
-              <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all bg-white shrink-0">
+                className="flex-1 min-w-[200px] px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
+              <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all bg-white shrink-0 font-medium">
                 {uploading ? <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> : <FiUpload className="w-4 h-4" />}
                 <input ref={inputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
               </label>
+
+              {form.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-blue-50 text-brand-blue border border-blue-200 text-xs font-bold hover:bg-blue-100 transition-all cursor-pointer shadow-xs"
+                >
+                  <FiCrop className="w-4 h-4 text-brand-blue" />
+                  <span>Edit Crop & Position</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -177,6 +204,13 @@ export default function TestimonialEditor() {
         </div>
       </form>
       <SaveCancelBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} onDiscard={() => navigate('/admin/testimonials')} />
+      {showCropper && form.avatar_url && (
+        <ImageCropperModal
+          imageUrl={form.avatar_url}
+          onClose={() => setShowCropper(false)}
+          onCropSave={handleCropSave}
+        />
+      )}
     </PageShell>
   );
 }

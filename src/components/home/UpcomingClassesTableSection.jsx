@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiClock, FiLoader, FiX, FiCheckCircle, FiCalendar } from 'react-icons/fi';
@@ -89,19 +90,31 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
     <section className="pt-10 pb-16 bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-            {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
-            )}
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3" />
-            {subheading && (
-              <p className="text-text-gray text-sm sm:text-base leading-relaxed max-w-2xl mt-3 whitespace-pre-line">{subheading}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12 items-start text-center sm:text-left">
+            <div className="lg:col-span-7">
+              {heading && (
+                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
+              )}
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mx-auto sm:mx-0" />
+              {subheading && (
+                <p className="text-text-gray text-sm sm:text-base leading-relaxed max-w-2xl mt-3 whitespace-pre-line">{subheading}</p>
+              )}
+            </div>
+            {imageUrl && (
+              <div className="lg:col-span-5 flex items-center justify-center pt-1">
+                <Link
+                  to="/career"
+                  className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
+                >
+                  Recent Job Openings !
+                </Link>
+              </div>
             )}
           </div>
         </Reveal>
 
         {classes.length > 0 && (
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-stretch mt-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-stretch mt-8 lg:mt-10">
             <Reveal className="lg:col-span-7">
               <div className="space-y-4">
                 {classes.slice(0, 4).map((cls, i) => (
@@ -129,7 +142,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
-                        className="w-full sm:w-auto inline-block bg-brand-blue text-white font-bold text-sm py-2.5 px-6 rounded-full transition-colors hover:bg-blue-700"
+                        className="w-full sm:w-auto inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
                       >
                         Register Now
                       </button>
@@ -139,7 +152,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               </div>
             </Reveal>
             {imageUrl && (
-              <Reveal className="lg:col-span-5 min-w-0 flex items-center justify-center w-full">
+              <Reveal className="lg:col-span-5 min-w-0 flex flex-col items-center justify-center w-full">
                 {imageLink ? (
                   <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full max-h-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

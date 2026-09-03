@@ -12,9 +12,9 @@ export default function HeroBackground({ className = '' }) {
       {/* Left Base White Layer */}
       <div className="absolute inset-0 bg-white" />
 
-      {/* Slanted Right Side Solid Blue Shape */}
+      {/* Slanted Right Side Solid Blue Shape - Desktop Only */}
       <svg
-        className="absolute inset-0 w-full h-full"
+        className="hidden lg:block absolute inset-0 w-full h-full"
         viewBox="0 0 1000 600"
         preserveAspectRatio="none"
         fill="none"

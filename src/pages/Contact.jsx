@@ -15,18 +15,19 @@ function HeroHeading({ data }) {
     <div className="flex flex-col items-center mb-4 text-center">
       {line2 ? (
         <>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy inline-block">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy inline-block">
             {data.heading}
           </h1>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy inline-block">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy inline-block">
             {line2}
           </h1>
         </>
       ) : (
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
           {data.heading}
         </h1>
       )}
+      <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
     </div>
   );
 }
@@ -65,9 +66,9 @@ export default function Contact() {
   if (!hasContent) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-3xl font-bold text-dark-navy mb-4">Page Not Found</h1>
-        <p className="text-text-gray mb-8">The page you're looking for doesn't exist.</p>
-        <Link to="/" className="inline-flex items-center gap-2 text-brand-orange hover:underline"><FiArrowLeft className="w-4 h-4" /> Back to Home</Link>
+        <h1 className="text-2xl sm:text-3xl font-bold text-dark-navy mb-4">Page Not Found</h1>
+        <p className="text-slate-500 text-xs sm:text-sm mb-8">The page you're looking for doesn't exist.</p>
+        <Link to="/" className="inline-flex items-center gap-2 text-brand-orange hover:underline text-sm font-semibold"><FiArrowLeft className="w-4 h-4" /> Back to Home</Link>
       </div>
     );
   }
@@ -79,9 +80,13 @@ export default function Contact() {
       )}
 
       {(data.heading || data.subheading) && (
-        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
           {data.heading && <HeroHeading data={data} />}
-          {data.subheading && <p className="text-lg sm:text-xl text-text-gray max-w-3xl mx-auto mt-4 leading-relaxed">{data.subheading}</p>}
+          {data.subheading && (
+            <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line max-w-2xl mx-auto">
+              {data.subheading}
+            </p>
+          )}
         </Reveal>
       )}
 

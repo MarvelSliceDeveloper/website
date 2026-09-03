@@ -183,6 +183,24 @@ function LiveChat({ conversations, onConversationsChange }) {
     return (c.user_name || '').toLowerCase().includes(q) || (c.last_message || '').toLowerCase().includes(q);
   });
 
+  const mergeMessageList = useCallback((existing, incoming) => {
+    const map = new Map();
+    existing.forEach((m) => {
+      map.set(m.id || `temp_${m.content}_${m.created_at}`, m);
+    });
+    incoming.forEach((m) => {
+      for (const [key, val] of map.entries()) {
+        if (key.startsWith('temp_') && val.content === m.content && val.sender === m.sender) {
+          map.delete(key);
+        }
+      }
+      map.set(m.id, m);
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+    );
+  }, []);
+
   useEffect(() => {
     if (!activeConv) return;
     let cancelled = false;
@@ -195,7 +213,7 @@ function LiveChat({ conversations, onConversationsChange }) {
         .select('*')
         .eq('conversation_id', activeConv.id)
         .order('created_at');
-      if (!cancelled) setMessages(data || []);
+      if (!cancelled && data) setMessages(data);
     }
 
     load();
@@ -205,7 +223,7 @@ function LiveChat({ conversations, onConversationsChange }) {
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${activeConv.id}` },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          setMessages((prev) => mergeMessageList(prev, [payload.new]));
           onConversationsChange((prev) => prev.map((c) =>
             c.id === activeConv.id
               ? { ...c, last_message: payload.new.content, last_message_sender: payload.new.sender, last_message_at: payload.new.created_at }
@@ -215,8 +233,37 @@ function LiveChat({ conversations, onConversationsChange }) {
       )
       .subscribe();
 
-    return () => { cancelled = true; supabase.removeChannel(msgChannel); };
-  }, [activeConv?.id]);
+    // 3.5-second fallback poll
+    const pollInterval = setInterval(async () => {
+      if (cancelled) return;
+      try {
+        const { data: latest } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', activeConv.id)
+          .order('created_at', { ascending: true });
+
+        if (latest && latest.length > 0) {
+          setMessages((prev) => {
+            const prevIds = new Set(prev.map(m => m.id));
+            const hasNew = latest.some(m => !prevIds.has(m.id));
+            if (hasNew || latest.length !== prev.length) {
+              return mergeMessageList(prev, latest);
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        // silent
+      }
+    }, 3500);
+
+    return () => {
+      cancelled = true;
+      clearInterval(pollInterval);
+      supabase.removeChannel(msgChannel);
+    };
+  }, [activeConv?.id, mergeMessageList, onConversationsChange]);
 
   async function handleSend(e) {
     e.preventDefault();
@@ -226,15 +273,40 @@ function LiveChat({ conversations, onConversationsChange }) {
     setSending(true);
     setInput('');
 
-    await supabase.from('messages').insert({
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const tempMsg = {
+      id: tempId,
       conversation_id: activeConv.id,
       sender: 'admin',
       content: text,
-    });
+      created_at: new Date().toISOString(),
+    };
 
-    await supabase.from('conversations').update({ last_message: text, last_message_sender: 'admin', last_message_at: new Date().toISOString() }).eq('id', activeConv.id);
+    setMessages((prev) => [...prev, tempMsg]);
+    scrollToBottom();
 
-    setSending(false);
+    try {
+      const { data: insertedMsg, error } = await supabase.from('messages').insert({
+        conversation_id: activeConv.id,
+        sender: 'admin',
+        content: text,
+      }).select().maybeSingle();
+
+      if (!error) {
+        if (insertedMsg) {
+          setMessages((prev) => mergeMessageList(prev, [insertedMsg]));
+        }
+        await supabase
+          .from('conversations')
+          .update({ last_message: text, last_message_sender: 'admin', last_message_at: new Date().toISOString() })
+          .eq('id', activeConv.id);
+      }
+    } catch (err) {
+      console.error('Failed to send admin message:', err);
+    } finally {
+      setSending(false);
+      setTimeout(() => scrollToBottom(), 50);
+    }
   }
 
   return (

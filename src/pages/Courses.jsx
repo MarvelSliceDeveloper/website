@@ -28,6 +28,7 @@ import { supabase } from "../lib/supabaseClient";
 import CourseCard from "../components/ui/CourseCard";
 import CourseSkeleton from "../components/ui/CourseSkeleton";
 import { Stagger, StaggerItem } from "../components/ui/Reveal";
+import { trackSearch, trackTabClick } from "../lib/analytics";
 
 const PER_PAGE = 6;
 
@@ -271,6 +272,12 @@ export default function Courses() {
   const [viewMode, setViewMode] = useState("grid");
   const rawParent = searchParams.get("parent");
   if (rawParent === "competitive-exam") {
+    const cat = searchParams.get("category");
+    if (cat === "aptitude") return <Navigate to="/aptitude" replace />;
+    if (cat === "reasoning") return <Navigate to="/reasoning" replace />;
+    if (cat === "english") return <Navigate to="/english" replace />;
+    if (cat === "banking-awareness") return <Navigate to="/banking-awareness" replace />;
+    if (cat === "current-affairs") return <Navigate to="/current-affairs" replace />;
     return <Navigate to="/banking" replace />;
   }
   const parentParam = rawParent || PARENTS[0].slug;
@@ -644,7 +651,10 @@ export default function Courses() {
                   return (
                     <button
                       key={child.id}
-                      onClick={() => selectCategory(childSlug)}
+                      onClick={() => {
+                        trackTabClick(child.label, 'category_filter');
+                        selectCategory(childSlug);
+                      }}
                       className={`w-full text-left px-2.5 py-2 rounded-lg text-xs sm:text-sm transition-all duration-200 ease-out cursor-pointer flex items-center justify-between gap-2 ${
                         isChildActive
                           ? "bg-blue-50 text-blue-700 font-semibold"
@@ -783,6 +793,9 @@ export default function Courses() {
                     onChange={(e) => {
                       setSearch(e.target.value);
                       setPage(1);
+                    }}
+                    onBlur={() => {
+                      if (search.trim()) trackSearch(search.trim());
                     }}
                     placeholder="Search courses..."
                     className="w-full pl-9 pr-7 py-2 rounded-full border border-slate-300 text-xs sm:text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"

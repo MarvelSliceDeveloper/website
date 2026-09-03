@@ -165,6 +165,12 @@ export default function CourseWizard() {
   const [startDateError, setStartDateError] = useState(false);
   const [showAIImportModal, setShowAIImportModal] = useState(false);
 
+  useEffect(() => {
+    if (searchParams.get('openAI') === 'true') {
+      setShowAIImportModal(true);
+    }
+  }, [searchParams]);
+
   function handleAIImportData(importedData) {
     setC((prev) => ({
       ...prev,
@@ -474,10 +480,10 @@ export default function CourseWizard() {
               <button
                 type="button"
                 onClick={() => setShowAIImportModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95 shrink-0"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95 shrink-0"
               >
-                <HiSparkles className="w-4 h-4" />
-                Import
+                <HiSparkles className="w-4 h-4 text-amber-200" />
+                <span>AI Course Creator</span>
               </button>
             </div>
 
@@ -1326,6 +1332,7 @@ export default function CourseWizard() {
         isOpen={showAIImportModal}
         onClose={() => setShowAIImportModal(false)}
         onImportData={handleAIImportData}
+        initialCourseName={c.title}
       />
     </PageShell>
   );

@@ -1,5 +1,6 @@
 import http from 'node:http';
 import nodemailer from 'nodemailer';
+import { fetchAndStoreCurrentAffairs } from './src/lib/rssService.js';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -395,7 +396,10 @@ const server = http.createServer(async (req, res) => {
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', async () => {
     try {
-      const parsed = JSON.parse(body);
+      let parsed = {};
+      if (body && body.trim()) {
+        try { parsed = JSON.parse(body); } catch {}
+      }
       let result;
       if (req.url === '/api/submit-career') result = await handleCareer(parsed);
       else if (req.url === '/api/submit-form') result = await handleForm(parsed);
@@ -406,6 +410,7 @@ const server = http.createServer(async (req, res) => {
       else if (req.url === '/api/submit-about') result = await handleAbout(parsed);
       else if (req.url === '/api/submit-enquiry') result = await handleEnquiry(parsed);
       else if (req.url === '/api/admin-reply') result = await handleAdminReply(parsed);
+      else if (req.url === '/api/fetch-current-affairs') result = await fetchAndStoreCurrentAffairs();
       else { res.writeHead(404); res.end(JSON.stringify({ error: 'Not found' })); return; }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
@@ -416,6 +421,15 @@ const server = http.createServer(async (req, res) => {
     }
   });
 });
+
+// Automated 3-hour Current Affairs RSS Sync
+const THREE_HOURS = 3 * 60 * 60 * 1000;
+setTimeout(() => {
+  fetchAndStoreCurrentAffairs().catch((e) => console.error('[dev-server] Initial RSS fetch error:', e));
+}, 5000);
+setInterval(() => {
+  fetchAndStoreCurrentAffairs().catch((e) => console.error('[dev-server] Scheduled RSS fetch error:', e));
+}, THREE_HOURS);
 
 server.listen(PORT, () => {
   console.log(`[dev-server] API server running on http://localhost:${PORT}`);

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import nodemailer from 'nodemailer';
+import { fetchAndStoreCurrentAffairs } from './src/lib/rssService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,6 +101,11 @@ async function handleApiRequest(req, res, body) {
     return res.end(JSON.stringify({ success: true }));
   }
 
+  if (req.url === '/api/fetch-current-affairs') {
+    const result = await fetchAndStoreCurrentAffairs();
+    return res.end(JSON.stringify(result));
+  }
+
   return res.end(JSON.stringify({ success: true }));
 }
 
@@ -159,4 +165,13 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[Marvel Slice Production Docker Server] running on port ${PORT}`);
+  
+  // Automated 3-hour Current Affairs RSS Sync
+  const THREE_HOURS = 3 * 60 * 60 * 1000;
+  setTimeout(() => {
+    fetchAndStoreCurrentAffairs().catch((e) => console.error('[server.js] Initial RSS fetch error:', e));
+  }, 5000);
+  setInterval(() => {
+    fetchAndStoreCurrentAffairs().catch((e) => console.error('[server.js] Scheduled RSS fetch error:', e));
+  }, THREE_HOURS);
 });

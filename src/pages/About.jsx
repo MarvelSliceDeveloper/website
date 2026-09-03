@@ -55,9 +55,14 @@ export default function About() {
       )}
 
       {(data.heading || data.subheading) && (
-        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-10 sm:pb-12 text-center">
-          {data.heading && <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy mb-4">{data.heading}</h1>}
-          {data.subheading && <p className="text-base sm:text-lg text-text-gray max-w-2xl mx-auto">{data.subheading}</p>}
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pb-12 text-center">
+          {data.heading && (
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-dark-navy tracking-tight">{data.heading}</h1>
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+            </div>
+          )}
+          {data.subheading && <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>}
         </Reveal>
       )}
 
