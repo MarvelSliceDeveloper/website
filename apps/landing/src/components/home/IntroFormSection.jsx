@@ -160,7 +160,6 @@ export default function IntroFormSection({ section }) {
 
             <div className="mt-6 hidden lg:block space-y-6">
               {stats.length > 0 && <StatsGrid stats={stats} />}
-              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
               <CourseButtons />
             </div>
           </Reveal>
@@ -233,6 +232,13 @@ export default function IntroFormSection({ section }) {
                   </form>
                 </div>
               </div>
+
+              {/* Pill buttons right below form for PC and Tab view */}
+              {rawPills.length > 0 && (
+                <div className="w-full mt-6 hidden lg:block">
+                  <PillGrid pills={rawPills} />
+                </div>
+              )}
             </div>
           </Reveal>
 
