@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabaseClient";
 import ImageUploader from "../components/ImageUploader";
 import AddButton from "../components/AddButton";
 import { FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight, FiX, FiSearch } from "react-icons/fi";
+import { HiSparkles } from 'react-icons/hi2';
+import CourseAIImportModal from '../components/CourseAIImportModal';
 import { useAuth } from "../context/AuthContext";
 import PageShell from '../components/ui/PageShell';
 import SectionSelect from '../components/ui/SectionSelect';
@@ -244,6 +246,16 @@ export default function CourseEditor() {
     curriculum: [],
   });
 
+  const [showAIModal, setShowAIModal] = useState(false);
+
+  function handleAIImportData(importedData) {
+    setCourse((prev) => ({
+      ...prev,
+      ...importedData,
+      slug: importedData.title ? String(importedData.title).toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : prev.slug,
+    }));
+  }
+
   const { dirty, reset } = useDirty([course, courseTags], loading);
 
   useEffect(() => {
@@ -412,14 +424,14 @@ export default function CourseEditor() {
     setCourseTags(newTags);
   }
 
-  async function saveRelated(table, records) {
-    const { error: delErr } = await supabase.from(table).delete().eq("course_id", id);
+  async function saveRelated(table, records, targetId = id) {
+    const { error: delErr } = await supabase.from(table).delete().eq("course_id", targetId);
     if (delErr) throw new Error(delErr.message);
-    if (records.length > 0) {
+    if (records && records.length > 0) {
       const clean = records.map((r, i) => {
         if (table === "course_tabs") {
           return {
-            course_id: id,
+            course_id: targetId,
             sort_order: i,
             label: r.label || r.title || "Tab",
             content_type: r.content_type || "overview",
@@ -427,7 +439,7 @@ export default function CourseEditor() {
           };
         }
         const { id: _, ...rest } = r;
-        return { ...rest, course_id: id, sort_order: i };
+        return { ...rest, course_id: targetId, sort_order: i };
       });
       const { error: insErr } = await supabase.from(table).insert(clean);
       if (insErr) throw new Error(insErr.message);
@@ -447,36 +459,27 @@ export default function CourseEditor() {
       setSaving(false);
       return;
     }
-    // Only enforce full required fields if status is Active or Coming Soon (bypassed in Draft mode)
-    if (course.status !== 'Draft') {
-      if ((course.highlights || []).length < 9) {
-        setTab('highlights');
-        setMessage(`Cannot save course: Minimum 9 Key Highlights are required for ${course.status} status. Currently configured: ${(course.highlights || []).length}/9.`);
-        setSaveError(`Minimum 9 Key Highlights are required (currently ${(course.highlights || []).length}/9). Use preset buttons to add 9, 12, or 15 items.`);
+    if (!course.description?.trim()) {
+      setTab('basic');
+      setMessage('Cannot save course: Description is required.');
+      setSaveError('Description is required.');
+      isSavingRef.current = false;
+      setSaving(false);
+      return;
+    }
+    if (course.is_published) {
+      if (!course.hero_image_url) {
+        setTab('hero');
+        setMessage('Cannot save course: Hero image is required.');
+        setSaveError('Hero image is required.');
         isSavingRef.current = false;
         setSaving(false);
         return;
       }
-      if ((course.projects || []).length !== 3) {
-        setTab('projects');
-        setMessage(`Cannot save course: Exactly 3 Projects are required for ${course.status} status. Currently configured: ${(course.projects || []).length}/3.`);
-        setSaveError(`Exactly 3 Projects are required (currently ${(course.projects || []).length}/3). Please configure exactly 3 projects.`);
-        isSavingRef.current = false;
-        setSaving(false);
-        return;
-      }
-      if ((course.faqs || []).length > 4) {
-        setTab('faqs');
-        setMessage(`Cannot save course: Maximum 4 General FAQs allowed. Currently configured: ${(course.faqs || []).length}/4.`);
-        setSaveError(`Maximum 4 General FAQs allowed (currently ${(course.faqs || []).length}/4). Please remove extra FAQs.`);
-        isSavingRef.current = false;
-        setSaving(false);
-        return;
-      }
-      if (!course.cta_background_image || !course.cta_background_image.trim()) {
-        setTab('basic');
-        setMessage(`Cannot save course: CTA Background Image is required for ${course.status} status.`);
-        setSaveError(`CTA Background Image is required.`);
+      if (!course.cta_heading || !course.cta_description || !course.cta_text || !course.cta_background_image) {
+        setTab('hero');
+        setMessage('Cannot save course: All CTA Banner fields (Heading, Description, Button Text, and Background Image) are required.');
+        setSaveError('All CTA Banner fields (Heading, Description, Button Text, and Background Image) are required.');
         isSavingRef.current = false;
         setSaving(false);
         return;
@@ -542,6 +545,7 @@ export default function CourseEditor() {
         checklist_items: (course.checklist_items || []).filter(Boolean).slice(0, 4),
         curriculum: [],
       };
+      let targetId = id;
       if (isNew) {
         const { data, error } = await supabase
           .from("courses")
@@ -549,54 +553,48 @@ export default function CourseEditor() {
           .select()
           .single();
         if (error) throw error;
-        if (course.certifications.length > 0) {
-          const cleanCert = course.certifications.map((c) => {
-            const { id: _, ...rest } = c;
-            return { ...rest, course_id: data.id };
-          });
-          const { error: certErr } = await supabase.from("certifications").insert(cleanCert);
-          if (certErr) throw new Error(certErr.message);
-        }
+        targetId = data.id;
       } else {
         const { error } = await supabase
           .from("courses")
           .update(payload)
           .eq("id", id);
         if (error) throw error;
-        await saveRelated("highlights", course.highlights);
-        await saveRelated("overview_faqs", course.overview_faqs);
-        await saveRelated("projects", course.projects);
-        await saveRelated("course_tabs", course.tabs);
-        const { error: certDelErr } = await supabase.from("certifications").delete().eq("course_id", id);
-        if (certDelErr) throw certDelErr;
-        if (course.certifications.length > 0) {
-          const cleanCert = course.certifications.map((c) => {
-            const { id: _, ...rest } = c;
-            return { ...rest, recognized_companies: (rest.recognized_companies || []).filter(Boolean), course_id: id };
-          });
-          const { error: certErr } = await supabase.from("certifications").insert(cleanCert);
-          if (certErr) throw new Error(certErr.message);
-        }
-        const { error: faqDelErr } = await supabase.from("faqs").delete().eq("course_id", id);
-        if (faqDelErr) throw faqDelErr;
-        if (course.faqs.length > 0) {
-          const cleanFaqs = course.faqs.map((f, i) => {
-            const { id: _, ...rest } = f;
-            return { ...rest, course_id: id, sort_order: i };
-          });
-          const { error: faqsErr } = await supabase.from("faqs").insert(cleanFaqs);
-          if (faqsErr) throw new Error(faqsErr.message);
-        }
-        const { error: tagDelErr } = await supabase.from("course_tags").delete().eq("course_id", id);
-        if (tagDelErr) throw tagDelErr;
-        if (courseTags.length > 0) {
-          const { error: tagInsErr } = await supabase
-            .from("course_tags")
-            .insert(
-              courseTags.map((tagId) => ({ course_id: id, tag_id: tagId })),
-            );
-          if (tagInsErr) throw tagInsErr;
-        }
+      }
+
+      await saveRelated("highlights", course.highlights, targetId);
+      await saveRelated("overview_faqs", course.overview_faqs, targetId);
+      await saveRelated("projects", course.projects, targetId);
+      await saveRelated("course_tabs", course.tabs, targetId);
+      const { error: certDelErr } = await supabase.from("certifications").delete().eq("course_id", targetId);
+      if (certDelErr) throw certDelErr;
+      if (course.certifications && course.certifications.length > 0) {
+        const cleanCert = course.certifications.map((c) => {
+          const { id: _, ...rest } = c;
+          return { ...rest, recognized_companies: (rest.recognized_companies || []).filter(Boolean), course_id: targetId };
+        });
+        const { error: certErr } = await supabase.from("certifications").insert(cleanCert);
+        if (certErr) throw new Error(certErr.message);
+      }
+      const { error: faqDelErr } = await supabase.from("faqs").delete().eq("course_id", targetId);
+      if (faqDelErr) throw faqDelErr;
+      if (course.faqs && course.faqs.length > 0) {
+        const cleanFaqs = course.faqs.map((f, i) => {
+          const { id: _, ...rest } = f;
+          return { ...rest, course_id: targetId, sort_order: i };
+        });
+        const { error: faqsErr } = await supabase.from("faqs").insert(cleanFaqs);
+        if (faqsErr) throw new Error(faqsErr.message);
+      }
+      const { error: tagDelErr } = await supabase.from("course_tags").delete().eq("course_id", targetId);
+      if (tagDelErr) throw tagDelErr;
+      if (courseTags && courseTags.length > 0) {
+        const { error: tagInsErr } = await supabase
+          .from("course_tags")
+          .insert(
+            courseTags.map((tagId) => ({ course_id: targetId, tag_id: tagId })),
+          );
+        if (tagInsErr) throw tagInsErr;
       }
       queryClient.invalidateQueries({ queryKey: ['course', course.slug] });
       queryClient.invalidateQueries({ queryKey: ['allCourses'] });
@@ -620,6 +618,16 @@ export default function CourseEditor() {
     <PageShell
       backTo={returnUrl}
       title={isNew ? "New Course" : `Edit: ${course.title || "Untitled"}`}
+      actions={
+        <button
+          type="button"
+          onClick={() => setShowAIModal(true)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+        >
+          <HiSparkles className="w-4 h-4 text-amber-200" />
+          <span>AI Course Creator</span>
+        </button>
+      }
     >
       {message && (
         <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
@@ -971,7 +979,7 @@ export default function CourseEditor() {
             </div>
           )}
 
-          {tab === "tabs" && !isNew && (
+          {tab === "tabs" && (
             <div className="space-y-6">
               {(() => {
                 const contentTabs = course.tabs.filter(t => t.content_type === "overview" || t.content_type === "syllabus");
@@ -1334,7 +1342,7 @@ export default function CourseEditor() {
             </div>
           )}
 
-          {tab === "highlights" && !isNew && (
+          {tab === "highlights" && (
             <div className="max-w-3xl space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
                 <div className="flex items-center gap-2">
@@ -1442,7 +1450,7 @@ export default function CourseEditor() {
             </div>
           )}
 
-          {tab === "projects" && !isNew && (
+          {tab === "projects" && (
             <div className="max-w-3xl space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
                 <div className="flex items-center gap-2">
@@ -1645,7 +1653,7 @@ export default function CourseEditor() {
             );
           })()}
 
-          {tab === "faqs" && !isNew && (
+          {tab === "faqs" && (
             <div className="max-w-3xl space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
                 <div className="flex items-center gap-2">
@@ -1727,7 +1735,7 @@ export default function CourseEditor() {
             </div>
           )}
 
-          {tab === "tags" && !isNew && (
+          {tab === "tags" && (
             <div className="max-w-2xl">
               <h3 className="font-semibold text-black mb-4">Tags</h3>
               <p className="text-sm text-neutral-500 mb-4">
@@ -1824,6 +1832,13 @@ export default function CourseEditor() {
       </div>
       </div>
       <SaveCancelBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} onDiscard={() => navigate(returnUrl)} />
+
+      <CourseAIImportModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        onImportData={handleAIImportData}
+        initialCourseName={course.title}
+      />
     </PageShell>
   );
 }

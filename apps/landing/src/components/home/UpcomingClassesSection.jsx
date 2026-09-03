@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiClock, FiLoader, FiX, FiCheckCircle, FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
@@ -152,14 +153,22 @@ export default function UpcomingClassesSection({ section }) {
     <section className="pt-8 pb-16 bg-neutral-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="text-center">
-            {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
-            )}
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
-            {subheading && (
-              <p className="text-text-gray text-sm sm:text-base leading-relaxed mt-3 mb-10 whitespace-pre-line">{subheading}</p>
-            )}
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 text-center sm:text-left mb-8 sm:mb-10">
+            <div>
+              {heading && (
+                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
+              )}
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mx-auto sm:mx-0" />
+              {subheading && (
+                <p className="text-text-gray text-sm sm:text-base leading-relaxed mt-3 whitespace-pre-line">{subheading}</p>
+              )}
+            </div>
+            <Link
+              to="/career"
+              className="shrink-0 text-xl sm:text-2xl font-extrabold text-brand-blue leading-tight hover:underline cursor-pointer"
+            >
+              Recent Job Openings !
+            </Link>
           </div>
         </Reveal>
 
@@ -191,7 +200,7 @@ export default function UpcomingClassesSection({ section }) {
                           <button
                             type="button"
                             onClick={() => setSelectedClass(cls)}
-                            className="inline-block bg-brand-orange text-white font-bold text-sm py-2 px-6 rounded-full transition-colors group-hover:bg-[#e0951f]"
+                            className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
                           >
                             Register now
                           </button>
@@ -241,8 +250,9 @@ export default function UpcomingClassesSection({ section }) {
                   )}
                   <div className="mt-auto pt-4 flex justify-end">
                     <button
+                      type="button"
                       onClick={() => setSelectedClass(cls)}
-                      className="inline-block bg-brand-orange text-white font-bold text-sm py-2 px-6 rounded-full transition-colors group-hover:bg-[#e0951f]"
+                      className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
                     >
                       Register now
                     </button>

@@ -20,8 +20,9 @@ const [jobs, setJobs] = useState([]);
   const [categories, setCategories] = useState([]);
 
   const defaultJobForm = {
-    title: '', role_category_id: '', location: '', type: 'Full-time',
+    title: '', division: '', role_category_id: '', location: '', type: 'Full-time',
     experience: '', salary: '', apply_url: '', description: '',
+    key_requirements: '', responsibilities: '', qualifications: '',
     is_active: true, sort_order: 0,
   };
   const [jobForm, setJobForm] = useState(defaultJobForm);
@@ -44,7 +45,13 @@ const [jobs, setJobs] = useState([]);
   function openJobForm(job = null) {
     if (job) {
       setEditingJob(job);
-      setJobForm({ ...job });
+      setJobForm({
+        ...job,
+        division: job.division || job.department || '',
+        key_requirements: job.key_requirements || '',
+        responsibilities: job.responsibilities || '',
+        qualifications: job.qualifications || '',
+      });
     } else {
       setEditingJob(null);
       setJobForm(defaultJobForm);
@@ -69,22 +76,40 @@ const [jobs, setJobs] = useState([]);
     setJobSaving(true);
     const payload = {
       title: jobForm.title.trim(),
+      division: jobForm.division?.trim() || null,
+      department: jobForm.division?.trim() || null,
       role_category_id: jobForm.role_category_id || null,
       location: jobForm.location?.trim() || null,
       type: jobForm.type?.trim() || null,
       experience: jobForm.experience?.trim() || null,
       salary: jobForm.salary?.trim() || null,
       description: jobForm.description?.trim() || null,
+      key_requirements: jobForm.key_requirements?.trim() || null,
+      responsibilities: jobForm.responsibilities?.trim() || null,
+      qualifications: jobForm.qualifications?.trim() || null,
       apply_url: jobForm.apply_url?.trim() || null,
       is_active: jobForm.is_active,
       sort_order: jobForm.sort_order,
     };
 
+    let currentPayload = { ...payload };
     let res;
-    if (editingJob) {
-      res = await supabase.from('job_openings').update(payload).eq('id', editingJob.id);
-    } else {
-      res = await supabase.from('job_openings').insert(payload);
+    for (let attempt = 0; attempt < 6; attempt++) {
+      if (editingJob) {
+        res = await supabase.from('job_openings').update(currentPayload).eq('id', editingJob.id);
+      } else {
+        res = await supabase.from('job_openings').insert(currentPayload);
+      }
+      if (res?.error) {
+        const match = res.error.message?.match(/Could not find the '([^']+)' column/i);
+        if (match && match[1] && currentPayload[match[1]] !== undefined) {
+          delete currentPayload[match[1]];
+          continue;
+        }
+        break;
+      } else {
+        break;
+      }
     }
     if (res?.error) {
       console.error('Failed to save job opening:', res.error);
@@ -143,7 +168,7 @@ const [jobs, setJobs] = useState([]);
       </div>
 
       {showJobForm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 pt-12 sm:pt-20 cursor-pointer" onClick={closeJobForm}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 pt-8 sm:pt-12 cursor-pointer" onClick={closeJobForm}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col cursor-auto overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-admin-200 bg-gray-50/50 shrink-0">
               <h3 className="font-semibold text-black">{editingJob ? 'Edit Job Opening' : 'Add Job Opening'}</h3>
@@ -155,9 +180,15 @@ const [jobs, setJobs] = useState([]);
               <form id="jobForm" onSubmit={saveJob} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Job Title *</label>
-                    <input name="title" value={jobForm.title} onChange={handleJobChange} placeholder="e.g. Software Engineer" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" required />
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Position / Title *</label>
+                    <input name="title" value={jobForm.title} onChange={handleJobChange} placeholder="e.g. Full Stack Developer" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" required />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Division / Department</label>
+                    <input name="division" value={jobForm.division} onChange={handleJobChange} placeholder="e.g. Marketing" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Category</label>
                     <select name="role_category_id" value={jobForm.role_category_id} onChange={handleJobChange} className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all bg-white">
@@ -165,26 +196,23 @@ const [jobs, setJobs] = useState([]);
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Location</label>
-                    <input name="location" value={jobForm.location} onChange={handleJobChange} placeholder="e.g. New York, NY" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
-                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Type</label>
                     <select name="type" value={jobForm.type} onChange={handleJobChange} className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all bg-white">
                       <option value="Full-time">Full-time</option>
                       <option value="Part-time">Part-time</option>
                       <option value="Contract">Contract</option>
-                      <option value="Internship">Internship</option>
                     </select>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Experience</label>
-                    <input name="experience" value={jobForm.experience} onChange={handleJobChange} placeholder="e.g. 2–4 years" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Minimum Experience</label>
+                    <input name="experience" value={jobForm.experience} onChange={handleJobChange} placeholder="e.g. 4 years" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Location</label>
+                    <input name="location" value={jobForm.location} onChange={handleJobChange} placeholder="e.g. New York, NY" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Salary Range</label>
@@ -192,13 +220,28 @@ const [jobs, setJobs] = useState([]);
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>
-                  <input name="apply_url" value={jobForm.apply_url} onChange={handleJobChange} placeholder="e.g. https://apply.example.com/position" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Main Duties &amp; Responsibilities (Overview / Summary)</label>
+                  <textarea name="description" value={jobForm.description} onChange={handleJobChange} rows={3}
+                    placeholder="We are seeking to hire a Full stack developer to initiate and develop company website and web app projects..." className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Description</label>
-                  <textarea name="description" value={jobForm.description} onChange={handleJobChange} rows={4}
-                    placeholder="Brief description or requirements..." className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y" />
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Key Requirements</label>
+                  <textarea name="key_requirements" value={jobForm.key_requirements} onChange={handleJobChange} rows={4}
+                    placeholder="• Good experience of website UI/UX designing&#10;• Management of hosting environment, preferably AWS&#10;• Integrating data from back-end services and databases" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Responsibilities</label>
+                  <textarea name="responsibilities" value={jobForm.responsibilities} onChange={handleJobChange} rows={4}
+                    placeholder="• Design of the overall architecture of the web application&#10;• Implementation of a robust set of services and APIs&#10;• Optimization of the application for maximum speed and scalability" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Qualification &amp; Experience</label>
+                  <textarea name="qualifications" value={jobForm.qualifications} onChange={handleJobChange} rows={4}
+                    placeholder="• Graduates/Post Graduates in BCA/MCA with minimum 4 years of work experience&#10;• Ability to work on multiple projects in a fast-paced environment&#10;• Pleasant, personable demeanour" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>
+                  <input name="apply_url" value={jobForm.apply_url} onChange={handleJobChange} placeholder="e.g. https://apply.example.com/position" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                 </div>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">

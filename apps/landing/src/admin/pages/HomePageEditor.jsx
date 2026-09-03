@@ -128,8 +128,8 @@ const sectionDefs = [
   },
   {
     key: 'empowering', label: 'Empowering', icon: FiStar, color: 'from-blue-500 to-blue-600',
+    noSubheading: true,
     fields: [
-      { name: 'heading', label: 'Heading', type: 'text' },
       { name: 'description', label: 'Description', type: 'textarea' },
     ],
   },
@@ -405,19 +405,12 @@ function ServicesEditor({ data, onChange }) {
     onChange({ ...data, content: { ...content, [name]: value } });
   }
   const services = content.services_list || [];
-  const cards = content.service_cards || [];
   function addService() { updateContent('services_list', [...services, { icon_name: 'briefcase', title: '', description: '' }]); }
   function updateService(idx, field, value) {
     const u = services.map((s, i) => i === idx ? { ...s, [field]: value } : s);
     updateContent('services_list', u);
   }
   function removeService(idx) { updateContent('services_list', services.filter((_, i) => i !== idx)); }
-  function addCard() { updateContent('service_cards', [...cards, { image_url: '', title: '', description: '', link_url: '', is_clickable: false }]); }
-  function updateCard(idx, field, value) {
-    const u = cards.map((c, i) => i === idx ? { ...c, [field]: value } : c);
-    updateContent('service_cards', u);
-  }
-  function removeCard(idx) { updateContent('service_cards', cards.filter((_, i) => i !== idx)); }
   return (
     <div className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-4">
@@ -497,48 +490,6 @@ function ServicesEditor({ data, onChange }) {
                     <input type="text" value={s.description || ''} onChange={(e) => updateService(i, 'description', e.target.value)}
                       className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" />
                   </div>
-                </div>
-              </div>
-            </RepeatableItemCard>
-          )}
-        />
-      </div>
-      <div className="pt-4">
-        <RepeatableItemList
-          title="Upcoming Cards"
-          items={cards}
-          onAdd={addCard}
-          addLabel="Add Card"
-          renderItem={(c, i) => (
-            <RepeatableItemCard key={i} index={i} label="Card" onRemove={() => removeCard(i)}>
-              <div className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Title</label>
-                    <input type="text" value={c.title || ''} onChange={(e) => updateCard(i, 'title', e.target.value)}
-                      className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description</label>
-                    <input type="text" value={c.description || ''} onChange={(e) => updateCard(i, 'description', e.target.value)}
-                      className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" />
-                  </div>
-                </div>
-                <ImageUploader value={c.image_url} onChange={(v) => updateCard(i, 'image_url', v)} label="Image" />
-                <div className="flex items-center gap-4 pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={!!c.is_clickable} onChange={(e) => updateCard(i, 'is_clickable', e.target.checked)}
-                      className="w-4 h-4 rounded border-admin-200 text-admin-600 focus:ring-admin-500/20" />
-                    <span className="text-xs font-medium text-black">Clickable</span>
-                  </label>
-                  {c.is_clickable && (
-                    <div className="flex-1">
-                      <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Link URL</label>
-                      <input type="text" value={c.link_url || ''} onChange={(e) => updateCard(i, 'link_url', e.target.value)}
-                        placeholder="/courses or https://..."
-                        className="w-full px-3 py-1.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500" />
-                    </div>
-                  )}
                 </div>
               </div>
             </RepeatableItemCard>

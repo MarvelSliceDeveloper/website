@@ -268,22 +268,33 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
 
   async function markRead(row, e) {
     e?.stopPropagation();
-    const { error } = await supabase.from(table).update({ is_read: true }).eq('id', row.id);
-    if (error) {
-      console.error(`Failed to mark read in ${table}:`, error);
-      alert('Failed to mark read: ' + error.message);
-      return;
+    try {
+      const { error } = await supabase.from(table).update({ is_read: true }).eq('id', row.id);
+      if (error) {
+        if (error.message?.includes('is_read') || error.code === 'PGRST204') {
+          // Table doesn't have is_read column yet (e.g. legacy conversations)
+          await supabase.from(table).update({ notified: false }).eq('id', row.id).catch(() => {});
+        } else {
+          console.warn(`Failed to mark read in ${table}:`, error.message);
+        }
+      }
+    } catch (err) {
+      console.warn(`markRead exception in ${table}:`, err);
     }
     setData(prev => prev.map(s => s.id === row.id ? { ...s, is_read: true } : s));
   }
 
   async function markUnread(row, e) {
     e?.stopPropagation();
-    const { error } = await supabase.from(table).update({ is_read: false }).eq('id', row.id);
-    if (error) {
-      console.error(`Failed to mark unread in ${table}:`, error);
-      alert('Failed to mark unread: ' + error.message);
-      return;
+    try {
+      const { error } = await supabase.from(table).update({ is_read: false }).eq('id', row.id);
+      if (error) {
+        if (!error.message?.includes('is_read')) {
+          console.warn(`Failed to mark unread in ${table}:`, error.message);
+        }
+      }
+    } catch (err) {
+      console.warn(`markUnread exception in ${table}:`, err);
     }
     setData(prev => prev.map(s => s.id === row.id ? { ...s, is_read: false } : s));
   }

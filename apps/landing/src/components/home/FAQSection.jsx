@@ -3,11 +3,12 @@ import AccordionItem from '../ui/AccordionItem';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
 
 export default function FAQSection({ section }) {
+  const [openIdx, setOpenIdx] = useState(null);
+
   if (!section) return null;
 
   const heading = section.heading || 'Frequently Asked Questions';
   const items = section.content?.items || [];
-  const [openIdx, setOpenIdx] = useState(null);
 
   if (items.length === 0) return null;
 

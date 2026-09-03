@@ -1,11 +1,18 @@
 import { FiBriefcase } from "react-icons/fi";
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell, FiCheckCircle, FiAward } from "react-icons/fi";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell, FiCheckCircle, FiAward, FiCpu } from "react-icons/fi";
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 const navGroups = [
-  { label: "Dashboard", icon: FiHome, items: [{ to: "/admin", label: "Dashboard", icon: FiHome }] },
+  { 
+    label: "Dashboard", 
+    icon: FiHome, 
+    items: [
+      { to: "/admin", label: "Dashboard", icon: FiHome },
+      { to: "/admin/analytics", label: "Live Analytics", icon: FiBarChart2 }
+    ] 
+  },
   {
     label: "All Pages", icon: FiFile,
     items: [
@@ -52,10 +59,6 @@ const navGroups = [
         { to: "/admin/courses/wizard?category=Software%20Learning", label: "Add Course", icon: FiPlusCircle },
         { to: "/admin/courses?category=Software%20Learning", label: "View Courses", icon: FiBookOpen }
       ]},
-      { label: "Competitive Exam", children: [
-        { to: "/admin/courses/wizard?category=Competitive%20Exam", label: "Add Course", icon: FiPlusCircle },
-        { to: "/admin/courses?category=Competitive%20Exam", label: "View Courses", icon: FiBookOpen }
-      ]},
       { label: "Tags", children: [
         { to: "/admin/tags/add", label: "Add Tag", icon: FiPlusCircle },
         { to: "/admin/tags", label: "View Tags", icon: FiTag }
@@ -91,10 +94,6 @@ const navGroups = [
       { to: "/admin/nav-menu?section=Software%20Learning&tab=add", label: "Add Menu", icon: FiPlusCircle },
       { to: "/admin/nav-menu?section=Software%20Learning&tab=view", label: "View Menu", icon: FiMenu }
     ]},
-    { label: "Competitive Exam", children: [
-      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=add", label: "Add Menu", icon: FiPlusCircle },
-      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=view", label: "View Menu", icon: FiMenu }
-    ]},
     { label: "Services", children: [
       { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu", icon: FiPlusCircle },
       { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu", icon: FiMenu }
@@ -105,6 +104,7 @@ const navGroups = [
     ]},
   { label: "Settings", icon: FiSettings, items: [
     { to: "/admin/site-settings?section=general", label: "Site Settings", icon: FiSettings },
+    { to: "/admin/ai-settings", label: "AI Settings", icon: FiCpu },
     { to: "/admin/admin-users", label: "Admin Users", icon: FiUsers }
     ]}
     ];

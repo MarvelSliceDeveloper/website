@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiTarget, FiChevronDown, FiX, FiLoader, FiZoomIn } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { supabase } from '../lib/supabaseClient';
-import { trackRegister, trackFormSubmit } from '../lib/analytics';
+import { trackRegister, trackFormSubmit, trackEnroll } from '../lib/analytics';
 import BankingTestimonialsSection from '../components/banking/BankingTestimonialsSection';
 
 const FAQS = [
@@ -132,9 +132,9 @@ export default function Banking() {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
 
   function openApplyModal(type = 'general', topic = 'General Banking Enquiry') {
+    trackEnroll(topic, 'banking_exams');
     setEnquiryType(type);
     setSelectedTopic(topic);
     setShowApplyModal(true);
@@ -251,7 +251,7 @@ export default function Banking() {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
                 <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
-                  Build Your Career in Banking
+                  About Banking
                 </h1>
 
                 <p className="text-sm sm:text-base leading-relaxed text-slate-600 w-full">
@@ -565,12 +565,10 @@ export default function Banking() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="text-center mb-10 sm:mb-14">
-              <div className="inline-flex flex-col items-center">
-                <h2 className="font-extrabold text-2xl sm:text-3xl lg:text-4xl text-dark-navy tracking-tight">
-                  Frequently Asked Questions
-                </h2>
-                <div className="mt-3.5 h-[3.5px] bg-brand-orange rounded-full w-16 sm:w-20" />
-              </div>
+              <h2 className="font-extrabold text-2xl sm:text-3xl lg:text-4xl text-dark-navy tracking-tight">
+                Frequently Asked Questions
+              </h2>
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
             </div>
           </Reveal>
 
@@ -724,7 +722,7 @@ export default function Banking() {
                             <span>Submitting...</span>
                           </>
                         ) : (
-                          <span>Submit Application</span>
+                          <span>Submit</span>
                         )}
                       </button>
                     </div>

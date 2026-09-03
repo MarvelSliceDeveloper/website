@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { trackFormSubmit, trackDownload } from '../lib/analytics';
 import Reveal from '../components/ui/Reveal';
 import CTABannerSection from '../components/home/CTABannerSection';
 import {
-  FiMapPin, FiClock, FiDollarSign,
-  FiSearch, FiExternalLink, FiChevronRight, FiChevronLeft,
+  FiMapPin, FiClock,
+  FiSearch, FiChevronRight, FiChevronLeft,
   FiBriefcase, FiUpload, FiSend, FiCheck,
   FiAlertCircle, FiX, FiArrowRight,
 } from 'react-icons/fi';
@@ -221,8 +221,6 @@ export default function Career() {
 
   const fc = pageContent?.form_config || {};
   const formCfg = fc.form || {};
-  const section2HeadingAlign = fc.section2_heading_align || 'center';
-  const section2SubheadingAlign = fc.section2_subheading_align || 'center';
   const formEnabled = formCfg.enabled !== false;
 
   const ctaConfig = fc.cta_banner || {};
@@ -359,8 +357,12 @@ export default function Career() {
     if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     if (!file) errs.file = 'Resume is required';
     else {
-      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
-      if (!allowed.includes(file.type)) errs.file = 'Only PDF, DOC, DOCX, JPG, PNG files are allowed';
+      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedExts = ['pdf', 'doc', 'docx'];
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!allowed.includes(file.type) && !allowedExts.includes(ext)) {
+        errs.file = 'Only PDF, DOC, or DOCX document files are allowed';
+      }
       if (file.size > 10 * 1024 * 1024) errs.file = 'File must be under 10 MB';
     }
     setErrors(errs);
@@ -565,7 +567,7 @@ export default function Career() {
                         </>
                       )}
                     </div>
-                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={e => {
+                    <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e => {
                       const f = e.target.files?.[0];
                       setFile(f || null);
                       if (errors.file) setErrors(prev => ({ ...prev, file: '' }));
@@ -672,43 +674,54 @@ export default function Career() {
 
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
         {fc.headline && (
-          <h2 className="text-4xl font-extrabold text-brand-orange">
-            {fc.headline}
-          </h2>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
+              {fc.headline}
+            </h2>
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+          </div>
         )}
-        <div className="w-16 h-0.5 bg-brand-orange mx-auto rounded-full mt-3" />
 
         {fc.subtitle && (
-          <p className="text-xl font-bold text-brand-orange mt-8">
+          <h3 className="text-lg sm:text-xl font-bold text-dark-navy mt-4 mb-2">
             {fc.subtitle}
-          </p>
+          </h3>
         )}
 
         {fc.description && (
-          <p className="text-slate-500 text-base w-full max-w-none mx-auto mt-3">
-            {fc.description}
-          </p>
+          <div className="max-w-4xl mx-auto mt-3">
+            {fc.description.split('\n\n').filter(Boolean).map((p, idx) => (
+              <p
+                key={idx}
+                className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mb-4"
+              >
+                {p}
+              </p>
+            ))}
+          </div>
         )}
 
         <div className="mt-10">
         {fc.categoriesSubtitle && (
-          <h3 className="text-2xl font-bold text-brand-orange mt-1">
-            {fc.categoriesSubtitle}
-          </h3>
+          <div>
+            <h3 className="text-xl sm:text-2xl font-bold text-dark-navy mt-1">
+              {fc.categoriesSubtitle}
+            </h3>
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+          </div>
         )}
-        <div className="w-12 h-1 bg-brand-orange mx-auto rounded-full mt-2" />
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-6xl mx-auto text-left">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mt-8 max-w-6xl mx-auto text-left">
             {roleCategories.map((cat, idx) => (
               <div
                 key={cat.id}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer flex items-center gap-3 group"
+                className="bg-white rounded-2xl p-2.5 sm:p-4 shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-2 sm:gap-3 group"
               >
-                <div className={`p-3 rounded-xl flex items-center justify-center shrink-0 ${idx % 2 === 0 ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-orange/10 text-brand-orange'}`}>
-                  <FiBriefcase className="w-5 h-5" />
+                <div className={`p-2.5 sm:p-3 rounded-xl flex items-center justify-center shrink-0 ${idx % 2 === 0 ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-orange/10 text-brand-orange'}`}>
+                  <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-gray-900 font-semibold text-sm md:text-base">
+                <span className="text-dark-navy font-semibold text-xs sm:text-sm md:text-base leading-snug break-words">
                   {cat.name}
                 </span>
               </div>
@@ -727,18 +740,20 @@ export default function Career() {
 
       <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className={`mb-8 text-${section2HeadingAlign}`}>
+          <div className="mb-8 text-center">
             {pageContent?.section2_heading && (
-              <h2 className="text-3xl font-extrabold text-slate-900 mt-2 whitespace-pre-line">
-                {pageContent.section2_heading}
-              </h2>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy whitespace-pre-line">
+                  {pageContent.section2_heading}
+                </h2>
+                <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+              </div>
             )}
             {pageContent?.section2_subheading && (
-              <p className="text-slate-600 text-sm mt-1 whitespace-pre-line">
+              <p className="text-slate-500 text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
                 {pageContent.section2_subheading}
               </p>
             )}
-            <div className="w-16 h-[3px] bg-brand-orange mx-auto rounded-full mt-3" />
           </div>
 
           {/* Category Tabs: All, Jobs, Internships */}
@@ -778,74 +793,63 @@ export default function Career() {
                     exit="exit"
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   >
-                    {pageItems.map((item, i) => {
+                    {pageItems.map((item) => {
                       const isIntern = item._type === 'intern';
+                      const empType = item.type || item.department || (isIntern ? 'Internship' : 'Job');
+                      const expVal = item.experience || item.duration;
+                      const locVal = item.location;
+
                       return (
                         <motion.div
                           key={`${item._type}-${item.id}`}
                           variants={cardVariants}
-                          whileHover={{ y: -5 }}
-                          className="bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-slate-300 transition-all p-5 flex flex-col justify-between"
+                          whileHover={{ y: -4 }}
+                          className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-brand-blue/40 transition-all duration-300 p-5 sm:p-6 flex flex-col justify-between h-full"
                         >
                           <div>
-                            {/* TOP ROW: Name + Badge (Left) | Stipend / Salary (Right Top) */}
-                            <div className="flex items-center justify-between gap-3 mb-3">
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 break-words min-w-0 flex-1" title={item.title}>
-                                  {item.title}
-                                </h3>
-                                <span className="text-[10px] font-bold text-brand-orange bg-orange-50 border border-orange-200/60 px-2 py-0.5 rounded-full shrink-0">
-                                  {isIntern ? 'Internship' : 'Job'}
-                                </span>
-                              </div>
-
-                              {/* RIGHT SIDE TOP: Salary or Stipend */}
-                              {(item.salary || item.stipend) && (
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-md bg-orange-50 text-brand-orange text-xs font-bold border border-orange-200/60">
-                                    {(item.salary || item.stipend).startsWith('₹') ? (item.salary || item.stipend) : `₹${item.salary || item.stipend}`}
-                                  </span>
+                            {/* TOP SECTION: Icon + Title & Salary (Left) | Pill Badge (Top-Right) */}
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
+                                  <FiBriefcase className="w-5 h-5" />
                                 </div>
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-bold text-black text-base sm:text-lg leading-snug group-hover:text-brand-blue transition-colors line-clamp-2" title={item.title}>
+                                    {item.title}
+                                  </h3>
+                                </div>
+                              </div>
+                              {empType && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-brand-orange border border-orange-200/60 shrink-0">
+                                  {empType}
+                                </span>
                               )}
                             </div>
-
-                            {/* FULL DESCRIPTION */}
-                            {item.description && (
-                              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
-                                {item.description}
-                              </p>
-                            )}
                           </div>
 
-                          {/* BOTTOM ROW: Experience/Duration + Location (Left) & Apply Button (Right) */}
-                          <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto gap-3 w-full">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0 flex-1">
-                              {(item.experience || item.duration) && (
-                                <span className="text-slate-600 text-xs flex items-center gap-1 font-semibold shrink-0">
-                                  <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
-                                  {item.experience || item.duration}
+                          {/* METADATA & ACTION SECTION BELOW DIVIDER */}
+                          <div className="pt-3.5 mt-4 border-t border-slate-100 flex items-center justify-between gap-3 w-full">
+                            <div className="flex flex-wrap items-center gap-3.5 min-w-0 flex-1 text-xs text-slate-500 font-medium">
+                              {expVal && (
+                                <span className="flex items-center gap-1.5 shrink-0" title={expVal}>
+                                  <FiClock className="w-3.5 h-3.5 text-brand-orange shrink-0" />
+                                  <span>{expVal}</span>
                                 </span>
                               )}
-                              {item.location && (
-                                <span className="text-slate-500 text-xs flex items-start gap-1 font-medium min-w-0">
-                                  <FiMapPin className="w-3.5 h-3.5 shrink-0 text-slate-400 mt-0.5" />
-                                  <span className="line-clamp-2 leading-tight break-words" title={item.location}>{item.location}</span>
+                              {locVal && (
+                                <span className="flex items-center gap-1.5 min-w-0" title={locVal}>
+                                  <FiMapPin className="w-3.5 h-3.5 text-brand-orange shrink-0" />
+                                  <span className="truncate max-w-[130px] sm:max-w-[150px]">{locVal}</span>
                                 </span>
                               )}
                             </div>
-                            <button
-                              onClick={() => {
-                                if (item.apply_url?.trim()) {
-                                  window.open(item.apply_url.trim(), '_blank', 'noopener,noreferrer');
-                                } else {
-                                  setSelectedJob(item);
-                                  setShowForm(true);
-                                }
-                              }}
-                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue hover:bg-blue-700 text-white font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm shadow-sm shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
+                            <Link
+                              to={`/career/job/${item._type}/${item.id}`}
+                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-bold text-xs sm:text-sm py-2 px-4.5 rounded-full hover:bg-blue-700 hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
                             >
-                              Apply Now <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
+                              <span>View Details</span>
+                              <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
                           </div>
                         </motion.div>
                       );
@@ -881,8 +885,8 @@ export default function Career() {
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-brand-blue px-6 py-4 text-white relative">
-              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-slate-600 hover:text-slate-800 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
-                <FiX className="w-4 h-4" />
+              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
+                <FiX className="w-4 h-4 text-red-600" />
               </button>
               {selectedJob && (
                 <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10">

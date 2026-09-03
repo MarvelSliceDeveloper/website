@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState";
 import Card from "../components/ui/Card";
 import DataTable from "../components/ui/DataTable";
 import { FiBookOpen, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft, FiX, FiCheckSquare } from "react-icons/fi";
+import { HiSparkles } from "react-icons/hi2";
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 

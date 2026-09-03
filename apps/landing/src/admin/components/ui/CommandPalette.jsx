@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiFile, FiFileText, FiBookOpen, FiServer, FiZap, FiInbox, FiSettings, FiMenu, FiHome, FiMessageCircle, FiLayers, FiGlobe, FiSearch } from 'react-icons/fi';
+import { FiFile, FiFileText, FiBookOpen, FiServer, FiZap, FiInbox, FiSettings, FiMenu, FiHome, FiMessageCircle, FiLayers, FiGlobe, FiSearch, FiCpu } from 'react-icons/fi';
 
 const routes = [
   { label: 'Dashboard', to: '/admin', icon: FiHome, category: 'Pages' },
@@ -25,6 +25,7 @@ const routes = [
   { label: 'Media Library', to: '/admin/media', icon: FiLayers, category: 'Settings' },
   { label: 'Footer', to: '/admin/footer', icon: FiLayers, category: 'Settings' },
   { label: 'Site Settings', to: '/admin/site-settings?section=general', icon: FiSettings, category: 'Settings' },
+  { label: 'AI Settings', to: '/admin/ai-settings', icon: FiCpu, category: 'Settings' },
   { label: 'Admin Users', to: '/admin/admin-users', icon: FiSettings, category: 'Settings' },
   { label: 'Live Chat', to: '/admin/chats?tab=live', icon: FiMessageCircle, category: 'Settings' },
   { label: 'Chat History', to: '/admin/chats?tab=history', icon: FiMessageCircle, category: 'Settings' },

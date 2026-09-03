@@ -56,6 +56,7 @@ const entityConfig = {
 // Single-segment pages (list / leaf pages)
 const singles = {
   "site-settings": "Site Settings",
+  "ai-settings": "AI Settings",
   "nav-menu": "Menu",
   alumni: "Alumni Companies",
   footer: "Footer",

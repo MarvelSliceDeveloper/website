@@ -13,9 +13,12 @@ export default function EmpoweringSection({ section }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal variant="up" className="space-y-4 sm:space-y-6 text-center lg:text-left">
           {heading && (
-            <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug whitespace-pre-line">
-              {heading}
-            </h2>
+            <div>
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug whitespace-pre-line">
+                {heading}
+              </h2>
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto lg:mx-0" />
+            </div>
           )}
           {description && (
             <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">

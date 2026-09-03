@@ -107,8 +107,12 @@ export default function JobApplyModal({ job, onClose }) {
     if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     if (!file) errs.file = 'Resume is required';
     else {
-      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
-      if (!allowed.includes(file.type)) errs.file = 'Only PDF, DOC, DOCX, JPG, PNG files are allowed';
+      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedExts = ['pdf', 'doc', 'docx'];
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!allowed.includes(file.type) && !allowedExts.includes(ext)) {
+        errs.file = 'Only PDF, DOC, or DOCX document files are allowed';
+      }
       if (file.size > 10 * 1024 * 1024) errs.file = 'File must be under 10 MB';
     }
     setErrors(errs);
@@ -188,8 +192,8 @@ export default function JobApplyModal({ job, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="bg-brand-blue px-6 py-4 text-white relative">
-          <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-slate-600 hover:text-slate-800 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
-            <FiX className="w-4 h-4" />
+          <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
+            <FiX className="w-4 h-4 text-red-600" />
           </button>
           <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10">
             Applying for: <span className="font-semibold">{job.title}</span>
@@ -305,7 +309,7 @@ export default function JobApplyModal({ job, onClose }) {
                         </>
                       )}
                     </div>
-                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={e => {
+                    <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e => {
                       const f = e.target.files?.[0];
                       setFile(f || null);
                       if (errors.file) setErrors(prev => ({ ...prev, file: '' }));

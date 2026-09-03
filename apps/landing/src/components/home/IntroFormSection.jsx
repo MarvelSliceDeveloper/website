@@ -19,16 +19,16 @@ function getStatIcon(label) {
 
 function CourseButtons() {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
+    <div className="flex flex-row gap-2.5 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-bold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center"
+        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-bold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-bold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center"
+        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-bold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>
@@ -43,23 +43,25 @@ function StatsGrid({ stats }) {
   if (!stats || stats.length === 0) return null;
 
   return (
-    <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 w-full max-w-md sm:max-w-none mx-auto">
+    <Stagger className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-md sm:max-w-none mx-auto">
       {stats.map((stat, i) => {
         const Icon = getStatIcon(stat.label);
         const bgClass = statIconBg[i % statIconBg.length];
         const colorClass = statIconColor[i % statIconColor.length];
 
         return (
-          <StaggerItem key={i} className="w-full">
+          <StaggerItem key={i} className="w-full min-w-0">
             <div
-              className="text-center p-3 sm:p-4 bg-white rounded-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1.5 hover:shadow-xl cursor-default flex flex-col items-center justify-center w-full h-full min-h-[96px] sm:min-h-[104px]"
+              className="text-center p-2.5 sm:p-4 bg-white rounded-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg cursor-default flex flex-col items-center justify-center w-full min-h-[96px] sm:min-h-[104px] border border-slate-100/80 shadow-xs"
               style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}
             >
               <div className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full ${bgClass} flex items-center justify-center mx-auto mb-1.5 sm:mb-2 shrink-0`}>
                 <Icon className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${colorClass}`} />
               </div>
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-brand-orange leading-none"><AnimatedNumber value={stat.value} /></div>
-              <div className="text-[11px] sm:text-xs lg:text-sm text-gray-600 mt-1 sm:mt-1.5">{stat.label}</div>
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-brand-orange leading-none">
+                <AnimatedNumber value={stat.value} />
+              </div>
+              <div className="text-[10px] sm:text-xs lg:text-sm text-gray-600 mt-1 sm:mt-1.5 font-medium leading-tight">{stat.label}</div>
             </div>
           </StaggerItem>
         );
@@ -70,14 +72,14 @@ function StatsGrid({ stats }) {
 
 function PillGrid({ pills }) {
   return (
-    <Stagger className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full max-w-md sm:max-w-none mx-auto">
+    <Stagger className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full max-w-md lg:max-w-none mx-auto">
       {pills.map((label, i) => (
         <StaggerItem key={i} className="min-w-0">
-          <div className="flex items-center justify-start text-left gap-1.5 sm:gap-2 bg-white rounded-lg border border-gray-100 px-2.5 sm:px-3 py-2.5 shadow-sm min-w-0 h-full min-h-[48px]">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
-              <FiCheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-blue" />
+          <div className="flex items-center justify-start text-left gap-2 bg-white rounded-xl border border-slate-100 px-3 py-3 shadow-xs min-w-0 h-full min-h-[48px]">
+            <div className="w-6 h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
+              <FiCheckCircle className="w-3.5 h-3.5 text-brand-blue" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-brand-blue leading-snug flex-1 min-w-0 break-words text-left">{label}</span>
+            <span className="text-xs font-bold text-slate-700 leading-snug flex-1 min-w-0 break-words text-left">{label}</span>
           </div>
         </StaggerItem>
       ))}
@@ -91,7 +93,6 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
-  const formTitle = content.form_title || 'Book Your Free Demo Class';
 
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -145,9 +146,9 @@ export default function IntroFormSection({ section }) {
     <section className="relative overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 sm:py-16">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          <Reveal variant="up" className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6 text-center lg:text-left">
+          <Reveal variant="up" className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6 text-left">
             {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center lg:text-left leading-tight sm:leading-snug max-w-none whitespace-pre-line">
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-left leading-tight sm:leading-snug max-w-none whitespace-pre-line">
                 {heading}
               </h2>
             )}
@@ -159,12 +160,13 @@ export default function IntroFormSection({ section }) {
 
             <div className="mt-6 hidden lg:block space-y-6">
               {stats.length > 0 && <StatsGrid stats={stats} />}
+              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
               <CourseButtons />
             </div>
           </Reveal>
 
           <Reveal variant="right" className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center lg:items-end">
-            <div className="max-w-sm w-full flex flex-col items-center text-center">
+            <div className="w-full max-w-md lg:max-w-sm flex flex-col items-center text-center mx-auto lg:mx-0">
               <p className="text-[24px] sm:text-[32px] font-bold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
                 Book Your Demo Now!
               </p>
@@ -230,10 +232,6 @@ export default function IntroFormSection({ section }) {
                     </button>
                   </form>
                 </div>
-              </div>
-
-              <div className="mt-6 lg:mt-8 hidden lg:block w-full">
-                {rawPills.length > 0 && <PillGrid pills={rawPills} />}
               </div>
             </div>
           </Reveal>

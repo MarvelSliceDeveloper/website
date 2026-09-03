@@ -45,7 +45,9 @@ export default function FolderTabs({ tabs, activeTab, onChange }) {
                 borderTopRightRadius: 10,
                 paddingLeft: 20,
                 paddingRight: 20,
-                border: isActive ? 'none' : '1px solid #E5E7EB',
+                borderTop: isActive ? 'none' : '1px solid #E5E7EB',
+                borderLeft: isActive ? 'none' : '1px solid #E5E7EB',
+                borderRight: isActive ? 'none' : '1px solid #E5E7EB',
                 borderBottom: 'none',
                 boxShadow: isActive
                   ? '0 -3px 10px rgba(37,99,235,0.28)'

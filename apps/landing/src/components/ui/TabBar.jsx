@@ -1,47 +1,5 @@
 import { useState } from 'react';
 
-const styles = {
-  container: {
-    display: 'flex',
-    position: 'relative',
-    overflowX: 'auto',
-    overflowY: 'hidden',
-    flexWrap: 'nowrap',
-    minWidth: 0,
-    paddingBottom: 8,
-    marginBottom: -8,
-  },
-  tab: {
-    position: 'relative',
-    padding: '8px 14px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px 8px 0 0',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'background 0.15s, color 0.15s',
-  },
-  active: {
-    background: '#f59e0b',
-    color: '#fff',
-  },
-  inactive: {
-    background: '#f3f4f6',
-    color: '#1e293b',
-  },
-  diamond: {
-    position: 'absolute',
-    bottom: '-6px',
-    left: '50%',
-    transform: 'translateX(-50%) rotate(45deg)',
-    width: '12px',
-    height: '12px',
-    background: '#f59e0b',
-    pointerEvents: 'none',
-  },
-};
-
 export default function TabBar({ tabs, activeIndex = 0, onChange }) {
   const [active, setActive] = useState(activeIndex);
 
@@ -51,20 +9,27 @@ export default function TabBar({ tabs, activeIndex = 0, onChange }) {
   }
 
   return (
-    <div className="scrollbar-hide" style={styles.container}>
-      {tabs.map((label, i) => (
-        <button
-          key={label}
-          onClick={() => handleClick(i)}
-          style={{
-            ...styles.tab,
-            ...(i === active ? styles.active : styles.inactive),
-          }}
-        >
-          {label}
-          {i === active && <div style={styles.diamond} />}
-        </button>
-      ))}
+    <div className="relative z-30 flex items-center flex-nowrap min-w-0 pb-4 -mb-4 gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none">
+      {tabs.map((label, i) => {
+        const isActive = i === active;
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => handleClick(i)}
+            className={`relative px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-t-lg sm:rounded-t-xl text-xs sm:text-sm font-semibold whitespace-nowrap border-0 outline-none transition-all cursor-pointer select-none ${
+              isActive
+                ? 'bg-[#f59e0b] text-white z-30 shadow-xs'
+                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 z-10'
+            }`}
+          >
+            {label}
+            {isActive && (
+              <span className="absolute -bottom-1 sm:-bottom-1.5 left-1/2 -translate-x-1/2 rotate-45 w-2 h-2 sm:w-3 sm:h-3 bg-[#f59e0b] pointer-events-none z-50" />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

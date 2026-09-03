@@ -29,10 +29,12 @@ function isItemOrSubtreeActive(item, currentPath, parentParam, resolvedChildren)
     return true;
   }
 
+  const compPaths = ['/banking', '/aptitude', '/reasoning', '/english', '/banking-awareness', '/current-affairs', '/todays-affairs', '/mock-exam'];
+  const isCompetitivePath = compPaths.some(p => currentPath === p || currentPath.startsWith(p + '/')) || currentPath.includes('competitive-exam') || currentPath.startsWith('/courses/ce/') || parentParam === 'competitive-exam' || parentParam === 'ce';
+
   // 3. Category & Course route matching for Software Learning
   if (label === 'Software Learning') {
-    const isCompetitive = currentPath === '/banking' || currentPath.startsWith('/banking') || currentPath.includes('competitive-exam') || currentPath.startsWith('/courses/ce/') || parentParam === 'competitive-exam' || parentParam === 'ce';
-    if (!isCompetitive && (
+    if (!isCompetitivePath && (
       currentPath.startsWith('/courses') ||
       currentPath.startsWith('/software-learning')
     )) {
@@ -42,7 +44,7 @@ function isItemOrSubtreeActive(item, currentPath, parentParam, resolvedChildren)
 
   // 4. Competitive Exam matching
   if (label === 'Competitive Exam') {
-    if (currentPath === '/banking' || currentPath.startsWith('/banking') || currentPath.includes('competitive-exam') || currentPath.startsWith('/courses/ce/') || parentParam === 'competitive-exam' || parentParam === 'ce') {
+    if (isCompetitivePath) {
       return true;
     }
   }
@@ -280,22 +282,42 @@ function DesktopNavItem({
       onMouseLeave={scheduleClose}
       onKeyDown={handleKeyDown}
     >
-      <button
-        role="menuitem"
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-          className={`group w-full flex items-center justify-between gap-3 pl-[17px] pr-5 py-2.5 text-sm whitespace-nowrap transition-all duration-200 ease-out cursor-pointer border-l-[3px] ${
-            isOpen
-              ? "border-brand-blue text-brand-blue font-semibold"
-              : "border-transparent text-gray-700 hover:border-brand-blue/50 hover:text-brand-blue"
-          }`}
-        onClick={() => (isOpen ? onClose() : onOpen())}
+      <div
+        className={`group w-full flex items-center justify-between gap-3 pl-[17px] pr-5 py-2.5 text-sm whitespace-nowrap transition-all duration-200 ease-out border-l-[3px] ${
+          isOpen
+            ? "border-brand-blue text-brand-blue font-semibold"
+            : "border-transparent text-gray-700 hover:border-brand-blue/50 hover:text-brand-blue"
+        }`}
       >
-        <span>{item.label}</span>
+        {item.path ? (
+          <Link
+            to={item.path}
+            role="menuitem"
+            className="flex-1 hover:text-brand-blue"
+            onClick={onItemClick}
+          >
+            {item.label}
+          </Link>
+        ) : (
+          <span
+            className="flex-1 cursor-pointer"
+            onClick={() => (isOpen ? onClose() : onOpen())}
+          >
+            {item.label}
+          </span>
+        )}
         <FiChevronRight
-          className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 ease-out ${isOpen ? "translate-x-0.5" : "group-hover:translate-x-0.5"}`}
+          className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 ease-out cursor-pointer ${isOpen ? "translate-x-0.5" : "group-hover:translate-x-0.5"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isOpen) {
+              onClose();
+            } else {
+              onOpen();
+            }
+          }}
         />
-      </button>
+      </div>
 
       <AnimatePresence>
         {isOpen && (

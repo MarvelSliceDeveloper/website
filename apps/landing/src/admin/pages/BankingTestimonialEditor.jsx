@@ -5,7 +5,18 @@ import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import PageShell from '../components/ui/PageShell';
 import useDirty from '../hooks/useDirty';
-import { FiUpload, FiStar, FiAward } from 'react-icons/fi';
+import { FiUpload, FiStar, FiAward, FiCrop } from 'react-icons/fi';
+import ImageCropperModal from '../components/ImageCropperModal';
+
+const STANDARD_EXAMS = [
+  'IBPS PO',
+  'IBPS Clerk',
+  'IBPS RRB Officer',
+  'IBPS RRB Assistant',
+  'IBPS SO',
+  'SBI PO',
+  'General Banking',
+];
 
 export default function BankingTestimonialEditor() {
   const { id } = useParams();
@@ -18,10 +29,13 @@ export default function BankingTestimonialEditor() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [customExamName, setCustomExamName] = useState('');
 
   const defaultForm = {
     name: '',
     role: '',
+    bank_name: '',
     exam_name: 'IBPS PO',
     quote: '',
     rating: 5,
@@ -39,10 +53,13 @@ export default function BankingTestimonialEditor() {
       if (!isNew) {
         const { data, error } = await supabase.from('banking_testimonials').select('*').eq('id', id).single();
         if (data) {
+          const rawExam = data.exam_name || 'IBPS PO';
+          const isStandard = STANDARD_EXAMS.includes(rawExam);
           setForm({
             name: data.name || '',
             role: data.role || '',
-            exam_name: data.exam_name || 'IBPS PO',
+            bank_name: data.bank_name || '',
+            exam_name: isStandard ? rawExam : 'Other',
             quote: data.quote || '',
             rating: data.rating ?? 5,
             avatar_url: data.avatar_url || '',
@@ -50,6 +67,9 @@ export default function BankingTestimonialEditor() {
             is_active: data.is_active ?? true,
             sort_order: data.sort_order || 0,
           });
+          if (!isStandard) {
+            setCustomExamName(rawExam);
+          }
         }
       }
       setLoading(false);
@@ -79,11 +99,28 @@ export default function BankingTestimonialEditor() {
     setUploading(false);
   }
 
+  async function handleCropSave(croppedFile) {
+    setUploading(true);
+    setSaveError('');
+    const path = `testimonials/banking_cropped_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+    const { error } = await supabase.storage.from('pages').upload(path, croppedFile);
+    if (!error) {
+      const { data } = supabase.storage.from('pages').getPublicUrl(path);
+      setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
+    } else {
+      setSaveError('Crop save failed: ' + error.message);
+    }
+    setUploading(false);
+  }
+
   async function handleSave(e) {
     if (e) e.preventDefault();
     const errs = [];
     if (!form.name.trim()) errs.push('Candidate Name is required.');
     if (!form.quote.trim()) errs.push('Quote / Testimonial review is required.');
+    if (form.exam_name === 'Other' && !customExamName.trim()) {
+      errs.push('Please specify the custom exam name.');
+    }
     if (errs.length > 0) {
       setSaveError(errs.join(' '));
       return;
@@ -92,10 +129,13 @@ export default function BankingTestimonialEditor() {
     setSaved(false);
     setSaveError('');
 
+    const finalExam = form.exam_name === 'Other' ? customExamName.trim() : form.exam_name?.trim();
+
     const payload = {
       name: form.name.trim(),
       role: form.role?.trim() || null,
-      exam_name: form.exam_name?.trim() || null,
+      bank_name: form.bank_name?.trim() || null,
+      exam_name: finalExam || null,
       quote: form.quote.trim(),
       rating: Math.min(5, Math.max(1, parseInt(form.rating, 10) || 5)),
       avatar_url: form.avatar_url?.trim() || null,
@@ -112,25 +152,51 @@ export default function BankingTestimonialEditor() {
       res = await supabase.from('banking_testimonials').update(payload).eq('id', id);
     }
 
+    // Fallback if bank_name column does not exist in database table schema cache yet
+    if (res.error && (res.error.message.includes('bank_name') || res.error.code === 'PGRST204')) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.bank_name;
+      if (form.bank_name?.trim()) {
+        const bankStr = form.bank_name.trim();
+        fallbackPayload.role = form.role?.trim()
+          ? (form.role.trim().includes(bankStr) ? form.role.trim() : `${form.role.trim()} - ${bankStr}`)
+          : bankStr;
+      }
+      if (isNew) {
+        res = await supabase.from('banking_testimonials').insert(fallbackPayload);
+      } else {
+        res = await supabase.from('banking_testimonials').update(fallbackPayload).eq('id', id);
+      }
+    }
+
     if (res?.error) {
       setSaveError(res.error.message);
-      setSaving(false);
-      return;
+    } else {
+      setSaved(true);
+      reset();
+      setTimeout(() => {
+        navigate('/admin/banking-testimonials');
+      }, 1000);
     }
     setSaving(false);
-    setSaved(true);
-    reset();
-    setTimeout(() => navigate('/admin/banking-testimonials'), 800);
   }
 
-  if (loading) return <div className="p-8 text-center text-neutral-500">Loading banking testimonial...</div>;
+  if (loading) {
+    return (
+      <PageShell title="Loading Testimonial...">
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue" />
+        </div>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell backTo="/admin/banking-testimonials" title={isNew ? 'Add Banking Testimonial' : 'Edit Banking Testimonial'}>
       <SaveBar saving={saving} saved={saved} saveError={saveError} label="Banking Testimonial" top />
       <form onSubmit={handleSave}>
         <div className="bg-white border border-gray-300 rounded-xl p-6 space-y-5 shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <div>
               <label className="block text-xs font-bold text-neutral-700 mb-1.5 uppercase tracking-wider">
                 Candidate Name <span className="text-red-500">*</span>
@@ -148,14 +214,28 @@ export default function BankingTestimonialEditor() {
 
             <div>
               <label className="block text-xs font-bold text-neutral-700 mb-1.5 uppercase tracking-wider">
-                Role / Bank Designation
+                Role / Designation
               </label>
               <input
                 type="text"
                 name="role"
                 value={form.role}
                 onChange={handleChange}
-                placeholder="e.g. Probationary Officer - Bank of Baroda"
+                placeholder="e.g. Scale II Manager, Clerk, PO"
+                className="w-full px-3.5 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1.5 uppercase tracking-wider">
+                Bank Name / Institution
+              </label>
+              <input
+                type="text"
+                name="bank_name"
+                value={form.bank_name}
+                onChange={handleChange}
+                placeholder="e.g. Bank of Baroda, SBI, IDBI"
                 className="w-full px-3.5 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all"
               />
             </div>
@@ -177,7 +257,18 @@ export default function BankingTestimonialEditor() {
                 <option value="IBPS SO">IBPS Specialist Officer (SO)</option>
                 <option value="SBI PO">SBI PO</option>
                 <option value="General Banking">General Banking Career</option>
+                <option value="Other">Other (Custom Exam)</option>
               </select>
+              {form.exam_name === 'Other' && (
+                <input
+                  type="text"
+                  name="custom_exam_name"
+                  value={customExamName}
+                  onChange={(e) => setCustomExamName(e.target.value)}
+                  placeholder="Enter custom exam name..."
+                  className="mt-2.5 w-full px-3.5 py-2.5 border border-brand-blue/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all bg-blue-50/40 font-medium text-slate-800"
+                />
+              )}
             </div>
           </div>
 
@@ -238,7 +329,7 @@ export default function BankingTestimonialEditor() {
             <label className="block text-xs font-bold text-neutral-700 mb-1.5 uppercase tracking-wider">
               Candidate Photo / Avatar
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               {form.avatar_url ? (
                 <img src={form.avatar_url} alt="Candidate" className="w-12 h-12 rounded-full object-cover shrink-0 border border-slate-200 shadow-xs" />
               ) : null}
@@ -248,7 +339,7 @@ export default function BankingTestimonialEditor() {
                 value={form.avatar_url}
                 onChange={handleChange}
                 placeholder="Paste photo image URL or upload file..."
-                className="flex-1 px-3.5 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                className="flex-1 min-w-[200px] px-3.5 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all"
               />
               <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:border-brand-blue hover:text-brand-blue hover:bg-blue-50/50 transition-all bg-white shrink-0 font-medium">
                 {uploading ? (
@@ -261,6 +352,17 @@ export default function BankingTestimonialEditor() {
                 )}
                 <input ref={inputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
               </label>
+
+              {form.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-blue-50 text-brand-blue border border-blue-200 text-xs font-bold hover:bg-blue-100 transition-all cursor-pointer shadow-xs"
+                >
+                  <FiCrop className="w-4 h-4 text-brand-blue" />
+                  <span>Edit Crop & Position</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -293,6 +395,13 @@ export default function BankingTestimonialEditor() {
         </div>
       </form>
       <SaveCancelBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} onDiscard={() => navigate('/admin/banking-testimonials')} />
+      {showCropper && form.avatar_url && (
+        <ImageCropperModal
+          imageUrl={form.avatar_url}
+          onClose={() => setShowCropper(false)}
+          onCropSave={handleCropSave}
+        />
+      )}
     </PageShell>
   );
 }
