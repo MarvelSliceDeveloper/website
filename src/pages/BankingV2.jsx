@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown } from 'react-icons/fi';
+import { FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown, FiChevronRight, FiMail, FiPhone } from 'react-icons/fi';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { supabase } from '../lib/supabaseClient';
 import { useSiteSettings } from '../hooks/useSupabase';
-import { trackRegister, trackFormSubmit, trackEnroll } from '../lib/analytics';
+import { trackRegister, trackFormSubmit, trackEnroll, trackSocialClick } from '../lib/analytics';
 import BankingTestimonialsSection from '../components/banking/BankingTestimonialsSection';
 
 const FAQS = [
@@ -121,9 +123,102 @@ const EXAMS = [
   }
 ];
 
+const BANKING_MENU_DROPDOWNS = {
+  aptitude: {
+    label: 'Aptitude',
+    path: '/aptitude',
+    categories: [
+      {
+        id: 'di',
+        name: 'Data Interpretation',
+        items: ['Pie Chart & Line Graphs', 'Tabular DI & Caselets', 'Radar & Bar Graphs', 'Missing Data DI']
+      },
+      {
+        id: 'arithmetic',
+        name: 'Arithmetic',
+        items: ['Percentage & Profit Loss', 'Simple & Compound Interest', 'Time & Work / Pipes', 'Ratios & Mixtures']
+      },
+      {
+        id: 'speedMaths',
+        name: 'Speed Calculation',
+        items: ['Vedic Tricks & Squares', 'Simplification & Approximation', 'Quadratic Equations', 'Number Series (Missing & Wrong)']
+      }
+    ]
+  },
+  reasoning: {
+    label: 'Reasoning',
+    path: '/reasoning',
+    categories: [
+      {
+        id: 'puzzles',
+        name: 'Puzzles & Seating',
+        items: ['Floor & Flat Puzzles', 'Linear & Circular Arrangement', 'Box & Month Based Puzzles', 'Matrix & Schedule Puzzles']
+      },
+      {
+        id: 'logical',
+        name: 'Logical Reasoning',
+        items: ['Syllogisms (Only a Few)', 'Coded Inequalities', 'Blood Relations & Direction', 'Input-Output Machine']
+      }
+    ]
+  },
+  english: {
+    label: 'English',
+    path: '/english',
+    categories: [
+      {
+        id: 'grammar',
+        name: 'Grammar & Reading',
+        items: ['Reading Comprehension Passages', 'Error Spotting & Sentence Correction', 'Cloze Test & Fillers', 'Para Jumbles & Rearrangement']
+      },
+      {
+        id: 'vocab',
+        name: 'Vocabulary',
+        items: ['Editorial Vocabulary', 'Idioms & Phrases', 'One Word Substitution', 'Synonyms & Antonyms']
+      }
+    ]
+  },
+  bankingAwareness: {
+    label: 'Banking Awareness',
+    path: '/banking-awareness',
+    categories: [
+      {
+        id: 'financial',
+        name: 'Banking & Finance',
+        items: ['RBI & Monetary Policy', 'Types of Bank Accounts & Cheques', 'NPA, PCA & Insolvency Code', 'Inflation, Repo Rate & CRR/SLR']
+      },
+      {
+        id: 'markets',
+        name: 'Capital & Money Market',
+        items: ['SEBI & Stock Exchanges', 'Treasury Bills & Commercial Paper', 'Priority Sector Lending', 'Digital Banking & UPI/NEFT/RTGS']
+      }
+    ]
+  },
+  affairs: {
+    label: 'Affairs',
+    path: '/current-affairs',
+    items: [
+      { title: 'Current Affairs', path: '/current-affairs', desc: 'Daily National & International News' },
+      { title: "Today's Affairs", path: '/todays-affairs', desc: 'Real-time Daily News Updates' },
+      { title: 'Monthly Current Affairs Capsule', path: '/current-affairs', desc: 'Comprehensive Exam-focused Summary' },
+      { title: 'Banking & Economy News', path: '/current-affairs', desc: 'Financial Sector Weekly Updates' }
+    ]
+  },
+  mockExam: {
+    label: 'Mock Exam',
+    path: '/mock-exam',
+    items: [
+      { title: 'IBPS PO Prelims Full Mock', desc: '100 Questions Timed Simulation' },
+      { title: 'IBPS Clerk Speed Test', desc: 'Sectional Speed Booster Test' },
+      { title: 'RRB Officer Scale I Practice', desc: 'Prelims & Mains Model Test' },
+      { title: 'Specialist Officer Test Series', desc: 'Domain Knowledge Mocks' }
+    ]
+  }
+};
+
 export default function BankingV2() {
   const navigate = useNavigate();
   const { data: settings } = useSiteSettings();
+  const social = settings?.social_links || {};
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [enquiryType, setEnquiryType] = useState('general');
@@ -136,14 +231,15 @@ export default function BankingV2() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // SubHeader Navigation State
-  const [affairsOpen, setAffairsOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const affairsRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (affairsRef.current && !affairsRef.current.contains(e.target)) {
-        setAffairsOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setActiveDropdown(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -252,172 +348,499 @@ export default function BankingV2() {
 
   return (
     <div className="bg-white min-h-screen text-slate-800 relative">
-      {/* Dynamic CSS override to hide the global site header on BankingV2 page */}
+      {/* Hide site's global white header on BankingV2 page */}
       <style>{`
         header {
           display: none !important;
         }
       `}</style>
 
-      {/* 0. STANDALONE HEADER & SUB-HEADER MENU FOR BANKING V2 */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-slate-200 shadow-xs">
-        {/* Top Header Row: Logo (Left), Search Bar (Center), Login / Sign In Text (Right) */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[58px] sm:h-[64px] flex items-center justify-between gap-3 sm:gap-6">
-          {/* Left Logo */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Marvel Slice" className="h-9 sm:h-11 w-auto object-contain" />
-            ) : (
-              <span className="text-lg sm:text-2xl font-extrabold text-brand-blue tracking-tight">
-                Marvel <span className="text-brand-orange">Slice</span>
-              </span>
-            )}
-          </Link>
-
-          {/* Center Search Bar */}
-          <div className="flex-1 max-w-md mx-2 sm:mx-6">
-            <div className="relative w-full">
-              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search banking topics, exams..."
-                className="w-full pl-9 pr-8 py-1.5 sm:py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 text-slate-700 placeholder-slate-400 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                >
-                  <FiX className="w-3.5 h-3.5" />
-                </button>
-              )}
+      {/* 0. STANDALONE 3-TIER HEADER FOR BANKING V2 */}
+      <div className="fixed top-0 left-0 right-0 z-[60] shadow-md">
+        {/* TIER 1: Old Blue Top Bar */}
+        <div className="hidden lg:block bg-brand-blue text-white text-xs py-2 border-b border-blue-700">
+          <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <a href={`mailto:${settings?.contact_email || 'contact@marvelslice.com'}`} className="flex items-center gap-1 hover:underline">
+                <FiMail className="w-3.5 h-3.5 shrink-0" />
+                <span>{settings?.contact_email || 'contact@marvelslice.com'}</span>
+              </a>
+              <div className="flex items-center gap-1.5">
+                <FiPhone className="w-3.5 h-3.5 shrink-0 text-white/90" />
+                <span>+91 63809 57390 / +91 80882 18609</span>
+              </div>
             </div>
-          </div>
-
-          {/* Right Login / Sign In Text Link */}
-          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-semibold shrink-0">
-            <button
-              type="button"
-              onClick={() => openApplyModal('general', 'Login / Sign In')}
-              className="text-slate-700 hover:text-brand-blue transition-colors cursor-pointer"
-            >
-              Log In
-            </button>
-            <span className="text-slate-300">/</span>
-            <button
-              type="button"
-              onClick={() => openApplyModal('general', 'Login / Sign In')}
-              className="text-brand-blue hover:text-brand-orange transition-colors font-bold cursor-pointer"
-            >
-              Sign Up
-            </button>
+            <div className="flex items-center gap-2.5">
+              <a href={social.twitter || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+                <FaXTwitter className="w-2.5 h-2.5" />
+              </a>
+              <a href={social.facebook || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+                <FaFacebookF className="w-2.5 h-2.5" />
+              </a>
+              <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+                <FaInstagram className="w-2.5 h-2.5" />
+              </a>
+              <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+                <FaLinkedinIn className="w-2.5 h-2.5" />
+              </a>
+              <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+                <FaYoutube className="w-2.5 h-2.5" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Sub-Header Line Menu Bar - Full Width, Left-Aligned (justify-start) */}
-        <div className="w-full bg-blue-50/90 border-t border-blue-100/80 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* TIER 2: White Part with Logo, Name & Center Search Bar */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="w-full px-4 sm:px-6 lg:px-8 h-[58px] sm:h-[64px] flex items-center justify-between gap-3 sm:gap-6">
+            {/* Left: Logo & Name */}
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
+              {settings?.logo_url && (
+                <img src={settings.logo_url} alt="Marvel Slice" className="h-9 sm:h-11 w-auto object-contain" />
+              )}
+              <span className="text-lg sm:text-2xl font-extrabold text-brand-blue tracking-tight">
+                Marvel <span className="text-brand-orange">Slice</span>
+              </span>
+            </Link>
+
+            {/* Center: Search Bar */}
+            <div className="flex-1 max-w-md mx-2 sm:mx-6">
+              <div className="relative w-full">
+                <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search banking topics, exams..."
+                  className="w-full pl-9 pr-8 py-1.5 sm:py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 text-slate-700 placeholder-slate-400 transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <FiX className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Login / Sign In Text Link */}
+            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-semibold shrink-0">
+              <button
+                type="button"
+                onClick={() => openApplyModal('general', 'Login / Sign In')}
+                className="text-slate-700 hover:text-brand-blue transition-colors cursor-pointer"
+              >
+                Log In
+              </button>
+              <span className="text-slate-300">/</span>
+              <button
+                type="button"
+                onClick={() => openApplyModal('general', 'Login / Sign In')}
+                className="text-brand-blue hover:text-brand-orange transition-colors font-bold cursor-pointer"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TIER 3: Sub-Header Line Menu Bar in Other Color (Light Blue bg-blue-50/90) */}
+        <div ref={dropdownRef} className="w-full bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-[70]">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <nav
               role="menubar"
-              className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
+              className="flex items-center justify-start gap-1 sm:gap-2.5 py-2 text-xs sm:text-sm font-semibold relative overflow-visible"
             >
+              {/* 1. About Banking Active Button */}
               <Link
                 to="/bankingv2"
-                className="shrink-0 px-3 py-1.5 rounded-md bg-brand-blue text-white font-bold shadow-xs"
+                className="shrink-0 px-3.5 py-1.5 rounded-md bg-brand-blue text-white font-extrabold shadow-xs"
               >
                 About Banking
               </Link>
 
-              <Link
-                to="/aptitude"
-                className="shrink-0 px-3 py-1.5 rounded-md text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold transition-colors"
-              >
-                Aptitude
-              </Link>
-
-              <Link
-                to="/reasoning"
-                className="shrink-0 px-3 py-1.5 rounded-md text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold transition-colors"
-              >
-                Reasoning
-              </Link>
-
-              <Link
-                to="/english"
-                className="shrink-0 px-3 py-1.5 rounded-md text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold transition-colors"
-              >
-                English
-              </Link>
-
-              <Link
-                to="/banking-awareness"
-                className="shrink-0 px-3 py-1.5 rounded-md text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold transition-colors"
-              >
-                Banking Awareness
-              </Link>
-
-              {/* Affairs Dropdown */}
+              {/* 2. Aptitude with Guidely-Style Dropdown */}
               <div
-                ref={affairsRef}
                 className="relative shrink-0"
-                onMouseEnter={() => setAffairsOpen(true)}
-                onMouseLeave={() => setAffairsOpen(false)}
+                onMouseEnter={() => {
+                  setActiveDropdown('aptitude');
+                  setSelectedSubCategory('di');
+                }}
+                onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button
-                  type="button"
-                  onClick={() => setAffairsOpen((prev) => !prev)}
-                  aria-expanded={affairsOpen}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                    affairsOpen
+                <Link
+                  to="/aptitude"
+                  onClick={() => setActiveDropdown(null)}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'aptitude'
                       ? 'bg-brand-blue text-white font-bold shadow-xs'
                       : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
                   }`}
                 >
-                  <span>Affairs</span>
-                  <FiChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      affairsOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
+                  <span>Aptitude</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'aptitude' ? 'rotate-180' : ''}`} />
+                </Link>
 
                 <AnimatePresence>
-                  {affairsOpen && (
+                  {activeDropdown === 'aptitude' && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="absolute left-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 overflow-hidden"
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-[500px] sm:w-[560px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-[100] flex gap-4 text-slate-800"
                     >
-                      <Link
-                        to="/current-affairs"
-                        onClick={() => setAffairsOpen(false)}
-                        className="block px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue transition-colors"
-                      >
-                        Current Affairs
-                      </Link>
-                      <Link
-                        to="/todays-affairs"
-                        onClick={() => setAffairsOpen(false)}
-                        className="block px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue transition-colors"
-                      >
-                        Today's Affairs
-                      </Link>
+                      {/* Left Categories */}
+                      <div className="w-44 border-r border-slate-100 pr-3 space-y-1 shrink-0">
+                        {BANKING_MENU_DROPDOWNS.aptitude.categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onMouseEnter={() => setSelectedSubCategory(cat.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              (selectedSubCategory || 'di') === cat.id
+                                ? 'bg-blue-50 text-brand-blue'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Right Sub-Items */}
+                      <div className="flex-1 grid grid-cols-1 gap-2 p-1">
+                        {BANKING_MENU_DROPDOWNS.aptitude.categories
+                          .find((c) => c.id === (selectedSubCategory || 'di'))
+                          ?.items.map((item, idx) => (
+                            <Link
+                              key={idx}
+                              to="/aptitude"
+                              onClick={() => setActiveDropdown(null)}
+                              className="p-2 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/50 transition-all cursor-pointer group flex items-center gap-2"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-brand-blue shrink-0 group-hover:scale-125 transition-transform" />
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-brand-blue transition-colors">
+                                {item}
+                              </span>
+                            </Link>
+                          ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              <Link
-                to="/mock-exam"
-                className="shrink-0 px-3 py-1.5 rounded-md text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold transition-colors"
+              {/* 3. Reasoning with Guidely-Style Dropdown */}
+              <div
+                className="relative shrink-0"
+                onMouseEnter={() => {
+                  setActiveDropdown('reasoning');
+                  setSelectedSubCategory('puzzles');
+                }}
+                onMouseLeave={() => setActiveDropdown(null)}
               >
-                Mock Exam
-              </Link>
+                <Link
+                  to="/reasoning"
+                  onClick={() => setActiveDropdown(null)}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'reasoning'
+                      ? 'bg-brand-blue text-white font-bold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  <span>Reasoning</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'reasoning' ? 'rotate-180' : ''}`} />
+                </Link>
+
+                <AnimatePresence>
+                  {activeDropdown === 'reasoning' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-[500px] sm:w-[560px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-[100] flex gap-4 text-slate-800"
+                    >
+                      {/* Left Categories */}
+                      <div className="w-44 border-r border-slate-100 pr-3 space-y-1 shrink-0">
+                        {BANKING_MENU_DROPDOWNS.reasoning.categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onMouseEnter={() => setSelectedSubCategory(cat.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              (selectedSubCategory || 'puzzles') === cat.id
+                                ? 'bg-blue-50 text-brand-blue'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Right Sub-Items */}
+                      <div className="flex-1 grid grid-cols-1 gap-2 p-1">
+                        {BANKING_MENU_DROPDOWNS.reasoning.categories
+                          .find((c) => c.id === (selectedSubCategory || 'puzzles'))
+                          ?.items.map((item, idx) => (
+                            <Link
+                              key={idx}
+                              to="/reasoning"
+                              onClick={() => setActiveDropdown(null)}
+                              className="p-2 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/50 transition-all cursor-pointer group flex items-center gap-2"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-brand-blue shrink-0 group-hover:scale-125 transition-transform" />
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-brand-blue transition-colors">
+                                {item}
+                              </span>
+                            </Link>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 4. English with Guidely-Style Dropdown */}
+              <div
+                className="relative shrink-0"
+                onMouseEnter={() => {
+                  setActiveDropdown('english');
+                  setSelectedSubCategory('grammar');
+                }}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <Link
+                  to="/english"
+                  onClick={() => setActiveDropdown(null)}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'english'
+                      ? 'bg-brand-blue text-white font-bold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  <span>English</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'english' ? 'rotate-180' : ''}`} />
+                </Link>
+
+                <AnimatePresence>
+                  {activeDropdown === 'english' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-[500px] sm:w-[560px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-[100] flex gap-4 text-slate-800"
+                    >
+                      {/* Left Categories */}
+                      <div className="w-44 border-r border-slate-100 pr-3 space-y-1 shrink-0">
+                        {BANKING_MENU_DROPDOWNS.english.categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onMouseEnter={() => setSelectedSubCategory(cat.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              (selectedSubCategory || 'grammar') === cat.id
+                                ? 'bg-blue-50 text-brand-blue'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Right Sub-Items */}
+                      <div className="flex-1 grid grid-cols-1 gap-2 p-1">
+                        {BANKING_MENU_DROPDOWNS.english.categories
+                          .find((c) => c.id === (selectedSubCategory || 'grammar'))
+                          ?.items.map((item, idx) => (
+                            <Link
+                              key={idx}
+                              to="/english"
+                              onClick={() => setActiveDropdown(null)}
+                              className="p-2 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/50 transition-all cursor-pointer group flex items-center gap-2"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-brand-blue shrink-0 group-hover:scale-125 transition-transform" />
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-brand-blue transition-colors">
+                                {item}
+                              </span>
+                            </Link>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 5. Banking Awareness with Guidely-Style Dropdown */}
+              <div
+                className="relative shrink-0"
+                onMouseEnter={() => {
+                  setActiveDropdown('bankingAwareness');
+                  setSelectedSubCategory('financial');
+                }}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <Link
+                  to="/banking-awareness"
+                  onClick={() => setActiveDropdown(null)}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'bankingAwareness'
+                      ? 'bg-brand-blue text-white font-bold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  <span>Banking Awareness</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'bankingAwareness' ? 'rotate-180' : ''}`} />
+                </Link>
+
+                <AnimatePresence>
+                  {activeDropdown === 'bankingAwareness' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-[500px] sm:w-[560px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-[100] flex gap-4 text-slate-800"
+                    >
+                      {/* Left Categories */}
+                      <div className="w-44 border-r border-slate-100 pr-3 space-y-1 shrink-0">
+                        {BANKING_MENU_DROPDOWNS.bankingAwareness.categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onMouseEnter={() => setSelectedSubCategory(cat.id)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                              (selectedSubCategory || 'financial') === cat.id
+                                ? 'bg-blue-50 text-brand-blue'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Right Sub-Items */}
+                      <div className="flex-1 grid grid-cols-1 gap-2 p-1">
+                        {BANKING_MENU_DROPDOWNS.bankingAwareness.categories
+                          .find((c) => c.id === (selectedSubCategory || 'financial'))
+                          ?.items.map((item, idx) => (
+                            <Link
+                              key={idx}
+                              to="/banking-awareness"
+                              onClick={() => setActiveDropdown(null)}
+                              className="p-2 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/50 transition-all cursor-pointer group flex items-center gap-2"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-brand-blue shrink-0 group-hover:scale-125 transition-transform" />
+                              <span className="text-xs font-semibold text-slate-700 group-hover:text-brand-blue transition-colors">
+                                {item}
+                              </span>
+                            </Link>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 6. Affairs Dropdown */}
+              <div
+                className="relative shrink-0"
+                onMouseEnter={() => setActiveDropdown('affairs')}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveDropdown(activeDropdown === 'affairs' ? null : 'affairs')}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'affairs'
+                      ? 'bg-brand-blue text-white font-bold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  <span>Affairs</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'affairs' ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {activeDropdown === 'affairs' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-[100] text-slate-800"
+                    >
+                      {BANKING_MENU_DROPDOWNS.affairs.items.map((item, idx) => (
+                        <Link
+                          key={idx}
+                          to={item.path}
+                          onClick={() => setActiveDropdown(null)}
+                          className="block px-4 py-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer group"
+                        >
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-brand-blue transition-colors">{item.title}</p>
+                          <p className="text-[11px] text-slate-500 font-normal">{item.desc}</p>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 7. Mock Exam Dropdown */}
+              <div
+                className="relative shrink-0"
+                onMouseEnter={() => setActiveDropdown('mockExam')}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <Link
+                  to="/mock-exam"
+                  onClick={() => setActiveDropdown(null)}
+                  className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                    activeDropdown === 'mockExam'
+                      ? 'bg-brand-blue text-white font-bold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  <span>Mock Exam</span>
+                  <FiChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'mockExam' ? 'rotate-180' : ''}`} />
+                </Link>
+
+                <AnimatePresence>
+                  {activeDropdown === 'mockExam' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-1.5 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-[100] text-slate-800"
+                    >
+                      {BANKING_MENU_DROPDOWNS.mockExam.items.map((item, idx) => (
+                        <Link
+                          key={idx}
+                          to="/mock-exam"
+                          onClick={() => setActiveDropdown(null)}
+                          className="block px-4 py-2.5 hover:bg-blue-50/60 transition-colors cursor-pointer group"
+                        >
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-brand-blue transition-colors">{item.title}</p>
+                          <p className="text-[11px] text-slate-500 font-normal">{item.desc}</p>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </nav>
           </div>
         </div>
@@ -786,7 +1209,7 @@ export default function BankingV2() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              exit={{ opacity: 0, scale: 0.95, y: 0 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
             >
