@@ -33,19 +33,19 @@ function ClassCard({ cls }) {
           <FiBookOpen size={18} />
         </div>
 
-        <h3 className="min-w-0 truncate text-[17px] font-semibold text-brand-blue">
+        <h3 className="min-w-0 truncate text-[14px] font-semibold text-brand-blue">
           {cls.course_name}
         </h3>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 text-xs text-text-gray">
+      <div className="mt-2 flex items-center gap-2 text-[9px] text-text-gray">
         <span>📅 {formatDate(cls.date_time)}</span>
         <span>•</span>
         <span>🕒 {formatTime(cls.date_time)}</span>
       </div>
 
       {seatsLeft != null && seatsLeft <= 5 && (
-        <span className="mt-2 inline-flex w-fit items-center rounded-full bg-brand-orange px-2.5 py-0.5 text-xs font-semibold text-white">
+        <span className="mt-2 inline-flex w-fit items-center rounded-full bg-brand-orange px-2 py-0.5 text-[9px] font-semibold text-white">
           🔥 Only {seatsLeft} Seats Left
         </span>
       )}
@@ -53,7 +53,7 @@ function ClassCard({ cls }) {
       <div className="mt-auto pt-3">
         <a
           href={cls.registration_link || '/contact'}
-          className="inline-flex h-9 w-full items-center justify-center rounded-full bg-brand-orange px-4 text-xs sm:text-sm font-bold text-white transition-all duration-300 hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
+          className="inline-flex h-8 w-full items-center justify-center rounded-full bg-brand-orange px-4 text-[9px] sm:text-[11px] font-bold text-white transition-all duration-300 hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
         >
           Register Now
         </a>

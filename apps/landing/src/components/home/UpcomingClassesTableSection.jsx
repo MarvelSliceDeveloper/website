@@ -125,13 +125,13 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                       </span>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-dark-navy text-base leading-snug truncate">{cls.course_name}</p>
+                          <p className="font-semibold text-dark-navy text-[13px] leading-snug truncate">{cls.course_name}</p>
                           {cls.batch && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[11px] font-bold shrink-0">{cls.batch}</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[8px] font-bold shrink-0">{cls.batch}</span>
                           )}
                         </div>
                         {cls.date_time && (
-                          <p className="flex items-center gap-1.5 text-text-gray text-sm mt-1">
+                          <p className="flex items-center gap-1.5 text-text-gray text-[11px] mt-1">
                             <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                             {formatDateTime(cls.date_time)}
                           </p>
@@ -142,7 +142,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
+                        className="w-full sm:w-auto inline-flex items-center justify-center bg-brand-orange text-white font-bold text-[11px] py-2 px-5 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
                       >
                         Register Now
                       </button>

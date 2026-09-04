@@ -153,7 +153,7 @@ export default function UpcomingCoursesSection({ section }) {
             <div className="flex items-center gap-3 shrink-0 pt-1">
               <Link
                 to="/courses"
-                className="inline-flex items-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 <span>View All Courses</span>
                 <FiArrowRight className="w-4 h-4" />
@@ -164,17 +164,17 @@ export default function UpcomingCoursesSection({ section }) {
                     type="button"
                     aria-label="Previous courses"
                     onClick={goPrev}
-                    className="w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 transition-colors cursor-pointer"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 transition-colors cursor-pointer"
                   >
-                    <FiChevronLeft className="w-5 h-5" />
+                    <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     type="button"
                     aria-label="Next courses"
                     onClick={goNext}
-                    className="w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 transition-colors cursor-pointer"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 transition-colors cursor-pointer"
                   >
-                    <FiChevronRight className="w-5 h-5" />
+                    <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               )}
@@ -223,6 +223,17 @@ export default function UpcomingCoursesSection({ section }) {
             </div>
           )
         )}
+
+        {/* Mobile View: View All Courses button below course cards */}
+        <div className="flex sm:hidden justify-center mt-8">
+          <Link
+            to="/courses"
+            className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs shadow-sm hover:shadow-md transition-all cursor-pointer"
+          >
+            <span>View All Courses</span>
+            <FiArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );
