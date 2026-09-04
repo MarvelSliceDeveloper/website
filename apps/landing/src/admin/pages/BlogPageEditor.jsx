@@ -15,10 +15,11 @@ export default function BlogPageEditor() {
   const [saveError, setSaveError] = useState('');
   const [settingsId, setSettingsId] = useState(null);
   const [heroImage, setHeroImage] = useState('');
+  const [mobileHeroImage, setMobileHeroImage] = useState('');
   const [heading, setHeading] = useState('Latest Articles & News');
   const [subheading, setSubheading] = useState('Insights, tutorials, and stories from the Marvel Slice team');
 
-  const { dirty, reset } = useDirty([heroImage, heading, subheading], loading);
+  const { dirty, reset } = useDirty([heroImage, mobileHeroImage, heading, subheading], loading);
 
   useEffect(() => {
     supabase
@@ -37,6 +38,7 @@ export default function BlogPageEditor() {
         if (data) {
           setSettingsId(data.id);
           if (data.blog_hero_image) setHeroImage(data.blog_hero_image);
+          if (data.blog_mobile_hero_image) setMobileHeroImage(data.blog_mobile_hero_image);
           if (data.blog_heading) setHeading(data.blog_heading);
           if (data.blog_subheading) setSubheading(data.blog_subheading);
         }
@@ -50,6 +52,7 @@ export default function BlogPageEditor() {
     setSaveError('');
     const payload = {
       blog_hero_image: heroImage || null,
+      blog_mobile_hero_image: mobileHeroImage || null,
       blog_heading: heading,
       blog_subheading: subheading,
     };
@@ -93,9 +96,15 @@ export default function BlogPageEditor() {
                   placeholder="Insights, tutorials, and stories from the Marvel Slice team" />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Hero Image</label>
-              <ImageUploader value={heroImage} onChange={(url) => setHeroImage(url)} />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Desktop Hero Image</label>
+                <ImageUploader value={heroImage} onChange={(url) => setHeroImage(url)} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Mobile Hero Image (Optional)</label>
+                <ImageUploader value={mobileHeroImage} onChange={(url) => setMobileHeroImage(url)} />
+              </div>
             </div>
           </div>
         </form>
