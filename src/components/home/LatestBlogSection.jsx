@@ -35,7 +35,7 @@ export default function LatestBlogSection({ section }) {
             </div>
             <Link
               to="/blog"
-              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="hidden sm:inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm px-6 py-2.5 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               <span>{linkText}</span> <FiArrowRight className="w-4 h-4 text-white" />
             </Link>
@@ -79,6 +79,16 @@ export default function LatestBlogSection({ section }) {
             </StaggerItem>
           ))}
         </Stagger>
+
+        {/* Mobile View: View All Posts button below blog cards */}
+        <div className="flex sm:hidden justify-center mt-8">
+          <Link
+            to="/blog"
+            className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-xs px-6 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer"
+          >
+            <span>{linkText}</span> <FiArrowRight className="w-4 h-4 text-white" />
+          </Link>
+        </div>
       </div>
     </section>
   );

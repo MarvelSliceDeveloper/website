@@ -103,7 +103,7 @@ export default function FeatureCardsSection({ section }) {
                     </div>
 
                     {/* 5. CTA BUTTON (Anchored at Bottom) */}
-                    <div className="pt-2 mt-auto">
+                    <div className="pt-2 mt-auto flex justify-center sm:justify-start">
                       <a
                         href={buttonLink}
                         className="group/btn inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"

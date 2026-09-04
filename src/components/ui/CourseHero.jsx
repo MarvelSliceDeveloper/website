@@ -97,20 +97,20 @@ export default function CourseHero({
           {/* LEFT SIDE (Content) ~ 48% width */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Dynamic Title */}
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
+            <h1 className="text-[22px] sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
               {course.title}
             </h1>
 
             {/* Optional Status Badge */}
             {course.status && course.status !== 'Active' && (
-              <span className="inline-block mt-3 align-middle text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200/60">
+              <span className="inline-block mt-3 align-middle text-[10px] sm:text-xs font-semibold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200/60">
                 {course.status}
               </span>
             )}
 
             {/* Dynamic Description */}
             {course.description && (
-              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
+              <p className="mt-4 lg:mt-5 text-xs sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
                 {course.description}
               </p>
             )}
@@ -121,8 +121,8 @@ export default function CourseHero({
                 <div className="grid grid-cols-2 lg:block lg:space-y-2.5 gap-2.5 sm:gap-3.5 text-left">
                   {points.map((item, i) => (
                     <div key={i} className="flex items-start gap-2 sm:gap-2.5 min-w-0">
-                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-[15px] font-medium text-slate-600 leading-snug break-words">
+                      <FiCheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="text-[10px] sm:text-sm lg:text-[15px] font-medium text-slate-600 leading-snug break-words">
                         {typeof item === 'string' ? item.slice(0, 85) : (item?.label || item?.title || '').slice(0, 85)}
                       </span>
                     </div>
@@ -153,7 +153,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
                   }
                 }}
-                className="flex-1 px-3 sm:px-6 py-3 sm:py-3.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-xs sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-[10px] sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
               >
                 {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
@@ -161,7 +161,7 @@ export default function CourseHero({
               <button
                 type="button"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="flex-1 px-3 sm:px-6 py-3 sm:py-3.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-[10px] sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
               >
                 {course.cta_right || 'Download Brochure'}
               </button>

@@ -220,6 +220,28 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { data: settings } = useSiteSettings();
+  const mobileMenuRef = useRef(null);
+  const hamburgerBtnRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        mobileOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(e.target) &&
+        hamburgerBtnRef.current &&
+        !hamburgerBtnRef.current.contains(e.target)
+      ) {
+        setMobileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -264,7 +286,8 @@ export default function Header() {
         </div>
 
         <button
-          className="lg:hidden p-2.5 -mr-2 text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+          ref={hamburgerBtnRef}
+          className="lg:hidden p-2.5 -mr-2 text-gray-900 rounded-md hover:bg-gray-100 transition-colors cursor-pointer z-50"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -280,19 +303,32 @@ export default function Header() {
 
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-4 sm:right-6 top-full mt-2 w-64 sm:w-72 bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.16)] lg:hidden z-50 max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain"
-          >
-            <MobileNav
-              items={topNav}
-              currentPath={pathname}
-              onItemClick={() => setMobileOpen(false)}
+          <>
+            {/* Fixed Overlay Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden"
+              onClick={() => setMobileOpen(false)}
             />
-          </motion.div>
+
+            <motion.div
+              ref={mobileMenuRef}
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="absolute right-4 sm:right-6 top-full mt-2 w-64 sm:w-72 bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.16)] lg:hidden z-50 max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain"
+            >
+              <MobileNav
+                items={topNav}
+                currentPath={pathname}
+                onItemClick={() => setMobileOpen(false)}
+              />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

@@ -88,12 +88,12 @@ export default function HeroSection({ section }) {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {bannerHeading && (
-                      <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] drop-shadow-md whitespace-pre-line">
+                      <h1 className="text-[clamp(1.625rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] drop-shadow-md whitespace-pre-line">
                         {bannerHeading}
                       </h1>
                     )}
                     {bannerDescription && (
-                      <p className="mt-3 sm:mt-4 text-sm sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
+                      <p className="mt-2.5 sm:mt-4 text-xs sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
                         {bannerDescription}
                       </p>
                     )}
@@ -104,14 +104,14 @@ export default function HeroSection({ section }) {
           </AnimatePresence>
 
           {carouselEnabled && slides.length > 1 && (
-            <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-2 z-10 bg-black/35 backdrop-blur-xs px-3 py-1.5 rounded-full shadow-md">
+            <div className="absolute bottom-2 sm:bottom-6 right-2 sm:right-8 flex items-center gap-1 sm:gap-2 z-10 bg-black/35 backdrop-blur-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md">
               {slides.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
-                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? 'bg-white w-7 shadow-xs' : 'bg-white/40 hover:bg-white/80 w-2.5'
+                  className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    i === current ? 'bg-white w-4 sm:w-7 shadow-xs' : 'bg-white/40 hover:bg-white/80 w-1.5 sm:w-2.5'
                   }`} 
                 />
               ))}
@@ -136,20 +136,20 @@ export default function HeroSection({ section }) {
               transition={{ duration: 0.5, ease: 'easeInOut' }}
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center"
             >
-              {bannerHeading && <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">{bannerHeading}</h1>}
-              {bannerDescription && <p className="mt-4 text-sm sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
+              {bannerHeading && <h1 className="text-[clamp(1.625rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">{bannerHeading}</h1>}
+              {bannerDescription && <p className="mt-4 text-xs sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
             </motion.div>
           </AnimatePresence>
 
           {slides.length > 1 && (
-            <div className="flex justify-center gap-2 pb-12">
+            <div className="flex justify-center gap-1 sm:gap-2 pb-6 sm:pb-12">
               {slides.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
-                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? 'bg-white w-7 shadow-sm' : 'bg-white/40 hover:bg-white/60 w-2.5'
+                  className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    i === current ? 'bg-white w-4 sm:w-7 shadow-sm' : 'bg-white/40 hover:bg-white/60 w-1.5 sm:w-2.5'
                   }`} 
                 />
               ))}
@@ -162,11 +162,11 @@ export default function HeroSection({ section }) {
         <div className="bg-neutral-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             {bannerHeading ? (
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-[1.15] whitespace-pre-line">
+              <h2 className="text-[22px] sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-[1.15] whitespace-pre-line">
                 {headline}
               </h2>
             ) : (
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-[1.15] whitespace-pre-line">
+              <h1 className="text-[22px] sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-[1.15] whitespace-pre-line">
                 {headline}
               </h1>
             )}
@@ -185,20 +185,20 @@ export default function HeroSection({ section }) {
               <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16">
                 <motion.div variants={container} {...mount} className="flex flex-col justify-center text-center items-center lg:text-left lg:items-start">
                   {badgeText && (
-                    <Reveal as="div" className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-semibold text-white w-fit mb-6 mx-auto lg:mx-0">
+                    <Reveal as="div" className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3.5 py-1 text-xs sm:text-sm font-semibold text-white w-fit mb-6 mx-auto lg:mx-0">
                       <span className="w-2 h-2 rounded-full bg-brand-blue" />
                       {badgeText}
                     </Reveal>
                   )}
 
                   {headline && (
-                    <motion.h1 variants={item} className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">
+                    <motion.h1 variants={item} className="text-[clamp(1.625rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">
                       {headline}
                     </motion.h1>
                   )}
 
                   {description && (
-                    <motion.p variants={item} className="mt-4 sm:mt-5 text-base sm:text-lg text-white/85 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                    <motion.p variants={item} className="mt-4 sm:mt-5 text-sm sm:text-lg text-white/85 leading-relaxed max-w-xl mx-auto lg:mx-0">
                       {description}
                     </motion.p>
                   )}
@@ -206,8 +206,8 @@ export default function HeroSection({ section }) {
                   {featureBullets.length > 0 && (
                     <motion.ul variants={item} className="mt-8 space-y-3 text-left">
                       {featureBullets.map((bullet, i) => (
-                        <li key={i} className="flex items-start gap-3 text-base text-white">
-                          <FiCheckCircle className="w-5 h-5 text-brand-blue shrink-0 mt-0.5" />
+                        <li key={i} className="flex items-start gap-3 text-sm sm:text-base text-white">
+                          <FiCheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-brand-blue shrink-0 mt-0.5" />
                           <span>{bullet}</span>
                         </li>
                       ))}
@@ -219,7 +219,7 @@ export default function HeroSection({ section }) {
                       {buttons.map((btn, i) => (
                         btn.link ? (
                           <Link key={i} to={btn.link}
-                            className="inline-flex items-center justify-center px-6 py-3 rounded-full text-white font-semibold text-sm transition-colors"
+                            className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-white font-semibold text-xs sm:text-sm transition-colors"
                             style={{ backgroundColor: btn.color || '#f59e0b' }}
                           >
                             {btn.label}
@@ -247,8 +247,8 @@ export default function HeroSection({ section }) {
                 <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {stats.map((stat, i) => (
                     <StaggerItem key={i} className="text-center">
-                      <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">{stat.value}</p>
-                      <p className="text-sm sm:text-base text-white/70 mt-1">{stat.label}</p>
+                      <p className="text-[22px] sm:text-3xl lg:text-4xl font-extrabold text-white">{stat.value}</p>
+                      <p className="text-xs sm:text-base text-white/70 mt-1">{stat.label}</p>
                     </StaggerItem>
                   ))}
                 </Stagger>

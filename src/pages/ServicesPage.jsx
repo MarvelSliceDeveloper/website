@@ -317,23 +317,6 @@ export default function ServicesPage() {
         </section>
       )}
 
-      {/* Outgoing Links & CTA Section */}
-      <section className="py-12 bg-dark-navy text-white text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-3">Ready to transform your career?</h2>
-          <p className="text-white/80 text-sm mb-6 max-w-xl mx-auto">
-            Explore our specialized courses or get in touch with our expert advisors today.
-          </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link to="/courses" className="px-6 py-2.5 bg-brand-orange text-white font-semibold rounded-full hover:bg-brand-orange/90 transition-colors">
-              Explore Courses
-            </Link>
-            <Link to="/contact" className="px-6 py-2.5 bg-white/10 text-white font-semibold rounded-full border border-white/20 hover:bg-white/20 transition-colors">
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

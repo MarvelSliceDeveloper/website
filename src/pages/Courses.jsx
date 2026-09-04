@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useParams, Link, Navigate } from "react-router-dom";
+import { useSearchParams, useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import {
   FiBookOpen,
   FiChevronDown,
@@ -264,7 +264,16 @@ function CourseListItem({ course }) {
 }
 
 export default function Courses() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const handleExploreAll = useCallback((e) => {
+    if (e) e.preventDefault();
+    setSearch("");
+    setSearchParams({}, { replace: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigate("/courses");
+  }, [setSearchParams, navigate]);
   const { categorySlug } = useParams();
   const [search, setSearch] = useState("");
   const [userExpanded, setUserExpanded] = useState(null);
@@ -281,7 +290,6 @@ export default function Courses() {
     return <Navigate to="/banking" replace />;
   }
   const parentParam = rawParent || PARENTS[0].slug;
-  const activeCategory = searchParams.get("category") || categorySlug || null;
   const listOnly = searchParams.get("view") === "list";
   const page = parseInt(searchParams.get("page") || "1", 10);
 
@@ -405,16 +413,40 @@ export default function Courses() {
 
   const currentTree = tree[parentParam] || [];
 
+  const explicitCategoryParam = searchParams.get("category") || categorySlug || null;
+
+  const defaultCategorySlug = useMemo(() => {
+    if (!currentTree || currentTree.length === 0) return null;
+    const firstNode = currentTree[0]?.children?.[0] || currentTree[0];
+    if (!firstNode) return null;
+    return firstNode.path
+      ? firstNode.path.replace(/.*\//, "")
+      : firstNode.label.toLowerCase().replace(/\s+/g, "-");
+  }, [currentTree]);
+
+  const desktopActiveCategory = explicitCategoryParam || defaultCategorySlug;
+
   const activeNavId = useMemo(() => {
-    if (!activeCategory || !navItems) return null;
+    if (!desktopActiveCategory || !navItems) return null;
     const found = navItems.find((ni) => {
       const slug = ni.path
         ? ni.path.replace(/.*\//, "")
         : ni.label.toLowerCase().replace(/\s+/g, "-");
-      return slug === activeCategory;
+      return slug === desktopActiveCategory;
     });
     return found?.id || null;
-  }, [activeCategory, navItems]);
+  }, [desktopActiveCategory, navItems]);
+
+  const mobileActiveNavId = useMemo(() => {
+    if (!explicitCategoryParam || !navItems) return null;
+    const found = navItems.find((ni) => {
+      const slug = ni.path
+        ? ni.path.replace(/.*\//, "")
+        : ni.label.toLowerCase().replace(/\s+/g, "-");
+      return slug === explicitCategoryParam;
+    });
+    return found?.id || null;
+  }, [explicitCategoryParam, navItems]);
 
   const isActiveOrChild = useCallback((parentNode, activeId) => {
     if (!activeId) return false;
@@ -429,36 +461,6 @@ export default function Courses() {
     },
     [hasUserInteracted, userExpanded, activeNavId, isActiveOrChild],
   );
-
-  useEffect(() => {
-    if (!parentParam || activeNavId || !navItems || !currentTree.length) return;
-    const first = currentTree[0]?.children?.[0];
-    if (!first) return;
-    const slug = first.path
-      ? first.path.replace(/.*\//, "")
-      : first.label.toLowerCase().replace(/\s+/g, "-");
-    const next = new URLSearchParams();
-    next.set("parent", parentParam);
-    next.set("category", slug);
-    setSearchParams(next, { replace: true });
-  }, [parentParam, activeNavId, navItems, currentTree, setSearchParams]);
-
-  // Auto-select first category if none selected
-  useEffect(() => {
-    if (!parentParam || !navItems || !currentTree.length) return;
-    if (!searchParams.get("category") && currentTree.length > 0) {
-      const first = currentTree[0]?.children?.[0] || currentTree[0];
-      if (first) {
-        const slug = first.path
-          ? first.path.replace(/.*\//, "")
-          : first.label.toLowerCase().replace(/\s+/g, "-");
-        const next = new URLSearchParams();
-        next.set("parent", parentParam);
-        next.set("category", slug);
-        setSearchParams(next, { replace: true });
-      }
-    }
-  }, [parentParam, navItems, currentTree, searchParams, setSearchParams]);
 
   const filteredCourses = useMemo(() => {
     if (!courses) return [];
@@ -493,26 +495,39 @@ export default function Courses() {
     const processedCourseIds = new Set();
 
     currentTree.forEach((parentNode) => {
-      const parentCourses = (courseMap[parentNode.id] || []).filter((c) => {
-        if (!search) return true;
-        const q = search.toLowerCase();
-        return (
-          (c.title || "").toLowerCase().includes(q) ||
-          (c.slug || "").toLowerCase().includes(q)
-        );
-      });
+      const isParentMatch = mobileActiveNavId === parentNode.id;
+      const hasMatchingChild = parentNode.children?.some((c) => c.id === mobileActiveNavId);
 
-      if (parentCourses.length > 0) {
-        sections.push({
-          id: parentNode.id,
-          label: parentNode.label,
-          courses: parentCourses,
+      if (mobileActiveNavId && !isParentMatch && !hasMatchingChild) {
+        return;
+      }
+
+      if (!mobileActiveNavId || isParentMatch) {
+        const parentCourses = (courseMap[parentNode.id] || []).filter((c) => {
+          if (!search) return true;
+          const q = search.toLowerCase();
+          return (
+            (c.title || "").toLowerCase().includes(q) ||
+            (c.slug || "").toLowerCase().includes(q)
+          );
         });
-        parentCourses.forEach((c) => processedCourseIds.add(c.id));
+
+        if (parentCourses.length > 0) {
+          sections.push({
+            id: parentNode.id,
+            label: parentNode.label,
+            courses: parentCourses,
+          });
+          parentCourses.forEach((c) => processedCourseIds.add(c.id));
+        }
       }
 
       if (parentNode.children && parentNode.children.length > 0) {
         parentNode.children.forEach((child) => {
+          if (mobileActiveNavId && child.id !== mobileActiveNavId && !isParentMatch) {
+            return;
+          }
+
           const childCourses = (courseMap[child.id] || []).filter((c) => {
             if (!search) return true;
             const q = search.toLowerCase();
@@ -534,26 +549,28 @@ export default function Courses() {
       }
     });
 
-    const remainingCourses = courses.filter((c) => {
-      if (processedCourseIds.has(c.id)) return false;
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        (c.title || "").toLowerCase().includes(q) ||
-        (c.slug || "").toLowerCase().includes(q)
-      );
-    });
-
-    if (remainingCourses.length > 0) {
-      sections.push({
-        id: "other",
-        label: "Other Courses",
-        courses: remainingCourses,
+    if (!mobileActiveNavId) {
+      const remainingCourses = courses.filter((c) => {
+        if (processedCourseIds.has(c.id)) return false;
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+          (c.title || "").toLowerCase().includes(q) ||
+          (c.slug || "").toLowerCase().includes(q)
+        );
       });
+
+      if (remainingCourses.length > 0) {
+        sections.push({
+          id: "other",
+          label: "Other Courses",
+          courses: remainingCourses,
+        });
+      }
     }
 
     return sections;
-  }, [currentTree, courseMap, courses, search]);
+  }, [currentTree, courseMap, courses, search, mobileActiveNavId]);
 
   function toggleParent(id) {
     setHasUserInteracted(true);
@@ -574,7 +591,7 @@ export default function Courses() {
     const parentSlug = parentNode.path
       ? parentNode.path.replace(/.*\//, "")
       : parentNode.label.toLowerCase().replace(/\s+/g, "-");
-    const isParentActive = activeCategory === parentSlug;
+    const isParentActive = desktopActiveCategory === parentSlug;
     const expanded = shouldExpand(parentNode);
     const hasChildren = parentNode.children.length > 0;
 
@@ -647,7 +664,7 @@ export default function Courses() {
                   const childSlug = child.path
                     ? child.path.replace(/.*\//, "")
                     : child.label.toLowerCase().replace(/\s+/g, "-");
-                  const isChildActive = activeCategory === childSlug;
+                  const isChildActive = desktopActiveCategory === childSlug;
                   return (
                     <button
                       key={child.id}
@@ -752,9 +769,9 @@ export default function Courses() {
             {/* Mobile-mode header */}
             {!listOnly && (
               <div className="lg:hidden mb-4">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-[#1B365D] tracking-tight">
-                  Courses
-                </h2>
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#1B365D] tracking-tight">
+                  All Courses
+                </h1>
               </div>
             )}
 
@@ -774,7 +791,7 @@ export default function Courses() {
             )}
 
             {/* Toolbar row: Search Bar & View Toggle */}
-            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 w-full flex-wrap sm:flex-nowrap">
+            <div className="hidden lg:flex items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 w-full flex-wrap sm:flex-nowrap">
               {/* Course Count */}
               <p className="text-sm font-semibold text-slate-600 shrink-0">
                 <span className="font-extrabold text-slate-900">
@@ -885,13 +902,14 @@ export default function Courses() {
                   {!listOnly && (
                     <Pagination page={page} total={totalItems} onPage={setPage} />
                   )}
-                  {listOnly && totalItems > 0 && (
-                    <div className="flex justify-end mt-8">
+                  {listOnly && (
+                    <div className="flex justify-center mt-8">
                       <Link
-                        to={`/courses?parent=${parentParam}`}
-                        className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                        to="/courses"
+                        onClick={handleExploreAll}
+                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
                       >
-                        Explore more courses
+                        <span>Explore All Courses</span>
                         <FiChevronRight className="w-4 h-4" />
                       </Link>
                     </div>
@@ -957,6 +975,18 @@ export default function Courses() {
                       </div>
                     );
                   })}
+                  {explicitCategoryParam && (
+                    <div className="flex justify-center mt-8">
+                      <Link
+                        to="/courses"
+                        onClick={handleExploreAll}
+                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      >
+                        <span>Explore All Courses</span>
+                        <FiChevronRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

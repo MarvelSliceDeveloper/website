@@ -190,17 +190,17 @@ export default function UpcomingClassesSection({ section }) {
                   {doubled.map((cls, i) => (
                     <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
                       <div className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
-                        <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
+                        <h4 className="text-dark-navy text-[17px] font-medium">{cls.course_name}</h4>
                         {cls.date_time && (
-                          <p className="text-text-gray text-[15px] mt-3">
+                          <p className="text-text-gray text-[12px] mt-3">
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
-                        <div className="mt-auto pt-4 flex justify-end">
+                        <div className="mt-auto pt-4 flex justify-center sm:justify-end">
                           <button
                             type="button"
                             onClick={() => setSelectedClass(cls)}
-                            className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
+                            className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-[11px] py-2 px-5 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
                           >
                             Register now
                           </button>
@@ -242,17 +242,17 @@ export default function UpcomingClassesSection({ section }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {classes.map((cls) => (
                 <div key={cls.id} className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-                  <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
+                  <h4 className="text-dark-navy text-[17px] font-medium">{cls.course_name}</h4>
                   {cls.date_time && (
-                    <p className="text-text-gray text-[15px] mt-3">
+                    <p className="text-text-gray text-[12px] mt-3">
                       {formatDateTime(cls.date_time)}
                     </p>
                   )}
-                  <div className="mt-auto pt-4 flex justify-end">
+                  <div className="mt-auto pt-4 flex justify-center sm:justify-end">
                     <button
                       type="button"
                       onClick={() => setSelectedClass(cls)}
-                      className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
+                      className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-[11px] py-2 px-5 rounded-full transition-all hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 cursor-pointer"
                     >
                       Register now
                     </button>

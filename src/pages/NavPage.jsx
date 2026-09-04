@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import CourseCard from '../components/ui/CourseCard';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import SectionRenderer from '../components/ui/SectionRenderer';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiChevronRight } from 'react-icons/fi';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabaseClient';
 
@@ -44,10 +44,7 @@ export default function NavPage() {
       const parentSlug = navItem.parent_label
         ? navItem.parent_label.toLowerCase().replace(/\s+/g, '-')
         : null;
-      const categorySlug = path.replace(/.*\//, '');
-      const exploreLink = parentSlug
-        ? `/courses?parent=${parentSlug}&category=${categorySlug}`
-        : `/courses`;
+      const exploreLink = '/courses';
 
       const pageData = pageRes.data?.[0] || null;
       const page = pageData
@@ -59,7 +56,15 @@ export default function NavPage() {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8 animate-pulse">
+        <div className="h-48 bg-slate-100 rounded-2xl w-full" />
+        <div className="h-10 bg-slate-100 rounded-lg w-1/3 mx-auto" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-slate-100 rounded-xl" />)}
+        </div>
+      </div>
+    );
   }
 
   const hasContent = data && (data.heading || data.subheading || data.sections?.length > 0 || data.courses?.length > 0);
@@ -107,12 +112,14 @@ export default function NavPage() {
               </StaggerItem>
             ))}
           </Stagger>
-          <div className="text-right mt-6">
+          <div className="flex justify-center sm:justify-end mt-8">
             <Link
-              to={data.exploreLink}
-              className="text-sm font-semibold text-brand-orange hover:underline"
+              to="/courses"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
-              Explore All Courses →
+              <span>Explore All Courses</span>
+              <FiChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>

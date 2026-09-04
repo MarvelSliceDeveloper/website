@@ -33,7 +33,17 @@ export default function About() {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8 animate-pulse">
+        <div className="h-64 bg-slate-100 rounded-2xl w-full" />
+        <div className="h-10 bg-slate-100 rounded-lg w-1/3 mx-auto" />
+        <div className="h-4 bg-slate-100 rounded w-1/2 mx-auto" />
+        <div className="space-y-4 pt-6">
+          <div className="h-32 bg-slate-100 rounded-xl" />
+          <div className="h-32 bg-slate-100 rounded-xl" />
+        </div>
+      </div>
+    );
   }
 
   const hasContent = data && (data.heading || data.subheading || data.sections?.length > 0);
