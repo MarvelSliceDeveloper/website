@@ -80,19 +80,12 @@ export default function NavPage() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto"><img src={data.hero_image} alt="" className="w-full h-auto" /></Reveal>
       )}
 
-      {(data.heading || data.subheading) && (
-        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
-          {data.heading && <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy mb-4">{data.heading}</h1>}
-          {data.subheading && <p className="text-base sm:text-lg text-text-gray max-w-2xl mx-auto">{data.subheading}</p>}
-        </Reveal>
-      )}
-
-      {!data.heading && !data.subheading && data.courses?.length > 0 && (
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy mb-4">{data.navLabel}</h1>
-          <p className="text-base sm:text-lg text-text-gray max-w-2xl mx-auto">Explore our {data.navLabel?.toLowerCase()} courses</p>
-        </Reveal>
-      )}
+      <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-dark-navy mb-4">
+          {data.heading || data.navLabel || 'Page'}
+        </h1>
+        {data.subheading && <p className="text-base sm:text-lg text-text-gray max-w-2xl mx-auto">{data.subheading}</p>}
+      </Reveal>
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
         <Reveal key={i} variant="up" className={`py-10 sm:py-14 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>

@@ -87,9 +87,15 @@ export default function Footer() {
           {/* Logo & Contact Info Section: Spans full width across top on Tablet (sm:col-span-2 lg:col-span-1) */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-1 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0">
             <div className="flex justify-start mb-4">
-              {settings?.logo_url && (
-                <img src={settings.logo_url} alt="Marvel Slice" className="h-16 sm:h-20 w-auto object-contain" />
-              )}
+              <Link to="/" aria-label="Go to Homepage" className="inline-flex items-center gap-3 group">
+                {settings?.logo_url ? (
+                  <img src={settings.logo_url} alt="Marvel Slice" className="h-16 sm:h-20 w-auto object-contain transition-transform duration-200 group-hover:scale-105" />
+                ) : (
+                  <span className="text-xl sm:text-2xl font-extrabold text-white">
+                    Marvel <span className="text-brand-orange">Slice</span>
+                  </span>
+                )}
+              </Link>
             </div>
             <div className="space-y-3 text-sm text-gray-300 text-left">
               {address && (

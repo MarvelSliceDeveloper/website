@@ -557,30 +557,57 @@ function HeroEditor({ data, onChange }) {
       {mode === 'normal' ? (
         <div className="space-y-6">
           {/* Media Preview Section */}
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Banner Image</label>
-            <div className="flex gap-2 mb-3">
-              <input type="text" value={content.banner_image || ''} onChange={(e) => updateContent('banner_image', e.target.value)}
-                className="flex-1 px-3.5 py-2.5 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
-                placeholder="Paste image URL or upload..." />
-              <ImageUploader value={content.banner_image || ''} onChange={(v) => updateContent('banner_image', v)} label="" hideInput />
-            </div>
-            {content.banner_image ? (
-              <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-md">
-                <img src={content.banner_image} alt="Banner preview" className="w-full h-48 object-cover" />
-                <button type="button" onClick={() => updateContent('banner_image', '')}
-                  className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white hover:text-red-600 transition-all border border-gray-200">
-                  <FiTrash2 className="w-4 h-4" />
-                </button>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Desktop Banner Image</label>
+              <div className="flex gap-2 mb-3">
+                <input type="text" value={content.banner_image || ''} onChange={(e) => updateContent('banner_image', e.target.value)}
+                  className="flex-1 px-3.5 py-2.5 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                  placeholder="Paste desktop image URL or upload..." />
+                <ImageUploader value={content.banner_image || ''} onChange={(v) => updateContent('banner_image', v)} label="" hideInput />
               </div>
-            ) : (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 h-48 flex items-center justify-center">
-                <div className="text-center">
-                  <FiUpload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No banner image selected</p>
+              {content.banner_image ? (
+                <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-md">
+                  <img src={content.banner_image} alt="Banner preview" className="w-full h-36 object-cover" />
+                  <button type="button" onClick={() => updateContent('banner_image', '')}
+                    className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white transition-all border border-gray-200 cursor-pointer">
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
                 </div>
+              ) : (
+                <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 h-36 flex items-center justify-center">
+                  <div className="text-center">
+                    <FiUpload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                    <p className="text-xs text-gray-400">No desktop image selected</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Mobile Banner Image (Optional)</label>
+              <div className="flex gap-2 mb-3">
+                <input type="text" value={content.mobile_banner_image || ''} onChange={(e) => updateContent('mobile_banner_image', e.target.value)}
+                  className="flex-1 px-3.5 py-2.5 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                  placeholder="Paste mobile image URL or upload..." />
+                <ImageUploader value={content.mobile_banner_image || ''} onChange={(v) => updateContent('mobile_banner_image', v)} label="" hideInput />
               </div>
-            )}
+              {content.mobile_banner_image ? (
+                <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-md">
+                  <img src={content.mobile_banner_image} alt="Mobile preview" className="w-full h-36 object-cover" />
+                  <button type="button" onClick={() => updateContent('mobile_banner_image', '')}
+                    className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white transition-all border border-gray-200 cursor-pointer">
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 h-36 flex items-center justify-center">
+                  <div className="text-center">
+                    <FiUpload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                    <p className="text-xs text-gray-400">No mobile image selected</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Text Fields - 2 Column Grid */}
@@ -640,23 +667,43 @@ function HeroEditor({ data, onChange }) {
                 <RepeatableItemCard key={i} index={i} label="Slide" onRemove={() => removeSlide(i)}>
                   <div className="space-y-4">
                     {carouselType === 'image' && (
-                      <div>
-                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Slide Image</label>
-                        <div className="flex gap-2">
-                          <input type="text" value={slide.image || ''} onChange={(e) => updateSlide(i, 'image', e.target.value)}
-                            className="flex-1 px-3.5 py-2 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
-                            placeholder="Image URL" />
-                          <ImageUploader value={slide.image || ''} onChange={(v) => updateSlide(i, 'image', v)} label="" hideInput />
-                        </div>
-                        {slide.image && (
-                          <div className="relative mt-2 rounded-lg overflow-hidden border border-gray-200">
-                            <img src={slide.image} alt="" className="h-32 w-full object-cover" />
-                            <button type="button" onClick={() => updateSlide(i, 'image', '')}
-                              className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white transition-all border border-gray-200">
-                              <FiTrash2 className="w-3.5 h-3.5" />
-                            </button>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Desktop Slide Image</label>
+                          <div className="flex gap-2 mb-2">
+                            <input type="text" value={slide.image || ''} onChange={(e) => updateSlide(i, 'image', e.target.value)}
+                              className="flex-1 px-3.5 py-2 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                              placeholder="Desktop Image URL" />
+                            <ImageUploader value={slide.image || ''} onChange={(v) => updateSlide(i, 'image', v)} label="" hideInput />
                           </div>
-                        )}
+                          {slide.image && (
+                            <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                              <img src={slide.image} alt="" className="h-28 w-full object-cover" />
+                              <button type="button" onClick={() => updateSlide(i, 'image', '')}
+                                className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white transition-all border border-gray-200">
+                                <FiTrash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Mobile Slide Image (Optional)</label>
+                          <div className="flex gap-2 mb-2">
+                            <input type="text" value={slide.mobile_image || ''} onChange={(e) => updateSlide(i, 'mobile_image', e.target.value)}
+                              className="flex-1 px-3.5 py-2 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white"
+                              placeholder="Mobile Image URL" />
+                            <ImageUploader value={slide.mobile_image || ''} onChange={(v) => updateSlide(i, 'mobile_image', v)} label="" hideInput />
+                          </div>
+                          {slide.mobile_image && (
+                            <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                              <img src={slide.mobile_image} alt="" className="h-28 w-full object-cover" />
+                              <button type="button" onClick={() => updateSlide(i, 'mobile_image', '')}
+                                className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm text-red-500 rounded-full shadow-sm hover:bg-white transition-all border border-gray-200">
+                                <FiTrash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

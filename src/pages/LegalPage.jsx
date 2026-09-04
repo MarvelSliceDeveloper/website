@@ -121,7 +121,9 @@ export default function LegalPage({ pageKey }) {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       <Reveal className="mb-10 sm:mb-12">
-        {contentData.title && <h1 className="text-3xl sm:text-4xl font-extrabold text-dark-navy mb-4">{contentData.title}</h1>}
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-dark-navy mb-4">
+          {contentData.title || (pageKey === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions')}
+        </h1>
         {contentData.intro && <p className="!text-text-gray text-base sm:text-lg">{contentData.intro}</p>}
       </Reveal>
 

@@ -90,7 +90,7 @@ const queryClient = useQueryClient();
   const navItemIdRef = useRef(null);
   const savingRef = useRef(false);
 
-  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '', heading_line_2: '' });
+  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '', mobile_hero_image: '', heading_line_2: '' });
   const [contactContent, setContactContent] = useState(DEFAULT_CONTACT_CONTENT);
   const [formConfig, setFormConfig] = useState({});
   const [faqs, setFaqs] = useState([]);
@@ -129,6 +129,7 @@ const queryClient = useQueryClient();
             heading: page.heading || '',
             subheading: page.subheading || '',
             hero_image: page.hero_image || '',
+            mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || '',
             heading_line_2: page.form_config?.hero?.heading_line_2 || '',
           });
           setFormConfig(page.form_config || {});
@@ -182,7 +183,19 @@ const queryClient = useQueryClient();
 
     if (!navItemId && !navItemIdRef.current) { setSaveError('No nav item linked — please refresh and try again'); setSaving(false); savingRef.current = false; return; }
 
-    const payload = { nav_item_id: navItemId || navItemIdRef.current, heading: hero.heading, subheading: hero.subheading, hero_image: hero.hero_image || null, form_config: { ...formConfig, hero: { heading_line_2: hero.heading_line_2 || '' } }, sections, is_published: true };
+    const payload = {
+      nav_item_id: navItemId || navItemIdRef.current,
+      heading: hero.heading,
+      subheading: hero.subheading,
+      hero_image: hero.hero_image || null,
+      form_config: {
+        ...formConfig,
+        mobile_hero_image: hero.mobile_hero_image || '',
+        hero: { heading_line_2: hero.heading_line_2 || '' },
+      },
+      sections,
+      is_published: true,
+    };
     let res;
     if (pageId) {
       res = await supabase.from('nav_pages').update(payload).eq('id', pageId);
@@ -283,8 +296,13 @@ const queryClient = useQueryClient();
               <label className={labelCls}>Description</label>
               <textarea rows={4} value={hero.subheading} onChange={(e) => setHero({ ...hero, subheading: e.target.value })} placeholder="Description" className={`${inputCls} resize-y`} />
             </div>
-            <div>
-              <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Hero Image" />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Desktop Hero Image" />
+              </div>
+              <div>
+                <ImageUploader value={hero.mobile_hero_image} onChange={(v) => setHero({ ...hero, mobile_hero_image: v })} label="Mobile Hero Image (Optional)" />
+              </div>
             </div>
           </div>
         </div>
