@@ -20,7 +20,6 @@ import Contact from './pages/Contact';
 import ServicesPage from './pages/ServicesPage';
 import LegalPage from './pages/LegalPage';
 import Banking from './pages/Banking';
-import BankingV2 from './pages/BankingV2';
 import Aptitude from './pages/Aptitude';
 import Reasoning from './pages/Reasoning';
 import English from './pages/English';
@@ -111,7 +110,6 @@ function AnimatedRoutes() {
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/banking" element={<Banking />} />
-      <Route path="/bankingv2" element={<BankingV2 />} />
       <Route path="/aptitude" element={<Aptitude />} />
       <Route path="/reasoning" element={<Reasoning />} />
       <Route path="/english" element={<English />} />
@@ -148,18 +146,13 @@ function AnimatedRoutes() {
 }
 
 function PublicLayout() {
-  const { pathname } = useLocation();
-  const isV2Page = pathname === '/bankingv2';
-
   return (
-    <div className="flex flex-col min-h-screen w-full max-w-full relative">
+    <div className="flex flex-col min-h-screen overflow-x-hidden w-full max-w-full">
       <ScrollToTop />
       <PageTracker />
-      <div className="fixed top-0 left-0 right-0 z-50 w-full">
-        <TopBar />
-        <Header />
-      </div>
-      <main className={`flex-1 w-full max-w-full overflow-x-hidden ${isV2Page ? 'pt-[96px] lg:pt-[140px]' : 'pt-[60px] lg:pt-[104px]'}`}>
+      <TopBar />
+      <Header />
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <AnimatedRoutes />
       </main>
       <Footer />

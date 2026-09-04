@@ -10,14 +10,23 @@ const PAGE_PATH = '/contact';
 function HeroHeading({ data }) {
   const cfg = data.form_config?.hero || {};
   const line2 = cfg.heading_line_2;
-  const headingText = data.heading || 'Get In Touch';
 
   return (
     <div className="flex flex-col items-center mb-4 text-center">
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
-        <span>{headingText}</span>
-        {line2 && <span className="block mt-1">{line2}</span>}
-      </h1>
+      {line2 ? (
+        <>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy inline-block">
+            {data.heading}
+          </h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy inline-block">
+            {line2}
+          </h1>
+        </>
+      ) : (
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
+          {data.heading}
+        </h1>
+      )}
       <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
     </div>
   );
@@ -64,22 +73,10 @@ export default function Contact() {
     );
   }
 
-  const heroImg = data?.hero_image || '';
-  const mobileHeroImg = data?.mobile_hero_image || data?.form_config?.mobile_hero_image || '';
-
   return (
     <div>
-      {(heroImg || mobileHeroImg) && (
-        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
-          {mobileHeroImg ? (
-            <picture>
-              <source media="(max-width: 639px)" srcSet={mobileHeroImg} />
-              <img src={heroImg || mobileHeroImg} alt="" className="w-full h-[260px] sm:h-auto object-cover" />
-            </picture>
-          ) : (
-            <img src={heroImg} alt="" className="w-full h-[260px] sm:h-auto object-cover" />
-          )}
-        </Reveal>
+      {data.hero_image && (
+        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto"><img src={data.hero_image} alt="" className="w-full h-auto" /></Reveal>
       )}
 
       {(data.heading || data.subheading) && (

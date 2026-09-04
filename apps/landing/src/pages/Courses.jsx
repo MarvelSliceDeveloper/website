@@ -752,9 +752,9 @@ export default function Courses() {
             {/* Mobile-mode header */}
             {!listOnly && (
               <div className="lg:hidden mb-4">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-[#1B365D] tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#1B365D] tracking-tight">
                   Courses
-                </h2>
+                </h1>
               </div>
             )}
 

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FiBriefcase } from 'react-icons/fi';
 import * as LuIcons from 'react-icons/lu';
@@ -211,7 +210,6 @@ export default function ServicesPage() {
         const faqsSec = sections.find((s) => s.section_type === 'faq_list');
         return {
           hero_image: page.hero_image || '',
-          mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || '',
           heading: page.heading || '',
           subheading: page.subheading || '',
           services: cards?.items || [],
@@ -235,38 +233,31 @@ export default function ServicesPage() {
     );
   }
 
-  const { hero_image, mobile_hero_image, heading, subheading, services = [], faqs = [], faqHeading, faqSubheading, timeline = null } = pageData || {};
+  const { hero_image, heading, subheading, services = [], faqs = [], faqHeading, faqSubheading, timeline = null } = pageData || {};
 
   return (
     <div className="bg-white">
-      {(hero_image || mobile_hero_image) && (
-        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
-          {mobile_hero_image ? (
-            <picture>
-              <source media="(max-width: 639px)" srcSet={mobile_hero_image} />
-              <img src={hero_image || mobile_hero_image} alt="" className="w-full h-auto" />
-            </picture>
-          ) : (
-            <img src={hero_image} alt="" className="w-full h-auto" />
-          )}
+      {hero_image && (
+        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto">
+          <img src={hero_image} alt="" className="w-full h-auto" />
         </Reveal>
       )}
 
-      <section className="py-12 sm:py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal as="div" className="mb-4 text-center">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-dark-navy">
-              {heading || 'Our Professional Services'}
-            </h1>
-            <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
-            {subheading && (
-              <p className="mx-auto max-w-2xl text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
-                {subheading}
-              </p>
-            )}
-          </Reveal>
+      {services.length > 0 && (
+        <section className="py-16 sm:py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Reveal as="div" className="mb-4 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
+                {heading}
+              </h2>
+              <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
+              {subheading && (
+                <p className="mx-auto max-w-2xl text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
+                  {subheading}
+                </p>
+              )}
+            </Reveal>
 
-          {services.length > 0 && (
             <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mt-12">
               {services.map((service, i) => (
                 <StaggerItem key={`service-card-${i}`} className="h-full">
@@ -279,9 +270,9 @@ export default function ServicesPage() {
                 </StaggerItem>
               ))}
             </Stagger>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       <LearningJourney data={timeline} />
 
@@ -316,24 +307,6 @@ export default function ServicesPage() {
           </div>
         </section>
       )}
-
-      {/* Outgoing Links & CTA Section */}
-      <section className="py-12 bg-dark-navy text-white text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-3">Ready to transform your career?</h2>
-          <p className="text-white/80 text-sm mb-6 max-w-xl mx-auto">
-            Explore our specialized courses or get in touch with our expert advisors today.
-          </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link to="/courses" className="px-6 py-2.5 bg-brand-orange text-white font-semibold rounded-full hover:bg-brand-orange/90 transition-colors">
-              Explore Courses
-            </Link>
-            <Link to="/contact" className="px-6 py-2.5 bg-white/10 text-white font-semibold rounded-full border border-white/20 hover:bg-white/20 transition-colors">
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
