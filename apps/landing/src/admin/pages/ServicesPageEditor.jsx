@@ -112,7 +112,7 @@ export default function ServicesPageEditor() {
   const [faqHeading, setFaqHeading] = useState('Frequently Asked Questions');
   const [faqSubheading, setFaqSubheading] = useState('');
   const [faqs, setFaqs] = useState([]);
-  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '' });
+  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '', mobile_hero_image: '' });
   const { dirty, reset } = useDirty([hero, services, journeyHeading, journeySubheading, steps, journeyFeatures, faqHeading, faqSubheading, faqs], loading);
 
   useEffect(() => {
@@ -138,7 +138,12 @@ export default function ServicesPageEditor() {
         const page = pages?.[0] || null;
         if (page) {
           setPageId(page.id);
-          setHero({ heading: page.heading || '', subheading: page.subheading || '', hero_image: page.hero_image || '' });
+          setHero({
+            heading: page.heading || '',
+            subheading: page.subheading || '',
+            hero_image: page.hero_image || '',
+            mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || '',
+          });
           const secs = page.sections || [];
           const cardsSec = secs.find(s => s.section_type === 'cards');
           if (cardsSec?.items) setServices(cardsSec.items.map(i => typeof i === 'string' ? { title: i, description: '', icon: '' } : { ...i, icon: i.icon || '' }));
@@ -210,7 +215,15 @@ export default function ServicesPageEditor() {
       } : null,
     ].filter(Boolean);
     if (!navItemId && !navItemIdRef.current) { setSaveError('No nav item linked'); setSaving(false); savingRef.current = false; return; }
-    const payload = { nav_item_id: navItemId || navItemIdRef.current, heading: hero.heading || null, subheading: hero.subheading, hero_image: hero.hero_image || null, sections, is_published: true };
+    const payload = {
+      nav_item_id: navItemId || navItemIdRef.current,
+      heading: hero.heading || null,
+      subheading: hero.subheading,
+      hero_image: hero.hero_image || null,
+      form_config: { mobile_hero_image: hero.mobile_hero_image || '' },
+      sections,
+      is_published: true,
+    };
     let res;
     if (pageId) {
       res = await supabase.from('nav_pages').update(payload).eq('id', pageId);
@@ -273,9 +286,15 @@ export default function ServicesPageEditor() {
                   <input type="text" value={hero.subheading} onChange={(e) => setHero({ ...hero, subheading: e.target.value })} placeholder="A short intro line..." className={inputClass} />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Hero Image</label>
-                <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} bucket="pages" />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Desktop Hero Image</label>
+                  <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} bucket="pages" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Mobile Hero Image (Optional)</label>
+                  <ImageUploader value={hero.mobile_hero_image} onChange={(v) => setHero({ ...hero, mobile_hero_image: v })} bucket="pages" />
+                </div>
               </div>
             </div>
           )}
