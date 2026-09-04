@@ -51,19 +51,19 @@ export default function TopBar() {
           <a href="#" className="hover:underline transition-colors" onClick={() => trackCtaClick('Sign Up', 'topbar')}>Sign Up</a>
           <span className="text-white/40">|</span>
           <div className="flex items-center gap-3 ml-2">
-            <a href={social.twitter || '#'} onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+            <a href={social.twitter || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
               <FaXTwitter className="w-2.5 h-2.5" />
             </a>
-            <a href={social.facebook || '#'} onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+            <a href={social.facebook || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
               <FaFacebookF className="w-2.5 h-2.5" />
             </a>
-            <a href={social.instagram || '#'} onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+            <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
               <FaInstagram className="w-2.5 h-2.5" />
             </a>
-            <a href={social.linkedin || '#'} onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+            <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
               <FaLinkedinIn className="w-2.5 h-2.5" />
             </a>
-            <a href={social.youtube || '#'} onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" target={social.youtube ? "_blank" : undefined} rel={social.youtube ? "noopener noreferrer" : undefined} className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+            <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
               <FaYoutube className="w-2.5 h-2.5" />
             </a>
           </div>
