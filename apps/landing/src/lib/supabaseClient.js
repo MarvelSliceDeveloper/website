@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getEnv } from './env';
+import { getEnv } from './env.js';
 
 const supabaseUrl = getEnv('VITE_SUPABASE_URL', 'http://localhost:54321');
 const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY', 'public-anon-key');
