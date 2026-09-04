@@ -390,6 +390,21 @@ select {
 }
 
 @media (max-width: 639px) {
+  /* Global site-wide mobile typography scaling */
+  html {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Increase all paragraph font sizes by 2px on mobile view */
+  p {
+    font-size: calc(1em + 2px);
+  }
+  p.text-xs { font-size: 14px; }
+  p.text-sm { font-size: 16px; }
+  p.text-base { font-size: 18px; }
+  p.text-lg { font-size: 20px; }
+
   .admin-table-scroll {
     margin-right: 0;
     max-width: 100%;
