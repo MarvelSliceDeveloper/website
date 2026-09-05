@@ -240,17 +240,7 @@ export default function BankingV2() {
       setSearchParams(searchParams, { replace: true });
     }
   };
-  const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setActiveDropdown(null);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   function openApplyModal(type = 'general', topic = 'General Banking Enquiry') {
     trackEnroll(topic, 'banking_exams');
