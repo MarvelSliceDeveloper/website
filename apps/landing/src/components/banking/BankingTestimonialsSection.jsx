@@ -9,72 +9,66 @@ function TestimonialCard({ item }) {
   const count = Math.min(5, Math.max(1, parseInt(item.rating, 10) || 5));
 
   return (
-    <div className="group relative flex h-full w-full flex-col justify-between overflow-hidden rounded-3xl border border-blue-100/80 bg-white p-6 sm:p-8 md:px-10 shadow-[0_10px_28px_rgba(30,86,199,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(30,86,199,0.13)]">
-      {/* Background Watermark Quotation Marks */}
-      <span aria-hidden="true" className="pointer-events-none absolute top-4 right-8 select-none font-serif text-6xl text-blue-100/60 font-bold leading-none">
-        ”
-      </span>
-      <span aria-hidden="true" className="pointer-events-none absolute bottom-4 right-8 select-none font-serif text-6xl text-blue-100/60 font-bold leading-none">
-        ”
-      </span>
+    <div className="group relative w-full h-full min-h-[380px] sm:min-h-[420px] md:min-h-[460px] flex flex-col justify-center overflow-hidden rounded-3xl border border-blue-100/90 bg-white p-6 sm:p-10 md:p-12 shadow-[0_12px_36px_rgba(30,86,199,0.08)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(30,86,199,0.14)]">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-stretch h-full w-full relative z-10">
+        {/* LEFT HALF (~ 5 cols): Image on top -> Below: Name, Position, Star Rating */}
+        <div className="md:col-span-5 lg:col-span-4 flex flex-col items-center text-center justify-center border-b md:border-b-0 md:border-r border-blue-100/80 pb-6 md:pb-0 md:pr-8 h-full">
+          {/* Avatar Image */}
+          <div className="relative shrink-0 rounded-2xl p-1.5 bg-gradient-to-tr from-brand-blue via-blue-500 to-brand-orange shadow-lg mb-4">
+            {item.avatar_url ? (
+              <img
+                src={item.avatar_url}
+                alt={item.name}
+                className="h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 rounded-xl object-cover object-top border-2 border-white shadow-inner"
+              />
+            ) : (
+              <div className="flex h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 items-center justify-center rounded-xl bg-gradient-to-br from-brand-blue to-blue-700 text-3xl sm:text-4xl font-extrabold text-white border-2 border-white">
+                {(item.name || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
 
-      {/* TOP HEADER: Avatar + Name + Badge + Star Rating */}
-      <div className="relative z-10 flex items-center gap-4 sm:gap-6 text-left">
-        {/* Avatar with Outer Ring Glow */}
-        <div className="relative shrink-0 rounded-full p-1 bg-white ring-4 ring-blue-100/80 shadow-md border border-blue-200/50">
-          {item.avatar_url ? (
-            <img src={item.avatar_url} alt={item.name} className="h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover object-top" />
-          ) : (
-            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-blue to-blue-600 text-lg font-bold text-white">
-              {(item.name || '?').charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
+          {/* Name */}
+          <h3 className="text-xl sm:text-2xl font-extrabold text-[#0B1E48] tracking-tight leading-snug">{item.name}</h3>
 
-        {/* User Details */}
-        <div className="min-w-0 flex-1">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#0B1E48] tracking-tight leading-snug break-words">{item.name}</h3>
-
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {/* Position & Bank Badges */}
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5 min-h-[32px]">
             {item.role && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50/90 px-3 py-0.5 text-xs sm:text-sm font-semibold text-[#1E56C7] border border-blue-100/80 w-fit max-w-full">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50/90 px-3 py-1 text-xs sm:text-sm font-semibold text-[#1E56C7] border border-blue-100">
                 <FiBriefcase className="w-3.5 h-3.5 text-[#1E56C7] shrink-0" />
-                <span className="leading-snug break-words">{item.role}</span>
+                <span>{item.role}</span>
               </div>
             )}
 
             {item.bank_name && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50/90 px-3 py-0.5 text-xs sm:text-sm font-semibold text-emerald-700 border border-emerald-200/80 w-fit max-w-full">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50/90 px-3 py-1 text-xs sm:text-sm font-semibold text-emerald-700 border border-emerald-200">
                 <FiAward className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="leading-snug break-words">{item.bank_name}</span>
+                <span>{item.bank_name}</span>
               </div>
             )}
 
             {!item.role && !item.bank_name && (item.exam_name || item.badge_text) && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50/90 px-3 py-0.5 text-xs sm:text-sm font-semibold text-[#1E56C7] border border-blue-100/80 w-fit max-w-full">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50/90 px-3 py-1 text-xs sm:text-sm font-semibold text-[#1E56C7] border border-blue-100">
                 <FiBriefcase className="w-3.5 h-3.5 text-[#1E56C7] shrink-0" />
-                <span className="leading-snug break-words">{item.exam_name || item.badge_text}</span>
+                <span>{item.exam_name || item.badge_text}</span>
               </div>
             )}
           </div>
 
           {/* Star Rating */}
-          <div className="mt-1.5 flex items-center gap-1">
+          <div className="mt-3 flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
-              <FiStar key={i} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${i < count ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
+              <FiStar key={i} className={`w-4 h-4 sm:w-5 sm:h-5 ${i < count ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Horizontal Divider Line */}
-      <div className="relative z-10 my-4 sm:my-5 border-t border-blue-50/90" />
-
-      {/* QUOTE CONTENT BODY */}
-      <div className="relative z-10 flex-1 flex flex-col justify-start">
-        <p className="text-justify [text-align-last:left] text-sm sm:text-base md:text-[17px] font-medium leading-relaxed text-slate-700 whitespace-pre-line">
-          “{item.quote}”
-        </p>
+        {/* RIGHT HALF (~ 7 cols): Description / Quote Text */}
+        <div className="md:col-span-7 lg:col-span-8 flex flex-col justify-center text-left md:pl-4 h-full">
+          <p className="text-base sm:text-lg md:text-xl font-medium leading-relaxed text-slate-700 whitespace-pre-line text-justify [text-align-last:left]">
+            {item.quote}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -100,28 +94,15 @@ export default function BankingTestimonialsSection() {
 
   const [pos, setPos] = useState(0);
   const [animate, setAnimate] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(2);
   const timerRef = useRef(null);
   const n = items.length;
   const tripled = n > 0 ? [...items, ...items, ...items] : [];
 
   useEffect(() => {
-    function update() {
-      const w = window.innerWidth;
-      setVisibleCount(w >= 1024 ? 2 : 1);
-    }
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  const shouldScroll = n > visibleCount;
-
-  useEffect(() => {
-    if (!shouldScroll) return undefined;
+    if (n <= 1) return undefined;
     startAutoScroll();
     return () => clearInterval(timerRef.current);
-  }, [shouldScroll, visibleCount, n]);
+  }, [n]);
 
   function startAutoScroll() {
     clearInterval(timerRef.current);
@@ -151,7 +132,8 @@ export default function BankingTestimonialsSection() {
         <div className="absolute -top-24 left-1/2 h-64 w-[720px] max-w-full -translate-x-1/2 rounded-full bg-brand-blue/[0.04] blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-48 w-96 max-w-full rounded-full bg-brand-orange/[0.06] blur-3xl" />
       </div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-10">
             <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">
@@ -164,37 +146,30 @@ export default function BankingTestimonialsSection() {
           </div>
         </Reveal>
 
-        {!shouldScroll ? (
-          /* Grid mode when items are <= visibleCount */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4 max-w-7xl mx-auto">
-            {items.map((item) => (
-              <TestimonialCard key={item.id} item={item} />
-            ))}
+        {/* 1-at-a-time Carousel */}
+        <div className="relative mx-auto w-full mt-6" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
+          <div className="overflow-hidden py-4">
+            <motion.div
+              animate={{ x: `-${pos * 100}%` }}
+              transition={animate ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] } : { duration: 0 }}
+              onAnimationComplete={() => {
+                if (pos >= n) {
+                  setAnimate(false);
+                  setPos(0);
+                }
+              }}
+              className="flex items-stretch"
+            >
+              {tripled.map((item, idx) => (
+                <div key={`${item.id}-${idx}`} className="h-full w-full shrink-0 px-2 flex">
+                  <TestimonialCard item={item} />
+                </div>
+              ))}
+            </motion.div>
           </div>
-        ) : (
-          /* Seamless Carousel mode when items > visibleCount */
-          <div className="relative mx-auto w-full mt-6" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
-            <div className="overflow-hidden py-4">
-              <motion.div
-                animate={{ x: `-${pos * (100 / visibleCount)}%` }}
-                transition={animate ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] } : { duration: 0 }}
-                onAnimationComplete={() => {
-                  if (pos >= n) {
-                    setAnimate(false);
-                    setPos(0);
-                  }
-                }}
-                className="flex items-stretch"
-              >
-                {tripled.map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="h-full shrink-0 px-3 flex" style={{ width: `${100 / visibleCount}%` }}>
-                    <TestimonialCard item={item} />
-                  </div>
-                ))}
-              </motion.div>
-            </div>
 
-            {/* Pagination Indicators */}
+          {/* Pagination Indicators */}
+          {n > 1 && (
             <div className="flex justify-center items-center gap-2.5 mt-8">
               {items.map((t, idx) => {
                 const isActive = activeIndex === idx;
@@ -211,8 +186,8 @@ export default function BankingTestimonialsSection() {
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

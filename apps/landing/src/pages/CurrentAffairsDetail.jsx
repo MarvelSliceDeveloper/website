@@ -140,16 +140,6 @@ export default function CurrentAffairsDetail() {
     <div className="bg-white min-h-screen text-slate-800">
       <main className="py-8 sm:py-12 bg-white">
         <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          {/* TOP LEFT BACK BUTTON */}
-          <button
-            type="button"
-            onClick={handleBackNavigation}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-orange transition-colors cursor-pointer group mb-2"
-          >
-            <FiArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform group-hover:-translate-x-1" />
-            <span>Back</span>
-          </button>
-
           {/* HEADING TOP, DATE / CATEGORY / SOURCE BELOW */}
           <header className="space-y-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-tight tracking-tight">

@@ -64,6 +64,7 @@ export default function About() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto"><img src={data.hero_image} alt="" className="w-full h-auto" /></Reveal>
       )}
 
+<<<<<<< HEAD
       {(data.heading || data.subheading) && (
         <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pb-12 text-center">
           {data.heading && (
@@ -73,6 +74,11 @@ export default function About() {
             </div>
           )}
           {data.subheading && <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>}
+=======
+      {data.subheading && (
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6 text-center">
+          <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>
+>>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
         </Reveal>
       )}
 

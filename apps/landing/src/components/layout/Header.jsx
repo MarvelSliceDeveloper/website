@@ -12,24 +12,7 @@ export const topNav = [
   {
     label: 'Competitive Exam',
     children: [
-      {
-        label: 'Banking',
-        children: [
-          { label: 'About Banking', path: '/banking' },
-          { label: 'Aptitude', path: '/aptitude' },
-          { label: 'Reasoning', path: '/reasoning' },
-          { label: 'English', path: '/english' },
-          { label: 'Banking Awareness', path: '/banking-awareness' },
-          {
-            label: 'Affairs',
-            children: [
-              { label: 'Current Affairs', path: '/current-affairs' },
-              { label: "Today's Affairs", path: '/todays-affairs' },
-            ],
-          },
-          { label: 'Mock Exam', path: '/mock-exam' },
-        ],
-      },
+      { label: 'Banking', path: '/banking' },
     ],
   },
   { label: 'Services', path: '/services' },
@@ -38,6 +21,181 @@ export const topNav = [
   { label: 'Contact', path: '/contact' },
 ];
 
+<<<<<<< HEAD
+=======
+const subNavItems = [
+  { label: 'Aptitude', path: '/aptitude' },
+  { label: 'Reasoning', path: '/reasoning' },
+  { label: 'English', path: '/english' },
+  { label: 'Banking Awareness', path: '/banking-awareness' },
+  {
+    label: 'Affairs',
+    path: '/current-affairs',
+    children: [
+      { label: 'Current Affairs', path: '/current-affairs' },
+      { label: "Today's Affairs", path: '/current-affairs?filter=today' },
+    ],
+  },
+  { label: 'Mock Exam', path: '/mock-exam' },
+];
+
+function SubHeaderMenu({ currentPath, onItemClick }) {
+  const [affairsOpen, setAffairsOpen] = useState(false);
+  const affairsRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (affairsRef.current && !affairsRef.current.contains(e.target)) {
+        setAffairsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isAffairsActive = currentPath === '/current-affairs' || currentPath === '/todays-affairs';
+
+  return (
+    <div className="bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <nav
+          role="menubar"
+          className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto lg:overflow-visible no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
+        >
+          <Link
+            to="/aptitude"
+            onClick={onItemClick}
+            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
+              currentPath === '/aptitude'
+                ? 'bg-brand-blue text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+            }`}
+          >
+            Aptitude
+          </Link>
+
+          <Link
+            to="/reasoning"
+            onClick={onItemClick}
+            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
+              currentPath === '/reasoning'
+                ? 'bg-brand-blue text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+            }`}
+          >
+            Reasoning
+          </Link>
+
+          <Link
+            to="/english"
+            onClick={onItemClick}
+            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
+              currentPath === '/english'
+                ? 'bg-brand-blue text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+            }`}
+          >
+            English
+          </Link>
+
+          <Link
+            to="/banking-awareness"
+            onClick={onItemClick}
+            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
+              currentPath === '/banking-awareness'
+                ? 'bg-brand-blue text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+            }`}
+          >
+            Banking Awareness
+          </Link>
+
+          <div
+            ref={affairsRef}
+            className="relative shrink-0"
+            onMouseEnter={() => setAffairsOpen(true)}
+            onMouseLeave={() => setAffairsOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setAffairsOpen((prev) => !prev)}
+              aria-expanded={affairsOpen}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                isAffairsActive || affairsOpen
+                  ? 'bg-brand-blue text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+              }`}
+            >
+              <span>Affairs</span>
+            </button>
+
+            <AnimatePresence>
+              {affairsOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-[90] lg:hidden"
+                    onClick={() => setAffairsOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="fixed lg:absolute left-4 lg:left-0 right-4 lg:right-auto top-[98px] lg:top-full mt-1 lg:mt-1.5 w-auto lg:w-48 bg-white rounded-xl shadow-xl border border-blue-100 py-1.5 z-[100] text-left"
+                  >
+                    <Link
+                      to="/current-affairs"
+                      onClick={() => {
+                        setAffairsOpen(false);
+                        if (onItemClick) onItemClick();
+                      }}
+                      className={`block px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
+                        currentPath === '/current-affairs'
+                          ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue'
+                          : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue'
+                      }`}
+                    >
+                      Current Affairs
+                    </Link>
+
+                    <Link
+                      to="/todays-affairs"
+                      onClick={() => {
+                        setAffairsOpen(false);
+                        if (onItemClick) onItemClick();
+                      }}
+                      className={`block px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
+                        currentPath === '/todays-affairs'
+                          ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue'
+                          : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue'
+                      }`}
+                    >
+                      Today's Affairs
+                    </Link>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <Link
+            to="/mock-exam"
+            onClick={onItemClick}
+            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
+              currentPath === '/mock-exam'
+                ? 'bg-brand-blue text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+            }`}
+          >
+            Mock Exam
+          </Link>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+>>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
@@ -76,24 +234,48 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
+  const isBankingPage = [
+    '/banking',
+    '/bankingv2',
+    '/aptitude',
+    '/reasoning',
+    '/english',
+    '/banking-awareness',
+    '/current-affairs',
+    '/todays-affairs',
+    '/mock-exam'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+
   return (
+<<<<<<< HEAD
     <header className="bg-white sticky top-0 z-50" style={{ boxShadow: '0 15px 35px rgba(0, 0, 0, 0.15)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[60px] lg:h-[68px]">
         <Link to="/" className="flex items-center gap-3 shrink-0">
+=======
+    <header className="bg-white border-b border-gray-100 relative">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2.5">
+>>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
           {settings?.logo_url && (
-            <img src={settings.logo_url} alt="Marvel Slice" className="h-10 lg:h-14 w-auto object-contain" />
+            <img
+              src={settings.logo_url}
+              alt="Marvel Slice Logo"
+              className="h-9 sm:h-10 w-auto object-contain"
+            />
           )}
-          <span className="text-xl lg:text-2xl font-extrabold text-brand-blue">
-            Marvel <span className="text-brand-orange">Slice</span>
+          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
+            MARVEL<span className="text-brand-orange">SLICE</span>
           </span>
         </Link>
 
+        {/* Desktop Nav Items */}
         <div className="hidden lg:flex items-center">
           <NavDropdown items={topNav} currentPath={pathname} />
         </div>
 
+        {/* Mobile Hamburger Toggle Button */}
         <button
-          ref={hamburgerBtnRef}
+          type="button"
           className="lg:hidden p-2.5 -mr-2 text-gray-900 rounded-md hover:bg-gray-100 transition-colors cursor-pointer z-50"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
@@ -106,6 +288,11 @@ export default function Header() {
         </button>
       </div>
 
+<<<<<<< HEAD
+=======
+      {isBankingPage && <SubHeaderMenu currentPath={pathname} />}
+
+>>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
       <AnimatePresence>
         {mobileOpen && (
           <>

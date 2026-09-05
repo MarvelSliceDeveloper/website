@@ -93,7 +93,7 @@ export default function FeatureCardsSection({ section }) {
                           {bullets.map((bullet, j) => (
                             <div key={j} className="flex items-start gap-2 min-w-0">
                               <FiCheckCircle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
-                              <span className="text-brand-blue text-xs sm:text-sm font-medium leading-snug break-words">
+                              <span className="text-brand-blue text-[15px] sm:text-base font-medium leading-snug break-words">
                                 {bullet}
                               </span>
                             </div>

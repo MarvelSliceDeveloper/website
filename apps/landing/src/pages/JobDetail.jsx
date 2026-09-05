@@ -205,7 +205,6 @@ export default function JobDetail() {
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
     if (!form.position.trim()) errs.position = 'Position is required';
-    if (!form.category) errs.category = 'Please select a category';
     if (!form.description.trim()) errs.description = 'Description is required';
     if (!file) errs.file = 'Resume is required';
     else {
@@ -326,12 +325,13 @@ export default function JobDetail() {
             </Link>
           </Reveal>
 
-          <Reveal>
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-dark-navy tracking-tight leading-tight mt-1 mb-5">
+          <Reveal className="text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-dark-navy tracking-tight leading-tight mt-1 text-center">
               {job.title}
             </h1>
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-5 mx-auto" />
 
-            {/* Quick Metadata Row with Apply Now Button on the Right */}
+            {/* Quick Metadata Row */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-t border-slate-200/80 pt-5 mt-2">
               <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-slate-600">
                 {(job.division || job.department) && (
@@ -376,18 +376,6 @@ export default function JobDetail() {
                     <span className="text-slate-600">{job.duration}</span>
                   </div>
                 )}
-              </div>
-
-              {/* Brand Apply Now Button on the Right */}
-              <div className="shrink-0 pt-1 lg:pt-0">
-                <button
-                  type="button"
-                  onClick={openApplyModal}
-                  className="inline-flex items-center gap-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm sm:text-base py-3 px-8 rounded-full shadow-md hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
-                >
-                  <span>Apply Now</span>
-                  <FiArrowRight className="w-4.5 h-4.5" />
-                </button>
               </div>
             </div>
           </Reveal>
@@ -586,11 +574,11 @@ export default function JobDetail() {
             className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto border border-gray-100"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative">
-              <button onClick={() => setShowForm(false)} className="absolute top-3.5 right-3.5 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
+            <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
+              <button onClick={() => setShowForm(false)} className="absolute top-3.5 right-3.5 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
                 <FiX className="w-4 h-4 text-red-600" />
               </button>
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight pr-10">
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
                 {job.title}
               </h3>
             </div>
@@ -630,13 +618,8 @@ export default function JobDetail() {
                     <input name="phone" type="tel" value={form.phone} onChange={handleChange}
                       className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.phone ? 'border-red-300' : 'border-slate-200'}`} placeholder="+1 234 567 890" />
                   </Field>
-                  <Field label="Position" required error={errors.position}>
-                    <input name="position" value={form.position} readOnly
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
-                  </Field>
-                  <Field label="Category" required error={errors.category}>
-                    <input name="category" value={form.category} readOnly
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
+                  <Field label="Position">
+                    <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
                   </Field>
                   <div className="sm:col-span-2">
                     <Field label="Description" required error={errors.description}>
@@ -686,7 +669,7 @@ export default function JobDetail() {
                   <div className="sm:col-span-2 pt-1">
                     <button type="submit" disabled={submitting || uploading}
                       className="w-fit mx-auto bg-brand-blue hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                      {uploading ? 'Uploading...' : submitting ? 'Submitting...' : <><FiSend className="w-4 h-4" /> Submit Application</>}
+                      {uploading ? 'Uploading...' : submitting ? 'Submitting...' : <><FiSend className="w-4 h-4" /> Submit</>}
                     </button>
                   </div>
                 </div>
