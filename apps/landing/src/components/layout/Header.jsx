@@ -21,8 +21,6 @@ export const topNav = [
   { label: 'Contact', path: '/contact' },
 ];
 
-<<<<<<< HEAD
-=======
 const subNavItems = [
   { label: 'Aptitude', path: '/aptitude' },
   { label: 'Reasoning', path: '/reasoning' },
@@ -195,7 +193,6 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
   );
 }
 
->>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
@@ -247,15 +244,9 @@ export default function Header() {
   ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   return (
-<<<<<<< HEAD
-    <header className="bg-white sticky top-0 z-50" style={{ boxShadow: '0 15px 35px rgba(0, 0, 0, 0.15)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[60px] lg:h-[68px]">
-        <Link to="/" className="flex items-center gap-3 shrink-0">
-=======
     <header className="bg-white border-b border-gray-100 relative">
       <div className="w-full px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
->>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
           {settings?.logo_url && (
             <img
               src={settings.logo_url}
@@ -288,11 +279,8 @@ export default function Header() {
         </button>
       </div>
 
-<<<<<<< HEAD
-=======
       {isBankingPage && <SubHeaderMenu currentPath={pathname} />}
 
->>>>>>> cd1a8d7b2d7680b743ee49d5731688dfa2c7be65
       <AnimatePresence>
         {mobileOpen && (
           <>
