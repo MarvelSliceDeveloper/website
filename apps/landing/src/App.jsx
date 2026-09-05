@@ -21,6 +21,7 @@ import Contact from './pages/Contact';
 import ServicesPage from './pages/ServicesPage';
 import LegalPage from './pages/LegalPage';
 import Banking from './pages/Banking';
+import BankingV2 from './pages/BankingV2';
 import Aptitude from './pages/Aptitude';
 import Reasoning from './pages/Reasoning';
 import English from './pages/English';
