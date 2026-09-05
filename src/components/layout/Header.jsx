@@ -12,24 +12,7 @@ export const topNav = [
   {
     label: 'Competitive Exam',
     children: [
-      {
-        label: 'Banking',
-        children: [
-          { label: 'About Banking', path: '/banking' },
-          { label: 'Aptitude', path: '/aptitude' },
-          { label: 'Reasoning', path: '/reasoning' },
-          { label: 'English', path: '/english' },
-          { label: 'Banking Awareness', path: '/banking-awareness' },
-          {
-            label: 'Affairs',
-            children: [
-              { label: 'Current Affairs', path: '/current-affairs' },
-              { label: "Today's Affairs", path: '/todays-affairs' },
-            ],
-          },
-          { label: 'Mock Exam', path: '/mock-exam' },
-        ],
-      },
+      { label: 'Banking', path: '/banking' },
     ],
   },
   { label: 'Services', path: '/services' },
@@ -48,7 +31,7 @@ const subNavItems = [
     path: '/current-affairs',
     children: [
       { label: 'Current Affairs', path: '/current-affairs' },
-      { label: "Today's Affairs", path: '/todays-affairs' },
+      { label: "Today's Affairs", path: '/current-affairs?filter=today' },
     ],
   },
   { label: 'Mock Exam', path: '/mock-exam' },
@@ -72,10 +55,10 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
 
   return (
     <div className="bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <nav
           role="menubar"
-          className="flex items-center justify-start lg:justify-center gap-1 sm:gap-2.5 py-1.5 overflow-x-auto lg:overflow-visible no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
+          className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto lg:overflow-visible no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
         >
           <Link
             to="/aptitude"
@@ -142,11 +125,6 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
               }`}
             >
               <span>Affairs</span>
-              <FiChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  affairsOpen ? 'rotate-180' : ''
-                }`}
-              />
             </button>
 
             <AnimatePresence>
@@ -263,30 +241,42 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
+  const isBankingPage = [
+    '/banking',
+    '/bankingv2',
+    '/aptitude',
+    '/reasoning',
+    '/english',
+    '/banking-awareness',
+    '/current-affairs',
+    '/todays-affairs',
+    '/mock-exam'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+
   return (
-    <header
-      className={`bg-white transition-all duration-300 ${
-        scrolled
-          ? 'shadow-[0_12px_30px_rgba(0,0,0,0.14)] border-b border-gray-100'
-          : 'shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-[60px] lg:h-[68px]">
-        <Link to="/" className="flex items-center gap-3 shrink-0">
+    <header className="bg-white border-b border-gray-100 relative">
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2.5">
           {settings?.logo_url && (
-            <img src={settings.logo_url} alt="Marvel Slice" className="h-10 lg:h-14 w-auto object-contain" />
+            <img
+              src={settings.logo_url}
+              alt="Marvel Slice Logo"
+              className="h-9 sm:h-10 w-auto object-contain"
+            />
           )}
-          <span className="text-xl lg:text-2xl font-extrabold text-brand-blue">
-            Marvel <span className="text-brand-orange">Slice</span>
+          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
+            MARVEL<span className="text-brand-orange">SLICE</span>
           </span>
         </Link>
 
+        {/* Desktop Nav Items */}
         <div className="hidden lg:flex items-center">
           <NavDropdown items={topNav} currentPath={pathname} />
         </div>
 
+        {/* Mobile Hamburger Toggle Button */}
         <button
-          ref={hamburgerBtnRef}
+          type="button"
           className="lg:hidden p-2.5 -mr-2 text-gray-900 rounded-md hover:bg-gray-100 transition-colors cursor-pointer z-50"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
@@ -299,7 +289,7 @@ export default function Header() {
         </button>
       </div>
 
-      {pathname === '/bankingv2' && <SubHeaderMenu currentPath={pathname} />}
+      {isBankingPage && <SubHeaderMenu currentPath={pathname} />}
 
       <AnimatePresence>
         {mobileOpen && (

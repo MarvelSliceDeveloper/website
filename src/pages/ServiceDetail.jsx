@@ -910,13 +910,14 @@ export default function ServiceDetail() {
           onClick={() => setEnquiryOpen(false)}
         >
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900">Enquire Now</h2>
+            <div className="px-6 pt-6 pb-4 border-b border-gray-100 relative text-center flex flex-col items-center justify-center">
+              <h2 className="text-lg font-bold text-gray-900 text-center">Enquire Now</h2>
               <button
                 onClick={() => setEnquiryOpen(false)}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                aria-label="Close modal"
               >
-                <FiX className="w-5 h-5 text-gray-400" />
+                <FiX className="w-4 h-4 text-red-600" />
               </button>
             </div>
             {enquiryDone ? (

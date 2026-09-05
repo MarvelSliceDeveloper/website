@@ -620,10 +620,10 @@ export default function CourseDetail() {
         {showInterest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowInterest(false)}>
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">Register Your Interest</h2>
-                <button onClick={() => setShowInterest(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-                  <FiX className="w-5 h-5 text-gray-400" />
+              <div className="px-6 pt-6 pb-4 border-b border-gray-100 relative text-center flex flex-col items-center justify-center">
+                <h2 className="text-lg font-bold text-gray-900 text-center">Register Your Interest</h2>
+                <button onClick={() => setShowInterest(false)} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
               {interestDone ? (
@@ -761,17 +761,28 @@ export default function CourseDetail() {
       {/* Related Courses */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex flex-row items-center justify-between gap-4 mb-8">
             <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">More Courses You Might Like</Reveal>
             <Link
               to="/courses"
-              className="inline-flex items-center gap-2 bg-brand-orange text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
+              className="hidden sm:inline-flex items-center gap-2 bg-brand-orange text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
           <RelatedCoursesWithId courseId={course.id} />
+
+          {/* Mobile Only: Explore All Courses button below cards */}
+          <div className="mt-8 flex justify-center sm:hidden">
+            <Link
+              to="/courses"
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-xs px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm active:scale-95 transition-all cursor-pointer w-auto text-center group"
+            >
+              <span>Explore All Courses</span>
+              <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -880,9 +891,9 @@ export default function CourseDetail() {
               className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto cursor-default"
               onClick={e => e.stopPropagation()}
             >
-              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl flex items-start justify-between relative">
-                <div className="pr-4 min-w-0">
-                  <h2 className="text-lg sm:text-xl font-extrabold !text-white leading-snug" style={{ color: '#ffffff' }}>Enquire Now</h2>
+              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <h2 className="text-lg sm:text-xl font-extrabold !text-white leading-snug text-center" style={{ color: '#ffffff' }}>Enquire Now</h2>
                   <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-dark-navy text-[11px] sm:text-xs font-semibold shadow-2xs max-w-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-blue shrink-0"></span>
                     <span className="truncate">{course.title}</span>
@@ -890,10 +901,10 @@ export default function CourseDetail() {
                 </div>
                 <button
                   onClick={() => setShowEnquiry(false)}
-                  className="p-1 rounded-full bg-black/15 hover:bg-black/25 text-white transition-colors cursor-pointer shrink-0 mt-0.5"
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
                   aria-label="Close modal"
                 >
-                  <FiX className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
 
@@ -1007,21 +1018,21 @@ export default function CourseDetail() {
               {/* Close Button */}
               <button
                 onClick={() => setShowChoicePopup(false)}
-                className="absolute top-4.5 right-4.5 w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-all cursor-pointer"
+                className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
                 aria-label="Close modal"
               >
-                <FiX className="w-4.5 h-4.5 stroke-[2.5]" />
+                <FiX className="w-4 h-4 text-red-600" />
               </button>
 
               {/* Header Info */}
-              <div className="mb-6">
+              <div className="mb-6 text-center flex flex-col items-center">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3.5 border border-emerald-100">
                   <FiZap className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight text-center">
                   How would you like to proceed?
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed text-center">
                   Select an option for <span className="font-semibold text-slate-800">{course?.title}</span>
                 </p>
               </div>

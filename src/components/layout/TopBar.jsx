@@ -15,7 +15,7 @@ export default function TopBar() {
 
   return (
     <div className="hidden lg:block bg-brand-blue text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
+      <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
         <div className="flex items-center gap-4">
           {email && (
             <a

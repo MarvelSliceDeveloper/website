@@ -189,15 +189,6 @@ export default function MockExam() {
         {/* HERO SECTION */}
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <button
-              type="button"
-              onClick={handleBackNavigation}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-orange transition-colors mb-6 cursor-pointer group"
-            >
-              <FiArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-orange transition-transform group-hover:-translate-x-0.5" />
-              <span>Back</span>
-            </button>
-
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
                 <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
@@ -350,16 +341,16 @@ export default function MockExam() {
               className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-brand-blue px-6 py-5 text-white relative">
+              <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
                 <button
                   onClick={closeApplyModal}
-                  className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 p-1.5 rounded-full text-white transition-colors cursor-pointer"
-                  aria-label="Close"
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                  aria-label="Close modal"
                 >
-                  <FiX className="w-4 h-4" />
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
-                <h3 className="text-lg font-bold text-white">Enroll for Mock Exam Series</h3>
-                <p className="text-xs text-white/80 mt-0.5">{selectedTopic}</p>
+                <h3 className="text-lg font-bold text-white text-center">Enroll for Mock Exam Series</h3>
+                <p className="text-xs text-white/80 mt-0.5 text-center">{selectedTopic}</p>
               </div>
 
               {isSubmitted ? (

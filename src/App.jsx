@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, useParams, Navigate } from '
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import TopBar from './components/layout/TopBar';
 import Header from './components/layout/Header';
+import BankingHeader from './components/layout/BankingHeader';
 import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import FloatingContactButton from './components/FloatingContactButton';
@@ -110,14 +111,14 @@ function AnimatedRoutes() {
       <Route path="/career/jobs" element={<Navigate to="/career" replace />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/banking" element={<Banking />} />
+      <Route path="/banking" element={<BankingV2 />} />
       <Route path="/bankingv2" element={<BankingV2 />} />
       <Route path="/aptitude" element={<Aptitude />} />
       <Route path="/reasoning" element={<Reasoning />} />
       <Route path="/english" element={<English />} />
       <Route path="/banking-awareness" element={<BankingAwareness />} />
       <Route path="/current-affairs" element={<CurrentAffairs />} />
-      <Route path="/todays-affairs" element={<CurrentAffairs isTodayOnly={true} />} />
+      <Route path="/todays-affairs" element={<Navigate to="/current-affairs?filter=today" replace />} />
       <Route path="/current-affairs/:id" element={<CurrentAffairsDetail />} />
       <Route path="/mock-exam" element={<MockExam />} />
       <Route path="/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
@@ -149,17 +150,33 @@ function AnimatedRoutes() {
 
 function PublicLayout() {
   const { pathname } = useLocation();
-  const isV2Page = pathname === '/bankingv2';
+  const isBankingPage = [
+    '/banking',
+    '/bankingv2',
+    '/aptitude',
+    '/reasoning',
+    '/english',
+    '/banking-awareness',
+    '/current-affairs',
+    '/todays-affairs',
+    '/mock-exam'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-full relative">
       <ScrollToTop />
       <PageTracker />
       <div className="fixed top-0 left-0 right-0 z-50 w-full">
-        <TopBar />
-        <Header />
+        {isBankingPage ? (
+          <BankingHeader />
+        ) : (
+          <>
+            <TopBar />
+            <Header />
+          </>
+        )}
       </div>
-      <main className={`flex-1 w-full max-w-full overflow-x-hidden ${isV2Page ? 'pt-[96px] lg:pt-[140px]' : 'pt-[60px] lg:pt-[104px]'}`}>
+      <main className={`flex-1 w-full max-w-full overflow-x-hidden ${isBankingPage ? 'pt-[124px] sm:pt-[130px] lg:pt-[136px]' : 'pt-[60px] lg:pt-[104px]'}`}>
         <AnimatedRoutes />
       </main>
       <Footer />

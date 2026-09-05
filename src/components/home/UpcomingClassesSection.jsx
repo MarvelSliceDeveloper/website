@@ -307,12 +307,12 @@ export default function UpcomingClassesSection({ section }) {
                 </div>
               ) : (
                 <>
-                  <div className="px-6 py-5 bg-[#1E56C7] rounded-t-2xl flex items-start justify-between relative">
-                    <div className="pr-4">
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+                  <div className="px-6 py-5 bg-[#1E56C7] rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
                         {selectedClass.course_name}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
                         {selectedClass.batch && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/15 text-white text-xs font-semibold">
                             <FiCalendar className="w-3.5 h-3.5 text-brand-orange" />
@@ -329,10 +329,10 @@ export default function UpcomingClassesSection({ section }) {
                     </div>
                     <button
                       onClick={closeModal}
-                      className="p-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"
-                      aria-label="Close"
+                      className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                      aria-label="Close modal"
                     >
-                      <FiX className="w-5 h-5 text-white" />
+                      <FiX className="w-4 h-4 text-red-600" />
                     </button>
                   </div>
                   <form onSubmit={handleSubmit} className="p-6 space-y-3">

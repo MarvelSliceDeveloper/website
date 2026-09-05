@@ -85,7 +85,7 @@ function buildDefaultFormConfig() {
     enabled: true,
     heading: 'Apply Now',
     description: "Fill out the form below and we'll get back to you.",
-    cta: { text: 'Submit Application', variant: 'accent' },
+    cta: { text: 'Submit', variant: 'accent' },
     fields: Object.fromEntries(
       Object.entries(FORM_FIELD_DEFAULTS).map(([k, v]) => [k, { label: v.label, enabled: v.enabled, required: v.required, placeholder: v.placeholder, options: v.options || null }])
     ),

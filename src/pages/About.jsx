@@ -76,13 +76,11 @@ export default function About() {
         </Reveal>
       )}
 
-      <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 sm:pb-12 text-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-dark-navy tracking-tight">{data.heading || 'About Us'}</h1>
-          <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
-        </div>
-        {data.subheading && <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>}
-      </Reveal>
+      {data.subheading && (
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6 text-center">
+          <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>
+        </Reveal>
+      )}
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
         <Reveal key={i} variant="up" className={`py-10 sm:py-16 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>

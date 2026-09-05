@@ -115,7 +115,18 @@ export default function CourseHero({
               </p>
             )}
 
-            {/* Dynamic Course Points */}
+            {/* Mobile Only: Video directly below description paragraph and above keys */}
+            <div className="lg:hidden w-full mt-5">
+              <VideoVisual
+                embedUrl={embedUrl}
+                videoPlaying={videoPlaying}
+                setVideoPlaying={setVideoPlaying}
+                trackVideoPlay={trackVideoPlay}
+                course={course}
+              />
+            </div>
+
+            {/* Dynamic Course Points (Keys) */}
             {points.length > 0 && (
               <div className="mt-5 lg:mt-6 w-full max-w-[600px]">
                 <div className="grid grid-cols-2 lg:block lg:space-y-2.5 gap-2.5 sm:gap-3.5 text-left">
@@ -131,19 +142,8 @@ export default function CourseHero({
               </div>
             )}
 
-            {/* Mobile Only: Video directly after description and text */}
-            <div className="lg:hidden w-full mt-6">
-              <VideoVisual
-                embedUrl={embedUrl}
-                videoPlaying={videoPlaying}
-                setVideoPlaying={setVideoPlaying}
-                trackVideoPlay={trackVideoPlay}
-                course={course}
-              />
-            </div>
-
-            {/* Mobile CTA Buttons: 2-in-1 line side-by-side below video */}
-            <div className="flex lg:hidden flex-row items-center justify-center gap-2.5 sm:gap-3 mt-6 w-full max-w-md mx-auto">
+            {/* Mobile CTA Buttons: Compact 2-in-1 line side-by-side below video */}
+            <div className="flex lg:hidden flex-row items-center justify-center gap-2 sm:gap-3 mt-4 w-full max-w-sm mx-auto">
               <button
                 type="button"
                 onClick={() => {
@@ -153,7 +153,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
                   }
                 }}
-                className="flex-1 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-[10px] sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
               >
                 {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
@@ -161,7 +161,7 @@ export default function CourseHero({
               <button
                 type="button"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="flex-1 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-[10px] sm:text-sm rounded-full shadow-md active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
               >
                 {course.cta_right || 'Download Brochure'}
               </button>

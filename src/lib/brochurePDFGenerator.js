@@ -128,15 +128,10 @@ export async function generate12PageCourseBrochurePDF(course, siteSettings = {})
     }
 
     // Left Title Block
-    pdf.setFontSize(13);
+    pdf.setFontSize(9.5);
     pdf.setFont('Helvetica', 'bold');
     setText(COLOR_PRIMARY_NAVY);
-    pdf.text('Marvel Slice', textStartX, headerY + 4.5);
-
-    pdf.setFontSize(6.5);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_BRAND_ORANGE);
-    pdf.text('INSTITUTE FOR SOFTWARE LEARNING AND COMPETITIVE EXAMS', textStartX, headerY + 8.5);
+    pdf.text('Marvel Slice : Institute for Software Learning and Competitive Exams', textStartX, headerY + 6.5, { maxWidth: pageW - margin - textStartX - 70 });
 
     // Right Contact Block
     pdf.setFontSize(7);
@@ -375,7 +370,7 @@ export async function generate12PageCourseBrochurePDF(course, siteSettings = {})
   function renderFrontCover() {
     drawCornerTag();
 
-    const bannerH = 74;
+    const bannerH = 32;
 
     // Top Dark Blue Header Banner
     setFill(COLOR_PRIMARY_NAVY);
@@ -383,101 +378,42 @@ export async function generate12PageCourseBrochurePDF(course, siteSettings = {})
 
     // Accent Gold curve accent
     setFill(COLOR_ACCENT_GOLD);
-    pdf.rect(0, bannerH - 3, pageW, 3, 'F');
+    pdf.rect(0, bannerH - 2.5, pageW, 2.5, 'F');
 
-    // Central Circular Logo Badge (Vertically Centered in Banner)
-    const badgeX = pageW - margin - 22;
-    const badgeY = bannerH / 2;
-    const badgeR = 23;
-
-    // Outer Glow Ring
-    setFill(COLOR_ACCENT_GOLD);
-    pdf.circle(badgeX, badgeY, badgeR + 1.5, 'F');
-
-    // Inner White Badge
-    setFill(COLOR_WHITE);
-    pdf.circle(badgeX, badgeY, badgeR, 'F');
-
-    // Brand Logo scaled to properly fill the circular badge
+    // Draw Logo & Brand Text in Header Banner
+    let textX = margin;
     if (logoInfo?.dataUrl) {
       try {
-        const ratio = (logoInfo.w || 1) / (logoInfo.h || 1);
-        let drawW = 36;
-        let drawH = drawW / ratio;
-        if (drawH > 32) {
-          drawH = 32;
-          drawW = drawH * ratio;
-        }
-        pdf.addImage(logoInfo.dataUrl, 'PNG', badgeX - drawW / 2, badgeY - drawH / 2, drawW, drawH);
+        const logoH = 16;
+        const logoW = Math.min(36, (logoInfo.w / logoInfo.h) * logoH);
+        const logoY = (bannerH - 2.5 - logoH) / 2;
+        pdf.addImage(logoInfo.dataUrl, 'PNG', margin, logoY, logoW, logoH);
+        textX = margin + logoW + 5;
       } catch {
-        pdf.setFontSize(13);
-        pdf.setFont('Helvetica', 'bold');
-        setText(COLOR_PRIMARY_NAVY);
-        pdf.text('MARVEL', badgeX, badgeY - 2, { align: 'center' });
-        setText(COLOR_BRAND_ORANGE);
-        pdf.text('SLICE', badgeX, badgeY + 5, { align: 'center' });
+        textX = margin;
       }
-    } else {
-      pdf.setFontSize(13);
-      pdf.setFont('Helvetica', 'bold');
-      setText(COLOR_PRIMARY_NAVY);
-      pdf.text('MARVEL', badgeX, badgeY - 2, { align: 'center' });
-      setText(COLOR_BRAND_ORANGE);
-      pdf.text('SLICE', badgeX, badgeY + 5, { align: 'center' });
     }
 
-    // Institute Authority Header (Aligned on Left)
-    const textMaxW = badgeX - badgeR - margin - 6;
-
-    pdf.setFontSize(15.5);
+    pdf.setFontSize(12);
     pdf.setFont('Helvetica', 'bold');
     setText(COLOR_WHITE);
-    pdf.text('Leading Software & IT Training Institute', margin, 24, { maxWidth: textMaxW });
-
-    pdf.setFontSize(8);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('INSTITUTE FOR SOFTWARE LEARNING AND COMPETITIVE EXAMS', margin, 33, { maxWidth: textMaxW });
-
-    pdf.setFontSize(8);
-    pdf.setFont('Helvetica', 'normal');
-    setText([224, 231, 255]);
-    pdf.text('20+ Years of Excellence in IT Training & Career Transformations', margin, 41, { maxWidth: textMaxW });
-
-    // Official curriculum badge inside banner
-    setFill([18, 55, 128]);
-    setStroke([35, 78, 160]);
-    pdf.setLineWidth(0.4);
-    pdf.roundedRect(margin, 48, 80, 7, 1.5, 1.5, 'FD');
-    pdf.setFontSize(7);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('ACCREDITED PROFESSIONAL CAREER PROGRAM', margin + 4, 52.8);
+    pdf.text('Marvel Slice : Institute for Software Learning and Competitive Exams', textX, (bannerH - 2.5) / 2 + 2, { maxWidth: pageW - margin - textX });
 
     // Main Course Title Section
-    cursorY = 88;
+    cursorY = bannerH + 20;
 
     pdf.setFontSize(9);
     pdf.setFont('Helvetica', 'bold');
     setText(COLOR_BRAND_ORANGE);
     pdf.text('OFFICIAL CURRICULUM & CAREER SPECIFICATION', margin, cursorY);
-    cursorY += 6;
+    cursorY += 7;
 
-    pdf.setFontSize(18);
+    pdf.setFontSize(22);
     pdf.setFont('Helvetica', 'bold');
     setText(COLOR_PRIMARY_NAVY);
-    const titleLines = pdf.splitTextToSize(sanitize(data.meta.title), contentW - 20);
+    const titleLines = pdf.splitTextToSize(sanitize(data.meta.title), contentW);
     pdf.text(titleLines, margin, cursorY);
-    cursorY += titleLines.length * 7 + 2;
-
-    if (data.meta.subtitle) {
-      pdf.setFontSize(9.5);
-      pdf.setFont('Helvetica', 'normal');
-      setText(COLOR_ROYAL_BLUE);
-      const subLines = pdf.splitTextToSize(sanitize(data.meta.subtitle), contentW);
-      pdf.text(subLines, margin, cursorY);
-      cursorY += subLines.length * 4.5 + 4;
-    }
+    cursorY += titleLines.length * 8.5 + 8;
 
     // Meta Pill Tags (Duration, Mode, Placement)
     const tagY = cursorY;
@@ -489,124 +425,26 @@ export async function generate12PageCourseBrochurePDF(course, siteSettings = {})
 
     let curTagX = margin;
     tags.forEach(tag => {
-      const w = pdf.getTextWidth(tag) + 8;
+      const w = pdf.getTextWidth(tag) + 10;
       setFill(COLOR_BLUE_TINT);
       setStroke(COLOR_ROYAL_BLUE);
       pdf.setLineWidth(0.4);
-      pdf.roundedRect(curTagX, tagY, w, 6.5, 1.5, 1.5, 'FD');
+      pdf.roundedRect(curTagX, tagY, w, 7.5, 1.5, 1.5, 'FD');
 
-      pdf.setFontSize(7.5);
+      pdf.setFontSize(8);
       pdf.setFont('Helvetica', 'bold');
       setText(COLOR_ROYAL_BLUE);
-      pdf.text(tag, curTagX + 4, tagY + 4.5);
-      curTagX += w + 4;
+      pdf.text(tag, curTagX + 5, tagY + 5.2);
+      curTagX += w + 5;
     });
 
-    cursorY += 14;
-
-    // Authority Metrics 3-Pillar Card (Navy Container matching reference)
-    const cardY = cursorY;
-    const cardH = 26;
-
-    setFill(COLOR_PRIMARY_NAVY);
-    pdf.roundedRect(margin, cardY, contentW, cardH, 4, 4, 'F');
-
-    const colW = contentW / 3;
-
-    // Metric 1
-    pdf.setFontSize(12);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('20+ Years', margin + colW * 0.5, cardY + 9, { align: 'center' });
-    pdf.setFontSize(7.5);
-    pdf.setFont('Helvetica', 'normal');
-    setText(COLOR_WHITE);
-    pdf.text('Experience in Training & Placements', margin + colW * 0.5, cardY + 16, { align: 'center', maxWidth: colW - 6 });
-
-    // Divider Line 1
-    setStroke([50, 80, 140]);
-    pdf.setLineWidth(0.4);
-    pdf.line(margin + colW, cardY + 4, margin + colW, cardY + cardH - 4);
-
-    // Metric 2
-    pdf.setFontSize(12);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('1.5 Lakh+', margin + colW * 1.5, cardY + 9, { align: 'center' });
-    pdf.setFontSize(7.5);
-    pdf.setFont('Helvetica', 'normal');
-    setText(COLOR_WHITE);
-    pdf.text('Happy & Successful Learners', margin + colW * 1.5, cardY + 16, { align: 'center', maxWidth: colW - 6 });
-
-    // Divider Line 2
-    pdf.line(margin + colW * 2, cardY + 4, margin + colW * 2, cardY + cardH - 4);
-
-    // Metric 3
-    pdf.setFontSize(12);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('90,000+', margin + colW * 2.5, cardY + 9, { align: 'center' });
-    pdf.setFontSize(7.5);
-    pdf.setFont('Helvetica', 'normal');
-    setText(COLOR_WHITE);
-    pdf.text('Successful IT Placements', margin + colW * 2.5, cardY + 16, { align: 'center', maxWidth: colW - 6 });
-
-    cursorY += cardH + 10;
-
-    // Authorized Training & Certification Partner for Top Brands
-    pdf.setFontSize(9);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_PRIMARY_NAVY);
-    pdf.text('Authorized Training & Certification Partner for Top Brands', margin, cursorY);
-    cursorY += 5;
-
-    // Partner Brand Badges Box
-    const brandsBoxH = 34;
-    setFill(COLOR_LIGHT_BG);
-    setStroke(COLOR_BORDER);
-    pdf.setLineWidth(0.5);
-    pdf.roundedRect(margin, cursorY, contentW, brandsBoxH, 3, 3, 'FD');
-
-    const partnerBrands = [
-      ['IBM', 'Microsoft', 'Meta', 'Unity', 'Cisco'],
-      ['Autodesk', 'Adobe', 'Apple', 'AWS', 'Google Cloud']
-    ];
-
-    let brandY = cursorY + 10;
-    partnerBrands.forEach(row => {
-      const bColW = contentW / row.length;
-      row.forEach((bName, bIdx) => {
-        const bX = margin + bColW * bIdx + bColW / 2;
-        pdf.setFontSize(9);
-        pdf.setFont('Helvetica', 'bold');
-        setText(COLOR_TEXT_BODY);
-        pdf.text(bName, bX, brandY, { align: 'center' });
-      });
-      brandY += 13;
-    });
-
-    // Bottom Footer Banner
-    const footH = 14;
-    setFill(COLOR_PRIMARY_NAVY);
-    pdf.rect(0, pageH - footH, pageW, footH, 'F');
-
-    pdf.setFontSize(7.5);
-    pdf.setFont('Helvetica', 'bold');
-    setText(COLOR_ACCENT_GOLD);
-    pdf.text('Marvel Slice Institute for Software Learning and Competitive Exams', margin, pageH - 6.5);
-
-    setText(COLOR_WHITE);
-    pdf.text('www.marvelslice.com | +91 63809 57390', pageW - margin, pageH - 6.5, { align: 'right' });
+    cursorY = tagY + 14;
   }
 
   // =========================================================================
-  // PAGE 2: TARGET AUDIENCE ("Who Can Take Up This Program?")
+  // TARGET AUDIENCE ("Who Can Take Up This Program?")
   // =========================================================================
   function renderTargetAudience() {
-    pdf.addPage();
-    drawPageHeader();
-    cursorY = 28;
-
     addSectionHeading('Who Can Take Up Our Services & Programs?', 'Tailored Learning Tracks for Every Stage of Your Career');
 
     addParagraph(
@@ -993,9 +831,6 @@ export async function generate12PageCourseBrochurePDF(course, siteSettings = {})
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
-
-    // Skip footer on cover page 1
-    if (i === 1) continue;
 
     const footY = pageH - 8;
 
