@@ -21,6 +21,15 @@ export function getRazorpayInstance() {
   });
 }
 
+export async function createRazorpayOrder(amount: number, currency = "INR", receipt?: string) {
+  const razorpay = getRazorpayInstance();
+  return razorpay.orders.create({
+    amount,
+    currency,
+    receipt: receipt || `rcpt_${Date.now().toString(36)}`,
+  });
+}
+
 /**
  * Verifies Razorpay payment signature using HMAC-SHA256.
  *
@@ -252,7 +261,7 @@ export const paymentService = {
         email: payment.user?.email || "",
         invoice: {
           paymentId: payment.id,
-          packageName: payment.package.name,
+          packageName: payment.package!.name,
           amount: payment.amount,
           discountAmount: payment.discountAmount,
           orderId: razorpayOrderId,
@@ -275,7 +284,7 @@ export const paymentService = {
 
     return {
       paymentId: payment.id,
-      packageId: payment.packageId,
+      packageId: payment.packageId!,
       userId: payment.userId,
       amount: payment.amount,
     };
@@ -346,7 +355,7 @@ export const paymentService = {
           credentials: { email: email.toLowerCase(), password: dummyPassword },
           invoice: {
             paymentId: payment.id,
-            packageName: payment.package.name,
+            packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
           },
@@ -369,7 +378,7 @@ export const paymentService = {
           credentials: { email: email.toLowerCase(), password: dummyPassword },
           invoice: {
             paymentId: payment.id,
-            packageName: payment.package.name,
+            packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
           },
@@ -386,7 +395,7 @@ export const paymentService = {
     const enrollment = await prisma.packageEnrollment.create({
       data: {
         userId: user.id,
-        packageId: payment.packageId,
+        packageId: payment.packageId!,
         paymentId: payment.id,
         status: "APPROVED",
       },
@@ -399,7 +408,7 @@ export const paymentService = {
 
     const courseIds = batch?.courseId
       ? [batch.courseId]
-      : payment.package.courses.map((pc) => pc.courseId);
+      : payment.package!.courses.map((pc) => pc.courseId);
 
     for (const courseId of courseIds) {
       await prisma.packageEnrollmentCourse.create({
@@ -452,7 +461,7 @@ export const paymentService = {
           credentials: { email: email.toLowerCase(), password: dummyPassword },
           invoice: {
             paymentId: payment.id,
-            packageName: payment.package.name,
+            packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
           },
@@ -475,7 +484,7 @@ export const paymentService = {
           credentials: { email: email.toLowerCase(), password: dummyPassword },
           invoice: {
             paymentId: payment.id,
-            packageName: payment.package.name,
+            packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
           },
@@ -492,7 +501,7 @@ export const paymentService = {
     const enrollment = await prisma.packageEnrollment.create({
       data: {
         userId: user.id,
-        packageId: payment.packageId,
+        packageId: payment.packageId!,
         paymentId: payment.id,
         status: "PENDING",
       },
@@ -534,7 +543,7 @@ export const paymentService = {
       id: p.id,
       studentName: p.user.name,
       studentEmail: p.user.email,
-      packageName: p.package.name,
+      packageName: p.package!.name,
       amount: p.amount,
       currency: p.currency,
       status: p.status,

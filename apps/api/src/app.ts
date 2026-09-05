@@ -20,6 +20,7 @@ import { webhookRouter } from "./modules/calendar/webhook.routes";
 import { sessionRouter } from "./modules/sessions/session.routes";
 import { recordingRouter } from "./modules/recordings/recording.routes";
 import { courseRouter } from "./modules/courses/course.routes";
+import { catalogueRouter } from "./modules/courses/catalogue.routes";
 import { batchRouter } from "./modules/batches/batch.routes";
 import { studentBatchRouter } from "./modules/batches/student-batch.routes";
 import { userRouter } from "./modules/users/user.routes";
@@ -199,6 +200,7 @@ const csrfExemptPaths = [
   "/api/payments/batches",
   "/api/coupons/validate",
   "/api/interns/apply",
+  "/api/courses/catalogue",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -327,6 +329,7 @@ app.get("/api/maintenance-status", async (_req: Request, res: Response) => {
 app.use("/api/public/branding", publicBrandingRouter);
 app.use("/api/pages", publicStaticPagesRouter);
 app.use("/api/interns", internRouter);
+app.use("/api/courses/catalogue", catalogueRouter);
 
 // ── Protected routes ──
 app.use("/api/calendar", calendarRouter);

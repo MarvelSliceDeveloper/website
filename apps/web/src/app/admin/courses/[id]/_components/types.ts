@@ -107,6 +107,8 @@ export type Course = {
   thumbnailUrl: string | null;
   coverImageUrl: string | null;
   publishedAt: string | null;
+  isCatalog?: boolean;
+  price?: number | null;
   modules: Module[];
   _count: { batches: number };
 };
@@ -159,4 +161,6 @@ export type CourseFormData = {
   category: string;
   tags: string[];
   learningObjectives: string[];
+  isCatalog: boolean;
+  price: string;
 };

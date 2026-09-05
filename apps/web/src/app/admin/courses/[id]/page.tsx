@@ -55,6 +55,8 @@ export default function CourseDetailPage() {
     category: "",
     tags: [],
     learningObjectives: [],
+    isCatalog: false,
+    price: "",
   });
 
   useEffect(() => {
@@ -66,6 +68,8 @@ export default function CourseDetailPage() {
         category: data.category || "",
         tags: data.tags || [],
         learningObjectives: data.learningObjectives || [],
+        isCatalog: (data as any).isCatalog ?? false,
+        price: (data as any).price != null ? String((data as any).price / 100) : "",
       });
     }
   }, [courseQuery.data]);
@@ -79,6 +83,8 @@ export default function CourseDetailPage() {
         tags: form.tags.length > 0 ? form.tags : null,
         learningObjectives:
           form.learningObjectives.length > 0 ? form.learningObjectives : null,
+        isCatalog: form.isCatalog,
+        price: form.price.trim() ? Math.round(parseFloat(form.price) * 100) : null,
       }),
     onSuccess: () => {
       toast.success("Course saved!");

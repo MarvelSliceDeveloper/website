@@ -63,7 +63,7 @@ export const studentController = {
           amount: p.amount,
           currency: p.currency,
           status: p.status,
-          packageName: p.package.name,
+          packageName: p.package!.name,
           razorpayPaymentId: p.razorpayPaymentId,
           createdAt: p.createdAt,
         })),

@@ -69,6 +69,8 @@ export default function CreateCoursePage() {
     category: "",
     tags: [] as string[],
     learningObjectives: [] as string[],
+    isCatalog: false,
+    price: "",
   });
   const [aiTopic, setAiTopic] = useState("");
   const [newObjective, setNewObjective] = useState("");
@@ -278,6 +280,8 @@ export default function CreateCoursePage() {
           category: form.category || undefined,
           tags: form.tags,
           learningObjectives: form.learningObjectives,
+          isCatalog: form.isCatalog,
+          price: form.price.trim() ? Math.round(parseFloat(form.price) * 100) : null,
           slug: form.title
             .toLowerCase()
             .replace(/\s+/g, "-")
@@ -569,6 +573,30 @@ export default function CreateCoursePage() {
             <p className="mt-1 text-xs text-muted">
               Tags auto-fill from the course title. You can add or remove them.
             </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isCatalog}
+                onChange={(e) => setForm((prev) => ({ ...prev, isCatalog: e.target.checked }))}
+                className="h-4 w-4 rounded border-border text-primary"
+              />
+              <span className="text-sm font-semibold">Catalogue course? (show on /catalogue)</span>
+            </label>
+            {form.isCatalog && (
+              <div className="flex items-center gap-2 sm:ml-auto">
+                <span className="text-sm text-muted-foreground">Price ₹</span>
+                <input
+                  type="number"
+                  value={form.price}
+                  onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+                  placeholder="1999"
+                  className="field w-32"
+                />
+              </div>
+            )}
           </div>
 
           <div>

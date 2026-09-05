@@ -13,9 +13,15 @@ export function PackageCard({ pkg }: PackageCardProps) {
   const hasPrice = pkg.price != null && pkg.price > 0;
   const isInternship = pkg.isInternship ?? false;
 
+  const firstThumb = pkg.courses?.[0]?.course?.thumbnailUrl || null;
   return (
-    <div className="rounded-xl border border-border bg-card p-6 flex flex-col transition-colors hover:border-border-hover hover:bg-card-hover">
-      <div className="flex-1">
+    <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col transition-colors hover:border-border-hover hover:shadow-lg">
+      {firstThumb ? (
+        <div className="h-36 w-full overflow-hidden bg-gradient-to-br from-primary/20 to-card">
+          <img src={firstThumb} alt={pkg.name} className="w-full h-full object-cover" />
+        </div>
+      ) : null}
+      <div className="p-6 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-foreground">{pkg.name}</h3>
           {isInternship && (
@@ -132,7 +138,7 @@ export function PackageCard({ pkg }: PackageCardProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+      <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
         <div>
           {hasPrice ? (
             <span className="text-2xl font-bold text-foreground">
@@ -142,7 +148,6 @@ export function PackageCard({ pkg }: PackageCardProps) {
             <span className="text-sm text-muted">Contact for pricing</span>
           )}
         </div>
-
         <Link
           href={`/catalogue/${pkg.slug}`}
           className={`px-5 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors inline-flex items-center justify-center ${!hasPrice ? "pointer-events-none opacity-50" : ""}`}
