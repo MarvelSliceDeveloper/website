@@ -322,6 +322,37 @@ export default function CourseDetailsTab({
         Course Details
       </h2>
 
+      {/* Catalogue toggle */}
+      <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isCatalog}
+            onChange={(e) => setForm((p) => ({ ...p, isCatalog: e.target.checked }))}
+            className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+          />
+          <span className="text-sm font-semibold text-foreground">Show in catalogue (public)</span>
+        </label>
+        {form.isCatalog && (
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <span className="text-sm text-muted-foreground">Price ₹</span>
+            <input
+              type="number"
+              min={0}
+              step={10}
+              value={form.price}
+              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              placeholder="e.g. 1999"
+              className="field w-32"
+            />
+            <span className="text-xs text-muted-foreground">empty = enquiry only</span>
+          </div>
+        )}
+      </div>
+      {form.isCatalog && (
+        <p className="text-xs text-muted-foreground -mt-2">When checked, this course appears at <code>/catalogue</code> landing grid if published. Set price to allow direct pay.</p>
+      )}
+
       {/* AI draft row */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-500/5 p-3">
         <IconSparkles size={16} className="shrink-0 text-violet-500" />

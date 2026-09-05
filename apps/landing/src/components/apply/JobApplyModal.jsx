@@ -75,7 +75,7 @@ export default function JobApplyModal({ job, onClose }) {
       setForm(prev => ({
         ...prev,
         position: job.title || '',
-        category: job._type === 'intern' ? 'Internship' : (job.type || prev.category),
+        category: job._type === 'intern' ? 'Internship' : (job.type || 'Full-time'),
       }));
       setStatus(null);
       setErrors({});
@@ -102,7 +102,6 @@ export default function JobApplyModal({ job, onClose }) {
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
     if (!form.position.trim()) errs.position = 'Position is required';
-    if (!form.category) errs.category = 'Please select a category';
     if (!form.description.trim()) errs.description = 'Description is required';
     if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     if (!file) errs.file = 'Resume is required';
@@ -191,11 +190,11 @@ export default function JobApplyModal({ job, onClose }) {
         className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
         onClick={e => e.stopPropagation()}
       >
-        <div className="bg-brand-blue px-6 py-4 text-white relative">
-          <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
+        <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+          <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
             <FiX className="w-4 h-4 text-red-600" />
           </button>
-          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10">
+          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
             Applying for: <span className="font-semibold">{job.title}</span>
           </span>
         </div>
@@ -257,29 +256,8 @@ export default function JobApplyModal({ job, onClose }) {
                     errors.phone ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder="+1 234 567 890" />
               </Field>
-              <Field label="Position" required error={errors.position}>
-                <input name="position" value={form.position} readOnly
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
-              </Field>
-              <Field label="Category" required error={errors.category}>
-                <div className="relative">
-                  {isInternship ? (
-                    <input name="category" value={form.category} readOnly
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
-                  ) : (
-                    <>
-                      <select name="category" value={form.category} onChange={handleChange}
-                        style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
-                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none ${
-                          errors.category ? 'border-red-300' : 'border-slate-200'
-                        } ${!form.category ? 'text-slate-400' : ''}`}>
-                        <option value="" disabled>Select category</option>
-                        {['Full-time', 'Part-time', 'Internship', 'Contract', 'Freelance'].map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                      <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </>
-                  )}
-                </div>
+              <Field label="Position">
+                <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
               </Field>
               <div className="sm:col-span-2">
                 <Field label="Description" required error={errors.description}>
@@ -346,7 +324,7 @@ export default function JobApplyModal({ job, onClose }) {
                   ) : submitting ? (
                     <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Submitting...</>
                   ) : (
-                    <><FiSend className="w-4 h-4" /> Submit Application</>
+                    <><FiSend className="w-4 h-4" /> Submit</>
                   )}
                 </button>
               </div>

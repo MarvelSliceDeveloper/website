@@ -11,28 +11,24 @@ export default function BrandLogo({
   className = "",
 }: BrandLogoProps) {
   const sizes = {
-    sm: { box: "h-8 w-8", img: "h-5 w-auto", text: "text-lg" },
-    md: { box: "h-10 w-10", img: "h-6 w-auto", text: "text-xl" },
-    lg: { box: "h-12 w-12", img: "h-7 w-auto", text: "text-2xl" },
+    sm: { box: "h-10 w-10", img: "h-8 w-auto", text: "text-xl" },
+    md: { box: "h-12 w-12", img: "h-10 w-auto", text: "text-2xl" },
+    lg: { box: "h-14 w-14", img: "h-12 w-auto", text: "text-3xl" },
   };
   const s = sizes[size];
 
   return (
-    <Link href="/" className={`flex items-center gap-2.5 ${className}`}>
-      <div
-        className={`${s.box} flex items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/10`}
-      >
-        <Image
-          src="/images/logo.svg"
-          alt="Marvel Slice"
-          width={32}
-          height={32}
-          className={`${s.img} object-contain`}
-        />
-      </div>
+    <Link href="/" className={`flex items-center gap-3 ${className}`}>
+      <Image
+        src="/images/logo.svg"
+        alt="Marvel Slice"
+        width={48}
+        height={48}
+        className={`${s.img} object-contain shrink-0`}
+      />
       <span className={`${s.text} font-extrabold tracking-tight`}>
-        <span className="text-primary">Marvel</span>{" "}
-        <span className="text-primary/70">Slice</span>
+        <span className="text-foreground">Marvel</span>{" "}
+        <span className="text-primary">Slice</span>
       </span>
     </Link>
   );

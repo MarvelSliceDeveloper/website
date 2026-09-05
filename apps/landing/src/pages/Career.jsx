@@ -285,7 +285,7 @@ export default function Career() {
       setForm(prev => ({
         ...prev,
         position: selectedJob.title || '',
-        category: selectedJob._type === 'intern' ? 'Internship' : (selectedJob.type || prev.category),
+        category: selectedJob._type === 'intern' ? 'Internship' : (selectedJob.type || 'Full-time'),
       }));
     }
   }, [selectedJob]);
@@ -299,7 +299,7 @@ export default function Career() {
       setForm(prev => ({
         ...prev,
         position: applyTitle,
-        category: intern ? 'Internship' : prev.category,
+        category: intern ? 'Internship' : (job?.type || 'Full-time'),
       }));
       setShowForm(true);
       setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -352,7 +352,6 @@ export default function Career() {
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
     if (!form.position.trim()) errs.position = 'Position is required';
-    if (!form.category) errs.category = 'Please select a category';
     if (!form.description.trim()) errs.description = 'Description is required';
     if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     if (!file) errs.file = 'Resume is required';
@@ -424,7 +423,7 @@ export default function Career() {
 
   function renderForm() {
     if (!formEnabled) return null;
-    const ctaText = formCfg.cta?.text || 'Submit Application';
+    const ctaText = formCfg.cta?.text || 'Submit';
 
     const fieldDefs = {
       full_name: { type: 'text', ...getFieldConfig(formCfg, 'full_name', { label: 'Full Name', enabled: true, required: true, placeholder: 'John Doe' }) },
@@ -505,33 +504,10 @@ export default function Career() {
                   }`} placeholder={fieldDefs.phone.placeholder} />
               </Field>
             )}
-            {fieldDefs.position.enabled !== false && (
-              <Field label={fieldDefs.position.label} required={fieldDefs.position.required !== false} error={errors.position}>
-                <input name="position" value={form.position} readOnly
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
-              </Field>
-            )}
 
-            {fieldDefs.category.enabled !== false && (
-              <Field label={fieldDefs.category.label} required={fieldDefs.category.required !== false} error={errors.category}>
-                <div className="relative">
-                  {isInternship ? (
-                    <input name="category" value={form.category} readOnly
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-500 text-sm cursor-not-allowed" />
-                  ) : (
-                    <>
-                      <select name="category" value={form.category} onChange={handleChange}
-                        style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
-                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none ${
-                          errors.category ? 'border-red-300' : 'border-slate-200'
-                        } ${!form.category ? 'text-slate-400' : ''}`}>
-                        <option value="" disabled>{fieldDefs.category.placeholder}</option>
-                        {(fieldDefs.category.options || []).map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                      <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </>
-                  )}
-                </div>
+            {fieldDefs.position.enabled !== false && (
+              <Field label={fieldDefs.position.label}>
+                <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
               </Field>
             )}
 
@@ -884,12 +860,12 @@ export default function Career() {
             className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-brand-blue px-6 py-4 text-white relative">
-              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
+            <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
                 <FiX className="w-4 h-4 text-red-600" />
               </button>
               {selectedJob && (
-                <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10">
+                <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
                   Applying for: <span className="font-semibold">{selectedJob.title}</span>
                 </span>
               )}

@@ -154,17 +154,17 @@ export default function FloatingContactButton() {
             role="dialog"
             aria-modal="true"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
               <button
                 type="button"
                 onClick={close}
-                aria-label="Close"
-                className="absolute top-3 right-3 bg-white shadow-md text-slate-600 hover:text-slate-800 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200"
+                aria-label="Close modal"
+                className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
               >
-                <FiX className="w-4 h-4" />
+                <FiX className="w-4 h-4 text-red-600" />
               </button>
-              <h3 className="text-xl font-bold">Enquiry</h3>
-              <div className="text-white text-xs mt-0.5">Fill the form and our team will contact you shortly.</div>
+              <h3 className="text-xl font-bold text-center">Enquiry</h3>
+              <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
             </div>
 
             {sent ? (

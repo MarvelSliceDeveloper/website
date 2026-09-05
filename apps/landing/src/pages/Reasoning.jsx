@@ -238,15 +238,6 @@ export default function Reasoning() {
       <div className="reasoning-content">
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <button
-              type="button"
-              onClick={handleBackNavigation}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-orange transition-colors mb-6 cursor-pointer group"
-            >
-              <FiArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-orange transition-transform group-hover:-translate-x-0.5" />
-              <span>Back</span>
-            </button>
-
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
                 <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
@@ -550,12 +541,12 @@ export default function Reasoning() {
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
             >
-              <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 flex items-center justify-between relative border-b border-blue-600/30">
-                <div>
-                  <h3 className="text-base sm:text-lg font-extrabold leading-tight">
+              <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 text-center relative border-b border-blue-600/30">
+                <div className="flex flex-col items-center justify-center px-4">
+                  <h3 className="text-base sm:text-lg font-extrabold leading-tight text-center">
                     Reasoning Course Enrollment
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center justify-center gap-2 mt-1">
                     <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
                       {enquiryType === 'topic' ? `Topic: ${selectedTopic}` : 'General Reasoning Enrollment'}
@@ -565,10 +556,10 @@ export default function Reasoning() {
                 <button
                   type="button"
                   onClick={closeApplyModal}
-                  className="w-7 h-7 rounded-full bg-white text-red-500 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
                   aria-label="Close modal"
                 >
-                  <FiX className="w-4 h-4 stroke-[2.5]" />
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
 

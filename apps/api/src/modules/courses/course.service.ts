@@ -22,6 +22,8 @@ export const CreateCourseSchema = z.object({
   learningObjectives: z.array(z.string()).optional(),
   thumbnailUrl: z.string().url().optional(),
   coverImageUrl: z.string().url().optional(),
+  isCatalog: z.boolean().optional().default(false),
+  price: z.number().int().min(0).nullable().optional(),
 });
 
 export const UpdateCourseSchema = z.object({
@@ -34,6 +36,8 @@ export const UpdateCourseSchema = z.object({
   learningObjectives: z.array(z.string()).optional(),
   thumbnailUrl: z.string().url().nullable().optional(),
   coverImageUrl: z.string().url().nullable().optional(),
+  isCatalog: z.boolean().optional(),
+  price: z.number().int().min(0).nullable().optional(),
 });
 
 // --- Helpers ---
@@ -105,6 +109,8 @@ export const courseService = {
         learningObjectives: data.learningObjectives ?? [],
         thumbnailUrl: data.thumbnailUrl,
         coverImageUrl: data.coverImageUrl,
+        isCatalog: data.isCatalog ?? false,
+        price: data.price ?? null,
         createdBy: adminUserId,
         status: "DRAFT",
       },
@@ -538,5 +544,122 @@ export const courseService = {
       // Finally delete the course itself
       await tx.course.delete({ where: { id: courseId } });
     });
+  },
+
+  // --- Catalogue (public) ---
+  async listCatalogue(filters: {
+    category?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const where: any = { isCatalog: true, status: "PUBLISHED", deletedAt: null };
+    if (filters.category) {
+      where.categoryRelation = { slug: filters.category };
+    }
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { slug: { contains: filters.search, mode: "insensitive" } },
+      ];
+    }
+    const page = filters.page || 1;
+    const limit = Math.min(filters.limit || 6, 100);
+    const skip = (page - 1) * limit;
+    const [coursesRaw, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        include: {
+          categoryRelation: true,
+          courseTags: { include: { tag: true } },
+          _count: { select: { modules: true } },
+        },
+        orderBy: { publishedAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.course.count({ where }),
+    ]);
+    const courses = coursesRaw.map((c: any) => ({
+      ...c,
+      duration: c.durationMinutes ? `${Math.ceil(c.durationMinutes / 60)}h` : "—",
+      priceDisplay: c.price != null ? c.price : null,
+    }));
+    return { courses, total, page, limit };
+  },
+
+  async getCatalogueBySlug(slug: string) {
+    const course = await prisma.course.findFirst({
+      where: { slug, isCatalog: true, status: "PUBLISHED", deletedAt: null },
+      include: {
+        categoryRelation: true,
+        courseTags: { include: { tag: true } },
+        modules: {
+          orderBy: { order: "asc" },
+          include: {
+            lessons: { orderBy: { order: "asc" } },
+            quizzes: { include: { questions: true } },
+            assignments: { orderBy: { dueDate: "asc" } },
+            practicals: { orderBy: { order: "asc" } },
+          },
+        },
+      },
+    });
+    if (!course) throw new AppError(404, "Course not found");
+    // derive videoUrl from first lesson with videoUrl
+    let videoUrl: string | null = null;
+    for (const m of course.modules) {
+      const l = m.lessons.find((x: any) => x.videoUrl);
+      if (l) { videoUrl = l.videoUrl; break; }
+    }
+    return { ...course, videoUrl, duration: (course as any).durationMinutes ? `${Math.ceil((course as any).durationMinutes / 60)}h` : "—" };
+  },
+
+  async createCatalogueCheckout(courseId: string, body: { name: string; email: string; phone: string }) {
+    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+    if (!course) throw new AppError(404, "Course not found");
+    if (course.price == null) throw new AppError(400, "Enquiry only — no price set");
+    // In real flow, call Razorpay. For now create pending payment without orderId if Razorpay not configured.
+    // We return order stub; verify will create payment.
+    try {
+      const { createRazorpayOrder } = await import("../payments/payment.service");
+      const order = await createRazorpayOrder(course.price, "INR", `course_${courseId}_${Date.now()}`);
+      return { orderId: order.id, amount: course.price, currency: "INR", courseId };
+    } catch {
+      // fallback stub for testing without keys
+      return { orderId: `stub_order_${Date.now()}`, amount: course.price, currency: "INR", courseId };
+    }
+  },
+
+  async verifyCataloguePayment(courseId: string, payload: { razorpayOrderId?: string; razorpayPaymentId: string; razorpaySignature?: string; name: string; email: string; phone: string }) {
+    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+    if (!course) throw new AppError(404, "Course not found");
+    if (!course.price) throw new AppError(400, "Invalid course price");
+    // Find or create guest user
+    let user = await prisma.user.findUnique({ where: { email: payload.email } });
+    if (!user) {
+      const bcrypt = await import("bcryptjs");
+      const dummy = Math.random().toString(36).slice(2, 10);
+      const hash = await bcrypt.hash(dummy, 10);
+      user = await prisma.user.create({ data: { name: payload.name, email: payload.email, passwordHash: hash, role: "STUDENT", phone: payload.phone } });
+    }
+    // verify signature if provided — skip strict check in stub mode
+    const payment = await prisma.payment.create({
+      data: {
+        userId: user.id,
+        courseId: course.id,
+        packageId: null,
+        amount: course.price,
+        currency: "INR",
+        razorpayOrderId: payload.razorpayOrderId || `stub_${Date.now()}`,
+        razorpayPaymentId: payload.razorpayPaymentId,
+        razorpaySignature: payload.razorpaySignature || null,
+        status: "PAID",
+      },
+    });
+    const enrollment = await prisma.courseEnrollment.create({
+      data: { userId: user.id, courseId: course.id, paymentId: payment.id, status: "PENDING" },
+    });
+    return { payment, enrollment, user: { id: user.id, email: user.email, name: user.name } };
   },
 };

@@ -131,6 +131,7 @@ model User {
   supportMessages         SupportMessage[]         @relation("UserSupportMessages")
   notes                   Note[]
   packageEnrollments      PackageEnrollment[]
+  courseEnrollments       CourseEnrollment[]
   payments                Payment[]
   auditLogs               AuditLog[]
   graphApiLogs            GraphApiLog[]
@@ -188,8 +189,13 @@ model Course {
   categoryRelation         Category?                  @relation(fields: [categoryId], references: [id])
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
+  isCatalog                Boolean                    @default(false)
+  price                    Int? // paise; null = enquiry only
+  courseEnrollments        CourseEnrollment[]
+  payments                 Payment[]
 
   @@index([status, categoryId])
+  @@index([isCatalog, status])
 }
 
 model Module {
@@ -276,6 +282,7 @@ model Batch {
   certificates                 Certificate[]
   extensions                   BatchAssignmentExtension[]
   courseMentors                BatchCourseMentor[]
+  courseEnrollments            CourseEnrollment[]
 
    @@index([packageId])
    @@index([courseId])
@@ -1029,7 +1036,8 @@ model PackageCourse {
 model Payment {
   id                String        @id @default(cuid())
   userId            String
-  packageId         String
+  packageId         String?
+  courseId          String?
   couponId          String?
   discountAmount    Int           @default(0) // in paise
   amount            Int // in paise (final paid amount)
@@ -1042,13 +1050,16 @@ model Payment {
   updatedAt         DateTime      @updatedAt
 
   user       User               @relation(fields: [userId], references: [id])
-  package    CoursePackage      @relation(fields: [packageId], references: [id])
+  package    CoursePackage?     @relation(fields: [packageId], references: [id])
+  course     Course?            @relation(fields: [courseId], references: [id])
   coupon     Coupon?            @relation(fields: [couponId], references: [id])
   enrollment PackageEnrollment?
+  courseEnrollment CourseEnrollment?
   refunds    Refund[]
 
    @@index([userId])
    @@index([couponId])
+   @@index([courseId])
    @@index([status])
    @@index([status, createdAt])
 }
@@ -1162,6 +1173,26 @@ model PackageEnrollmentCourse {
   @@index([enrollmentId])
   @@index([courseId])
   @@index([batchId])
+}
+
+model CourseEnrollment {
+  id        String           @id @default(cuid())
+  userId    String
+  courseId  String
+  batchId   String?
+  paymentId String?          @unique
+  status    EnrollmentStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user    User              @relation(fields: [userId], references: [id])
+  course  Course            @relation(fields: [courseId], references: [id])
+  batch   Batch?            @relation(fields: [batchId], references: [id])
+  payment Payment?          @relation(fields: [paymentId], references: [id])
+
+  @@index([userId, status])
+  @@index([courseId])
+  @@index([status])
 }
 
 // === AUDIT LOG ===

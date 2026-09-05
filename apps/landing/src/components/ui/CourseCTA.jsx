@@ -109,9 +109,10 @@ export default function CourseCTA({
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: 0.1 }}
-                className="text-slate-300 font-normal leading-relaxed max-w-[620px] text-left"
+                className="text-white/90 font-normal leading-relaxed max-w-[620px] text-left"
                 style={{
-                  fontSize: 'clamp(0.95rem, 1.2vw, 1.1rem)'
+                  fontSize: 'clamp(0.95rem, 1.2vw, 1.1rem)',
+                  color: 'rgba(255, 255, 255, 0.88)'
                 }}
               >
                 {finalDescription}
@@ -120,7 +121,7 @@ export default function CourseCTA({
           </div>
 
           {/* Right Column (Modular CTA Button) */}
-          <div className="flex items-center justify-start lg:justify-end w-full">
+          <div className="flex items-center justify-end w-full">
             {finalButtonText && (
               <ModularCTAButton
                 text={finalButtonText}

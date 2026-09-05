@@ -33,12 +33,12 @@ export default function ModularCTAButton({
   const targetUrl = href || to;
   const Component = targetUrl ? motion.a : motion.button;
 
-  // Size variations
+  // Size variations (compact on mobile, bold on desktop)
   const sizeClasses = {
-    sm: 'min-w-[180px] min-h-[52px] px-6 py-3 text-base sm:text-lg',
-    md: 'min-w-[220px] min-h-[60px] px-8 py-4 text-lg sm:text-xl',
-    lg: 'min-w-[250px] min-h-[68px] px-9 py-4.5 text-xl sm:text-2xl',
-  }[size] || 'min-w-[220px] min-h-[60px] px-8 py-4 text-lg sm:text-xl';
+    sm: 'min-w-0 sm:min-w-[180px] min-h-[38px] sm:min-h-[52px] px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-lg',
+    md: 'min-w-0 sm:min-w-[200px] min-h-[42px] sm:min-h-[60px] px-5 sm:px-8 py-2.5 sm:py-4 text-sm sm:text-xl',
+    lg: 'min-w-0 sm:min-w-[240px] min-h-[46px] sm:min-h-[68px] px-6 sm:px-9 py-3 sm:py-4.5 text-base sm:text-2xl',
+  }[size] || 'min-w-0 sm:min-w-[200px] min-h-[42px] sm:min-h-[60px] px-5 sm:px-8 py-2.5 sm:py-4 text-sm sm:text-xl';
 
   // Variant backgrounds & glowing shadows
   const getVariantStyles = () => {
@@ -82,21 +82,21 @@ export default function ModularCTAButton({
               y: { duration: 0.6, ease: 'easeOut' },
             }
       }
-      className={`flex items-center justify-center w-full lg:w-auto ${className}`}
+      className={`flex items-center justify-end w-full ${className}`}
     >
       <Component
         {...(targetUrl ? { href: targetUrl } : { type: 'button', onClick })}
         aria-label={ariaLabel || (typeof text === 'string' ? text : '')}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`relative group cursor-pointer select-none inline-flex items-center justify-center w-full sm:w-auto focus:outline-none focus:ring-4 focus:ring-amber-400/50 rounded-2xl overflow-hidden shadow-2xl ${sizeClasses}`}
+        className={`relative group cursor-pointer select-none inline-flex items-center justify-center w-auto focus:outline-none focus:ring-4 focus:ring-amber-400/50 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl ${sizeClasses}`}
         whileHover={shouldReduceMotion ? {} : { y: -4, scale: 1.02 }}
         whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         {/* Dynamic Background & Animated Neon Glow */}
         <motion.div
-          className="absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none"
+          className="absolute inset-0 rounded-xl sm:rounded-2xl transition-all duration-300 pointer-events-none"
           style={getVariantStyles()}
         />
 
@@ -118,7 +118,7 @@ export default function ModularCTAButton({
         )}
 
         {/* High Contrast Content & Spring Arrow Animation */}
-        <div className="relative z-10 flex items-center justify-center gap-3.5 whitespace-nowrap">
+        <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3.5 whitespace-nowrap">
           <span className="text-white font-black tracking-wide drop-shadow-md">
             {text}
           </span>
@@ -131,7 +131,7 @@ export default function ModularCTAButton({
               transition={{ type: 'spring', stiffness: 350, damping: 18 }}
               className="text-white shrink-0 drop-shadow-md"
             >
-              <Icon className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3]" />
+              <Icon className="w-4 h-4 sm:w-7 sm:h-7 stroke-[2.5] sm:stroke-[3]" />
             </motion.div>
           )}
         </div>
