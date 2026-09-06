@@ -104,14 +104,14 @@ export default function HeroSection({ section }) {
           </AnimatePresence>
 
           {carouselEnabled && slides.length > 1 && (
-            <div className="absolute bottom-2 sm:bottom-6 right-2 sm:right-8 flex items-center gap-1 sm:gap-2 z-10 bg-black/35 backdrop-blur-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md">
+            <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2.5 z-10">
               {slides.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? 'bg-white w-4 sm:w-7 shadow-xs' : 'bg-white/40 hover:bg-white/80 w-1.5 sm:w-2.5'
+                    i === current ? 'bg-white w-5 sm:w-7 shadow-md' : 'bg-white/60 hover:bg-white w-1.5 sm:w-2.5'
                   }`} 
                 />
               ))}

@@ -129,11 +129,11 @@ export default function CourseHero({
             {/* Dynamic Course Points (Keys) */}
             {points.length > 0 && (
               <div className="mt-5 lg:mt-6 w-full max-w-[600px]">
-                <div className="grid grid-cols-1 gap-2 sm:gap-2.5 lg:space-y-2.5 text-left">
+                <div className="grid grid-cols-1 gap-2.5 text-left">
                   {points.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0" />
-                      <span className="text-xs sm:text-sm lg:text-[15px] font-medium text-slate-600 leading-snug whitespace-nowrap truncate">
+                    <div key={i} className="flex items-start gap-2.5 min-w-0">
+                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="text-[15px] sm:text-base font-medium text-slate-600 leading-snug break-words">
                         {typeof item === 'string' ? item : (item?.label || item?.title || '')}
                       </span>
                     </div>

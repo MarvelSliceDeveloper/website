@@ -90,8 +90,8 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
     <section className="pt-10 pb-16 bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12 items-start text-center sm:text-left">
-            <div className="lg:col-span-7">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-12 items-start text-center sm:text-left">
+            <div className="md:col-span-7">
               {heading && (
                 <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
               )}
@@ -101,7 +101,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               )}
             </div>
             {imageUrl && (
-              <div className="lg:col-span-5 hidden lg:flex items-center justify-center pt-1">
+              <div className="md:col-span-5 hidden md:flex items-center justify-center pt-1">
                 <Link
                   to="/career"
                   className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
@@ -114,14 +114,14 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
         </Reveal>
 
         {classes.length > 0 && (
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-stretch mt-8 lg:mt-10">
-            <Reveal className="lg:col-span-7">
-              <div className="space-y-4">
+          <div className="grid md:grid-cols-12 gap-6 lg:gap-12 items-stretch mt-8 lg:mt-10">
+            <Reveal className="md:col-span-7">
+              <div className="space-y-3 sm:space-y-3.5">
                 {classes.slice(0, 4).map((cls, i) => (
-                  <div key={cls.id} className="flex flex-col sm:flex-row items-start sm:items-center text-left gap-3.5 sm:gap-4 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-4 sm:p-5">
-                    <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0 w-full">
-                      <span className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mt-0.5 sm:mt-0">
-                        <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <div key={cls.id} className="flex flex-col sm:flex-row items-start sm:items-center text-left gap-3 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-3 sm:py-3.5 sm:px-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
+                      <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
+                        <FiCalendar className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -131,18 +131,18 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                           )}
                         </div>
                         {cls.date_time && (
-                          <p className="flex items-center gap-1.5 text-slate-500 text-xs sm:text-sm mt-1">
+                          <p className="flex items-center gap-1.5 text-slate-500 text-xs sm:text-sm mt-0.5">
                             <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-2 sm:mt-0 shrink-0">
+                    <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-1.5 sm:mt-0 shrink-0">
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
-                        className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-xs sm:text-sm py-2 px-6 rounded-full hover:bg-brand-orange/90 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                        className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-xs sm:text-sm py-1.5 px-5 rounded-full hover:bg-brand-orange/90 shadow-xs hover:shadow-md transition-all cursor-pointer"
                       >
                         Register Now
                       </button>
@@ -152,8 +152,8 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               </div>
             </Reveal>
             {imageUrl && (
-              <Reveal className="lg:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 lg:mt-0">
-                <div className="lg:hidden flex items-center justify-center pt-4 pb-4">
+              <Reveal className="md:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 md:mt-0">
+                <div className="md:hidden flex items-center justify-center pt-2 pb-3">
                   <Link
                     to="/career"
                     className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
@@ -162,11 +162,11 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                   </Link>
                 </div>
                 {imageLink ? (
-                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
+                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </a>
                 ) : (
-                  <div className="w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full max-h-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-slate-50">
+                  <div className="w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-slate-50">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover" />
                   </div>
                 )}

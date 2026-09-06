@@ -145,29 +145,33 @@ export default function IntroFormSection({ section }) {
   return (
     <section className="relative overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 sm:py-16">
-        <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          <Reveal variant="up" className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6 text-left">
+        <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
+          <Reveal variant="up" className="md:col-span-7 lg:col-span-7 xl:col-span-8 space-y-5 text-left">
             {heading && (
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-left leading-tight sm:leading-snug max-w-none whitespace-pre-line">
                 {heading}
               </h2>
             )}
             {introText && (
-              <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10">
-                {introText}
-              </p>
+              <div className="space-y-4">
+                {introText.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                    {p.trim()}
+                  </p>
+                ))}
+              </div>
             )}
 
-            <div className="mt-6 hidden lg:block space-y-6">
+            <div className="space-y-5 pt-2">
               {stats.length > 0 && <StatsGrid stats={stats} />}
               <CourseButtons />
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center lg:items-end">
-            <div className="w-full max-w-md lg:max-w-sm flex flex-col items-center text-center mx-auto lg:mx-0">
-              <p className="text-[24px] sm:text-[32px] font-bold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
-                Book Your Demo Now!
+          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-10">
+            <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0">
+              <p className="text-xl sm:text-3xl md:text-2xl lg:text-3xl font-extrabold text-center mb-1 w-full leading-tight whitespace-nowrap" style={{ color: '#ef4444' }}>
+                Book Your Free Demo Now!
               </p>
               <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
                 <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
@@ -233,23 +237,14 @@ export default function IntroFormSection({ section }) {
                 </div>
               </div>
 
-              {/* Pill buttons right below form for PC and Tab view */}
+              {/* Pill buttons right below form */}
               {rawPills.length > 0 && (
-                <div className="w-full mt-6 hidden lg:block">
+                <div className="w-full mt-6 sm:mt-8 lg:mt-10">
                   <PillGrid pills={rawPills} />
                 </div>
               )}
             </div>
           </Reveal>
-
-          {/* Mobile Only: Flow order -> Form (28px gap) -> Stats stack (1-col) (24px gap) -> Features (2-col) (24px gap) -> Action Buttons (32px to Upcoming Classes) */}
-          <div className="lg:hidden mt-7 space-y-6 w-full max-w-md mx-auto mb-4 sm:mb-0">
-            {stats.length > 0 && <StatsGrid stats={stats} />}
-            {rawPills.length > 0 && <PillGrid pills={rawPills} />}
-            <Reveal variant="up">
-              <CourseButtons />
-            </Reveal>
-          </div>
         </div>
       </div>
 
