@@ -175,10 +175,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('facebook', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Facebook"
               >
-                <FaFacebookF className="w-3 h-3" />
+                <FaFacebookF className="w-3.5 h-3.5 text-[#1877F2]" />
               </a>
             )}
             {social.twitter && (
@@ -187,10 +187,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('twitter', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Twitter"
               >
-                <FaXTwitter className="w-3 h-3" />
+                <FaXTwitter className="w-3.5 h-3.5 text-black" />
               </a>
             )}
             {social.instagram && (
@@ -199,10 +199,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('instagram', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Instagram"
               >
-                <FaInstagram className="w-3 h-3" />
+                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
               </a>
             )}
             {social.linkedin && (
@@ -211,10 +211,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('linkedin', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="LinkedIn"
               >
-                <FaLinkedinIn className="w-3 h-3" />
+                <FaLinkedinIn className="w-3.5 h-3.5 text-[#0A66C2]" />
               </a>
             )}
             {social.youtube && (
@@ -223,10 +223,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('youtube', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="YouTube"
               >
-                <FaYoutube className="w-3 h-3" />
+                <FaYoutube className="w-3.5 h-3.5 text-[#FF0000]" />
               </a>
             )}
           </div>
