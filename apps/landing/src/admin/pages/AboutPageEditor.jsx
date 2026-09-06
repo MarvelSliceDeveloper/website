@@ -495,7 +495,7 @@ const queryClient = useQueryClient();
   const navItemIdRef = useRef(null);
   const savingRef = useRef(false);
 
-  const [hero, setHero] = useState({ hero_image: '' });
+  const [hero, setHero] = useState({ hero_image: '', mobile_hero_image: '' });
   const [sections, setSections] = useState([]);
   const [newType, setNewType] = useState('text');
   const [showHeroImage, setShowHeroImage] = useState(false);
@@ -528,8 +528,11 @@ const queryClient = useQueryClient();
         const page = pages?.[0] || null;
         if (page) {
           setPageId(page.id);
-          setHero({ hero_image: page.hero_image || '' });
-          setShowHeroImage(!!page.hero_image);
+          setHero({
+            hero_image: page.hero_image || '',
+            mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || '',
+          });
+          setShowHeroImage(!!(page.hero_image || page.mobile_hero_image));
           setSections(page.sections || []);
         }
       }
@@ -617,6 +620,7 @@ const queryClient = useQueryClient();
       heading: '',
       subheading: '',
       hero_image: hero.hero_image || null,
+      form_config: { mobile_hero_image: hero.mobile_hero_image || '' },
       sections,
       is_published: true,
     };
@@ -668,11 +672,19 @@ const queryClient = useQueryClient();
 
         {activeTab === 'hero-image' && (
           <div className="space-y-6">
-            <div className="space-y-3">
-              <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Hero Image" />
-              {hero.hero_image && (
-                <button type="button" onClick={() => setHero({ ...hero, hero_image: '' })} className="text-xs text-destructive-500 hover:text-destructive-700 cursor-pointer">Remove image</button>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Desktop Hero Image" />
+                {hero.hero_image && (
+                  <button type="button" onClick={() => setHero({ ...hero, hero_image: '' })} className="text-xs text-destructive-500 hover:text-destructive-700 cursor-pointer">Remove Desktop Image</button>
+                )}
+              </div>
+              <div className="space-y-3">
+                <ImageUploader value={hero.mobile_hero_image} onChange={(v) => setHero({ ...hero, mobile_hero_image: v })} label="Mobile Hero Image (Optional)" />
+                {hero.mobile_hero_image && (
+                  <button type="button" onClick={() => setHero({ ...hero, mobile_hero_image: '' })} className="text-xs text-destructive-500 hover:text-destructive-700 cursor-pointer">Remove Mobile Image</button>
+                )}
+              </div>
             </div>
           </div>
         )}

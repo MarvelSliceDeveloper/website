@@ -35,6 +35,7 @@ export default function HeroSection({ section }) {
 
   const slide = carouselEnabled ? slides[current] : null;
   const bannerImage = carouselEnabled ? (carouselType === 'image' ? slide?.image : '') : (content.banner_image || '');
+  const mobileBannerImage = carouselEnabled ? (carouselType === 'image' ? (slide?.mobile_image || slide?.image) : '') : (content.mobile_banner_image || '');
   const bannerHeading = carouselEnabled ? (slide?.heading || '') : (content.banner_heading || '');
   const bannerDescription = carouselEnabled ? (slide?.description || '') : (content.banner_description || '');
   const showGradient = carouselEnabled && carouselType === 'text';
@@ -49,14 +50,21 @@ export default function HeroSection({ section }) {
 
   return (
     <section className="relative overflow-hidden">
-      {bannerImage && (
+      {(bannerImage || mobileBannerImage) && (
         <div 
           className="relative w-full overflow-hidden"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
           {/* Base image dictates natural aspect ratio and natural image height automatically */}
-          <img src={bannerImage} alt="" className="w-full h-auto opacity-0 block pointer-events-none" />
+          {mobileBannerImage ? (
+            <picture className="w-full h-auto opacity-0 block pointer-events-none">
+              <source media="(max-width: 639px)" srcSet={mobileBannerImage} />
+              <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto" />
+            </picture>
+          ) : (
+            <img src={bannerImage} alt="" className="w-full h-auto opacity-0 block pointer-events-none" />
+          )}
 
           <AnimatePresence initial={false}>
             <motion.div
@@ -67,7 +75,14 @@ export default function HeroSection({ section }) {
               transition={{ duration: 0.5, ease: 'easeInOut' }}
               className="absolute inset-0 w-full h-full"
             >
-              <img src={bannerImage} alt="" className="w-full h-auto" />
+              {mobileBannerImage ? (
+                <picture className="w-full h-auto">
+                  <source media="(max-width: 639px)" srcSet={mobileBannerImage} />
+                  <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto object-cover" />
+                </picture>
+              ) : (
+                <img src={bannerImage} alt="" className="w-full h-auto" />
+              )}
               
               {(bannerHeading || bannerDescription) && (
                 <div className="absolute inset-0 flex items-center">
@@ -157,6 +172,10 @@ export default function HeroSection({ section }) {
             )}
           </div>
         </div>
+      )}
+
+      {!bannerHeading && !headline && (
+        <h1 className="sr-only">Marvel Software Learning & Competitive Exam Training</h1>
       )}
 
       {!bannerImage && !showGradient && (headline || description || featureBullets.length > 0 || buttons.length > 0 || studentImageUrl) && (

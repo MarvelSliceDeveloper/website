@@ -163,7 +163,7 @@ function PublicLayout() {
   ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden w-full max-w-full">
+    <div className="flex flex-col min-h-screen w-full max-w-full relative">
       <ScrollToTop />
       <PageTracker />
       <div className="fixed top-0 left-0 right-0 z-50 w-full">

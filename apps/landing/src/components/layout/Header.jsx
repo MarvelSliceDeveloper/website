@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -195,6 +195,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { data: settings } = useSiteSettings();
   const mobileMenuRef = useRef(null);
@@ -219,6 +220,15 @@ export default function Header() {
       document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -314,3 +324,4 @@ export default function Header() {
     </header>
   );
 }
+
