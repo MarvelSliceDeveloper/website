@@ -24,7 +24,7 @@ function NavColumn({ parentLabel, defaultChildren }) {
       { label: 'Banking', path: '/banking' }
     ];
     return (
-      <div className="col-span-1 lg:pt-10 text-center sm:text-left">
+      <div className="col-span-1 text-center sm:text-left">
         <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">
           {formatFooterLabel(parentLabel)}
         </h4>
@@ -44,7 +44,7 @@ function NavColumn({ parentLabel, defaultChildren }) {
 
   if (items.length === 0) return null;
   return (
-    <div className="col-span-1 lg:pt-10 text-center sm:text-left">
+    <div className="col-span-1 text-center sm:text-left">
       <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">
         {formatFooterLabel(parentLabel)}
       </h4>
@@ -93,15 +93,15 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
           {/* Logo & Contact Info Section: Spans full width across top on Tablet (sm:col-span-2 lg:col-span-1) */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-1 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left">
-            <div className="flex justify-center sm:justify-start mb-4">
+            <div className="flex justify-center sm:justify-start mb-4 -mt-3">
               <Link to="/" aria-label="Go to Homepage" className="inline-flex items-center gap-3 group">
                 {settings?.logo_url && (
-                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-12 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105" />
+                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-11 sm:h-11 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
                 )}
-                <span className="text-3xl sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif]">
+                <span className="text-3xl sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif] leading-tight">
                   Marvel <span className="text-brand-orange">Slice</span>
                 </span>
               </Link>
@@ -138,7 +138,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links Column */}
-          <div className="col-span-1 lg:pt-10 text-center sm:text-left">
+          <div className="col-span-1 text-center sm:text-left">
             <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">Quick Links</h4>
             <ul className="space-y-2.5 text-center sm:text-left">
               {linkItems.map((item, i) => (
@@ -158,7 +158,7 @@ export default function Footer() {
 
           {/* Working Hours & Social Links Column */}
           {(hours.weekday || hours.saturday) && (
-            <div className="col-span-1 lg:pt-10 text-center sm:text-left">
+            <div className="col-span-1 text-center sm:text-left">
               <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">Working Hours</h4>
               <ul className="space-y-3.5 text-base sm:text-base text-gray-200 text-center sm:text-left">
                 {hours.weekday && (
