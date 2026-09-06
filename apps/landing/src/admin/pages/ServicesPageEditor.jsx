@@ -220,6 +220,7 @@ export default function ServicesPageEditor() {
       heading: hero.heading || null,
       subheading: hero.subheading,
       hero_image: hero.hero_image || null,
+      mobile_hero_image: hero.mobile_hero_image || null,
       form_config: { mobile_hero_image: hero.mobile_hero_image || '' },
       sections,
       is_published: true,
@@ -241,6 +242,7 @@ export default function ServicesPageEditor() {
       queryClient.invalidateQueries({ queryKey: ['navPage', navItemId] });
       queryClient.invalidateQueries({ queryKey: ['navPageData'] });
       queryClient.invalidateQueries({ queryKey: ['servicesPage'] });
+      queryClient.invalidateQueries({ queryKey: ['servicesPageData'] });
       queryClient.invalidateQueries({ queryKey: ['learningJourney'] });
       setTimeout(() => setSaved(false), 2000);
       savingRef.current = false;

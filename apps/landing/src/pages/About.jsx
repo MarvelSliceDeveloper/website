@@ -30,6 +30,7 @@ export default function About() {
         .limit(1);
       return pages?.[0] || null;
     },
+    staleTime: 0,
   });
 
   if (isLoading) {
@@ -67,7 +68,7 @@ export default function About() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 639px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
             </picture>
           ) : (
@@ -76,14 +77,34 @@ export default function About() {
         </Reveal>
       )}
 
-      {data.subheading && (
-        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6 text-center">
-          <p className="text-sm sm:text-base text-text-gray max-w-2xl mx-auto leading-relaxed">{data.subheading}</p>
-        </Reveal>
+      {(data.heading || data.subheading) && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Reveal variant="up" className="space-y-4 sm:space-y-6 text-center">
+              {data.heading && (
+                <div>
+                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center leading-tight sm:leading-snug whitespace-pre-line">
+                    {data.heading}
+                  </h2>
+                  <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
+                </div>
+              )}
+              {data.subheading && (
+                <div className="space-y-4 sm:space-y-6">
+                  {data.subheading.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                    <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                      {p.trim()}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </Reveal>
+          </div>
+        </section>
       )}
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
-        <div key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+        <div key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
           <SectionRenderer section={section} />
         </div>
       ))}

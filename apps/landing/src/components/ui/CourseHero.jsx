@@ -97,7 +97,7 @@ export default function CourseHero({
           {/* LEFT SIDE (Content) ~ 48% width */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Dynamic Title */}
-            <h1 className="text-[22px] sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
+            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
               {course.title}
             </h1>
 
@@ -110,7 +110,7 @@ export default function CourseHero({
 
             {/* Dynamic Description */}
             {course.description && (
-              <p className="mt-4 lg:mt-5 text-xs sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
+              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
                 {course.description}
               </p>
             )}

@@ -80,13 +80,13 @@ function UnevenArticleCard({ article, index }) {
           </div>
 
           {/* Headline Title */}
-          <h3 className="text-sm sm:text-base font-bold text-dark-navy group-hover:text-brand-orange transition-colors leading-snug line-clamp-2">
+          <h3 className="text-xl sm:text-base font-bold text-dark-navy group-hover:text-brand-orange transition-colors leading-snug line-clamp-2">
             {article.title}
           </h3>
 
           {/* Excerpt / Summary */}
           {article.summary && (
-            <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+            <p className="text-sm sm:text-xs text-slate-600 leading-relaxed line-clamp-2">
               {article.summary}
             </p>
           )}

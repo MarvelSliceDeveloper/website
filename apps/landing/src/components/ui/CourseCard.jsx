@@ -16,7 +16,7 @@ export default function CourseCard({
   const queryClient = useQueryClient();
   const bannerH = bannerHeights[bannerSize] || bannerHeights.md;
   const pad = contentPaddings[bannerSize] || contentPaddings.md;
-  const titleSize = bannerSize === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg';
+  const titleSize = bannerSize === 'lg' ? 'text-2xl sm:text-xl' : 'text-2xl sm:text-lg';
 
   function handlePrefetch() {
     if (course?.slug) {
@@ -59,7 +59,7 @@ export default function CourseCard({
         <h3 className={`font-bold text-dark-navy ${titleSize} group-hover:text-brand-orange transition-colors`}>
           {course.title}
         </h3>
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify [text-align-last:left] indent-4 sm:indent-6 whitespace-pre-line mt-2 line-clamp-2 flex-1">{course.description}</p>
+        <p className="text-sm sm:text-sm text-slate-600 leading-relaxed text-justify [text-align-last:left] indent-4 sm:indent-6 whitespace-pre-line mt-2 line-clamp-2 flex-1">{course.description}</p>
         <div className="flex flex-wrap gap-2 mt-3 mb-3">
           {course.duration && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">

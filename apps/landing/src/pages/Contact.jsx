@@ -46,6 +46,7 @@ export default function Contact() {
         .limit(1);
       return pages?.[0] || null;
     },
+    staleTime: 0,
   });
 
   if (isLoading) {
@@ -73,7 +74,7 @@ export default function Contact() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 639px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-[260px] sm:h-auto object-cover" />
             </picture>
           ) : (

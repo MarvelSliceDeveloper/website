@@ -280,10 +280,10 @@ export default function LearningJourney({ data }) {
         {/* ════════════════════════════════════════════
             SECTION 1: TITLE & SUBTITLE
             ════════════════════════════════════════════ */}
-        <div className="mb-14 text-center">
+        <div className="mb-10 sm:mb-14 text-center">
           <motion.h2
             {...fadeUp(0.1, 16, rm)}
-            className="text-3xl sm:text-4xl font-bold tracking-tight text-blue-700"
+            className="text-2xl sm:text-4xl font-extrabold tracking-tight text-blue-700"
           >
             {heading}
           </motion.h2>
@@ -298,7 +298,7 @@ export default function LearningJourney({ data }) {
           {subheading && (
             <motion.p
               {...fadeUp(0.24, 14, rm)}
-              className="mx-auto mt-4 max-w-2xl text-base text-slate-500 sm:text-lg"
+              className="mx-auto mt-4 max-w-2xl text-sm sm:text-lg font-normal text-slate-600 leading-relaxed"
             >
               {subheading}
             </motion.p>
@@ -592,7 +592,7 @@ export default function LearningJourney({ data }) {
                     ease: [0.25, 1, 0.5, 1],
                   }}
                   whileHover={rm ? undefined : { y: -2 }}
-                  className="flex-1 min-w-0 bg-white rounded-[20px] border border-slate-200/80 p-4 sm:p-5 shadow-[0_4px_20px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] transition-all duration-300 relative overflow-hidden"
+                  className="flex-1 min-w-0 bg-white rounded-2xl sm:rounded-[20px] border border-slate-200/80 p-5 sm:p-5 shadow-[0_4px_20px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] transition-all duration-300 relative overflow-hidden"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     {/* Icon inside Card */}
@@ -616,13 +616,13 @@ export default function LearningJourney({ data }) {
                     </motion.div>
 
                     {/* Step Title */}
-                    <h3 className="font-bold text-base sm:text-lg leading-snug truncate" style={{ color: step.color }}>
+                    <h3 className="font-bold text-xl sm:text-lg leading-snug" style={{ color: step.color }}>
                       {step.title}
                     </h3>
                   </div>
 
                   {/* Step Description */}
-                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+                  <p className="text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
                     {step.description}
                   </p>
                 </motion.div>
@@ -658,7 +658,7 @@ export default function LearningJourney({ data }) {
                     ease: [0.25, 1, 0.5, 1],
                   }}
                   whileHover={rm ? undefined : { y: -2 }}
-                  className={`flex items-start gap-3.5 sm:gap-4 py-3.5 sm:py-3 lg:py-1 ${
+                  className={`flex items-start gap-3.5 sm:gap-4 py-4 sm:py-3 lg:py-1 ${
                     i === 0 ? 'lg:pr-6' : 'lg:px-6'
                   }`}
                 >
@@ -681,10 +681,10 @@ export default function LearningJourney({ data }) {
 
                   {/* Title & Subtext Stacked on Right */}
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                    <h4 className="text-lg sm:text-sm font-bold text-slate-900 leading-snug">
                       {feat.title}
                     </h4>
-                    <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                    <p className="mt-1 text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
                       {feat.description}
                     </p>
                   </div>

@@ -39,7 +39,7 @@ function Hero({ search, onSearchChange, onSearch, heroImage, mobileHeroImage, he
         {heroImage || mobileHeroImage ? (
           mobileHeroImage ? (
             <picture className="absolute inset-0 w-full h-full">
-              <source media="(max-width: 639px)" srcSet={mobileHeroImage} />
+              <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
               <img src={heroImage || mobileHeroImage} alt="" className="w-full h-full object-cover" />
             </picture>
           ) : (
@@ -85,21 +85,21 @@ function FeaturedPost({ post }) {
     <Reveal>
     <Link to={`/blog/${post.slug}`} className="block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
       <div className="grid md:grid-cols-2">
-        <div className="h-64 md:h-full bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center">
-          {post.image_url ? <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" /> : <span className="text-white/20 text-6xl font-bold">B</span>}
+        <div className="aspect-[16/10] md:aspect-auto md:h-full bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
+          {post.image_url ? <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <span className="text-white/20 text-6xl font-bold">B</span>}
         </div>
-        <div className="p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
+        <div className="p-5 sm:p-8 lg:p-10 flex flex-col justify-center">
           {post.blog_categories && (
-            <span className="inline-block px-3 py-1 bg-brand-orange/10 text-brand-orange text-xs font-semibold rounded-full mb-4 w-fit">{post.blog_categories.name}</span>
+            <span className="inline-block px-3 py-1 bg-brand-orange/10 text-brand-orange text-xs font-semibold rounded-full mb-3 sm:mb-4 w-fit">{post.blog_categories.name}</span>
           )}
-          <h2 className="text-2xl lg:text-3xl font-bold text-dark-navy group-hover:text-brand-orange transition-colors">{post.title}</h2>
-          <p className="mt-3 text-text-gray leading-relaxed line-clamp-3">{post.excerpt}</p>
-          <div className="flex items-center gap-4 mt-6 text-sm text-gray-400">
-            <span className="flex items-center gap-1.5"><FiUser className="w-4 h-4" />{post.author || 'Admin'}</span>
-            <span className="flex items-center gap-1.5"><FiCalendar className="w-4 h-4" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-dark-navy group-hover:text-brand-orange transition-colors">{post.title}</h2>
+          <p className="mt-2.5 sm:mt-3 text-sm sm:text-base text-slate-600 leading-relaxed font-normal line-clamp-2 sm:line-clamp-3">{post.excerpt}</p>
+          <div className="flex items-center gap-4 mt-4 sm:mt-6 text-xs sm:text-sm text-gray-400">
+            <span className="flex items-center gap-1.5"><FiUser className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{post.author || 'Admin'}</span>
+            <span className="flex items-center gap-1.5"><FiCalendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
           </div>
-          <span className="mt-6 text-brand-orange font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+          <span className="mt-4 sm:mt-6 text-brand-orange font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
             Read More <FiArrowRight className="w-4 h-4" /></span>
         </div>
       </div>
@@ -114,12 +114,12 @@ function PostCard({ post }) {
       <div className="aspect-[16/10] bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
         {post.image_url ? <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <FiCalendar className="w-12 h-12 text-white/20" />}
       </div>
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-5 sm:p-6 flex flex-col flex-1">
         {post.blog_categories && (
           <span className="inline-block px-3 py-1 bg-brand-orange/10 text-brand-orange text-xs font-semibold rounded-full mb-3 w-fit">{post.blog_categories.name}</span>
         )}
-        <h3 className="font-bold text-dark-navy text-lg group-hover:text-brand-orange transition-colors line-clamp-2">{post.title}</h3>
-        <p className="mt-2 text-sm text-text-gray line-clamp-4 flex-1">{post.excerpt}</p>
+        <h3 className="font-bold text-dark-navy text-xl sm:text-lg group-hover:text-brand-orange transition-colors line-clamp-2">{post.title}</h3>
+        <p className="mt-2 text-sm sm:text-sm text-slate-600 font-normal line-clamp-3 sm:line-clamp-4 flex-1">{post.excerpt}</p>
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
           <span className="text-xs text-gray-400 flex items-center gap-1"><FiCalendar className="w-3.5 h-3.5" />
             {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>

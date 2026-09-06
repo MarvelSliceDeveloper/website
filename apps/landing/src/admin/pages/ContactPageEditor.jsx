@@ -188,6 +188,7 @@ const queryClient = useQueryClient();
       heading: hero.heading,
       subheading: hero.subheading,
       hero_image: hero.hero_image || null,
+      mobile_hero_image: hero.mobile_hero_image || null,
       form_config: {
         ...formConfig,
         mobile_hero_image: hero.mobile_hero_image || '',

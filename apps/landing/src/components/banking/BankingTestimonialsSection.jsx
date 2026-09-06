@@ -29,7 +29,7 @@ function TestimonialCard({ item }) {
           </div>
 
           {/* Name */}
-          <h3 className="!text-[17px] sm:!text-2xl font-extrabold text-[#0B1E48] tracking-tight leading-snug">{item.name}</h3>
+          <h3 className="!text-xl sm:!text-2xl font-extrabold text-[#0B1E48] tracking-tight leading-snug">{item.name}</h3>
 
           {/* Position & Bank Badges */}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 min-h-[28px]">
@@ -65,7 +65,7 @@ function TestimonialCard({ item }) {
 
         {/* RIGHT HALF (~ 7 cols): Description / Quote Text */}
         <div className="md:col-span-7 lg:col-span-8 flex flex-col justify-center text-left md:pl-4 h-full">
-          <p className="!text-[13px] sm:!text-lg md:!text-xl font-medium leading-relaxed text-slate-700 whitespace-pre-line text-justify [text-align-last:left]">
+          <p className="!text-sm sm:!text-lg md:!text-xl font-normal leading-relaxed text-slate-600 whitespace-pre-line text-justify [text-align-last:left]">
             {item.quote}
           </p>
         </div>
@@ -136,11 +136,11 @@ export default function BankingTestimonialsSection() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-10">
-            <h2 className="font-bold !text-[21px] sm:!text-3xl text-dark-navy whitespace-pre-line">
+            <h2 className="font-extrabold !text-2xl sm:!text-3xl text-dark-navy whitespace-pre-line">
               Banking Aspirants, Real Success Stories
             </h2>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
-            <p className="text-text-gray !text-[13px] sm:!text-lg leading-relaxed mt-4 max-w-2xl mx-auto whitespace-pre-line">
+            <p className="text-slate-600 !text-sm sm:!text-base font-normal leading-relaxed mt-4 max-w-2xl mx-auto whitespace-pre-line">
               Hear from successful aspirants who transformed their preparation into results with focused guidance and structured training for banking examinations.
             </p>
           </div>
