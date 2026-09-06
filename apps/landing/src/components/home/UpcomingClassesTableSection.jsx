@@ -101,7 +101,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               )}
             </div>
             {imageUrl && (
-              <div className="lg:col-span-5 flex items-center justify-center pt-1">
+              <div className="lg:col-span-5 hidden lg:flex items-center justify-center pt-1">
                 <Link
                   to="/career"
                   className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
@@ -118,31 +118,31 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
             <Reveal className="lg:col-span-7">
               <div className="space-y-4">
                 {classes.slice(0, 4).map((cls, i) => (
-                  <div key={cls.id} className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-4 rounded-2xl border border-gray-200 bg-white shadow-md hover:shadow-lg hover:border-brand-blue/40 transition-all p-5">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <span className="w-12 h-12 shrink-0 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center">
-                        <FiCalendar className="w-5 h-5" />
+                  <div key={cls.id} className="flex flex-col sm:flex-row items-start sm:items-center text-left gap-3.5 sm:gap-4 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-4 sm:p-5">
+                    <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0 w-full">
+                      <span className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mt-0.5 sm:mt-0">
+                        <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5" />
                       </span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-dark-navy text-[13px] leading-snug truncate">{cls.course_name}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-bold text-slate-800 text-sm sm:text-base leading-snug">{cls.course_name}</p>
                           {cls.batch && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[8px] font-bold shrink-0">{cls.batch}</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[10px] sm:text-xs font-bold shrink-0">{cls.batch}</span>
                           )}
                         </div>
                         {cls.date_time && (
-                          <p className="flex items-center gap-1.5 text-text-gray text-[11px] mt-1">
+                          <p className="flex items-center gap-1.5 text-slate-500 text-xs sm:text-sm mt-1">
                             <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-2 sm:mt-0 shrink-0">
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center bg-brand-orange text-white font-bold text-[11px] py-2 px-5 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
+                        className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-xs sm:text-sm py-2 px-6 rounded-full hover:bg-brand-orange/90 shadow-xs hover:shadow-md transition-all cursor-pointer"
                       >
                         Register Now
                       </button>
@@ -152,9 +152,17 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               </div>
             </Reveal>
             {imageUrl && (
-              <Reveal className="lg:col-span-5 min-w-0 flex flex-col items-center justify-center w-full">
+              <Reveal className="lg:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 lg:mt-0">
+                <div className="lg:hidden flex items-center justify-center pt-4 pb-4">
+                  <Link
+                    to="/career"
+                    className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
+                  >
+                    Recent Job Openings !
+                  </Link>
+                </div>
                 {imageLink ? (
-                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full max-h-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
+                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full max-w-lg lg:max-w-none aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </a>
                 ) : (

@@ -55,7 +55,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
 
   return (
     <div className="bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav
           role="menubar"
           className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto lg:overflow-visible no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
@@ -255,7 +255,7 @@ export default function Header() {
 
   return (
     <header className="bg-white border-b border-gray-100 relative">
-      <div className="w-full px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           {settings?.logo_url && (
             <img
@@ -264,8 +264,8 @@ export default function Header() {
               className="h-9 sm:h-10 w-auto object-contain"
             />
           )}
-          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
-            MARVEL<span className="text-brand-orange">SLICE</span>
+          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+            Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </Link>
 

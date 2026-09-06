@@ -101,7 +101,7 @@ export default function Footer() {
                 {settings?.logo_url && (
                   <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105" />
                 )}
-                <span className="text-xl sm:text-2xl font-extrabold text-white">
+                <span className="text-xl sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif]">
                   Marvel <span className="text-brand-orange">Slice</span>
                 </span>
               </Link>

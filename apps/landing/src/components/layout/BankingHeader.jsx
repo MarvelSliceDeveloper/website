@@ -245,8 +245,8 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 className="h-9 sm:h-10 w-auto object-contain"
               />
             )}
-            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
-              MARVEL<span className="text-brand-orange">SLICE</span>
+            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
             </span>
           </Link>
 
