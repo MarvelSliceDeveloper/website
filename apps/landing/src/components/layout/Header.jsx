@@ -54,7 +54,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
   const isAffairsActive = currentPath === '/current-affairs' || currentPath === '/todays-affairs';
 
   return (
-    <div className="bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
+    <div className="hidden sm:block bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav
           role="menubar"
@@ -294,29 +294,78 @@ export default function Header() {
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Fixed Overlay Backdrop */}
+            {/* Modern Glassmorphic Backdrop Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 lg:hidden"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[99] lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
 
+            {/* Modern Slide-Over Drawer Panel */}
             <motion.div
               ref={mobileMenuRef}
-              initial={{ opacity: 0, scale: 0.95, y: -8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="absolute right-4 sm:right-6 top-full mt-2 w-64 sm:w-72 bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.16)] lg:hidden z-50 max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden border-l border-slate-100"
             >
-              <MobileNav
-                items={topNav}
-                currentPath={pathname}
-                onItemClick={() => setMobileOpen(false)}
-              />
+              {/* Drawer Top Bar Header - Close ('X') Button on LEFT */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+
+                <Link
+                  to="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2"
+                >
+                  {settings?.logo_url && (
+                    <img
+                      src={settings.logo_url}
+                      alt="Marvel Slice Logo"
+                      className="h-8 w-auto object-contain"
+                    />
+                  )}
+                  <span className="text-lg font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                    Marvel <span className="text-brand-orange">Slice</span>
+                  </span>
+                </Link>
+              </div>
+
+              {/* Drawer Navigation Body */}
+              <div className="flex-1 overflow-y-auto overscroll-contain py-4 px-3">
+                <MobileNav
+                  items={topNav}
+                  currentPath={pathname}
+                  onItemClick={() => setMobileOpen(false)}
+                />
+              </div>
+
+              {/* Drawer Bottom Action CTA */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/70 shrink-0 space-y-3">
+                <Link
+                  to="/contact"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full py-3 px-4 bg-brand-orange hover:bg-brand-orange/90 active:scale-[0.98] text-white font-bold text-sm rounded-xl text-center shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Contact Us
+                </Link>
+                {settings?.contact_phone && (
+                  <p className="text-xs text-center text-slate-500 font-medium">
+                    Call: <span className="text-slate-700 font-bold">{settings.contact_phone}</span>
+                  </p>
+                )}
+              </div>
             </motion.div>
           </>
         )}
