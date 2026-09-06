@@ -27,8 +27,11 @@ export default function InstructorShell({
       .catch(() => {});
   }, []);
 
-  // Onboarding route — render standalone without sidebar/header
-  if (pathname?.startsWith("/instructor/onboarding")) {
+  // Onboarding and Login routes — render standalone without sidebar/header
+  if (
+    pathname?.startsWith("/instructor/onboarding") ||
+    pathname?.startsWith("/instructor/login")
+  ) {
     return <>{children}</>;
   }
 

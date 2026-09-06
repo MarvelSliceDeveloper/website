@@ -566,7 +566,7 @@ export const courseService = {
     const page = filters.page || 1;
     const limit = Math.min(filters.limit || 6, 100);
     const skip = (page - 1) * limit;
-    const [coursesRaw, total] = await Promise.all([
+    const [coursesRaw, total, categoriesRaw] = await Promise.all([
       prisma.course.findMany({
         where,
         include: {
@@ -579,13 +579,39 @@ export const courseService = {
         take: limit,
       }),
       prisma.course.count({ where }),
+      prisma.category.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          order: true,
+          _count: {
+            select: {
+              courses: {
+                where: { isCatalog: true, status: "PUBLISHED", deletedAt: null },
+              },
+            },
+          },
+        },
+        orderBy: { order: "asc" },
+      }),
     ]);
     const courses = coursesRaw.map((c: any) => ({
       ...c,
       duration: c.durationMinutes ? `${Math.ceil(c.durationMinutes / 60)}h` : "—",
       priceDisplay: c.price != null ? c.price : null,
     }));
-    return { courses, total, page, limit };
+    const categories = categoriesRaw.map((cat: any) => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+      order: cat.order,
+      courseCount: cat._count.courses,
+    }));
+    return { courses, total, page, limit, categories };
   },
 
   async getCatalogueBySlug(slug: string) {

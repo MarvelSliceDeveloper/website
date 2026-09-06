@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { IconClock } from "@tabler/icons-react";
 
 const bannerHeights = { sm: "h-40", md: "h-44", lg: "h-48" } as const;
 
@@ -29,7 +30,7 @@ export function CourseCard({
       onMouseEnter={handlePrefetch}
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col"
     >
-      <div className={`${bannerH} bg-gradient-to-br from-primary to-dark-navy flex items-center justify-center shrink-0 overflow-hidden`}>
+      <div className={`${bannerH} bg-gradient-to-br from-primary to-dark-navy flex items-center justify-center shrink-0 overflow-hidden relative`}>
         <div className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
           {img ? (
             <img src={img} alt={course.title} className="w-full h-full object-cover" />
@@ -37,14 +38,20 @@ export function CourseCard({
             <span className="text-white/15 text-4xl sm:text-5xl font-bold">{course.title?.charAt(0)}</span>
           )}
         </div>
+        <span className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs">
+          Course
+        </span>
       </div>
       <div className="p-6 flex flex-col flex-1">
         <h3 className="font-bold text-dark-navy text-lg group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
         <p className="text-sm text-slate-600 leading-relaxed mt-2 line-clamp-2 flex-1">{course.description}</p>
         <div className="flex flex-wrap gap-2 mt-3 mb-3">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-            {course.duration || "—"}
-          </span>
+          {course.duration && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <IconClock size={12} />
+              {course.duration}
+            </span>
+          )}
           {course.categoryRelation?.name && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
               {course.categoryRelation.name}

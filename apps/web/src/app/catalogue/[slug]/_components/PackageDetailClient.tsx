@@ -430,21 +430,19 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Link href="/catalogue" className="group flex items-center gap-3">
-          <div className="transition-transform group-hover:scale-105">
-            <Image
-              src="/images/logo.svg"
-              alt="Marvel Slice"
-              width={220}
-              height={64}
-              className="h-7 w-auto object-contain"
-            />
-          </div>
-          <span className="hidden text-lg font-extrabold tracking-tight sm:inline">
-            <span className="text-blue-600">Marvel</span>{" "}
-            <span className="text-blue-500">Slice</span>
+          <Image
+            src="/images/logo.svg"
+            alt="Marvel Slice"
+            width={48}
+            height={48}
+            className="h-10 w-auto object-contain shrink-0"
+          />
+          <span className="text-xl sm:text-2xl font-extrabold tracking-tight">
+            <span className="text-foreground">Marvel</span>{" "}
+            <span className="text-primary">Slice</span>
           </span>
         </Link>
 
@@ -480,6 +478,7 @@ function Hero({ pkg }: { pkg: PackageDetail }) {
   const hasPrice = pkg.price != null && pkg.price > 0;
   const totalLessons = pkg.totalLessons ?? 0;
   const totalQuizzes = pkg.totalQuizzes ?? 0;
+  const firstThumb = pkg.courses?.[0]?.course?.thumbnailUrl || null;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-primary-hover text-white">
@@ -584,6 +583,11 @@ function Hero({ pkg }: { pkg: PackageDetail }) {
           </div>
 
           <div className="hidden lg:block">
+            {firstThumb ? (
+              <div className="rounded-2xl overflow-hidden bg-white/10 border border-white/15 backdrop-blur-md mb-4">
+                <img src={firstThumb} alt={pkg.name} className="w-full h-48 object-cover" />
+              </div>
+            ) : null}
             <div className="flex h-full flex-col rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
               <div className="mb-5 flex items-center gap-2">
                 <IconSparkles size={18} className="text-white/90" />
