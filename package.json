@@ -61,8 +61,5 @@
   "engines": {
     "node": ">=22.13.0",
     "pnpm": ">=8.0.0"
-  },
-  "dependencies": {
-    "pnpm": "^12.3.4"
   }
 }
