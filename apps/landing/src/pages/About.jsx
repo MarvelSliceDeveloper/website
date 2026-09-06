@@ -83,11 +83,9 @@ export default function About() {
       )}
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
-        <Reveal key={i} variant="up" className={`py-10 sm:py-16 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionRenderer section={section} className="pt-0 pb-16" />
-          </div>
-        </Reveal>
+        <div key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+          <SectionRenderer section={section} />
+        </div>
       ))}
     </div>
   );

@@ -34,7 +34,7 @@ function DynamicIcon({ name, className }) {
 function FaqListSection({ section }) {
   const [openIdx, setOpenIdx] = useState(null);
   return (
-    <Reveal className="w-full mx-auto">
+    <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
       <div className="space-y-2">
         {(section.items || []).map((faq, i) => (
@@ -67,7 +67,7 @@ export default function SectionRenderer({ section, className }) {
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
             </div>
           ) : (
-            <div key={i} className={`text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
+            <div key={i} className={`text-sm sm:text-base leading-relaxed text-slate-600 w-full whitespace-pre-line ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
           )
         );
         if (section.image_url) {
@@ -84,7 +84,7 @@ export default function SectionRenderer({ section, className }) {
               <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div className="space-y-4">
                   {paragraphs.map((b, i) => (
-                    <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{b.text}</div>
+                    <div key={i} className="text-sm sm:text-base leading-relaxed text-slate-600 w-full whitespace-pre-line">{b.text}</div>
                   ))}
                 </div>
                 <div className="flex justify-center">
@@ -95,7 +95,7 @@ export default function SectionRenderer({ section, className }) {
           );
         }
         return (
-          <Reveal className="py-12 max-w-4xl mx-auto">{contentBlocks}</Reveal>
+          <Reveal className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">{contentBlocks}</Reveal>
         );
       }
       const paragraphs = safeParse(section.content);
@@ -103,7 +103,7 @@ export default function SectionRenderer({ section, className }) {
         ? paragraphs.join('\n\n')
         : safeString(section.content);
       return (
-        <Reveal className={`py-12 max-w-4xl mx-auto text-${ca}`}>
+        <Reveal className={`py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-${ca}`}>
           {section.heading && (
             <div className="mb-6">
               <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy text-${ha}`}>{section.heading}</h2>
@@ -113,7 +113,7 @@ export default function SectionRenderer({ section, className }) {
           {content && (
             <div className="space-y-4">
               {content.split('\n\n').filter(Boolean).map((p, i) => (
-                <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</div>
+                <div key={i} className="text-sm sm:text-base leading-relaxed text-slate-600 w-full whitespace-pre-line">{p}</div>
               ))}
             </div>
           )}
@@ -155,7 +155,7 @@ export default function SectionRenderer({ section, className }) {
                   )}
                   <div className="max-w-[600px] space-y-6 mx-auto lg:mx-0">
                     {content.split('\n\n').filter(Boolean).map((p, i) => (
-                      <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</p>
+                      <p key={i} className="text-sm sm:text-base leading-relaxed text-slate-600 w-full whitespace-pre-line">{p}</p>
                     ))}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export default function SectionRenderer({ section, className }) {
     }
     case 'image':
       return (
-        <Reveal className="max-w-4xl mx-auto text-center">
+        <Reveal className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-4">{section.heading}</h2>}
           {section.image_url && <img src={section.image_url} alt={section.heading || ''} className="w-full max-h-96 object-cover rounded-xl shadow-sm" />}
           {section.content && <p className="text-text-gray text-base mt-4">{section.content}</p>}
@@ -194,7 +194,7 @@ export default function SectionRenderer({ section, className }) {
       );
     case 'cards':
       return (
-        <div>
+        <div className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</Reveal>}
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {(section.content || '').split('\n').filter(Boolean).map((item, i) => (
@@ -210,7 +210,7 @@ export default function SectionRenderer({ section, className }) {
       );
     case 'features':
       return (
-        <div className="max-w-3xl mx-auto">
+        <div className="py-12 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</Reveal>}
           <Stagger className="space-y-4">
             {(section.items || (section.content || '').split('\n').filter(Boolean)).map((item, i) => (
@@ -227,7 +227,7 @@ export default function SectionRenderer({ section, className }) {
       if (items.length === 0) return null;
       const ha = section.headingAlign || 'center';
       return (
-        <Reveal className="py-16">
+        <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-dark-navy mb-8 text-${ha}`}>{section.heading}</h2>}
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {items.map((stat, i) => (
@@ -244,7 +244,7 @@ export default function SectionRenderer({ section, className }) {
       const items = safeParse(section.items);
       if (items.length === 0) return null;
       return (
-        <div>
+        <div className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-8 text-center">{section.heading}</Reveal>}
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {items.map((member, i) => (
@@ -265,7 +265,7 @@ export default function SectionRenderer({ section, className }) {
     }
     case 'contact_info':
       return (
-        <Reveal className="max-w-lg mx-auto">
+        <Reveal className="py-12 max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
           <div className="space-y-4">
             {section.address && <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMapPin className="w-5 h-5 text-brand-orange" /></div><div className="text-text-gray text-base whitespace-pre-line">{section.address}</div></div>}
@@ -307,7 +307,7 @@ export default function SectionRenderer({ section, className }) {
       return <FaqListSection section={section} />;
     case 'positions':
       return (
-        <div>
+        <div className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-8 text-center">{section.heading}</Reveal>}
           <Stagger className="max-w-4xl mx-auto space-y-4">
             {(section.items || []).map((pos, i) => (
@@ -403,26 +403,26 @@ export default function SectionRenderer({ section, className }) {
                 {section.subheading}
               </Reveal>
             )}
-            <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mt-12 sm:mt-14">
+            <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6 mt-8 sm:mt-12">
               {items.map((item, i) => {
                 const s = accentStyles[i % accentStyles.length];
                 return (
                   <StaggerItem key={i} className="h-full">
-                    <div className="group relative h-full overflow-hidden rounded-[24px] border border-slate-100 bg-white px-6 sm:px-7 py-7 sm:py-8 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.1)] flex flex-col items-center text-center justify-between">
+                    <div className="group relative h-full w-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 sm:p-6 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between items-center text-center">
                       <div className="flex flex-col items-center text-center w-full">
                         {/* 1. ICON CONTAINER */}
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full mx-auto bg-white transition-transform duration-300 group-hover:scale-105 shrink-0" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-                          {item.icon ? <DynamicIcon name={item.icon} className={`h-7 w-7 ${s.accent}`} /> : <FiBriefcase className={`h-7 w-7 ${s.accent}`} />}
+                        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full mx-auto bg-white transition-transform duration-300 group-hover:scale-105 shrink-0" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
+                          {item.icon ? <DynamicIcon name={item.icon} className={`h-6 w-6 sm:h-7 sm:w-7 ${s.accent}`} /> : <FiBriefcase className={`h-6 w-6 sm:h-7 sm:w-7 ${s.accent}`} />}
                         </div>
 
-                        {/* 2. TITLE CONTAINER - FIXED HEIGHT FOR 100% EVEN ALIGNMENT */}
-                        <div className="mt-5 min-h-[52px] sm:min-h-[56px] flex flex-col items-center justify-center w-full">
-                          <h3 className="text-base sm:text-[17px] font-bold leading-snug text-slate-900 text-center">{item.title}</h3>
-                          <div className={`mt-2 h-[2.5px] w-8 rounded-full mx-auto ${s.underline} transition-all duration-300 group-hover:w-11`} />
+                        {/* 2. TITLE CONTAINER - UNIFORM HEIGHT ACROSS CARDS */}
+                        <div className="mt-3.5 min-h-[44px] sm:min-h-[52px] flex flex-col items-center justify-center w-full">
+                          <h3 className="text-sm sm:text-base font-bold leading-snug text-slate-900 text-center">{item.title}</h3>
+                          <div className={`mt-1.5 h-[2.5px] w-7 rounded-full mx-auto ${s.underline} transition-all duration-300 group-hover:w-10`} />
                         </div>
 
-                        {/* 3. DESCRIPTION TEXT - UNIFORM BASELINE ACROSS ALL CARDS */}
-                        <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-500 text-center font-normal">{item.description}</p>
+                        {/* 3. DESCRIPTION TEXT */}
+                        <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-500 text-center font-normal flex-1">{item.description}</p>
                       </div>
 
                       <div className={`absolute -bottom-10 -right-10 h-28 w-28 rounded-full ${s.blob} opacity-60 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none`} />
@@ -443,7 +443,7 @@ export default function SectionRenderer({ section, className }) {
     case 'content_media_list': {
       const listItems = safeParse(section.list_items);
       return (
-        <Reveal>
+        <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-center md:text-left">
               {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-4 text-center md:text-left">{section.heading}</h2>}
