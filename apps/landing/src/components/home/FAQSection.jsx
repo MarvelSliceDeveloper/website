@@ -29,7 +29,7 @@ export default function FAQSection({ section }) {
                 isOpen={openIdx === i}
                 onToggle={() => setOpenIdx(openIdx === i ? null : i)}
               >
-                <p className="text-gray-500 text-base leading-relaxed">{item.answer}</p>
+                <p className="text-gray-500 text-sm sm:text-base leading-relaxed">{item.answer}</p>
               </AccordionItem>
             </StaggerItem>
           ))}

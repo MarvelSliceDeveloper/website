@@ -93,7 +93,7 @@ export default function HeroSection({ section }) {
                       </h1>
                     )}
                     {bannerDescription && (
-                      <p className="mt-2.5 sm:mt-4 text-xs sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
+                      <p className="mt-2.5 sm:mt-4 text-sm sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
                         {bannerDescription}
                       </p>
                     )}
@@ -137,7 +137,7 @@ export default function HeroSection({ section }) {
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center"
             >
               {bannerHeading && <h1 className="text-[clamp(1.625rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">{bannerHeading}</h1>}
-              {bannerDescription && <p className="mt-4 text-xs sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
+              {bannerDescription && <p className="mt-4 text-sm sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
             </motion.div>
           </AnimatePresence>
 
