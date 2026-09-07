@@ -1064,7 +1064,7 @@ function StudentPortalContent() {
       onBack={goBack}
       studentName={studentName}
       studentEmail={studentEmail}
-      fullWidth={currentView.view === "COURSE_CONTENT"}
+      fullWidth={currentView.view === "COURSE_CONTENT" || currentView.view === "COURSE_DETAIL"}
       hideMobileNav={currentView.view === "COURSE_CONTENT"}
     >
       {/* View transition wrapper */}

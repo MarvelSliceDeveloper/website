@@ -21,7 +21,13 @@ const superAdminPrefixes = [
   "/admin/refunds/approvals",
 ];
 
-const bypassRoutes = ["/login", "/maintenance", "/_next", "/api/"];
+const bypassRoutes = [
+  "/login",
+  "/instructor/login",
+  "/maintenance",
+  "/_next",
+  "/api/",
+];
 
 let maintenanceCache: {
   enabled: boolean;
@@ -66,6 +72,20 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("accessToken")?.value;
 
+  // If already logged in as instructor, redirect from /instructor/login to dashboard
+  if (pathname === "/instructor/login" && token) {
+    try {
+      const payload = decodeJwt(token);
+      if (payload.role === "INSTRUCTOR") {
+        return NextResponse.redirect(
+          new URL("/instructor/dashboard", request.url),
+        );
+      }
+    } catch {
+      /* invalid token — proceed to login */
+    }
+  }
+
   // Bypass maintenance check for whitelisted routes
   const isBypassRoute = bypassRoutes.some((p) => pathname.startsWith(p));
   if (isBypassRoute) {
@@ -99,7 +119,11 @@ export async function middleware(request: NextRequest) {
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
 
   if (isProtected && !token) {
-    const loginUrl = new URL("/login", request.url);
+    const isInstructorRoute = pathname.startsWith("/instructor");
+    const loginUrl = new URL(
+      isInstructorRoute ? "/instructor/login" : "/login",
+      request.url,
+    );
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }

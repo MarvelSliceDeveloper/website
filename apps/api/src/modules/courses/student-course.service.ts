@@ -368,16 +368,28 @@ export async function getCatalogue(userId: string) {
 }
 
 // GET /api/courses/:courseId — single published course for the student's
-// on-demand COURSE_DETAIL view. Lightweight (no full catalogue scan).
+// on-demand COURSE_DETAIL view. Returns the same rich payload as the public
+// catalogue detail (getCatalogueBySlug) so the student portal can render the
+// identical landing layout (hero, highlights, modules, certification, FAQ).
 export async function getCourseDetail(userId: string, courseId: string) {
   const course = await prisma.course.findFirst({
     where: { id: courseId, status: "PUBLISHED" },
     include: {
+      categoryRelation: true,
+      courseTags: { include: { tag: true } },
       modules: {
-        select: {
-          id: true,
-          title: true,
-          _count: { select: { sessions: true } },
+        orderBy: { order: "asc" },
+        include: {
+          lessons: { orderBy: { order: "asc" } },
+          quizzes: {
+            include: { questions: true },
+          },
+          assignments: {
+            orderBy: { dueDate: "asc" },
+          },
+          practicals: {
+            orderBy: { order: "asc" },
+          },
         },
       },
       batches: {
@@ -413,7 +425,7 @@ export async function getCourseDetail(userId: string, courseId: string) {
     ...packageCourseEnrollments.map((p) => p.courseId),
   ]);
 
-  const nextBatch = course.batches[0];
+  const nextBatch = (course as any).batches[0];
   const instructorName = nextBatch?.instructor?.name || "TBD";
   const nextBatchLabel = nextBatch
     ? nextBatch.startDate.toLocaleDateString("en-IN", {
@@ -422,24 +434,72 @@ export async function getCourseDetail(userId: string, courseId: string) {
       })
     : "TBD";
 
-  const durationHours = course.durationMinutes
-    ? `${Math.ceil(course.durationMinutes / 60)} weeks`
-    : `${course.modules.length * 2} weeks`;
+  const durationHours = (course as any).durationMinutes
+    ? `${Math.ceil((course as any).durationMinutes / 60)} weeks`
+    : `${(course as any).modules.length * 2} weeks`;
+
+  // Derive videoUrl from first lesson with videoUrl (mirrors getCatalogueBySlug)
+  let videoUrl: string | null = null;
+  for (const m of (course as any).modules) {
+    const l = m.lessons.find((x: any) => x.videoUrl);
+    if (l) {
+      videoUrl = l.videoUrl;
+      break;
+    }
+  }
+
+  const totalLessons = (course as any).modules.reduce(
+    (sum: number, m: any) => sum + (m.lessons?.length ?? 0),
+    0,
+  );
+  const totalQuizzes = (course as any).modules.reduce(
+    (sum: number, m: any) => sum + (m.quizzes?.length ?? 0),
+    0,
+  );
 
   return {
-    id: course.id,
-    title: course.title,
-    thumbnail: course.thumbnailUrl || "📚",
+    id: (course as any).id,
+    slug: (course as any).slug,
+    title: (course as any).title,
+    description: (course as any).description,
+    thumbnail: (course as any).thumbnailUrl || "📚",
+    thumbnailUrl: (course as any).thumbnailUrl,
+    coverImageUrl: (course as any).coverImageUrl,
+    videoUrl,
+    price: (course as any).price ?? null,
     duration: durationHours,
+    durationMinutes: (course as any).durationMinutes ?? null,
     instructor: instructorName,
     nextBatch: nextBatchLabel,
-    isEnrolled: enrolledCourseIds.has(course.id),
-    tags: (course.tags as string[]) || [],
-    curriculum: course.modules.map((m) => ({
+    isEnrolled: enrolledCourseIds.has((course as any).id),
+    tags: ((course as any).tags as string[]) || [],
+    category: (course as any).category ?? null,
+    categoryRelation: (course as any).categoryRelation ?? null,
+    courseTags: (course as any).courseTags ?? [],
+    learningObjectives: ((course as any).learningObjectives as string[]) || [],
+    // Backwards compat for old view
+    whatYouLearn: ((course as any).learningObjectives as string[]) || [],
+    curriculum: (course as any).modules.map((m: any) => ({
       title: m.title,
-      sessions: m._count.sessions || 1,
+      sessions: m._count?.sessions ?? m.lessons?.length ?? 1,
     })),
-    whatYouLearn: (course.learningObjectives as string[]) || [],
+    modules: (course as any).modules.map((m: any) => ({
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      order: m.order,
+      lessons: m.lessons,
+      quizzes: m.quizzes,
+      assignments: m.assignments,
+      practicals: m.practicals,
+    })),
+    totalLessons,
+    totalQuizzes,
+    totalAssignments: (course as any).modules.reduce(
+      (sum: number, m: any) => sum + (m.assignments?.length ?? 0),
+      0,
+    ),
+    highlights: ((course as any).learningObjectives as string[]) || [],
   };
 }
 

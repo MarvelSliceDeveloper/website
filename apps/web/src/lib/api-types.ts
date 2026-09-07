@@ -160,15 +160,41 @@ export interface CourseProgress {
 
 export interface CatalogueCourse {
   id: string;
+  slug?: string;
   title: string;
+  description?: string | null;
   thumbnail: string;
+  thumbnailUrl?: string | null;
+  coverImageUrl?: string | null;
+  videoUrl?: string | null;
+  price?: number | null;
   duration: string;
+  durationMinutes?: number | null;
   instructor: string;
   nextBatch: string;
   isEnrolled: boolean;
   tags: string[];
+  category?: string | null;
+  categoryRelation?: { id: string; name: string; slug: string } | null;
+  courseTags?: { tag: { id: string; name: string; slug: string } }[];
+  learningObjectives?: string[];
+  highlights?: string[];
   curriculum: { title: string; sessions: number }[];
   whatYouLearn: string[];
+  // Rich detail (when fetched via GET /api/courses/:id)
+  modules?: {
+    id: string;
+    title: string;
+    description?: string | null;
+    order?: number;
+    lessons?: { id: string; title: string; videoUrl?: string | null }[];
+    quizzes?: { id: string; title: string }[];
+    assignments?: { id: string; title: string }[];
+    practicals?: { id: string; title: string }[];
+  }[];
+  totalLessons?: number;
+  totalQuizzes?: number;
+  totalAssignments?: number;
 }
 
 export interface ContinueLearningItem {
