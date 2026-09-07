@@ -42,8 +42,14 @@ export default function ServicesSection({ section }) {
           <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
         </div>
         {intro && (
-          <Reveal className="text-text-gray mb-12 text-center">
-            <p className="max-w-2xl mx-auto text-sm sm:text-base font-normal text-slate-600 leading-relaxed text-center whitespace-pre-line">{intro}</p>
+          <Reveal className="text-text-gray mb-12">
+            <div className="max-w-4xl mx-auto space-y-4">
+              {intro.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                  {p.trim()}
+                </p>
+              ))}
+            </div>
           </Reveal>
         )}
 
@@ -53,14 +59,20 @@ export default function ServicesSection({ section }) {
               <img
                 src={leftImageUrl}
                 alt={leftHeading}
-                className="w-full h-52 sm:h-60 md:h-56 lg:h-72 object-cover rounded-2xl shrink-0"
+                className="w-full h-auto rounded-2xl shrink-0"
               />
             ) : (
               <div className="w-full h-52 sm:h-60 md:h-56 lg:h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange shrink-0" />
             )}
             <h3 className="font-bold text-lg sm:text-xl mt-4 sm:mt-5 text-dark-navy text-center sm:text-left leading-snug line-clamp-2">{leftHeading}</h3>
             {leftDescription && (
-              <p className="text-sm sm:text-base font-normal leading-relaxed text-slate-600 whitespace-pre-line mt-2.5">{leftDescription}</p>
+              <div className="space-y-3 mt-2.5">
+                {leftDescription.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                    {p.trim()}
+                  </p>
+                ))}
+              </div>
             )}
           </Reveal>
 

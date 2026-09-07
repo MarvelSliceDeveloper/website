@@ -73,12 +73,12 @@ export default function Contact() {
       {(heroImg || mobileHeroImg) && (
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
-            <picture>
+            <picture className="w-full h-auto block">
               <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
-              <img src={heroImg || mobileHeroImg} alt="" className="w-full h-[260px] sm:h-auto object-cover" />
+              <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto block" />
             </picture>
           ) : (
-            <img src={heroImg} alt="" className="w-full h-[260px] sm:h-auto object-cover" />
+            <img src={heroImg} alt="" className="w-full h-auto block" />
           )}
         </Reveal>
       )}

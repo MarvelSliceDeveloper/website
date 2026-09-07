@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { trackSearch } from '../lib/analytics';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,71 +10,162 @@ import { useSiteSettings } from '../hooks/useSupabase';
 
 function Hero({ search, onSearchChange, onSearch, heroImage, mobileHeroImage, heading, subheading }) {
   const searchBar = (
-    <div className="max-w-xl mx-auto flex flex-row items-center gap-0 shadow-sm rounded-xl w-full">
-      <div className="relative flex-1">
-        <FiSearch className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+    <div className="max-w-[260px] xs:max-w-xs sm:max-w-xl mx-auto flex flex-row items-center gap-0 shadow-sm rounded-xl w-full">
+      <div className="relative flex-1 min-w-0">
+        <FiSearch className="absolute left-2.5 xs:left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search articles..."
           onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
-          className="w-full pl-9 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 rounded-l-xl bg-white text-dark-navy text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-brand-orange border border-gray-300 border-r-0"
+          className="w-full pl-7 xs:pl-8 sm:pl-12 pr-2 sm:pr-4 py-2 xs:py-2.5 sm:py-3.5 rounded-l-xl bg-white/95 backdrop-blur-xs text-dark-navy text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-brand-orange border border-gray-300 border-r-0 truncate"
         />
       </div>
       <button
         type="button"
         onClick={onSearch}
-        className="bg-brand-orange text-white px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-r-xl font-semibold hover:bg-brand-orange/90 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer text-sm sm:text-base"
+        className="bg-brand-orange text-white px-3 xs:px-4 sm:px-8 py-2 xs:py-2.5 sm:py-3.5 rounded-r-xl font-semibold hover:bg-brand-orange/90 transition-colors flex items-center justify-center gap-1 sm:gap-2 shrink-0 cursor-pointer text-sm sm:text-base"
       >
         <span>Search</span>
-        <FiArrowRight className="w-4 h-4" />
+        <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
     </div>
   );
 
   return (
     <div className="w-full max-w-[1900px] mx-auto">
-      <section className="relative text-white overflow-hidden w-full max-w-[1900px] mx-auto min-h-[240px] sm:h-[360px] lg:h-[400px] flex items-center justify-center py-8 sm:py-0">
+      <section className="relative text-white overflow-hidden w-full max-w-[1900px] mx-auto bg-dark-navy">
         {heroImage || mobileHeroImage ? (
-          mobileHeroImage ? (
-            <picture className="absolute inset-0 w-full h-full">
-              <source media="(max-width: 767px)" srcSet={mobileHeroImage} />
-              <img src={heroImage || mobileHeroImage} alt="" className="w-full h-full object-cover" />
+          <div className="relative w-full flex items-center justify-center min-h-[290px] xs:min-h-[320px] sm:min-h-0">
+            <picture className="w-full h-auto block">
+              {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+              <img
+                src={heroImage || mobileHeroImage}
+                alt=""
+                className="w-full h-auto block min-h-[290px] xs:min-h-[320px] object-cover sm:min-h-0 sm:h-[360px] lg:h-[400px] sm:object-cover"
+              />
             </picture>
-          ) : (
-            <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          )
-        ) : (
-          <div className="absolute inset-0 bg-dark-navy" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/30 z-10" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col items-center justify-center text-center relative z-20 w-full">
-          <Reveal>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-white">
-              {heading || 'Latest Articles & News'}
-            </h1>
-            <p className="mt-2 sm:mt-3 text-xs sm:text-lg !text-white max-w-2xl mx-auto leading-relaxed">
-              {subheading || 'Insights, tutorials, and stories from the Marvel Slice team'}
-            </p>
-          </Reveal>
-          <div className="mt-5 sm:mt-8 w-full max-w-xl mx-auto">
-            {searchBar}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30 z-10" />
+            <div className="absolute inset-0 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-full flex flex-col items-center justify-center text-center z-20 w-full py-4 sm:py-0">
+              <Reveal className="w-full">
+                <h1 className="text-[28px] xs:text-[32px] sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-white drop-shadow-md">
+                  {heading || 'Latest Articles & News'}
+                </h1>
+                <p className="mt-2 sm:mt-4 text-[18px] xs:text-xl sm:text-xl !text-white max-w-2xl mx-auto leading-normal sm:leading-relaxed drop-shadow-sm px-2">
+                  {subheading || 'Insights, tutorials, and stories from the Marvel Slice team'}
+                </p>
+              </Reveal>
+              <div className="mt-8 xs:mt-10 sm:mt-12 w-full max-w-[280px] xs:max-w-sm sm:max-w-xl mx-auto px-2 sm:px-0">
+                {searchBar}
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="relative text-white overflow-hidden w-full max-w-[1900px] mx-auto h-[320px] xs:h-[360px] sm:h-[360px] lg:h-[400px] flex items-center justify-center bg-dark-navy">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col items-center justify-center text-center relative z-20 w-full">
+              <Reveal className="w-full">
+                <h1 className="text-[28px] xs:text-[32px] sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-white">
+                  {heading || 'Latest Articles & News'}
+                </h1>
+                <p className="mt-2 sm:mt-4 text-[18px] xs:text-xl sm:text-xl !text-white max-w-2xl mx-auto leading-relaxed">
+                  {subheading || 'Insights, tutorials, and stories from the Marvel Slice team'}
+                </p>
+              </Reveal>
+              <div className="mt-8 xs:mt-10 sm:mt-12 w-full max-w-[280px] xs:max-w-sm sm:max-w-xl mx-auto">
+                {searchBar}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
 }
 
 function CategoryPills({ categories, active, onChange }) {
+  const scrollRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setShowLeft(scrollLeft > 5);
+    setShowRight(scrollLeft + clientWidth < scrollWidth - 5);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const timer = setTimeout(checkScroll, 100);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [categories]);
+
+  const scroll = (direction) => {
+    if (!scrollRef.current) return;
+    const amount = direction === 'left' ? -200 : 200;
+    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide flex-nowrap">
-        <Button onClick={() => onChange(null)} variant={!active ? 'pill-orange' : 'pill'} size="sm" shape="pill" className="whitespace-nowrap shrink-0">All</Button>
-        {categories.map((cat) => (
-          <Button key={cat.id} onClick={() => onChange(cat.slug)} variant={active === cat.slug ? 'pill-orange' : 'pill'} size="sm" shape="pill" className="whitespace-nowrap shrink-0">{cat.name}</Button>
-        ))}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="relative flex items-center group">
+        {showLeft && (
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            className="absolute left-0 z-20 bg-white/95 backdrop-blur-xs shadow-md border border-gray-200 text-gray-700 p-1.5 rounded-full hover:bg-brand-orange hover:text-white transition-colors cursor-pointer -ml-2"
+            aria-label="Scroll left"
+          >
+            <FiChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="flex items-center gap-2 overflow-x-auto py-2 px-1 flex-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 touch-pan-x w-full"
+        >
+          <Button
+            onClick={() => onChange(null)}
+            variant={!active ? 'pill-orange' : 'pill'}
+            size="sm"
+            shape="pill"
+            className="whitespace-nowrap shrink-0"
+          >
+            All
+          </Button>
+          {categories.map((cat) => (
+            <Button
+              key={cat.id}
+              onClick={() => onChange(cat.slug)}
+              variant={active === cat.slug ? 'pill-orange' : 'pill'}
+              size="sm"
+              shape="pill"
+              className="whitespace-nowrap shrink-0"
+            >
+              {cat.name}
+            </Button>
+          ))}
+        </div>
+
+        {showRight && (
+          <>
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10 rounded-r-xl" />
+            <button
+              type="button"
+              onClick={() => scroll('right')}
+              className="absolute right-0 z-20 bg-white/95 backdrop-blur-xs shadow-md border border-gray-200 text-gray-700 p-1.5 rounded-full hover:bg-brand-orange hover:text-white transition-colors cursor-pointer -mr-2 flex items-center justify-center animate-pulse hover:animate-none"
+              aria-label="Scroll right"
+            >
+              <FiChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -85,7 +176,7 @@ function FeaturedPost({ post }) {
     <Reveal>
     <Link to={`/blog/${post.slug}`} className="block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
       <div className="grid md:grid-cols-2">
-        <div className="aspect-[16/10] md:aspect-auto md:h-full bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
+        <div className="aspect-[16/9] sm:aspect-[16/10] md:aspect-auto md:h-full bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
           {post.image_url ? <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <span className="text-white/20 text-6xl font-bold">B</span>}
         </div>
         <div className="p-5 sm:p-8 lg:p-10 flex flex-col justify-center">
@@ -111,7 +202,7 @@ function FeaturedPost({ post }) {
 function PostCard({ post }) {
   return (
     <Link to={`/blog/${post.slug}`} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
-      <div className="aspect-[16/10] bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
+      <div className="aspect-[16/9] sm:aspect-[16/10] bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center overflow-hidden">
         {post.image_url ? <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <FiCalendar className="w-12 h-12 text-white/20" />}
       </div>
       <div className="p-5 sm:p-6 flex flex-col flex-1">
@@ -307,9 +398,9 @@ function SinglePost({ slug }) {
         </div>
       </Reveal>
       <Reveal>
-        {post.image_url && <img src={post.image_url} alt={post.title} className="w-full max-h-[500px] object-cover rounded-2xl mt-8 shadow-sm border border-gray-100" />}
-        {post.excerpt && <p className="text-lg text-text-gray mt-8 leading-relaxed">{post.excerpt}</p>}
-        <div className="mt-8 text-text-gray text-base leading-relaxed whitespace-pre-line">{post.content}</div>
+        {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto rounded-2xl mt-6 sm:mt-8 shadow-sm border border-gray-100" />}
+        {post.excerpt && <p className="text-base sm:text-lg text-text-gray mt-6 sm:mt-8 leading-relaxed">{post.excerpt}</p>}
+        <div className="mt-6 sm:mt-8 text-text-gray text-sm sm:text-base leading-relaxed whitespace-pre-line">{post.content}</div>
       </Reveal>
 
       {post.tags && post.tags.length > 0 && (

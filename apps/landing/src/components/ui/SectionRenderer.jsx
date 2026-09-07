@@ -95,7 +95,7 @@ export default function SectionRenderer({ section, className }) {
                   ))}
                 </div>
                 <div className="flex justify-center">
-                  <img src={section.image_url} alt={heading} className="w-full max-w-[500px] aspect-square object-cover rounded-2xl shadow-lg" />
+                  <img src={section.image_url} alt={heading} className="w-full h-auto max-w-[500px] rounded-2xl shadow-lg" />
                 </div>
               </div>
             </Reveal>
@@ -167,7 +167,7 @@ export default function SectionRenderer({ section, className }) {
                   </div>
                 </div>
                 <div className="lg:mt-[40px] flex justify-center">
-                  <img src={section.image_url} alt={section.heading || ''} className="w-full max-w-[500px] aspect-square object-cover rounded-2xl shadow-lg" />
+                  <img src={section.image_url} alt={section.heading || ''} className="w-full h-auto max-w-[500px] rounded-2xl shadow-lg" />
                 </div>
               </div>
               {items.length > 0 && (
@@ -207,7 +207,7 @@ export default function SectionRenderer({ section, className }) {
       return (
         <Reveal className="py-12 sm:py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {section.heading && <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-4 leading-tight sm:leading-snug">{section.heading}</h2>}
-          {section.image_url && <img src={section.image_url} alt={section.heading || ''} className="w-full max-h-96 object-cover rounded-xl shadow-sm" />}
+          {section.image_url && <img src={section.image_url} alt={section.heading || ''} className="w-full h-auto rounded-xl shadow-sm" />}
           {section.content && <p className="text-slate-600 text-sm sm:text-base leading-relaxed mt-4 font-normal">{section.content}</p>}
         </Reveal>
       );
@@ -219,7 +219,7 @@ export default function SectionRenderer({ section, className }) {
             {(section.content || '').split('\n').filter(Boolean).map((item, i) => (
               <StaggerItem key={i} className="h-full">
                 <Card className="p-5 sm:p-7">
-                  {section.image_url && <img src={section.image_url} alt="" className="w-full h-40 object-cover rounded-lg mb-4" />}
+                  {section.image_url && <img src={section.image_url} alt="" className="w-full h-auto rounded-lg mb-4" />}
                   <p className="text-dark-navy font-medium text-sm sm:text-base">{item}</p>
                 </Card>
               </StaggerItem>

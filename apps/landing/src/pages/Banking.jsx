@@ -284,11 +284,11 @@ export default function Banking() {
                   <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
                     {/* LEFT — Image (~35% width / lg:col-span-4) */}
                     <div className="lg:col-span-4 shrink-0 flex">
-                      <div className="relative w-full h-60 lg:h-full min-h-[260px] rounded-2xl overflow-hidden shadow-xs border border-slate-100">
+                      <div className="relative w-full h-auto lg:h-full rounded-2xl overflow-hidden shadow-xs border border-slate-100">
                         <img
                           src={exam.image}
                           alt={exam.imageAlt}
-                          className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-700 ease-out"
+                          className="w-full h-auto block sm:h-full sm:object-cover group-hover:scale-[1.05] transition-transform duration-700 ease-out"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-navy/40 via-transparent to-transparent opacity-40" />
                       </div>
