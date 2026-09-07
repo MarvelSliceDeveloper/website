@@ -159,16 +159,11 @@ export default function CreatePackagePage() {
                 <SelectValue placeholder="-- Select a package name --" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">
-                  <span>-- Select a package name --</span>
-                </SelectItem>
-                {packageNameOptions
-                  .filter((n) => n !== name)
-                  .map((n) => (
-                    <SelectItem key={n} value={n}>
-                      {n}
-                    </SelectItem>
-                  ))}
+                {packageNameOptions.map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n}
+                  </SelectItem>
+                ))}
                 {name &&
                   !(packageNameOptions as readonly string[]).includes(name) && (
                     <SelectItem value={name}>{name}</SelectItem>
