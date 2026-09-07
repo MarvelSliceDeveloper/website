@@ -184,7 +184,7 @@ function OverviewSection({ course }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div>
           <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy text-center mb-10 whitespace-pre-line">Key Highlights</Reveal>
-          <Stagger className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 max-w-5xl mx-auto">
+          <Stagger className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-5xl mx-auto">
             {highlights.map((h, i) => (
               <StaggerItem key={h.id || i}>
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-brand-orange/30 flex flex-col sm:flex-row items-center text-center sm:text-left gap-2 sm:gap-4 p-2.5 sm:px-4 sm:py-4 border border-gray-100 transition-all duration-300 group cursor-pointer h-full justify-center sm:justify-start">

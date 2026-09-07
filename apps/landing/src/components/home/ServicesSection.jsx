@@ -43,7 +43,7 @@ export default function ServicesSection({ section }) {
         </div>
         {intro && (
           <Reveal className="text-text-gray mb-12 text-center">
-            <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{intro}</p>
+            <p className="max-w-2xl mx-auto text-sm sm:text-base font-normal text-slate-600 leading-relaxed text-center whitespace-pre-line">{intro}</p>
           </Reveal>
         )}
 
@@ -58,9 +58,9 @@ export default function ServicesSection({ section }) {
             ) : (
               <div className="w-full h-52 sm:h-60 md:h-56 lg:h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange shrink-0" />
             )}
-            <h3 className="font-bold text-xl sm:text-xl mt-4 sm:mt-5 text-dark-navy text-center sm:text-left leading-snug line-clamp-2">{leftHeading}</h3>
+            <h3 className="font-bold text-lg sm:text-xl mt-4 sm:mt-5 text-dark-navy text-center sm:text-left leading-snug line-clamp-2">{leftHeading}</h3>
             {leftDescription && (
-              <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mt-2.5">{leftDescription}</p>
+              <p className="text-sm sm:text-base font-normal leading-relaxed text-slate-600 whitespace-pre-line mt-2.5">{leftDescription}</p>
             )}
           </Reveal>
 
@@ -75,7 +75,7 @@ export default function ServicesSection({ section }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-base sm:text-lg text-dark-navy leading-snug line-clamp-2">{service.title}</h4>
-                      <p className="text-xs sm:text-sm leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-6 whitespace-pre-line mt-1">{service.description}</p>
+                      <p className="text-sm sm:text-base font-normal leading-relaxed text-slate-600 whitespace-pre-line mt-1">{service.description}</p>
                     </div>
                   </div>
                   {i < servicesList.length - 1 && <div className="border-b border-gray-100" />}

@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Roboto', sans-serif;
+  --font-sans: 'Montserrat', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
   --font-roboto: 'Roboto', sans-serif;
   --color-neutral-50: #f8fafc;
   --color-neutral-100: #f1f5f9;

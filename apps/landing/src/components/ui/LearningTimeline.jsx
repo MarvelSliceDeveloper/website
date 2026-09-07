@@ -24,42 +24,42 @@ const FALLBACK_STEPS = [
     number: '01',
     title: 'Enroll',
     description:
-      'Select your program and begin your journey with guided counselor support.',
+      'Select the right program and begin your learning journey with personalized guidance and support.',
     icon: 'ClipboardCheck',
   },
   {
     number: '02',
     title: 'Learn',
     description:
-      'Master concepts through live sessions, labs, and expert-led courses.',
+      'Master essential concepts through interactive sessions, practical labs, and expert-led training.',
     icon: 'BookOpen',
   },
   {
     number: '03',
     title: 'Build',
     description:
-      'Apply skills on real-world projects to build a professional portfolio.',
+      'Apply your skills through hands-on projects and build a strong professional portfolio.',
     icon: 'Wrench',
   },
   {
     number: '04',
     title: 'Assess',
     description:
-      'Track growth through evaluations, mock interviews, and feedback.',
+      'Measure your growth through regular assessments, expert feedback, and mock interviews.',
     icon: 'ClipboardCheck',
   },
   {
     number: '05',
     title: 'Certify',
     description:
-      'Earn industry-recognized certifications that validate your expertise.',
+      'Earn recognized certifications that strengthen your profile and showcase your expertise.',
     icon: 'Award',
   },
   {
     number: '06',
     title: 'Succeed',
     description:
-      'Launch your career with placement support and hiring-partner connections.',
+      'Gain career guidance, placement support, and access to valuable hiring opportunities.',
     icon: 'Rocket',
   },
 ];
@@ -68,22 +68,26 @@ const FALLBACK_FEATURES = [
   {
     icon: 'ClipboardCheck',
     title: 'Personalized Guidance',
-    description: 'One-on-one counselor support at every stage.',
+    description:
+      'One-on-one support to help you make the right learning and career decisions.',
   },
   {
     icon: 'UserCheck',
     title: 'Hands-on Learning',
-    description: 'Projects & labs to build real industry skills.',
+    description:
+      'Practical projects and labs designed to build real-world industry skills.',
   },
   {
     icon: 'ClipboardList',
     title: 'Career Support',
-    description: 'Resume building, mock interviews & placements.',
+    description:
+      'Resume guidance, mock interviews, and placement preparation for your career.',
   },
   {
     icon: 'ShieldCheck',
     title: 'Lifetime Access',
-    description: 'Access resources & updates even after you succeed.',
+    description:
+      'Continue accessing resources, updates, and support even after completion.',
   },
 ];
 
@@ -232,9 +236,18 @@ export default function LearningJourney({ data }) {
 
   const steps = rawSteps.map((step, i) => {
     const colors = resolveStepColors(step, i);
+    const fallback = FALLBACK_STEPS[i % FALLBACK_STEPS.length];
+
+    const stage = fallback.stage;
+    const title = fallback.title;
+    const description = fallback.description;
+
     return {
       ...step,
       number: step.number || String(i + 1).padStart(2, '0'),
+      stage,
+      title,
+      description,
       color: colors.color,
       soft: colors.soft,
       ring: colors.ring,
@@ -283,7 +296,7 @@ export default function LearningJourney({ data }) {
         <div className="mb-10 sm:mb-14 text-center">
           <motion.h2
             {...fadeUp(0.1, 16, rm)}
-            className="text-2xl sm:text-4xl font-extrabold tracking-tight text-blue-700"
+            className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy"
           >
             {heading}
           </motion.h2>
@@ -291,14 +304,14 @@ export default function LearningJourney({ data }) {
           {/* Brand Underline */}
           <motion.div
             {...fadeUp(0.18, 8, rm)}
-            className="mx-auto mt-3 h-1 w-16 rounded-full bg-brand-orange"
+            className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-4"
           />
 
           {/* Subtitle */}
           {subheading && (
             <motion.p
               {...fadeUp(0.24, 14, rm)}
-              className="mx-auto mt-4 max-w-2xl text-sm sm:text-lg font-normal text-slate-600 leading-relaxed"
+              className="mx-auto mt-4 max-w-2xl text-sm sm:text-base font-normal text-slate-600 leading-relaxed"
             >
               {subheading}
             </motion.p>
@@ -438,15 +451,14 @@ export default function LearningJourney({ data }) {
                   <motion.div
                     whileHover={rm ? undefined : { y: -6, scale: 1.02 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className="w-full bg-white rounded-[22px] border border-[rgba(226,232,240,0.7)]
+                    className="w-full min-h-[295px] bg-white rounded-[22px] border border-[rgba(226,232,240,0.7)]
                                shadow-[0_10px_30px_rgba(15,23,42,0.055)]
-                               pt-[20px] px-5 pb-6
+                               pt-5 px-4 pb-6
                                flex flex-col items-center text-center relative overflow-hidden
                                transition-shadow duration-300 ease-out
                                group-hover:shadow-[0_20px_45px_rgba(15,23,42,0.11)] cursor-pointer"
                     style={{
                       marginTop: `${CARD_TOP}px`,
-                      height: `${CARD_MIN_H}px`,
                     }}
                   >
                     {/* Icon Circle INSIDE Card */}
@@ -471,16 +483,16 @@ export default function LearningJourney({ data }) {
                       />
                     </motion.div>
 
-                    {/* Title */}
+                    {/* Step Title in Accent Color (Enroll, Learn, Build, Assess, Certify, Succeed) */}
                     <h3
-                      className="text-[17px] font-bold leading-snug text-center mb-2"
+                      className="text-base sm:text-lg font-bold leading-snug text-center mb-2.5"
                       style={{ color: step.color }}
                     >
                       {step.title}
                     </h3>
 
-                    {/* Subtext */}
-                    <p className="text-slate-500 text-[13px] leading-[1.65] max-w-[195px] text-center">
+                    {/* Description Area */}
+                    <p className="text-slate-600 text-xs sm:text-sm leading-relaxed text-center font-normal text-pretty">
                       {step.description}
                     </p>
                   </motion.div>
@@ -592,16 +604,16 @@ export default function LearningJourney({ data }) {
                     ease: [0.25, 1, 0.5, 1],
                   }}
                   whileHover={rm ? undefined : { y: -2 }}
-                  className="flex-1 min-w-0 bg-white rounded-2xl sm:rounded-[20px] border border-slate-200/80 p-5 sm:p-5 shadow-[0_4px_20px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] transition-all duration-300 relative overflow-hidden"
+                  className="flex-1 min-w-0 bg-white rounded-2xl sm:rounded-[20px] border border-slate-200/80 p-5 shadow-[0_4px_20px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] transition-all duration-300 relative overflow-hidden flex flex-col items-center text-center"
                 >
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col items-center text-center mb-2">
                     {/* Icon inside Card */}
                     <motion.div
                       initial={rm ? undefined : { scale: 0.8 }}
                       whileInView={rm ? undefined : { scale: 1 }}
                       viewport={{ once: true, amount: 0.2 }}
                       transition={{ type: 'spring', stiffness: 300, damping: 15, delay: i * 0.08 + 0.15 }}
-                      className="flex items-center justify-center rounded-full shrink-0 w-8 h-8 sm:w-9 sm:h-9 transition-transform duration-300 group-hover:scale-105"
+                      className="flex items-center justify-center rounded-full shrink-0 w-9 h-9 mb-2 transition-transform duration-300 group-hover:scale-105"
                       style={{
                         backgroundColor: step.soft,
                         border: `2px solid ${step.ring}`,
@@ -610,19 +622,19 @@ export default function LearningJourney({ data }) {
                       <DynamicIcon
                         name={step.icon}
                         fallback={step.FallbackIcon}
-                        className="w-4 h-4 sm:w-4.5 sm:h-4.5"
+                        className="w-4.5 h-4.5"
                         style={{ color: step.color }}
                       />
                     </motion.div>
 
                     {/* Step Title */}
-                    <h3 className="font-bold text-xl sm:text-lg leading-snug" style={{ color: step.color }}>
+                    <h3 className="font-bold text-base sm:text-lg leading-snug text-center" style={{ color: step.color }}>
                       {step.title}
                     </h3>
                   </div>
 
                   {/* Step Description */}
-                  <p className="text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
+                  <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-normal text-center text-pretty max-w-md mx-auto">
                     {step.description}
                   </p>
                 </motion.div>
@@ -658,15 +670,15 @@ export default function LearningJourney({ data }) {
                     ease: [0.25, 1, 0.5, 1],
                   }}
                   whileHover={rm ? undefined : { y: -2 }}
-                  className={`flex items-start gap-3.5 sm:gap-4 py-4 sm:py-3 lg:py-1 ${
+                  className={`flex flex-col items-center text-center py-4 sm:py-3 lg:py-1 ${
                     i === 0 ? 'lg:pr-6' : 'lg:px-6'
                   }`}
                 >
-                  {/* Colored Icon on Left */}
+                  {/* Colored Icon at Top */}
                   <motion.div
                     whileHover={rm ? undefined : { scale: 1.12, rotate: 4 }}
                     transition={{ type: 'spring', stiffness: 350, damping: 15 }}
-                    className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full"
+                    className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full mb-2"
                     style={{
                       backgroundColor: feat.soft,
                       color: feat.color,
@@ -679,12 +691,12 @@ export default function LearningJourney({ data }) {
                     />
                   </motion.div>
 
-                  {/* Title & Subtext Stacked on Right */}
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-lg sm:text-sm font-bold text-slate-900 leading-snug">
+                  {/* Title & Subtext Stacked Center */}
+                  <div className="min-w-0 flex-1 text-center">
+                    <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-snug whitespace-nowrap text-center mb-1">
                       {feat.title}
                     </h4>
-                    <p className="mt-1 text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
+                    <p className="mt-1 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal text-center text-pretty max-w-[240px] mx-auto">
                       {feat.description}
                     </p>
                   </div>

@@ -567,9 +567,9 @@ export default function ServiceDetail() {
                         return <IconComp className="w-6 h-6 text-brand-orange" />;
                       })()}
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-2">{benefit.title}</h3>
+                    <h3 className="font-bold text-slate-900 text-base sm:text-lg mb-2">{benefit.title}</h3>
                     {benefit.description && (
-                      <p className="text-sm text-gray-500 leading-relaxed">{benefit.description}</p>
+                      <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal text-pretty">{benefit.description}</p>
                     )}
                   </div>
                 </StaggerItem>
@@ -654,10 +654,10 @@ export default function ServiceDetail() {
                                 })()}
                               </div>
                             )}
-                            <h3 className="font-bold text-gray-900">{step.title}</h3>
+                            <h3 className="font-bold text-slate-900 text-base sm:text-lg">{step.title}</h3>
                           </div>
                           {step.description && (
-                            <p className="text-sm text-gray-500 leading-relaxed pl-0 sm:pl-11">{step.description}</p>
+                            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal text-pretty pl-0 sm:pl-11">{step.description}</p>
                           )}
                         </div>
                       </div>

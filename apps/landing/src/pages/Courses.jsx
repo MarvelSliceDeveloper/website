@@ -907,7 +907,7 @@ export default function Courses() {
                       <Link
                         to="/courses"
                         onClick={handleExploreAll}
-                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-extrabold px-6 py-3 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer min-h-[40px]"
                       >
                         <span>Explore All Courses</span>
                         <FiChevronRight className="w-4 h-4" />
@@ -980,7 +980,7 @@ export default function Courses() {
                       <Link
                         to="/courses"
                         onClick={handleExploreAll}
-                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
+                        className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-amber-600 text-white font-extrabold px-6 py-3 rounded-full text-xs sm:text-sm shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer min-h-[40px]"
                       >
                         <span>Explore All Courses</span>
                         <FiChevronRight className="w-4 h-4" />
