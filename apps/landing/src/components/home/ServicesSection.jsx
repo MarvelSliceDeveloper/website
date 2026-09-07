@@ -36,7 +36,7 @@ export default function ServicesSection({ section }) {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-fit mx-auto text-center">
-          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">
+          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug whitespace-pre-line">
             {heading}
           </Reveal>
           <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
@@ -47,42 +47,35 @@ export default function ServicesSection({ section }) {
           </Reveal>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Reveal variant="right" className="flex flex-col">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+          <Reveal variant="right" className="flex flex-col h-full">
             {leftImageUrl ? (
               <img
                 src={leftImageUrl}
                 alt={leftHeading}
-                className="w-full h-72 object-cover rounded-2xl"
+                className="w-full h-52 sm:h-60 md:h-56 lg:h-72 object-cover rounded-2xl shrink-0"
               />
             ) : (
-              <div className="w-full h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange" />
+              <div className="w-full h-52 sm:h-60 md:h-56 lg:h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange shrink-0" />
             )}
-            <h3 className="font-bold text-xl mt-6 text-dark-navy text-center sm:text-left">{leftHeading}</h3>
+            <h3 className="font-bold text-xl sm:text-xl mt-4 sm:mt-5 text-dark-navy text-center sm:text-left leading-snug line-clamp-2">{leftHeading}</h3>
             {leftDescription && (
-              <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mt-3">{leftDescription}</p>
+              <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mt-2.5">{leftDescription}</p>
             )}
-            <a
-              href={ctaLink}
-              className="mt-4 self-center sm:self-start inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
-            >
-              <span>{ctaText}</span>
-              <FiChevronRight className="w-4 h-4 text-white" />
-            </a>
           </Reveal>
 
-          <Reveal variant="left" className="flex flex-col justify-center">
+          <Reveal variant="left" className="flex flex-col justify-center space-y-1">
             {servicesList.map((service, i) => {
               const Icon = ICON_MAP[service.icon_name] || FiBriefcase;
               return (
                 <div key={i}>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 py-5">
-                    <div className="w-12 h-12 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0 mt-1">
-                      <Icon className="w-6 h-6 text-brand-orange" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 py-3.5 sm:py-4">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-brand-orange" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-dark-navy text-base">{service.title}</h4>
-                      <p className="text-xs sm:text-sm leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-4 sm:indent-6 whitespace-pre-line mt-1">{service.description}</p>
+                      <h4 className="font-bold text-base sm:text-lg text-dark-navy leading-snug line-clamp-2">{service.title}</h4>
+                      <p className="text-xs sm:text-sm leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-6 whitespace-pre-line mt-1">{service.description}</p>
                     </div>
                   </div>
                   {i < servicesList.length - 1 && <div className="border-b border-gray-100" />}
@@ -91,6 +84,18 @@ export default function ServicesSection({ section }) {
             })}
           </Reveal>
         </div>
+
+        {ctaText && (
+          <Reveal variant="up" className="mt-10 text-center flex justify-center">
+            <a
+              href={ctaLink}
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-sm py-3 px-8 rounded-full hover:bg-brand-orange/90 hover:shadow-md hover:shadow-brand-orange/25 active:scale-95 transition-all cursor-pointer"
+            >
+              <span>{ctaText}</span>
+              <FiChevronRight className="w-4 h-4 text-white" />
+            </a>
+          </Reveal>
+        )}
       </div>
     </section>
   );

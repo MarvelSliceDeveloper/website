@@ -175,10 +175,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('facebook', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Facebook"
               >
-                <FaFacebookF className="w-3 h-3" />
+                <FaFacebookF className="w-3.5 h-3.5 text-[#1877F2]" />
               </a>
             )}
             {social.twitter && (
@@ -187,10 +187,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('twitter', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Twitter"
               >
-                <FaXTwitter className="w-3 h-3" />
+                <FaXTwitter className="w-3.5 h-3.5 text-black" />
               </a>
             )}
             {social.instagram && (
@@ -199,10 +199,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('instagram', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="Instagram"
               >
-                <FaInstagram className="w-3 h-3" />
+                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
               </a>
             )}
             {social.linkedin && (
@@ -211,10 +211,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('linkedin', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="LinkedIn"
               >
-                <FaLinkedinIn className="w-3 h-3" />
+                <FaLinkedinIn className="w-3.5 h-3.5 text-[#0A66C2]" />
               </a>
             )}
             {social.youtube && (
@@ -223,10 +223,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('youtube', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
                 aria-label="YouTube"
               >
-                <FaYoutube className="w-3 h-3" />
+                <FaYoutube className="w-3.5 h-3.5 text-[#FF0000]" />
               </a>
             )}
           </div>
@@ -245,8 +245,8 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 className="h-9 sm:h-10 w-auto object-contain"
               />
             )}
-            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
-              MARVEL<span className="text-brand-orange">SLICE</span>
+            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
             </span>
           </Link>
 
@@ -305,7 +305,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
       </div>
 
       {/* TIER 3: SUB-HEADER NAVIGATION BAR */}
-      <div className="bg-blue-50/90 border-b border-blue-100/80 shadow-xs relative" ref={dropdownRef}>
+      <div className="hidden sm:block bg-blue-50/90 border-b border-blue-100/80 shadow-xs relative" ref={dropdownRef}>
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <nav
             role="menubar"
@@ -673,87 +673,148 @@ export default function BankingHeader({ onOpenLoginModal }) {
       {/* MOBILE DRAWER */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="sm:hidden bg-white border-b border-slate-200 overflow-hidden px-4 py-4 space-y-3"
-          >
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenLoginModal && onOpenLoginModal('general', 'Log In');
-                }}
-                className="flex-1 py-2 bg-blue-50 text-brand-blue font-bold text-xs rounded-xl text-center"
-              >
-                Log In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenLoginModal && onOpenLoginModal('general', 'Sign Up');
-                }}
-                className="flex-1 py-2 bg-brand-blue text-white font-bold text-xs rounded-xl text-center"
-              >
-                Sign Up
-              </button>
-            </div>
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[99] sm:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
 
-            <div className="space-y-1 text-sm font-semibold">
-              <Link
-                to="/banking"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isAboutActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Banking
-              </Link>
-              <Link
-                to="/aptitude"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isAptitudeActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Aptitude
-              </Link>
-              <Link
-                to="/reasoning"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isReasoningActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Reasoning
-              </Link>
-              <Link
-                to="/english"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isEnglishActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                English
-              </Link>
-              <Link
-                to="/banking-awareness"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isBankingAwarenessActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Banking Awareness
-              </Link>
-              <Link
-                to="/current-affairs"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isAffairsActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Affairs
-              </Link>
-              <Link
-                to="/mock-exam"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg ${isMockExamActive ? 'bg-brand-blue text-white' : 'text-slate-700'}`}
-              >
-                Mock Exam
-              </Link>
-            </div>
-          </motion.div>
+            {/* Slide-Over Drawer - Close ('X') Button on LEFT */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:hidden bg-white shadow-2xl flex flex-col border-l border-slate-100"
+            >
+              {/* Drawer Top Header - Close ('X') Button on LEFT */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+
+                <Link
+                  to="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2"
+                >
+                  {settings?.logo_url && (
+                    <img
+                      src={settings.logo_url}
+                      alt="Marvel Slice Logo"
+                      className="h-8 w-auto object-contain"
+                    />
+                  )}
+                  <span className="text-lg font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                    Marvel <span className="text-brand-orange">Slice</span>
+                  </span>
+                </Link>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="flex-1 overflow-y-auto overscroll-contain py-4 px-3 space-y-1.5 font-semibold">
+                <Link
+                  to="/banking"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isAboutActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Banking
+                </Link>
+                <Link
+                  to="/aptitude"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isAptitudeActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Aptitude
+                </Link>
+                <Link
+                  to="/reasoning"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isReasoningActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Reasoning
+                </Link>
+                <Link
+                  to="/english"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isEnglishActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  English
+                </Link>
+                <Link
+                  to="/banking-awareness"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isBankingAwarenessActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Banking Awareness
+                </Link>
+                <Link
+                  to="/current-affairs"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isAffairsActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Affairs
+                </Link>
+                <Link
+                  to="/mock-exam"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
+                    isMockExamActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  Mock Exam
+                </Link>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/70 shrink-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenLoginModal && onOpenLoginModal('general', 'Log In');
+                    }}
+                    className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-brand-blue font-bold text-sm rounded-xl text-center transition-colors cursor-pointer"
+                  >
+                    Log In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenLoginModal && onOpenLoginModal('general', 'Sign Up');
+                    }}
+                    className="flex-1 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl text-center shadow-md transition-colors cursor-pointer"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

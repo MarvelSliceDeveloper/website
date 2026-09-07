@@ -82,7 +82,7 @@ export default function FeatureCardsSection({ section }) {
 
                       {/* Dynamic Description */}
                       {cardDesc && (
-                        <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mb-6">
+                        <p className="text-sm sm:text-base leading-relaxed text-slate-600 w-full whitespace-pre-line mb-6">
                           {cardDesc}
                         </p>
                       )}

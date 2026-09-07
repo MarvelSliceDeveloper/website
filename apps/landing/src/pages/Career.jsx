@@ -214,9 +214,11 @@ export default function Career() {
         hero_heading: page.heading || '',
         hero_subheading: page.subheading || '',
         hero_image: page.hero_image || '',
+        mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || page.form_config?.hero?.mobile_hero_image || '',
         section2_heading: 'Job Openings',
       };
     },
+    staleTime: 0,
   });
 
   const fc = pageContent?.form_config || {};
@@ -609,49 +611,41 @@ export default function Career() {
     );
   }
 
+  const heroImg = pageContent?.hero_image || '';
+  const mobileHeroImg = pageContent?.mobile_hero_image || pageContent?.form_config?.mobile_hero_image || pageContent?.form_config?.hero?.mobile_hero_image || '';
+
   return (
     <div>
-
-      {pageContent?.hero_image ? (
-        <div className="relative w-full max-w-[1900px] mx-auto">
-          <img src={pageContent.hero_image} alt="" className="w-full h-auto" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-          <div className="absolute inset-0 flex items-end">
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 lg:pb-10">
-              {pageContent.hero_heading && (
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-white">
-                  {pageContent.hero_heading}
-                </h1>
-              )}
-              {pageContent.hero_subheading && (
-                <p className="text-sm sm:text-base text-white/80 mt-1.5 max-w-2xl">
-                  {pageContent.hero_subheading}
-                </p>
-              )}
-            </div>
-          </div>
+      {(heroImg || mobileHeroImg) ? (
+        <div className="relative w-full max-w-[1900px] mx-auto overflow-hidden">
+          {mobileHeroImg ? (
+            <picture>
+              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
+            </picture>
+          ) : (
+            <img src={heroImg} alt="" className="w-full h-auto" />
+          )}
         </div>
-      ) : (pageContent?.hero_heading || pageContent?.hero_subheading) ? (
+      ) : (
         <div className="bg-gradient-to-br from-dark-navy to-brand-blue py-16 sm:py-20">
           <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {pageContent?.hero_heading && (
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4">
-                {pageContent.hero_heading}
-              </h1>
-            )}
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4">
+              {pageContent?.hero_heading || 'Career Opportunities'}
+            </h1>
             {pageContent?.hero_subheading && (
-              <p className="text-white/80 text-lg sm:text-xl max-w-2xl mx-auto">
+              <p className="text-white/80 text-sm sm:text-xl max-w-2xl mx-auto font-normal">
                 {pageContent.hero_subheading}
               </p>
             )}
           </Reveal>
         </div>
-      ) : null}
+      )}
 
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
+      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 text-center">
         {fc.headline && (
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
+            <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy">
               {fc.headline}
             </h2>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
@@ -659,7 +653,7 @@ export default function Career() {
         )}
 
         {fc.subtitle && (
-          <h3 className="text-lg sm:text-xl font-bold text-dark-navy mt-4 mb-2">
+          <h3 className="text-base sm:text-xl font-bold text-dark-navy mt-4 mb-2">
             {fc.subtitle}
           </h3>
         )}
@@ -669,7 +663,7 @@ export default function Career() {
             {fc.description.split('\n\n').filter(Boolean).map((p, idx) => (
               <p
                 key={idx}
-                className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line mb-4"
+                className="text-sm sm:text-base leading-relaxed text-left sm:text-justify [text-align-last:left] text-slate-600 w-full font-normal whitespace-pre-line mb-4"
               >
                 {p}
               </p>
@@ -677,27 +671,31 @@ export default function Career() {
           </div>
         )}
 
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
         {fc.categoriesSubtitle && (
           <div>
-            <h3 className="text-xl sm:text-2xl font-bold text-dark-navy mt-1">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-dark-navy mt-1">
               {fc.categoriesSubtitle}
             </h3>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
           </div>
         )}
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mt-8 max-w-6xl mx-auto text-left">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6 sm:mt-8 max-w-6xl mx-auto text-center">
             {roleCategories.map((cat, idx) => (
               <div
                 key={cat.id}
-                className="bg-white rounded-2xl p-2.5 sm:p-4 shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-2 sm:gap-3 group"
+                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-2xl p-2.5 sm:p-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 h-full"
               >
-                <div className={`p-2.5 sm:p-3 rounded-xl flex items-center justify-center shrink-0 ${idx % 2 === 0 ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-orange/10 text-brand-orange'}`}>
+                <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  idx % 2 === 0
+                    ? 'bg-blue-50 text-brand-blue border border-blue-100/80'
+                    : 'bg-orange-50 text-brand-orange border border-orange-100/80'
+                }`}>
                   <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-dark-navy font-semibold text-xs sm:text-sm md:text-base leading-snug break-words">
+                <span className="text-dark-navy group-hover:text-brand-blue font-bold text-[11px] sm:text-sm md:text-base leading-tight break-words text-center">
                   {cat.name}
                 </span>
               </div>
@@ -715,25 +713,25 @@ export default function Career() {
       <CTABannerSection section={ctaSection} />
 
       <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="mb-8 text-center">
+        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+          <div className="mb-6 sm:mb-8 text-center">
             {pageContent?.section2_heading && (
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy whitespace-pre-line">
+                <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy whitespace-pre-line">
                   {pageContent.section2_heading}
                 </h2>
-                <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
+                <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
               </div>
             )}
             {pageContent?.section2_subheading && (
-              <p className="text-slate-500 text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
+              <p className="text-slate-600 text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
                 {pageContent.section2_subheading}
               </p>
             )}
           </div>
 
           {/* Category Tabs: All, Jobs, Internships */}
-          <div className="flex items-center justify-center gap-2.5 mb-10 flex-wrap">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 mb-6 sm:mb-10 flex-wrap">
             {TABS.map(t => {
               const count = t.key === 'all'
                 ? (jobs?.length || 0) + (internships?.length || 0)
@@ -744,7 +742,7 @@ export default function Career() {
                 <button
                   key={t.key}
                   onClick={() => handleTabChange(t.key)}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer shadow-xs ${
+                  className={`px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs ${
                     tab === t.key
                       ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20'
                       : 'bg-white text-slate-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
@@ -767,7 +765,7 @@ export default function Career() {
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                   >
                     {pageItems.map((item) => {
                       const isIntern = item._type === 'intern';
@@ -780,32 +778,38 @@ export default function Career() {
                           key={`${item._type}-${item.id}`}
                           variants={cardVariants}
                           whileHover={{ y: -4 }}
-                          className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-brand-blue/40 transition-all duration-300 p-5 sm:p-6 flex flex-col justify-between h-full"
+                          className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-brand-blue/40 transition-all duration-300 p-4 sm:p-6 flex flex-col justify-between h-full"
                         >
                           <div>
                             {/* TOP SECTION: Icon + Title & Salary (Left) | Pill Badge (Top-Right) */}
-                            <div className="flex items-start justify-between gap-3 mb-2">
-                              <div className="flex items-start gap-3 min-w-0 flex-1">
-                                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
-                                  <FiBriefcase className="w-5 h-5" />
+                            <div className="flex items-start justify-between gap-2.5 mb-2">
+                              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-orange/10 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
+                                  <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <h3 className="font-bold text-black text-base sm:text-lg leading-snug group-hover:text-brand-blue transition-colors line-clamp-2" title={item.title}>
+                                  <h3 className="font-bold text-slate-900 text-base sm:text-lg leading-snug group-hover:text-brand-blue transition-colors line-clamp-2" title={item.title}>
                                     {item.title}
                                   </h3>
                                 </div>
                               </div>
                               {empType && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-brand-orange border border-orange-200/60 shrink-0">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-orange-50 text-brand-orange border border-orange-200/60 shrink-0">
                                   {empType}
                                 </span>
                               )}
                             </div>
+
+                            {item.description && (
+                              <p className="text-xs sm:text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                                {item.description.replace(/<[^>]*>?/gm, '')}
+                              </p>
+                            )}
                           </div>
 
                           {/* METADATA & ACTION SECTION BELOW DIVIDER */}
-                          <div className="pt-3.5 mt-4 border-t border-slate-100 flex items-center justify-between gap-3 w-full">
-                            <div className="flex flex-wrap items-center gap-3.5 min-w-0 flex-1 text-xs text-slate-500 font-medium">
+                          <div className="pt-3 mt-3 sm:mt-4 border-t border-slate-100 flex items-center justify-between gap-2.5 w-full">
+                            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 text-xs text-slate-500 font-medium">
                               {expVal && (
                                 <span className="flex items-center gap-1.5 shrink-0" title={expVal}>
                                   <FiClock className="w-3.5 h-3.5 text-brand-orange shrink-0" />
@@ -815,13 +819,13 @@ export default function Career() {
                               {locVal && (
                                 <span className="flex items-center gap-1.5 min-w-0" title={locVal}>
                                   <FiMapPin className="w-3.5 h-3.5 text-brand-orange shrink-0" />
-                                  <span className="truncate max-w-[130px] sm:max-w-[150px]">{locVal}</span>
+                                  <span className="truncate max-w-[110px] sm:max-w-[150px]">{locVal}</span>
                                 </span>
                               )}
                             </div>
                             <Link
                               to={`/career/job/${item._type}/${item.id}`}
-                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-bold text-xs sm:text-sm py-2 px-4.5 rounded-full hover:bg-blue-700 hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
+                              className="shrink-0 inline-flex items-center justify-center gap-1 bg-brand-blue text-white font-bold text-xs sm:text-sm py-1.5 px-3.5 sm:py-2 sm:px-4.5 rounded-full hover:bg-blue-700 hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
                             >
                               <span>View Details</span>
                               <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:translate-x-0.5 transition-transform" />

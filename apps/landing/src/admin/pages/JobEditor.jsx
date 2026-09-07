@@ -70,7 +70,6 @@ export default function JobEditor() {
     if (!jobForm.role_category_id) return;
     if (!jobForm.type) return;
     if (!jobForm.location?.trim()) return;
-    if (!jobForm.description?.trim()) return;
     setSaving(true);
     setSaved(false);
     setSaveError('');
@@ -186,13 +185,13 @@ export default function JobEditor() {
             </div>
           </div>
 
-          {/* Row 3: Main Duties & Responsibilities (Summary/Overview) */}
+          {/* Row 3: Job Description */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">
-              Main Duties &amp; Responsibilities (Overview / Summary) <span className="text-destructive-500">*</span>
+              Job Description
             </label>
-            <p className="text-[11px] text-neutral-500 mb-1.5">Overview description introducing the role and primary mission.</p>
-            <textarea name="description" value={jobForm.description} onChange={handleChange} rows={4} required
+            <p className="text-[11px] text-neutral-500 mb-1.5">Overview description introducing the role, scope, and primary mission.</p>
+            <textarea name="description" value={jobForm.description} onChange={handleChange} rows={4}
               placeholder="We are seeking to hire a Full stack developer to initiate and develop company website and web app projects..."
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all resize-y" />
           </div>

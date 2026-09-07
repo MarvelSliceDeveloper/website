@@ -506,14 +506,14 @@ function MobileNavItem({
     return (
       <Link
         to={item.path || "#"}
-        className={`block pl-[17px] pr-5 py-3 text-sm font-medium transition-all duration-200 border-l-[3px] ${
+        className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all duration-200 ${
           isActive
-            ? "border-brand-blue text-brand-blue font-semibold"
-            : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
+            ? "bg-blue-50 text-brand-blue font-bold shadow-xs border-l-4 border-brand-blue"
+            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue font-semibold"
         }`}
         onClick={onItemClick}
       >
-        {item.label}
+        <span>{item.label}</span>
       </Link>
     );
   }
@@ -521,21 +521,19 @@ function MobileNavItem({
   const hasActiveChild = isItemOrSubtreeActive(item, path, parentParam, resolvedChildren);
 
   return (
-    <div>
+    <div className="space-y-1">
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between pl-[17px] pr-5 py-3 text-sm font-medium transition-all duration-200 cursor-pointer border-l-[3px] ${
-          depth === 0
-            ? isOpen || hasActiveChild
-              ? "border-brand-blue text-brand-blue font-semibold"
-              : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
-            : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
+        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all duration-200 cursor-pointer ${
+          isOpen || hasActiveChild
+            ? "bg-blue-50/80 text-brand-blue font-bold border-l-4 border-brand-blue"
+            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue font-semibold"
         }`}
       >
         <span>{item.label}</span>
         <FiChevronDown
-          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 transition-transform duration-200 text-slate-400 ${isOpen ? "rotate-180 text-brand-blue" : ""}`}
         />
       </button>
       <AnimatePresence initial={false}>
@@ -549,7 +547,7 @@ function MobileNavItem({
             className="overflow-hidden"
           >
             <div
-              className={`py-1 ${depth === 0 ? "pl-6" : "pl-4"} border-l border-gray-100 ml-5`}
+              className={`py-1.5 ${depth === 0 ? "pl-3" : "pl-2"} border-l-2 border-blue-100 ml-4 my-1 space-y-1`}
             >
               {resolvedChildren.map((child, idx) => (
                 <MobileNavItem

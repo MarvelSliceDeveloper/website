@@ -81,6 +81,7 @@ export default function NavPageEditor() {
   const [heading, setHeading] = useState('');
   const [subheading, setSubheading] = useState('');
   const [heroImage, setHeroImage] = useState('');
+  const [mobileHeroImage, setMobileHeroImage] = useState('');
   const [sections, setSections] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -91,7 +92,7 @@ export default function NavPageEditor() {
   const [allCourses, setAllCourses] = useState([]);
   const [courseSearch, setCourseSearch] = useState('');
   const [courseChanges, setCourseChanges] = useState(false);
-  const { dirty, reset } = useDirty([heading, subheading, heroImage, sections], isLoading);
+  const { dirty, reset } = useDirty([heading, subheading, heroImage, mobileHeroImage, sections], isLoading);
 
   useEffect(() => {
     supabase.from('nav_items').select('label,path').eq('id', id).maybeSingle().then(({ data }) => {
@@ -109,6 +110,7 @@ export default function NavPageEditor() {
       setHeading(page.heading || '');
       setSubheading(page.subheading || '');
       setHeroImage(page.hero_image || '');
+      setMobileHeroImage(page.mobile_hero_image || page.form_config?.mobile_hero_image || '');
       setSections(page.sections || []);
     }
   }, [page]);
@@ -178,6 +180,8 @@ export default function NavPageEditor() {
       heading,
       subheading,
       hero_image: heroImage || null,
+      mobile_hero_image: mobileHeroImage || null,
+      form_config: { mobile_hero_image: mobileHeroImage || '' },
       sections,
       is_published: true,
     };
@@ -254,8 +258,13 @@ export default function NavPageEditor() {
                 placeholder="Supporting text" />
             </div>
           </div>
-          <div className="mt-4">
-            <ImageUploader value={heroImage} onChange={setHeroImage} label="Hero Image" />
+          <div className="grid sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <ImageUploader value={heroImage} onChange={setHeroImage} label="Desktop Hero Image" />
+            </div>
+            <div>
+              <ImageUploader value={mobileHeroImage} onChange={setMobileHeroImage} label="Mobile Hero Image (Optional)" />
+            </div>
           </div>
         </SectionAccordion>
 

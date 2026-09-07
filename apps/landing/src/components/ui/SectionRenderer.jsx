@@ -34,16 +34,23 @@ function DynamicIcon({ name, className }) {
 function FaqListSection({ section }) {
   const [openIdx, setOpenIdx] = useState(null);
   return (
-    <Reveal className="w-full mx-auto">
-      {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
-      <div className="space-y-2">
+    <Reveal className="py-8 sm:py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {section.heading && (
+        <div className="mb-4 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-dark-navy">{section.heading}</h2>
+          <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
+        </div>
+      )}
+      <div className="space-y-2.5 mt-6 sm:mt-8">
         {(section.items || []).map((faq, i) => (
           <AccordionItem
             key={i}
             title={faq.question}
             isOpen={openIdx === i}
             onToggle={() => setOpenIdx(openIdx === i ? null : i)}
-          >{faq.answer}</AccordionItem>
+          >
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
+          </AccordionItem>
         ))}
       </div>
     </Reveal>
@@ -62,29 +69,29 @@ export default function SectionRenderer({ section, className }) {
       if (blocks) {
         const contentBlocks = blocks.map((b, i) =>
           b.type === 'heading' ? (
-            <div key={i} className="mb-6">
-              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line text-${ha}`}>{b.text}</h2>
+            <div key={i} className="mb-6 text-center">
+              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug whitespace-pre-line text-${ha}`}>{b.text}</h2>
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
             </div>
           ) : (
-            <div key={i} className={`text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
+            <p key={i} className={`text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line ${section.image_url ? 'mb-4' : ''}`}>{b.text}</p>
           )
         );
         if (section.image_url) {
           const heading = blocks.find(b => b.type === 'heading')?.text || '';
           const paragraphs = blocks.filter(b => b.type === 'paragraph');
           return (
-            <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Reveal className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {heading && (
-                <div className="mb-8 text-center lg:text-left">
-                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight">{heading}</h2>
+                <div className="mb-6 sm:mb-8 text-center lg:text-left">
+                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug">{heading}</h2>
                   <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto lg:mx-0" />
                 </div>
               )}
-              <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
                 <div className="space-y-4">
                   {paragraphs.map((b, i) => (
-                    <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{b.text}</div>
+                    <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{b.text}</p>
                   ))}
                 </div>
                 <div className="flex justify-center">
@@ -95,7 +102,7 @@ export default function SectionRenderer({ section, className }) {
           );
         }
         return (
-          <Reveal className="py-12 max-w-4xl mx-auto">{contentBlocks}</Reveal>
+          <Reveal className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{contentBlocks}</Reveal>
         );
       }
       const paragraphs = safeParse(section.content);
@@ -103,17 +110,17 @@ export default function SectionRenderer({ section, className }) {
         ? paragraphs.join('\n\n')
         : safeString(section.content);
       return (
-        <Reveal className={`py-12 max-w-4xl mx-auto text-${ca}`}>
+        <Reveal className={`py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-${ca}`}>
           {section.heading && (
             <div className="mb-6">
-              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy text-${ha}`}>{section.heading}</h2>
+              <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug text-${ha}`}>{section.heading}</h2>
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
             </div>
           )}
           {content && (
-            <div className="space-y-4">
-              {content.split('\n\n').filter(Boolean).map((p, i) => (
-                <div key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</div>
+            <div className="space-y-4 sm:space-y-6">
+              {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
               ))}
             </div>
           )}
@@ -131,31 +138,31 @@ export default function SectionRenderer({ section, className }) {
       const statIconBg = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-cyan-100', 'bg-indigo-100', 'bg-teal-100', 'bg-amber-100'];
       const statIconColor = ['text-purple-500', 'text-blue-500', 'text-emerald-500', 'text-pink-500', 'text-cyan-500', 'text-indigo-500', 'text-teal-500', 'text-amber-500'];
       const statCard = (stat, i) => (
-        <div key={i} className="text-center p-4 sm:p-6 lg:p-[30px] bg-white rounded-[18px] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-xl cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}>
+        <div key={i} className="text-center p-5 sm:p-6 lg:p-[30px] bg-white rounded-[18px] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-xl cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}>
           <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${statIconBg[i % 8]} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>
             <DynamicIcon name={stat.icon || statIcons[i % 8]} className={`w-5 h-5 sm:w-6 sm:h-6 ${statIconColor[i % 8]}`} />
           </div>
           <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-orange leading-none"><AnimatedNumber value={stat.number} /></div>
-          <div className="text-xs sm:text-sm lg:text-base text-gray-600 mt-1.5 sm:mt-2">{stat.label}</div>
+          <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-normal mt-1.5 sm:mt-2">{stat.label}</div>
         </div>
       );
       return (
-        <div className={`relative ${className || 'py-[80px]'}`}>
+        <div className={`relative ${className || 'py-12 sm:py-16 lg:py-[80px]'}`}>
           {section.image_url ? (
             <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid lg:grid-cols-[55fr_45fr] gap-y-12 lg:gap-x-[70px] items-start">
+              <div className="grid lg:grid-cols-[55fr_45fr] gap-y-8 lg:gap-x-[70px] items-start">
                 <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
                   {section.heading && (
                     <div className="mb-6 text-center lg:text-left">
-                      <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight">
+                      <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug">
                         <span>{section.heading}</span>
                       </h2>
                       <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto lg:mx-0" />
                     </div>
                   )}
-                  <div className="max-w-[600px] space-y-6 mx-auto lg:mx-0">
-                    {content.split('\n\n').filter(Boolean).map((p, i) => (
-                      <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p}</p>
+                  <div className="max-w-[600px] space-y-4 sm:space-y-6 mx-auto lg:mx-0">
+                    {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                      <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
                     ))}
                   </div>
                 </div>
@@ -164,7 +171,7 @@ export default function SectionRenderer({ section, className }) {
                 </div>
               </div>
               {items.length > 0 && (
-                <div className="mt-[30px] sm:mt-[50px]">
+                <div className="mt-8 sm:mt-[50px]">
                   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     {items.map((stat, i) => statCard(stat, i))}
                   </div>
@@ -173,7 +180,19 @@ export default function SectionRenderer({ section, className }) {
             </div>
           ) : (
             <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-              <div className={`max-w-4xl mx-auto text-${ca} mb-12`}>{content}</div>
+              {section.heading && (
+                <div className="mb-6 text-center">
+                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug text-center">
+                    {section.heading}
+                  </h2>
+                  <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
+                </div>
+              )}
+              <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mb-8 sm:mb-12">
+                {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
+                ))}
+              </div>
               {items.length > 0 && (
                 <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                   {items.map((stat, i) => statCard(stat, i))}
@@ -186,22 +205,22 @@ export default function SectionRenderer({ section, className }) {
     }
     case 'image':
       return (
-        <Reveal className="max-w-4xl mx-auto text-center">
-          {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-4">{section.heading}</h2>}
+        <Reveal className="py-12 sm:py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {section.heading && <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-4 leading-tight sm:leading-snug">{section.heading}</h2>}
           {section.image_url && <img src={section.image_url} alt={section.heading || ''} className="w-full max-h-96 object-cover rounded-xl shadow-sm" />}
-          {section.content && <p className="text-text-gray text-base mt-4">{section.content}</p>}
+          {section.content && <p className="text-slate-600 text-sm sm:text-base leading-relaxed mt-4 font-normal">{section.content}</p>}
         </Reveal>
       );
     case 'cards':
       return (
-        <div>
-          {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</Reveal>}
+        <div className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center leading-tight sm:leading-snug">{section.heading}</Reveal>}
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {(section.content || '').split('\n').filter(Boolean).map((item, i) => (
               <StaggerItem key={i} className="h-full">
-                <Card className="p-6">
+                <Card className="p-5 sm:p-7">
                   {section.image_url && <img src={section.image_url} alt="" className="w-full h-40 object-cover rounded-lg mb-4" />}
-                  <p className="text-dark-navy font-medium">{item}</p>
+                  <p className="text-dark-navy font-medium text-sm sm:text-base">{item}</p>
                 </Card>
               </StaggerItem>
             ))}
@@ -210,13 +229,13 @@ export default function SectionRenderer({ section, className }) {
       );
     case 'features':
       return (
-        <div className="max-w-3xl mx-auto">
-          {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</Reveal>}
+        <div className="py-12 sm:py-16 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center leading-tight sm:leading-snug">{section.heading}</Reveal>}
           <Stagger className="space-y-4">
             {(section.items || (section.content || '').split('\n').filter(Boolean)).map((item, i) => (
               <StaggerItem key={i} className="flex items-start gap-3">
                 <FiCheckCircle className="w-5 h-5 text-brand-orange shrink-0 mt-0.5" />
-                <span className="text-text-gray text-base">{(typeof item === 'string') ? item : item.title}</span>
+                <span className="text-slate-600 text-sm sm:text-base leading-relaxed font-normal">{(typeof item === 'string') ? item : item.title}</span>
               </StaggerItem>
             ))}
           </Stagger>
@@ -227,13 +246,13 @@ export default function SectionRenderer({ section, className }) {
       if (items.length === 0) return null;
       const ha = section.headingAlign || 'center';
       return (
-        <Reveal className="py-16">
-          {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-dark-navy mb-8 text-${ha}`}>{section.heading}</h2>}
+        <Reveal className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <h2 className={`font-bold text-2xl sm:text-3xl text-dark-navy mb-8 leading-tight sm:leading-snug text-${ha}`}>{section.heading}</h2>}
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {items.map((stat, i) => (
-              <div key={i} className="text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-gray-300 border border-transparent cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px' }}>
+              <div key={i} className="text-center p-5 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-gray-300 border border-transparent cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px' }}>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-orange"><AnimatedNumber value={stat.number} /></div>
-                <div className="text-xs sm:text-sm lg:text-base text-gray-600 mt-1.5 sm:mt-2">{stat.label}</div>
+                <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-normal mt-1.5 sm:mt-2">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -244,18 +263,18 @@ export default function SectionRenderer({ section, className }) {
       const items = safeParse(section.items);
       if (items.length === 0) return null;
       return (
-        <div>
-          {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-8 text-center">{section.heading}</Reveal>}
+        <div className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-8 text-center leading-tight sm:leading-snug">{section.heading}</Reveal>}
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {items.map((member, i) => (
               <StaggerItem key={i} className="h-full">
-                <Card className="p-6 text-center h-full">
+                <Card className="p-5 sm:p-7 text-center h-full">
                   <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-brand-blue to-brand-orange flex items-center justify-center text-white text-2xl font-bold mb-3 overflow-hidden">
                     {member.image_url ? <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" /> : (member.name?.[0] || '?')}
                   </div>
-                  <h3 className="font-bold text-dark-navy">{member.name}</h3>
-                  <p className="text-sm text-brand-orange font-medium mt-0.5">{member.role}</p>
-                  {member.bio && <p className="text-xs text-text-gray mt-2 line-clamp-3">{member.bio}</p>}
+                  <h3 className="font-bold text-slate-900 text-xl sm:text-lg">{member.name}</h3>
+                  <p className="text-xs sm:text-sm text-brand-orange font-medium mt-0.5">{member.role}</p>
+                  {member.bio && <p className="text-xs sm:text-sm text-slate-600 font-normal mt-2 line-clamp-3">{member.bio}</p>}
                 </Card>
               </StaggerItem>
             ))}
@@ -265,21 +284,21 @@ export default function SectionRenderer({ section, className }) {
     }
     case 'contact_info':
       return (
-        <Reveal className="max-w-lg mx-auto">
-          {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
+        <Reveal className="py-12 sm:py-16 max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center leading-tight sm:leading-snug">{section.heading}</h2>}
           <div className="space-y-4">
-            {section.address && <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMapPin className="w-5 h-5 text-brand-orange" /></div><div className="text-text-gray text-base whitespace-pre-line">{section.address}</div></div>}
+            {section.address && <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMapPin className="w-5 h-5 text-brand-orange" /></div><div className="text-slate-600 text-sm sm:text-base font-normal whitespace-pre-line">{section.address}</div></div>}
             {section.phone && extractPhoneNumbers(section.phone).map((ph, idx) => (
               <div key={idx} className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
                   <FiPhone className="w-5 h-5 text-brand-orange" />
                 </div>
-                <a href={cleanTelHref(ph)} className="text-text-gray text-base hover:text-brand-orange transition-colors">
+                <a href={cleanTelHref(ph)} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">
                   {ph}
                 </a>
               </div>
             ))}
-            {section.email && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMail className="w-5 h-5 text-brand-orange" /></div><a href={`mailto:${section.email}`} className="text-text-gray text-base hover:text-brand-orange transition-colors">{section.email}</a></div>}
+            {section.email && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMail className="w-5 h-5 text-brand-orange" /></div><a href={`mailto:${section.email}`} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">{section.email}</a></div>}
           </div>
         </Reveal>
       );
@@ -289,8 +308,8 @@ export default function SectionRenderer({ section, className }) {
       const mapSrc = (match ? match[1] : raw).trim();
       if (!mapSrc) return null;
       return (
-        <section className="relative overflow-hidden" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
-          {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center max-w-7xl mx-auto px-4">{section.heading}</h2>}
+        <section className="relative overflow-hidden py-6 sm:py-8" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
+          {section.heading && <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center max-w-7xl mx-auto px-4 leading-tight sm:leading-snug">{section.heading}</h2>}
           <iframe
             src={mapSrc}
             className="w-full aspect-[16/9] max-h-[450px]"
@@ -307,19 +326,19 @@ export default function SectionRenderer({ section, className }) {
       return <FaqListSection section={section} />;
     case 'positions':
       return (
-        <div>
-          {section.heading && <Reveal as="h2" className="text-xl sm:text-2xl font-bold text-dark-navy mb-8 text-center">{section.heading}</Reveal>}
+        <div className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {section.heading && <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-8 text-center leading-tight sm:leading-snug">{section.heading}</Reveal>}
           <Stagger className="max-w-4xl mx-auto space-y-4">
             {(section.items || []).map((pos, i) => (
               <StaggerItem key={i}>
-                <Card className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h3 className="font-bold text-dark-navy text-lg">{pos.title}</h3>
-                    <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-text-gray">
+                    <h3 className="font-bold text-slate-900 text-xl sm:text-lg">{pos.title}</h3>
+                    <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs sm:text-sm text-slate-500 font-medium">
                       {pos.location && <span className="flex items-center gap-1"><FiMapPin className="w-3.5 h-3.5" />{pos.location}</span>}
                       {pos.type && <span className="flex items-center gap-1"><FiBriefcase className="w-3.5 h-3.5" />{pos.type}</span>}
                     </div>
-                    {pos.description && <p className="text-sm text-text-gray mt-3">{pos.description}</p>}
+                    {pos.description && <p className="text-sm sm:text-base leading-relaxed text-slate-600 font-normal mt-2.5">{pos.description}</p>}
                   </div>
                   <Button variant="outline" size="sm" className="shrink-0">Apply Now</Button>
                 </Card>
@@ -342,11 +361,11 @@ export default function SectionRenderer({ section, className }) {
             <div className="absolute bottom-0 right-[20%] w-[300px] h-[300px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(46,196,182,0.25) 0%, transparent 60%)' }} />
           </div>
           <Reveal variant="scale">
-            <div className="relative max-w-7xl mx-auto px-10 sm:px-16 lg:px-20 py-16 sm:py-20">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
+            <div className="relative max-w-7xl mx-auto px-6 sm:px-16 lg:px-20 py-12 sm:py-20">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
                 <div className="flex-1 text-center lg:text-left">
-                  {section.heading && <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight text-white">{section.heading}</h2>}
-                  {section.content && <p className="mt-5 text-base sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0">{section.content}</p>}
+                  {section.heading && <h2 className="font-bold text-2xl sm:text-3xl lg:text-[2.75rem] leading-tight text-white">{section.heading}</h2>}
+                  {section.content && <p className="mt-4 text-sm sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">{section.content}</p>}
                 </div>
                 <div className="shrink-0">
                   <Button to={section.cta_link || '/contact'} variant="outline" size="lg" className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20">
@@ -382,47 +401,47 @@ export default function SectionRenderer({ section, className }) {
       const headingParts = section.heading ? splitHeading(section.heading) : null;
 
       return (
-        <div className={className || 'py-16 sm:py-20'}>
+        <div className={className || 'py-16 bg-neutral-50'}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             {section.heading && (
               <Reveal as="div" className={`mb-4 text-${ha}`}>
-                <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-blue-700 leading-tight">
+                <h2 className="mt-2 sm:mt-4 font-bold text-2xl sm:text-3xl text-dark-navy leading-tight sm:leading-snug">
                   {headingParts?.before}
                   {headingParts?.highlight && (
-                    <span className="relative inline-block mx-1 text-blue-700">
+                    <span className="relative inline-block mx-1 text-dark-navy">
                       {headingParts.highlight}
                     </span>
                   )}
                   {headingParts?.after}
                 </h2>
-                <div className={`mt-3 h-[4px] w-14 rounded-full bg-brand-orange ${ha === 'center' ? 'mx-auto' : ''}`} />
+                <div className={`mt-3 h-[3px] w-16 rounded-full bg-brand-orange ${ha === 'center' ? 'mx-auto' : ''}`} />
               </Reveal>
             )}
             {section.subheading && (
-              <Reveal as="p" className={`text-gray-500 text-[15px] sm:text-base max-w-2xl leading-relaxed text-${sa} ${sa === 'center' ? 'mx-auto' : ''}`}>
+              <Reveal as="p" className={`text-slate-600 font-normal text-sm sm:text-base leading-relaxed w-full ${sa === 'center' ? 'mx-auto text-center' : 'text-left'}`}>
                 {section.subheading}
               </Reveal>
             )}
-            <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mt-12 sm:mt-14">
+            <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 sm:mt-12">
               {items.map((item, i) => {
                 const s = accentStyles[i % accentStyles.length];
                 return (
                   <StaggerItem key={i} className="h-full">
-                    <div className="group relative h-full overflow-hidden rounded-[24px] border border-slate-100 bg-white px-6 sm:px-7 py-7 sm:py-8 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.1)] flex flex-col items-center text-center justify-between">
-                      <div className="flex flex-col items-center text-center w-full">
+                    <div className="group relative h-full w-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between items-start text-left">
+                      <div className="flex flex-col items-start text-left w-full">
                         {/* 1. ICON CONTAINER */}
-                        <div className="flex h-16 w-16 items-center justify-center rounded-full mx-auto bg-white transition-transform duration-300 group-hover:scale-105 shrink-0" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-                          {item.icon ? <DynamicIcon name={item.icon} className={`h-7 w-7 ${s.accent}`} /> : <FiBriefcase className={`h-7 w-7 ${s.accent}`} />}
+                        <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-white transition-transform duration-300 group-hover:scale-105 shrink-0" style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
+                          {item.icon ? <DynamicIcon name={item.icon} className={`h-5 w-5 sm:h-7 sm:w-7 ${s.accent}`} /> : <FiBriefcase className={`h-5 w-5 sm:h-7 sm:w-7 ${s.accent}`} />}
                         </div>
 
-                        {/* 2. TITLE CONTAINER - FIXED HEIGHT FOR 100% EVEN ALIGNMENT */}
-                        <div className="mt-5 min-h-[52px] sm:min-h-[56px] flex flex-col items-center justify-center w-full">
-                          <h3 className="text-base sm:text-[17px] font-bold leading-snug text-slate-900 text-center">{item.title}</h3>
-                          <div className={`mt-2 h-[2.5px] w-8 rounded-full mx-auto ${s.underline} transition-all duration-300 group-hover:w-11`} />
+                        {/* 2. TITLE CONTAINER - UNIFORM HEIGHT ACROSS CARDS */}
+                        <div className="mt-3 min-h-[40px] sm:min-h-[52px] flex flex-col items-start justify-center w-full">
+                          <h3 className="text-xl sm:text-[17px] font-bold leading-snug text-slate-900 text-left">{item.title}</h3>
+                          <div className={`mt-1.5 h-[2.5px] w-7 rounded-full ${s.underline} transition-all duration-300 group-hover:w-10`} />
                         </div>
 
-                        {/* 3. DESCRIPTION TEXT - UNIFORM BASELINE ACROSS ALL CARDS */}
-                        <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-500 text-center font-normal">{item.description}</p>
+                        {/* 3. DESCRIPTION TEXT */}
+                        <p className="mt-2.5 text-sm sm:text-base leading-relaxed text-slate-600 font-normal flex-1 text-left">{item.description}</p>
                       </div>
 
                       <div className={`absolute -bottom-10 -right-10 h-28 w-28 rounded-full ${s.blob} opacity-60 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none`} />
@@ -443,7 +462,7 @@ export default function SectionRenderer({ section, className }) {
     case 'content_media_list': {
       const listItems = safeParse(section.list_items);
       return (
-        <Reveal>
+        <Reveal className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-center md:text-left">
               {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-4 text-center md:text-left">{section.heading}</h2>}

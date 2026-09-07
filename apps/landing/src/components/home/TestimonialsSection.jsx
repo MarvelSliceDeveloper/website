@@ -13,7 +13,7 @@ function TestimonialCard({ item }) {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue/10">
           <span aria-hidden="true" className="select-none font-serif text-xl font-bold leading-none text-brand-blue">&ldquo;</span>
         </div>
-        <blockquote className="flex-1 text-[15px] leading-[1.6] text-text-gray line-clamp-4">
+        <blockquote className="flex-1 !text-[13px] sm:!text-[15px] leading-[1.6] text-text-gray line-clamp-4">
           “{item.quote}”
         </blockquote>
       </div>
@@ -28,8 +28,8 @@ function TestimonialCard({ item }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-dark-navy">{item.name}</p>
-          {item.role && <p className="mt-0.5 truncate text-xs text-text-gray">{item.role}</p>}
+          <p className="truncate !text-[12px] sm:!text-sm font-bold text-dark-navy">{item.name}</p>
+          {item.role && <p className="mt-0.5 truncate !text-[11px] sm:!text-xs text-text-gray">{item.role}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (

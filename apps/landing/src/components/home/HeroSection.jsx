@@ -35,6 +35,7 @@ export default function HeroSection({ section }) {
 
   const slide = carouselEnabled ? slides[current] : null;
   const bannerImage = carouselEnabled ? (carouselType === 'image' ? slide?.image : '') : (content.banner_image || '');
+  const mobileBannerImage = carouselEnabled ? (carouselType === 'image' ? (slide?.mobile_image || slide?.image) : '') : (content.mobile_banner_image || '');
   const bannerHeading = carouselEnabled ? (slide?.heading || '') : (content.banner_heading || '');
   const bannerDescription = carouselEnabled ? (slide?.description || '') : (content.banner_description || '');
   const showGradient = carouselEnabled && carouselType === 'text';
@@ -49,14 +50,21 @@ export default function HeroSection({ section }) {
 
   return (
     <section className="relative overflow-hidden">
-      {bannerImage && (
+      {(bannerImage || mobileBannerImage) && (
         <div 
           className="relative w-full overflow-hidden"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
           {/* Base image dictates natural aspect ratio and natural image height automatically */}
-          <img src={bannerImage} alt="" className="w-full h-auto opacity-0 block pointer-events-none" />
+          {mobileBannerImage ? (
+            <picture className="w-full h-auto opacity-0 block pointer-events-none">
+              <source media="(max-width: 767px)" srcSet={mobileBannerImage} />
+              <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto" />
+            </picture>
+          ) : (
+            <img src={bannerImage} alt="" className="w-full h-auto opacity-0 block pointer-events-none" />
+          )}
 
           <AnimatePresence initial={false}>
             <motion.div
@@ -67,7 +75,14 @@ export default function HeroSection({ section }) {
               transition={{ duration: 0.5, ease: 'easeInOut' }}
               className="absolute inset-0 w-full h-full"
             >
-              <img src={bannerImage} alt="" className="w-full h-auto" />
+              {mobileBannerImage ? (
+                <picture className="w-full h-auto">
+                  <source media="(max-width: 767px)" srcSet={mobileBannerImage} />
+                  <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto object-cover" />
+                </picture>
+              ) : (
+                <img src={bannerImage} alt="" className="w-full h-auto" />
+              )}
               
               {(bannerHeading || bannerDescription) && (
                 <div className="absolute inset-0 flex items-center">
@@ -78,7 +93,7 @@ export default function HeroSection({ section }) {
                       </h1>
                     )}
                     {bannerDescription && (
-                      <p className="mt-2.5 sm:mt-4 text-xs sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
+                      <p className="mt-2.5 sm:mt-4 text-sm sm:text-base text-white/90 leading-relaxed max-w-xl drop-shadow-sm whitespace-pre-line">
                         {bannerDescription}
                       </p>
                     )}
@@ -89,14 +104,14 @@ export default function HeroSection({ section }) {
           </AnimatePresence>
 
           {carouselEnabled && slides.length > 1 && (
-            <div className="absolute bottom-2 sm:bottom-6 right-2 sm:right-8 flex items-center gap-1 sm:gap-2 z-10 bg-black/35 backdrop-blur-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md">
+            <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2.5 z-10">
               {slides.map((_, i) => (
                 <button 
                   key={i} 
                   onClick={() => setCurrent(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   className={`h-1.5 sm:h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? 'bg-white w-4 sm:w-7 shadow-xs' : 'bg-white/40 hover:bg-white/80 w-1.5 sm:w-2.5'
+                    i === current ? 'bg-white w-5 sm:w-7 shadow-md' : 'bg-white/60 hover:bg-white w-1.5 sm:w-2.5'
                   }`} 
                 />
               ))}
@@ -122,7 +137,7 @@ export default function HeroSection({ section }) {
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center"
             >
               {bannerHeading && <h1 className="text-[clamp(1.625rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] whitespace-pre-line">{bannerHeading}</h1>}
-              {bannerDescription && <p className="mt-4 text-xs sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
+              {bannerDescription && <p className="mt-4 text-sm sm:text-base text-white/85 leading-relaxed max-w-2xl mx-auto whitespace-pre-line">{bannerDescription}</p>}
             </motion.div>
           </AnimatePresence>
 
@@ -157,6 +172,10 @@ export default function HeroSection({ section }) {
             )}
           </div>
         </div>
+      )}
+
+      {!bannerHeading && !headline && (
+        <h1 className="sr-only">Marvel Software Learning & Competitive Exam Training</h1>
       )}
 
       {!bannerImage && !showGradient && (headline || description || featureBullets.length > 0 || buttons.length > 0 || studentImageUrl) && (

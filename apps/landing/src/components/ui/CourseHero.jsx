@@ -97,7 +97,7 @@ export default function CourseHero({
           {/* LEFT SIDE (Content) ~ 48% width */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Dynamic Title */}
-            <h1 className="text-[22px] sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
+            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
               {course.title}
             </h1>
 
@@ -110,7 +110,7 @@ export default function CourseHero({
 
             {/* Dynamic Description */}
             {course.description && (
-              <p className="mt-4 lg:mt-5 text-xs sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
+              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
                 {course.description}
               </p>
             )}
@@ -129,12 +129,12 @@ export default function CourseHero({
             {/* Dynamic Course Points (Keys) */}
             {points.length > 0 && (
               <div className="mt-5 lg:mt-6 w-full max-w-[600px]">
-                <div className="grid grid-cols-2 lg:block lg:space-y-2.5 gap-2.5 sm:gap-3.5 text-left">
+                <div className="grid grid-cols-1 gap-2.5 text-left">
                   {points.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 sm:gap-2.5 min-w-0">
-                      <FiCheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-[10px] sm:text-sm lg:text-[15px] font-medium text-slate-600 leading-snug break-words">
-                        {typeof item === 'string' ? item.slice(0, 85) : (item?.label || item?.title || '').slice(0, 85)}
+                    <div key={i} className="flex items-start gap-2.5 min-w-0">
+                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="text-[15px] sm:text-base font-medium text-slate-600 leading-snug break-words">
+                        {typeof item === 'string' ? item : (item?.label || item?.title || '')}
                       </span>
                     </div>
                   ))}

@@ -277,7 +277,7 @@ export default function Reasoning() {
                   whileHover={{ y: -6 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   id={mod.id}
-                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
+                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
                 >
                   <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
                     <div className="lg:col-span-4 shrink-0 flex">
@@ -311,7 +311,7 @@ export default function Reasoning() {
                           </h3>
                         </div>
 
-                        <div className="space-y-2 text-slate-600 text-xs sm:text-sm leading-relaxed font-normal">
+                        <div className="space-y-2 text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
                           {mod.paragraphs.map((p, idx) => (
                             <p key={idx}>{p}</p>
                           ))}
@@ -328,7 +328,7 @@ export default function Reasoning() {
                             </div>
                             <span>What Makes It Different?</span>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
                             {mod.difference}
                           </p>
                         </div>
@@ -342,7 +342,7 @@ export default function Reasoning() {
                             </div>
                             <span>Ideal For</span>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
                             {mod.idealFor}
                           </p>
                         </div>
@@ -422,7 +422,7 @@ export default function Reasoning() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Case-Elimination Templates</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Case-Elimination Templates</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Step-by-step puzzle frameworks that systematically rule out false conditions.
                         </p>
@@ -436,7 +436,7 @@ export default function Reasoning() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Oral Inequality & Syllogism Shortcuts</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Oral Inequality & Syllogism Shortcuts</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Solve direct statements visually without wasting precious seconds on rough sheets.
                         </p>
@@ -450,7 +450,7 @@ export default function Reasoning() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Complete Mains Pattern Coverage</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Complete Mains Pattern Coverage</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           In-depth practice for machine input-output, coded directions, and critical reasoning.
                         </p>

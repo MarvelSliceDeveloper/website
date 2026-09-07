@@ -195,7 +195,7 @@ function OverviewSection({ course }) {
                       return <IconComp className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 group-hover:text-brand-orange transition-colors" />;
                     })()}
                   </div>
-                  <span className="font-semibold text-dark-navy text-xs sm:text-sm group-hover:text-brand-orange transition-colors leading-snug break-words">{h.label}</span>
+                  <span className="font-semibold text-dark-navy text-[15px] sm:text-base group-hover:text-brand-orange transition-colors leading-snug break-words">{h.label}</span>
                 </div>
               </StaggerItem>
             ))}
@@ -553,9 +553,9 @@ export default function CourseDetail() {
                 {course.checklist_items?.length > 0 && (
                   <ul className="mt-6 space-y-2.5 w-full max-w-xl text-left">
                     {course.checklist_items.slice(0, 6).map((item, i) => (
-                      <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
-                        <FiCheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                        <span className="font-medium leading-relaxed">{(item || "").slice(0, 80)}</span>
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600 min-w-0">
+                        <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span className="font-medium leading-snug text-[15px] sm:text-base text-slate-600 break-words">{(item || "")}</span>
                       </li>
                     ))}
                   </ul>

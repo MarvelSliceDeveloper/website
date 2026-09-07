@@ -24,15 +24,15 @@ function NavColumn({ parentLabel, defaultChildren }) {
       { label: 'Banking', path: '/banking' }
     ];
     return (
-      <div className="col-span-1 lg:pt-10 text-center sm:text-left">
-        <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 text-white/90 text-center sm:text-left">
+      <div className="col-span-1 text-center sm:text-left">
+        <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">
           {formatFooterLabel(parentLabel)}
         </h4>
         <ul className="space-y-2.5 text-center sm:text-left">
           {ceDefaults.map((child, i) => (
             <li key={i}>
               <Link to={child.path || '#'}
-                className="text-sm text-gray-300 hover:text-brand-orange transition-colors py-0.5 inline-block">
+                className="text-base sm:text-base text-gray-200 hover:text-brand-orange transition-colors py-1 inline-block">
                 {formatFooterLabel(child.label)}
               </Link>
             </li>
@@ -44,15 +44,15 @@ function NavColumn({ parentLabel, defaultChildren }) {
 
   if (items.length === 0) return null;
   return (
-    <div className="col-span-1 lg:pt-10 text-center sm:text-left">
-      <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 text-white/90 text-center sm:text-left">
+    <div className="col-span-1 text-center sm:text-left">
+      <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">
         {formatFooterLabel(parentLabel)}
       </h4>
       <ul className="space-y-2.5 text-center sm:text-left">
         {items.map((child, i) => (
           <li key={i}>
             <Link to={child.path || '#'}
-              className="text-sm text-gray-300 hover:text-brand-orange transition-colors py-0.5 inline-block">
+              className="text-base sm:text-base text-gray-200 hover:text-brand-orange transition-colors py-1 inline-block">
               {formatFooterLabel(child.label)}
             </Link>
           </li>
@@ -93,23 +93,23 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
           {/* Logo & Contact Info Section: Spans full width across top on Tablet (sm:col-span-2 lg:col-span-1) */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-1 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left">
-            <div className="flex justify-center sm:justify-start mb-4">
+            <div className="flex justify-center sm:justify-start mb-4 -mt-3">
               <Link to="/" aria-label="Go to Homepage" className="inline-flex items-center gap-3 group">
                 {settings?.logo_url && (
-                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105" />
+                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-11 sm:h-11 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
                 )}
-                <span className="text-xl sm:text-2xl font-extrabold text-white">
+                <span className="text-3xl sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif] leading-tight">
                   Marvel <span className="text-brand-orange">Slice</span>
                 </span>
               </Link>
             </div>
-            <div className="space-y-3 text-sm text-gray-300 text-center sm:text-left">
+            <div className="space-y-3.5 text-base sm:text-base text-gray-200 text-center sm:text-left">
               {address && (
                 <p className="flex items-start justify-center sm:justify-start text-center sm:text-left gap-2.5">
-                  <FiMapPin className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                  <FiMapPin className="w-5 h-5 mt-1 shrink-0 text-brand-orange" />
                   <span>{address}</span>
                 </p>
               )}
@@ -120,7 +120,7 @@ export default function Footer() {
                   onClick={() => trackPhoneClick(num, 'footer')}
                   className="flex items-center justify-center sm:justify-start gap-2.5 hover:text-brand-orange transition-colors"
                 >
-                  <FiPhone className="w-4 h-4 shrink-0 text-brand-orange" />
+                  <FiPhone className="w-5 h-5 shrink-0 text-brand-orange" />
                   <span>{num}</span>
                 </a>
               ))}
@@ -130,7 +130,7 @@ export default function Footer() {
                   onClick={() => trackEmailClick(email, 'footer')}
                   className="flex items-center justify-center sm:justify-start gap-2.5 hover:text-brand-orange transition-colors"
                 >
-                  <FiMail className="w-4 h-4 shrink-0 text-brand-orange" />
+                  <FiMail className="w-5 h-5 shrink-0 text-brand-orange" />
                   <span>{email}</span>
                 </a>
               )}
@@ -138,12 +138,12 @@ export default function Footer() {
           </div>
 
           {/* Quick Links Column */}
-          <div className="col-span-1 lg:pt-10 text-center sm:text-left">
-            <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 text-white/90 text-center sm:text-left">Quick Links</h4>
+          <div className="col-span-1 text-center sm:text-left">
+            <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">Quick Links</h4>
             <ul className="space-y-2.5 text-center sm:text-left">
               {linkItems.map((item, i) => (
                 <li key={i}>
-                  <Link to={item.path} className="text-sm text-gray-300 hover:text-brand-orange transition-colors py-0.5 inline-block">
+                  <Link to={item.path} className="text-base sm:text-base text-gray-200 hover:text-brand-orange transition-colors py-1 inline-block">
                     {formatFooterLabel(item.label)}
                   </Link>
                 </li>
@@ -158,35 +158,35 @@ export default function Footer() {
 
           {/* Working Hours & Social Links Column */}
           {(hours.weekday || hours.saturday) && (
-            <div className="col-span-1 lg:pt-10 text-center sm:text-left">
-              <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 text-white/90 text-center sm:text-left">Working Hours</h4>
-              <ul className="space-y-3 text-sm text-gray-300 text-center sm:text-left">
+            <div className="col-span-1 text-center sm:text-left">
+              <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 text-white">Working Hours</h4>
+              <ul className="space-y-3.5 text-base sm:text-base text-gray-200 text-center sm:text-left">
                 {hours.weekday && (
                   <li className="flex items-start justify-center sm:justify-start text-center sm:text-left gap-2.5">
-                    <FiClock className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                    <FiClock className="w-5 h-5 mt-1 shrink-0 text-brand-orange" />
                     <div>
-                      <p className="text-white/90 font-medium">Monday - Friday</p>
+                      <p className="text-white font-medium">Monday - Friday</p>
                       <p>{hours.weekday}</p>
                     </div>
                   </li>
                 )}
                 {hours.saturday && (
                   <li className="flex items-start justify-center sm:justify-start text-center sm:text-left gap-2.5">
-                    <FiClock className="w-4 h-4 mt-0.5 shrink-0 text-brand-orange" />
+                    <FiClock className="w-5 h-5 mt-1 shrink-0 text-brand-orange" />
                     <div>
-                      <p className="text-white/90 font-medium">Saturday</p>
+                      <p className="text-white font-medium">Saturday</p>
                       <p>{hours.saturday}</p>
                     </div>
                   </li>
                 )}
               </ul>
-              <h4 className="font-semibold text-base sm:text-sm uppercase tracking-wider mb-3 mt-8 text-white/90 text-center sm:text-left">Social Links</h4>
-              <div className="flex items-center gap-3 mt-3 justify-center sm:justify-start">
-                <a href={social.twitter || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaXTwitter className="w-3.5 h-3.5" /></a>
-                <a href={social.facebook || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaFacebookF className="w-3.5 h-3.5" /></a>
-                <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaInstagram className="w-3.5 h-3.5" /></a>
-                <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaLinkedinIn className="w-3.5 h-3.5" /></a>
-                <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5"><FaYoutube className="w-3.5 h-3.5" /></a>
+              <h4 className="font-bold text-lg sm:text-base uppercase tracking-wider mb-3 mt-8 text-white">Social Links</h4>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-2.5 mt-3 justify-center sm:justify-start">
+                <a href={social.twitter || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="inline-flex w-10 h-10 sm:w-9 sm:h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaXTwitter className="w-5 h-5 sm:w-4 sm:h-4 text-black" /></a>
+                <a href={social.facebook || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="inline-flex w-10 h-10 sm:w-9 sm:h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaFacebookF className="w-5 h-5 sm:w-4 sm:h-4 text-[#1877F2]" /></a>
+                <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="inline-flex w-10 h-10 sm:w-9 sm:h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaInstagram className="w-5 h-5 sm:w-4 sm:h-4 text-[#E4405F]" /></a>
+                <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="inline-flex w-10 h-10 sm:w-9 sm:h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaLinkedinIn className="w-5 h-5 sm:w-4 sm:h-4 text-[#0A66C2]" /></a>
+                <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="inline-flex w-10 h-10 sm:w-9 sm:h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaYoutube className="w-5 h-5 sm:w-4 sm:h-4 text-[#FF0000]" /></a>
               </div>
             </div>
           )}
@@ -195,7 +195,7 @@ export default function Footer() {
 
       {/* Bottom Bar: Stacked on Mobile, Flex on Desktop */}
       <div className="bg-brand-orange py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-white font-medium">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm sm:text-base text-white font-medium">
           <span className="text-center sm:text-left">&copy; Marvel Slice. All rights reserved.</span>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
             <Link to="/privacy" className="hover:underline">Privacy Policy</Link>

@@ -279,7 +279,7 @@ export default function Banking() {
                   whileHover={{ y: -6 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   id={exam.id}
-                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
+                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
                 >
                   <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
                     {/* LEFT — Image (~35% width / lg:col-span-4) */}
@@ -317,7 +317,7 @@ export default function Banking() {
                         </div>
 
                         {/* Existing Paragraphs */}
-                        <div className="space-y-2 text-slate-600 text-xs sm:text-sm leading-relaxed font-normal">
+                        <div className="space-y-2 text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
                           {exam.paragraphs.map((p, idx) => (
                             <p key={idx}>{p}</p>
                           ))}
@@ -336,7 +336,7 @@ export default function Banking() {
                             </div>
                             <span>What Makes It Different?</span>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
                             {exam.difference}
                           </p>
                         </div>
@@ -351,7 +351,7 @@ export default function Banking() {
                             </div>
                             <span>Ideal For</span>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
                             {exam.idealFor}
                           </p>
                         </div>
@@ -459,7 +459,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Comprehensive Syllabus Coverage</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Comprehensive Syllabus Coverage</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           In-depth preparation for Quantitative Aptitude, Reasoning Ability, English Language, and General/Banking Awareness.
                         </p>
@@ -473,7 +473,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Structured Prelims & Mains Training</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Structured Prelims & Mains Training</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Targeted strategy covering two-tier objective exams, speed tests, and descriptive paper practice.
                         </p>
@@ -487,7 +487,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Expert Banking Faculty & Mentorship</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Expert Banking Faculty & Mentorship</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Learn directly from experienced competitive exam specialists and former banking professionals.
                         </p>
@@ -501,7 +501,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Full-Length Mock Tests & Analytics</h3>
+                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Full-Length Mock Tests & Analytics</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Regular section-wise speed tests, exam-pattern simulations, and detailed performance tracking.
                         </p>

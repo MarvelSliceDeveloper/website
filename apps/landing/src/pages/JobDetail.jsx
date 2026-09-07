@@ -312,7 +312,7 @@ export default function JobDetail() {
   return (
     <div className="bg-white min-h-screen">
       
-      {/* HERO / TOP JOB HEADER BANNER (Grey Section Band) */}
+      {/* HERO / TOP JOB HEADER BANNER: Heading & Description in 1 section */}
       <section className="bg-slate-50 border-b border-slate-200/80 py-10 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="mb-6">
@@ -329,82 +329,23 @@ export default function JobDetail() {
             <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-dark-navy tracking-tight leading-tight mt-1 text-center">
               {job.title}
             </h1>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-5 mx-auto" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
 
-            {/* Quick Metadata Row */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-t border-slate-200/80 pt-5 mt-2">
-              <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-slate-600">
-                {(job.division || job.department) && (
-                  <div className="flex items-center gap-2">
-                    <FiBriefcase className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">Division: </span>
-                    <span className="text-slate-600">{job.division || job.department}</span>
-                  </div>
-                )}
-                {empType && (
-                  <div className="flex items-center gap-2">
-                    <FiFileText className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">Type: </span>
-                    <span className="text-slate-600">{empType}</span>
-                  </div>
-                )}
-                {locVal && (
-                  <div className="flex items-center gap-2">
-                    <FiMapPin className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">Location: </span>
-                    <span className="text-slate-600">{locVal}</span>
-                  </div>
-                )}
-                {expVal && (
-                  <div className="flex items-center gap-2">
-                    <FiClock className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">Experience: </span>
-                    <span className="text-slate-600">{expVal}</span>
-                  </div>
-                )}
-                {salaryVal && (
-                  <div className="flex items-center gap-2">
-                    <FiDollarSign className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">{isIntern ? 'Stipend: ' : 'Salary: '}</span>
-                    <span className="text-slate-600">{salaryVal.startsWith('₹') ? salaryVal : `₹${salaryVal}`}</span>
-                  </div>
-                )}
-                {job.duration && (
-                  <div className="flex items-center gap-2">
-                    <FiClock className="w-4 h-4 text-brand-blue shrink-0" />
-                    <span className="font-semibold text-dark-navy">Duration: </span>
-                    <span className="text-slate-600">{job.duration}</span>
-                  </div>
-                )}
+            {job.description && (
+              <div className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-line text-left pt-2">
+                {job.description}
               </div>
-            </div>
+            )}
           </Reveal>
         </div>
       </section>
 
-      {/* 1. MAIN DUTIES & RESPONSIBILITIES (White Section Band) */}
-      {job.description && (
+      {/* 1. KEY REQUIREMENTS (White Section Band) */}
+      {job.key_requirements && (
         <section className="bg-white py-12 sm:py-16 border-b border-slate-200/80">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
-                Main Duties &amp; Responsibilities
-              </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <div className="text-slate-600 text-sm sm:text-base leading-relaxed whitespace-pre-line pl-4 sm:pl-6 lg:pl-8">
-                {job.description}
-              </div>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {/* 2. KEY REQUIREMENTS (Grey Section Band) */}
-      {job.key_requirements && (
-        <section className="bg-slate-50 py-12 sm:py-16 border-b border-slate-200/80">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-extrabold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
                 Key Requirements
               </h2>
               <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
@@ -416,12 +357,12 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 3. RESPONSIBILITIES (White Section Band) */}
+      {/* 2. RESPONSIBILITIES (Grey Section Band) */}
       {job.responsibilities && (
-        <section className="bg-white py-12 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-slate-50 py-12 sm:py-16 border-b border-slate-200/80">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-extrabold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
                 Responsibilities
               </h2>
               <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
@@ -433,12 +374,12 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 4. QUALIFICATION & EXPERIENCE (Grey Section Band) */}
+      {/* 3. QUALIFICATION & EXPERIENCE (White Section Band) */}
       {job.qualifications && (
-        <section className="bg-slate-50 py-12 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-white py-12 sm:py-16 border-b border-slate-200/80">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-extrabold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
                 Qualification &amp; Experience
               </h2>
               <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
@@ -450,115 +391,95 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 5. POSITION SUMMARY / JOB OVERVIEW TABLE & BRAND APPLY CTA */}
-      <section className="bg-white py-12 sm:py-16">
+      {/* 4. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
+      <section className="bg-slate-50 py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <div className="flex flex-col md:flex-row items-start justify-between gap-10 md:gap-12">
-              
-              {/* Left Column: Position Summary */}
-              <div className="w-full md:w-1/2 shrink-0">
-                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
-                  Position Summary
-                </h2>
-                <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
+            <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              Position Summary
+            </h2>
+            <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
 
-                <div className="pl-4 sm:pl-6">
-                  {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration) && (
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full">
-                      <table className="w-full text-left text-xs sm:text-sm border-collapse">
-                        <tbody className="divide-y divide-slate-200">
-                          {empType && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70 w-5/12 sm:w-1/3">
-                                Type
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {empType}
-                              </td>
-                            </tr>
-                          )}
-                          {(job.division || job.department) && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
-                                Division / Department
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {job.division || job.department}
-                              </td>
-                            </tr>
-                          )}
-                          {job.duration && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
-                                Duration
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {job.duration}
-                              </td>
-                            </tr>
-                          )}
-                          {expVal && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
-                                Experience Required
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {expVal}
-                              </td>
-                            </tr>
-                          )}
-                          {locVal && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
-                                Location
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {locVal}
-                              </td>
-                            </tr>
-                          )}
-                          {salaryVal && (
-                            <tr className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
-                                {isIntern ? 'Stipend' : 'Salary Range'}
-                              </td>
-                              <td className="py-3.5 px-5 font-medium text-slate-700">
-                                {salaryVal.startsWith('₹') ? salaryVal : `₹${salaryVal}`}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+            <div className="pl-4 sm:pl-6">
+              {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration) && (
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-8">
+                  <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                    <tbody className="divide-y divide-slate-200">
+                      {empType && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70 w-5/12 sm:w-1/3">
+                            Type
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {empType}
+                          </td>
+                        </tr>
+                      )}
+                      {(job.division || job.department) && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Division / Department
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {job.division || job.department}
+                          </td>
+                        </tr>
+                      )}
+                      {job.duration && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Duration
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {job.duration}
+                          </td>
+                        </tr>
+                      )}
+                      {expVal && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Experience Required
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {expVal}
+                          </td>
+                        </tr>
+                      )}
+                      {locVal && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Location
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {locVal}
+                          </td>
+                        </tr>
+                      )}
+                      {salaryVal && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            {isIntern ? 'Stipend' : 'Salary Range'}
+                          </td>
+                          <td className="py-3.5 px-5 font-medium text-slate-700">
+                            {salaryVal.startsWith('₹') ? salaryVal : `₹${salaryVal}`}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
+              )}
+
+              <div className="pt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={openApplyModal}
+                  className="inline-flex items-center gap-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm sm:text-base py-3.5 px-10 rounded-full shadow-md hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                >
+                  <span>Apply Now</span>
+                  <FiArrowRight className="w-4.5 h-4.5" />
+                </button>
               </div>
-
-              {/* Right Column: Take the Next Step in Your Career (Aligned straight with top of table) */}
-              <div className="flex-1 w-full md:w-auto flex flex-col items-start text-left md:pl-6 lg:pl-10 md:pt-[58px]">
-                <h3 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
-                  Take the Next Step in Your Career
-                </h3>
-                <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
-
-                <div className="pl-4 sm:pl-6 space-y-4 w-full">
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-sm">
-                    Apply today and explore an opportunity to grow with our team.
-                  </p>
-                  <div className="pt-2 w-full flex justify-center">
-                    <button
-                      type="button"
-                      onClick={openApplyModal}
-                      className="inline-flex items-center gap-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm sm:text-base py-3.5 px-10 rounded-full shadow-md hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
-                    >
-                      <span>Apply Now</span>
-                      <FiArrowRight className="w-4.5 h-4.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </Reveal>
         </div>

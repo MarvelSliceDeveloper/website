@@ -165,7 +165,12 @@ export default function CareerPageEditor() {
 
       if (content) {
         setPageId(content.id);
-        setHero({ heading: content.hero_heading || '', subheading: content.hero_subheading || '', hero_image: content.hero_image || '' });
+        setHero({
+          heading: content.hero_heading || '',
+          subheading: content.hero_subheading || '',
+          hero_image: content.hero_image || '',
+          mobile_hero_image: content.mobile_hero_image || content.form_config?.mobile_hero_image || '',
+        });
         const fc = content.form_config || {};
         setSection1({
           badgeText: fc.badgeText || 'WE\'RE HIRING!',
@@ -210,7 +215,12 @@ export default function CareerPageEditor() {
             .limit(1);
           const page = pages?.[0] || null;
           if (page) {
-            setHero({ heading: page.heading || '', subheading: page.subheading || '', hero_image: page.hero_image || '' });
+            setHero({
+              heading: page.heading || '',
+              subheading: page.subheading || '',
+              hero_image: page.hero_image || '',
+              mobile_hero_image: page.mobile_hero_image || page.form_config?.mobile_hero_image || '',
+            });
           }
         }
       }
@@ -243,12 +253,14 @@ export default function CareerPageEditor() {
       hero_heading: hero.heading,
       hero_subheading: hero.subheading,
       hero_image: hero.hero_image || null,
+      mobile_hero_image: hero.mobile_hero_image || null,
       section1_heading: section1.headline,
       section1_subheading: section1.subtitle,
       section1_description: section1.description,
       section2_heading: section2.heading || 'Job Openings',
       section2_subheading: section2.subheading,
       form_config: {
+        mobile_hero_image: hero.mobile_hero_image || '',
         badgeText: section1.badgeText,
         headline: section1.headline,
         subtitle: section1.subtitle,
@@ -471,29 +483,15 @@ export default function CareerPageEditor() {
                     placeholder="Subheading" className={inputClass} />
                 </div>
               </div>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Hero Image</label>
-                  <button type="button" onClick={() => {
-                    if (hero.hero_image) {
-                      setHero({ ...hero, hero_image: '' });
-                    }
-                  }}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${hero.hero_image ? 'bg-admin-600' : 'bg-admin-300'}`}>
-                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${hero.hero_image ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                  </button>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Desktop Hero Image</label>
+                  <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Upload Desktop Image" />
                 </div>
-                {hero.hero_image ? (
-                  <div className="relative">
-                    <img src={hero.hero_image} alt="" className="w-full h-32 object-cover rounded-lg" />
-                    <button type="button" onClick={() => setHero({ ...hero, hero_image: '' })}
-                      className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm transition-colors cursor-pointer">
-                      <FiX className="w-4 h-4 text-admin-600" />
-                    </button>
-                  </div>
-                ) : (
-                  <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Upload Hero Image" />
-                )}
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Mobile Hero Image (Optional)</label>
+                  <ImageUploader value={hero.mobile_hero_image} onChange={(v) => setHero({ ...hero, mobile_hero_image: v })} label="Upload Mobile Image" />
+                </div>
               </div>
             </div>
           </div>
