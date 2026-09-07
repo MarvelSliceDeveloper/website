@@ -502,7 +502,7 @@ export default function CourseDetail() {
   async function handleInterestSubmit(e) {
     e.preventDefault();
     if (!interestForm.name.trim() || !interestForm.email.trim() || !interestForm.phone.trim()) return;
-    if (!interestAgree) { setInterestError('Please agree to the terms and conditions.'); return; }
+    if (!interestAgree) { setInterestError('Please agree to receive notifications and accept the terms.'); return; }
     setInterestSubmitting(true);
     setInterestError('');
 
@@ -632,8 +632,9 @@ export default function CourseDetail() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowInterest(false)}>
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
-                  Register Your Interest
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
+                  <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
+                  <span>{course?.title || 'Register Your Interest'}</span>
                 </h2>
                 <button
                   onClick={() => setShowInterest(false)}
@@ -662,9 +663,6 @@ export default function CourseDetail() {
                 </div>
               ) : (
                 <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
-                  <p className="text-xs text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    Get notified the moment enrollment opens for <strong className="text-gray-900">{course.title}</strong>.
-                  </p>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
                     <input value={interestForm.name} onChange={e => setInterestForm(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" required
@@ -691,7 +689,7 @@ export default function CourseDetail() {
                       if (interestError) setInterestError('');
                     }} required className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue/20" />
                     <span className="text-xs text-gray-600 leading-relaxed">
-                      I agree to the{' '}
+                      I agree to receive course notifications and updates, and accept the{' '}
                       <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
                       {' '}and{' '}
                       <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
