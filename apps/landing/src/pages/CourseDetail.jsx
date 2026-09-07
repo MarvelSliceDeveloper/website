@@ -560,19 +560,18 @@ export default function CourseDetail() {
                     ))}
                   </ul>
                 )}
-                <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 mt-8 w-full max-w-md sm:max-w-none">
                   {notifiedSuccess ? (
                     <button
                       type="button"
                       disabled
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-md cursor-default transition-all"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
-                      <FiCheckCircle className="w-5 h-5" /> You're Notified!
+                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> You're Notified!
                     </button>
                   ) : (
-                    <Button
-                      variant="accent"
-                      size="lg"
+                    <button
+                      type="button"
                       onClick={() => {
                         setInterestForm({ name: '', email: '', phone: '' });
                         setInterestDone(false);
@@ -580,14 +579,18 @@ export default function CourseDetail() {
                         setInterestAgree(false);
                         setShowInterest(true);
                       }}
-                      className="w-full sm:w-auto"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
-                      <FiBell className="w-4 h-4" /> Notify Me
-                    </Button>
+                      <FiBell className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Notify Me
+                    </button>
                   )}
-                  <Button variant="outline" size="lg" to="/courses" className="w-full sm:w-auto !bg-brand-blue !text-white hover:!bg-blue-700 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                    Explore All Courses <FiArrowRight className="w-4 h-4" />
-                  </Button>
+                  <Link
+                    to="/courses"
+                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                  >
+                    <span>Explore All Courses</span>
+                    <FiArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  </Link>
                 </div>
               </div>
 
