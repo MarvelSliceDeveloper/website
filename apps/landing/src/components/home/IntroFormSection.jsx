@@ -93,6 +93,7 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
+  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo Now!';
 
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -168,10 +169,10 @@ export default function IntroFormSection({ section }) {
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-10">
+          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-2">
             <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0">
-              <p className="text-xl sm:text-3xl md:text-2xl lg:text-3xl font-extrabold text-center mb-1 w-full leading-tight whitespace-nowrap" style={{ color: '#ef4444' }}>
-                Book Your Free Demo Now!
+              <p className="text-xl sm:text-[26px] md:text-2xl lg:text-[26px] font-extrabold text-center mb-1 w-full leading-tight whitespace-nowrap" style={{ color: '#ef4444' }}>
+                {formTitle}
               </p>
               <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
                 <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>

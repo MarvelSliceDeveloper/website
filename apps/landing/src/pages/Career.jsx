@@ -682,20 +682,20 @@ export default function Career() {
         )}
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8 max-w-6xl mx-auto text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 mt-6 sm:mt-8 max-w-4xl mx-auto text-center">
             {roleCategories.map((cat, idx) => (
               <div
                 key={cat.id}
-                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-2xl p-3 sm:p-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 h-full"
+                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 h-full"
               >
                 <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  idx % 2 === 0
-                    ? 'bg-blue-50 text-brand-blue border border-blue-100/80'
-                    : 'bg-orange-50 text-brand-orange border border-orange-100/80'
+                  (Math.floor(idx / 2) + (idx % 2)) % 2 === 0
+                    ? 'bg-orange-50 text-brand-orange border border-orange-100/80'
+                    : 'bg-emerald-50 text-brand-green border border-emerald-100/80'
                 }`}>
                   <FiBriefcase className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-dark-navy group-hover:text-brand-blue font-bold text-xs sm:text-sm md:text-base leading-snug break-words text-center">
+                <span className="text-dark-navy font-bold text-xs sm:text-sm md:text-base leading-snug break-words text-center">
                   {cat.name}
                 </span>
               </div>
