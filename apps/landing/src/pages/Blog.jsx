@@ -336,14 +336,27 @@ function NewsletterForm() {
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
       <h3 className="font-bold text-lg mb-2 text-gray-900">Newsletter</h3>
       {subscribed ? (
-        <p className="text-green-400 text-sm font-medium">Thanks for subscribing!</p>
+        <p className="text-emerald-600 text-sm font-medium">Thanks for subscribing!</p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email address" required
-            className="w-full px-4 py-2.5 rounded-xl bg-white text-dark-navy text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 border border-gray-400" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
+            required
+            className="w-full px-4 py-2.5 rounded-xl bg-white text-dark-navy text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 border border-gray-300"
+          />
           {error && <p className="text-xs text-red-500">{error}</p>}
-          <Button type="submit" variant="primary" size="lg" shape="md" className="w-full">
-            Subscribe <FiArrowRight className="w-4 h-4" /></Button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap cursor-pointer"
+            >
+              <span>Subscribe</span>
+              <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
         </form>
       )}
     </div>
