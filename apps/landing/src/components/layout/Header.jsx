@@ -313,33 +313,33 @@ export default function Header() {
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
               className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden border-l border-slate-100"
             >
-              {/* Drawer Top Bar Header - Close ('X') Button on LEFT */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(false)}
-                  aria-label="Close menu"
-                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
-                >
-                  <FiX className="w-5 h-5" />
-                </button>
-
+              {/* Drawer Top Bar Header - Centered Logo, Close ('X') Button on RIGHT */}
+              <div className="relative flex items-center justify-center px-4 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2.5"
                 >
                   {settings?.logo_url && (
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-8 w-auto object-contain"
+                      className="h-10 sm:h-11 w-auto object-contain"
                     />
                   )}
-                  <span className="text-lg font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="absolute right-4 p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Drawer Navigation Body */}
@@ -349,22 +349,6 @@ export default function Header() {
                   currentPath={pathname}
                   onItemClick={() => setMobileOpen(false)}
                 />
-              </div>
-
-              {/* Drawer Bottom Action CTA */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/70 shrink-0 space-y-3">
-                <Link
-                  to="/contact"
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full py-3 px-4 bg-brand-orange hover:bg-brand-orange/90 active:scale-[0.98] text-white font-bold text-sm rounded-xl text-center shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  Contact Us
-                </Link>
-                {settings?.contact_phone && (
-                  <p className="text-xs text-center text-slate-500 font-medium">
-                    Call: <span className="text-slate-700 font-bold">{settings.contact_phone}</span>
-                  </p>
-                )}
               </div>
             </motion.div>
           </>

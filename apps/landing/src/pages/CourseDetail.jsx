@@ -807,10 +807,16 @@ export default function CourseDetail() {
               className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">Download Brochure</h2>
-                <button onClick={() => setShowBrochure(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-                  <FiX className="w-5 h-5 text-gray-400" />
+              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                  {course?.title ? `${course.title} Brochure` : 'Course Brochure'}
+                </h2>
+                <button
+                  onClick={() => setShowBrochure(false)}
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
               {brochureDone ? (
@@ -864,7 +870,7 @@ export default function CourseDetail() {
                   <button type="submit" disabled={brochureSubmitting}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors disabled:opacity-60 cursor-pointer">
                     {brochureSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-4 h-4" />}
-                    {brochureSubmitting ? 'Sending...' : 'Get Brochure'}
+                    {brochureSubmitting ? 'Submitting...' : 'Submit'}
                   </button>
                 </form>
               )}
@@ -892,13 +898,9 @@ export default function CourseDetail() {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <h2 className="text-lg sm:text-xl font-extrabold !text-white leading-snug text-center" style={{ color: '#ffffff' }}>Enquire Now</h2>
-                  <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-dark-navy text-[11px] sm:text-xs font-semibold shadow-2xs max-w-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-blue shrink-0"></span>
-                    <span className="truncate">{course.title}</span>
-                  </div>
-                </div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                  {course?.title ? `${course.title} Enquiry` : 'Course Enquiry'}
+                </h2>
                 <button
                   onClick={() => setShowEnquiry(false)}
                   className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
@@ -993,7 +995,7 @@ export default function CourseDetail() {
                       className="inline-flex items-center justify-center gap-1.5 px-5 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
                     >
                       {enquirySubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
-                      {enquirySubmitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
+                      {enquirySubmitting ? 'Submitting...' : 'Submit'}
                     </button>
                   </div>
                 </form>

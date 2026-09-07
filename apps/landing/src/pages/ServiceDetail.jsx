@@ -910,8 +910,10 @@ export default function ServiceDetail() {
           onClick={() => setEnquiryOpen(false)}
         >
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 pt-6 pb-4 border-b border-gray-100 relative text-center flex flex-col items-center justify-center">
-              <h2 className="text-lg font-bold text-gray-900 text-center">Enquire Now</h2>
+            <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                {service?.title ? `${service.title} Enquiry` : 'Service Enquiry'}
+              </h2>
               <button
                 onClick={() => setEnquiryOpen(false)}
                 className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
@@ -997,7 +999,7 @@ export default function ServiceDetail() {
                   ) : (
                     <FiSend className="w-4 h-4" />
                   )}
-                  {enquirySubmitting ? 'Sending...' : 'Send Enquiry'}
+                  {enquirySubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </form>
             )}

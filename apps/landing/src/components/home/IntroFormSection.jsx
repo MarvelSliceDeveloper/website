@@ -19,16 +19,16 @@ function getStatIcon(label) {
 
 function CourseButtons() {
   return (
-    <div className="flex flex-row gap-2.5 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
+    <div className="flex flex-row gap-2 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-bold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-bold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>

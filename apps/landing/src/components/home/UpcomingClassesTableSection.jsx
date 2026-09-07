@@ -142,7 +142,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
-                        className="inline-flex items-center justify-center bg-brand-orange text-white font-bold text-xs sm:text-sm py-1.5 px-5 rounded-full hover:bg-brand-orange/90 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                        className="inline-flex items-center justify-center bg-brand-orange text-white font-extrabold text-xs sm:text-sm py-2.5 px-6 rounded-full hover:bg-brand-orange/90 shadow-sm hover:shadow-md transition-all cursor-pointer min-h-[38px] whitespace-nowrap"
                       >
                         Register Now
                       </button>
