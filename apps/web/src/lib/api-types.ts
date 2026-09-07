@@ -313,6 +313,8 @@ export interface PackageDetail {
   totalQuizzes: number;
   totalAssignments: number;
   totalPracticals: number;
+  // Synthetic package derived from a single catalogue course (no DB package)
+  _derivedCourseId?: string;
 }
 
 export interface OverdueAssignment {

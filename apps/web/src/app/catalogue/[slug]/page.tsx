@@ -1,7 +1,57 @@
 import Link from "next/link";
 import { PackageDetailClient } from "./_components/PackageDetailClient";
-import { CatalogueCourseDetailClient } from "./_components/CatalogueCourseDetailClient";
 import type { PackageDetail } from "@/lib/api-types";
+
+function courseToPackageDetail(course: any): PackageDetail {
+  const modules = course.modules || [];
+  let totalLessons = 0;
+  let totalQuizzes = 0;
+  let totalAssignments = 0;
+  let totalPracticals = 0;
+  for (const m of modules) {
+    totalLessons += m.lessons?.length ?? 0;
+    totalQuizzes += m.quizzes?.length ?? 0;
+    totalAssignments += m.assignments?.length ?? 0;
+    totalPracticals += m.practicals?.length ?? 0;
+  }
+  return {
+    id: course.id,
+    name: course.title,
+    slug: course.slug,
+    description: course.description ?? null,
+    price: course.price ?? null,
+    status: course.status ?? "PUBLISHED",
+    createdAt: course.createdAt ?? new Date().toISOString(),
+    updatedAt: course.updatedAt ?? new Date().toISOString(),
+    isInternship: false,
+    courses: [
+      {
+        course: {
+          id: course.id,
+          title: course.title,
+          slug: course.slug,
+          description: course.description ?? null,
+          thumbnailUrl: course.thumbnailUrl ?? null,
+          learningObjectives: course.learningObjectives ?? null,
+          modules: modules.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            order: m.order ?? 0,
+          })),
+        },
+      },
+    ],
+    batches: [],
+    _count: { enrollments: 0 },
+    totalLessons,
+    totalQuizzes,
+    totalAssignments,
+    totalPracticals,
+    // marker to indicate this package is derived from a single course
+    // used by PackageDetailClient to switch checkout to course flow
+    _derivedCourseId: course.id,
+  } as PackageDetail & { _derivedCourseId?: string };
+}
 
 async function getPackage(slug: string): Promise<PackageDetail | null> {
   try {
@@ -37,7 +87,8 @@ export default async function PackageDetailPage({
   const { slug } = await params;
   const course = await getCatalogueCourse(slug);
   if (course) {
-    return <CatalogueCourseDetailClient slug={slug} />;
+    const derived = courseToPackageDetail(course);
+    return <PackageDetailClient pkg={derived} />;
   }
   const pkg = await getPackage(slug);
 
