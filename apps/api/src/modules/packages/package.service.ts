@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { paginate, PaginationParams } from "../../utils/paginate";
+import { AppError } from "../../utils/errors";
 import {
   notificationService,
   dispatchEmailsForNotification,
@@ -53,10 +54,10 @@ export const packageService = {
         where: { id: { in: courseIds } },
       });
       if (courses.length !== courseIds.length) {
-        throw new Error("One or more courses not found");
+        throw new AppError(404, "One or more courses not found");
       }
     } else if (!data.isInternship) {
-      throw new Error("At least one course is required");
+      throw new AppError(400, "At least one course is required");
     }
 
     const slug = data.name
@@ -168,7 +169,7 @@ export const packageService = {
       },
     });
 
-    if (!pkg) throw new Error("Package not found");
+    if (!pkg) throw new AppError(404, "Package not found");
     return pkg;
   },
 
@@ -180,7 +181,7 @@ export const packageService = {
     const existing = await prisma.coursePackage.findUnique({
       where: { id: packageId },
     });
-    if (!existing) throw new Error("Package not found");
+    if (!existing) throw new AppError(404, "Package not found");
 
     // If updating courses, verify they all exist
     if (data.courseIds && data.courseIds.length > 0) {
@@ -188,7 +189,7 @@ export const packageService = {
         where: { id: { in: data.courseIds } },
       });
       if (courses.length !== data.courseIds.length) {
-        throw new Error("One or more courses not found");
+        throw new AppError(404, "One or more courses not found");
       }
 
       // Remove old course links and create new ones
@@ -224,12 +225,12 @@ export const packageService = {
       where: { id: packageId },
       include: { _count: { select: { enrollments: true } } },
     });
-    if (!pkg) throw new Error("Package not found");
+    if (!pkg) throw new AppError(404, "Package not found");
     if (pkg.status !== "DRAFT") {
-      throw new Error("Only DRAFT packages can be deleted");
+      throw new AppError(400, "Only DRAFT packages can be deleted");
     }
     if (pkg._count.enrollments > 0) {
-      throw new Error("Cannot delete package with enrolled students");
+      throw new AppError(409, "Cannot delete package with enrolled students");
     }
 
     await prisma.coursePackage.delete({ where: { id: packageId } });
@@ -241,7 +242,7 @@ export const packageService = {
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
     });
-    if (!pkg) throw new Error("Package not found");
+    if (!pkg) throw new AppError(404, "Package not found");
 
     return prisma.coursePackage.update({
       where: { id: packageId },
@@ -265,16 +266,16 @@ export const packageService = {
       where: { id: packageId },
       include: { courses: { select: { courseId: true } } },
     });
-    if (!pkg) throw new Error("Package not found");
+    if (!pkg) throw new AppError(404, "Package not found");
     if (pkg.status !== "ACTIVE") {
-      throw new Error("Only ACTIVE packages can be used for enrollment");
+      throw new AppError(400, "Only ACTIVE packages can be used for enrollment");
     }
 
     // Verify student exists
     const student = await prisma.user.findUnique({
       where: { id: data.userId },
     });
-    if (!student) throw new Error("Student not found");
+    if (!student) throw new AppError(404, "Student not found");
 
     // Check for existing enrollment
     const existingEnrollment = await prisma.packageEnrollment.findFirst({
@@ -285,7 +286,7 @@ export const packageService = {
       },
     });
     if (existingEnrollment) {
-      throw new Error("Student is already enrolled in this package");
+      throw new AppError(409, "Student is already enrolled in this package");
     }
 
     // Create enrollment - batches will be assigned during approval
@@ -372,9 +373,10 @@ export const packageService = {
         courses: true,
       },
     });
-    if (!enrollment) throw new Error("Enrollment not found");
+    if (!enrollment) throw new AppError(404, "Enrollment not found");
     if (enrollment.status !== "PENDING") {
-      throw new Error(
+      throw new AppError(
+        400,
         `Cannot approve enrollment with status: ${enrollment.status}`,
       );
     }
@@ -383,7 +385,7 @@ export const packageService = {
     const packageCourseIds = enrollment.package.courses.map((c) => c.courseId);
     for (const assignment of data.courseBatchAssignments) {
       if (!packageCourseIds.includes(assignment.courseId)) {
-        throw new Error(`Course ${assignment.courseId} is not in this package`);
+        throw new AppError(400, `Course ${assignment.courseId} is not in this package`);
       }
       // Verify batch exists and belongs to the course
       const batch = await prisma.batch.findUnique({
@@ -397,16 +399,18 @@ export const packageService = {
           },
         },
       });
-      if (!batch) throw new Error(`Batch ${assignment.batchId} not found`);
+      if (!batch) throw new AppError(404, `Batch ${assignment.batchId} not found`);
       if (batch.courseId !== null && batch.courseId !== assignment.courseId) {
-        throw new Error(
+        throw new AppError(
+          400,
           `Batch ${assignment.batchId} does not belong to course ${assignment.courseId}`,
         );
       }
       const totalEnrolled =
         batch._count.enrollments + batch._count.packageEnrollmentCourses;
       if (batch.maxStudents && totalEnrolled >= batch.maxStudents) {
-        throw new Error(
+        throw new AppError(
+          409,
           `Batch "${batch.name}" has reached maximum capacity (${batch.maxStudents})`,
         );
       }
@@ -464,9 +468,10 @@ export const packageService = {
         package: { select: { name: true } },
       },
     });
-    if (!enrollment) throw new Error("Enrollment not found");
+    if (!enrollment) throw new AppError(404, "Enrollment not found");
     if (enrollment.status !== "PENDING") {
-      throw new Error(
+      throw new AppError(
+        400,
         `Cannot reject enrollment with status: ${enrollment.status}`,
       );
     }
@@ -540,7 +545,7 @@ export const packageService = {
         _count: { select: { enrollments: true } },
       },
     });
-    if (!pkg) throw new Error("Package not found");
+    if (!pkg) throw new AppError(404, "Package not found");
 
     // Aggregate content counts across all courses/modules
     let totalLessons = 0;
