@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown, FiLogIn } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -195,6 +195,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { data: settings } = useSiteSettings();
@@ -304,17 +305,17 @@ export default function Header() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Modern Slide-Over Drawer Panel */}
+            {/* Modern Slide-Over Drawer Panel matching Reference Design */}
             <motion.div
               ref={mobileMenuRef}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden border-l border-slate-100"
+              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden rounded-l-[32px] overflow-hidden border-l border-slate-100"
             >
-              {/* Drawer Top Bar Header - Centered Logo, Close ('X') Button on RIGHT */}
-              <div className="relative flex items-center justify-center px-4 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
+              {/* Header - Logo + Brand Name + Minimal Close ('X') Button */}
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
@@ -324,10 +325,10 @@ export default function Header() {
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-10 sm:h-11 w-auto object-contain"
+                      className="h-9 sm:h-10 w-auto object-contain"
                     />
                   )}
-                  <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  <span className="text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
@@ -336,19 +337,40 @@ export default function Header() {
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"
-                  className="absolute right-4 p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center"
                 >
-                  <FiX className="w-5 h-5" />
+                  <FiX className="w-5.5 h-5.5" />
                 </button>
               </div>
 
-              {/* Drawer Navigation Body */}
-              <div className="flex-1 overflow-y-auto overscroll-contain py-4 px-3">
+              {/* Navigation Links List */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
                 <MobileNav
                   items={topNav}
                   currentPath={pathname}
                   onItemClick={() => setMobileOpen(false)}
                 />
+              </div>
+
+              {/* Bottom Log In / Sign Up Action Buttons */}
+              <div className="p-4 border-t border-slate-100 mt-auto shrink-0 bg-white">
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-brand-blue font-bold text-sm rounded-xl text-center transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <FiLogIn className="w-4 h-4" />
+                    <span>Log In</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex-1 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl text-center shadow-xs transition-colors cursor-pointer"
+                  >
+                    Sign Up
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>

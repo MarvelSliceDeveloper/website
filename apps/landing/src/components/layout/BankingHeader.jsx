@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiMenu } from 'react-icons/fi';
+import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiMenu, FiLogIn, FiDollarSign, FiBarChart2, FiCpu, FiBook, FiShield, FiClock, FiCheckSquare } from 'react-icons/fi';
 import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -108,6 +108,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
   const dropdownRef = useRef(null);
 
   const searchQuery = searchParams.get('q') || '';
@@ -659,16 +660,16 @@ export default function BankingHeader({ onOpenLoginModal }) {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Slide-Over Drawer - Close ('X') Button on LEFT */}
+            {/* Modern Slide-Over Drawer Panel matching Reference Design */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:hidden bg-white shadow-2xl flex flex-col border-l border-slate-100"
+              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:hidden bg-white shadow-2xl flex flex-col rounded-l-[32px] overflow-hidden border-l border-slate-100"
             >
-              {/* Drawer Top Header - Centered Logo, Close ('X') Button on RIGHT */}
-              <div className="relative flex items-center justify-center px-4 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
+              {/* Header - Logo + Brand Name + Minimal Close ('X') Button */}
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
                 <Link
                   to="/"
                   onClick={() => setMobileMenuOpen(false)}
@@ -678,10 +679,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-10 sm:h-11 w-auto object-contain"
+                      className="h-9 sm:h-10 w-auto object-contain"
                     />
                   )}
-                  <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  <span className="text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
@@ -690,91 +691,99 @@ export default function BankingHeader({ onOpenLoginModal }) {
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
                   aria-label="Close menu"
-                  className="absolute right-4 p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center"
                 >
-                  <FiX className="w-5 h-5" />
+                  <FiX className="w-5.5 h-5.5" />
                 </button>
               </div>
 
               {/* Navigation Items */}
-              <div className="flex-1 overflow-y-auto overscroll-contain py-4 px-3 space-y-1.5 font-semibold">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-1.5">
                 <Link
                   to="/banking"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isAboutActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isAboutActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Banking
+                  <FiDollarSign className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Banking</span>
                 </Link>
                 <Link
                   to="/aptitude"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isAptitudeActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isAptitudeActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Aptitude
+                  <FiBarChart2 className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Aptitude</span>
                 </Link>
                 <Link
                   to="/reasoning"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isReasoningActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isReasoningActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Reasoning
+                  <FiCpu className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Reasoning</span>
                 </Link>
                 <Link
                   to="/english"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isEnglishActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isEnglishActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  English
+                  <FiBook className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>English</span>
                 </Link>
                 <Link
                   to="/banking-awareness"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isBankingAwarenessActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isBankingAwarenessActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Banking Awareness
+                  <FiShield className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Banking Awareness</span>
                 </Link>
                 <Link
                   to="/current-affairs"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isAffairsActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isAffairsActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Affairs
+                  <FiClock className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Affairs</span>
                 </Link>
                 <Link
                   to="/mock-exam"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all ${
-                    isMockExamActive ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all ${
+                    isMockExamActive ? 'bg-slate-100/90 text-brand-blue font-bold' : 'text-slate-800 hover:bg-slate-50'
                   }`}
                 >
-                  Mock Exam
+                  <FiCheckSquare className="w-5 h-5 shrink-0 text-slate-800" />
+                  <span>Mock Exam</span>
                 </Link>
               </div>
 
-              {/* Bottom Actions */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/70 shrink-0 space-y-2">
-                <div className="flex items-center gap-2">
+              {/* Bottom Log In / Sign Up Action Buttons */}
+              <div className="p-4 border-t border-slate-100 mt-auto shrink-0 bg-white">
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => {
                       setMobileMenuOpen(false);
                       onOpenLoginModal && onOpenLoginModal('general', 'Log In');
                     }}
-                    className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-brand-blue font-bold text-sm rounded-xl text-center transition-colors cursor-pointer"
+                    className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-brand-blue font-bold text-sm rounded-xl text-center transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    Log In
+                    <FiLogIn className="w-4 h-4" />
+                    <span>Log In</span>
                   </button>
                   <button
                     type="button"
@@ -782,7 +791,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
                       setMobileMenuOpen(false);
                       onOpenLoginModal && onOpenLoginModal('general', 'Sign Up');
                     }}
-                    className="flex-1 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl text-center shadow-md transition-colors cursor-pointer"
+                    className="flex-1 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl text-center shadow-xs transition-colors cursor-pointer"
                   >
                     Sign Up
                   </button>

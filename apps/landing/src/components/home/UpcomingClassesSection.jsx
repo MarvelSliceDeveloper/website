@@ -191,17 +191,22 @@ export default function UpcomingClassesSection({ section }) {
                     <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
                       <div className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
                         {cls.batch && (
-                          <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                          <span className="sm:hidden absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] font-bold shrink-0 border border-blue-100/60 z-10">
                             {cls.batch}
                           </span>
                         )}
-                        <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12">{cls.course_name}</h4>
+                        <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12 sm:pr-0">{cls.course_name}</h4>
                         {cls.date_time && (
                           <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
-                        <div className="mt-auto pt-4 flex justify-center sm:justify-end">
+                        <div className="mt-auto pt-4 flex items-center justify-center sm:justify-end gap-2.5">
+                          {cls.batch && (
+                            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-brand-blue text-xs font-bold shrink-0 border border-blue-100/60">
+                              {cls.batch}
+                            </span>
+                          )}
                           <button
                             type="button"
                             onClick={() => setSelectedClass(cls)}
@@ -248,17 +253,22 @@ export default function UpcomingClassesSection({ section }) {
               {classes.map((cls) => (
                 <div key={cls.id} className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
                   {cls.batch && (
-                    <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                    <span className="sm:hidden absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] font-bold shrink-0 border border-blue-100/60 z-10">
                       {cls.batch}
                     </span>
                   )}
-                  <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12">{cls.course_name}</h4>
+                  <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12 sm:pr-0">{cls.course_name}</h4>
                   {cls.date_time && (
                     <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                       {formatDateTime(cls.date_time)}
                     </p>
                   )}
-                  <div className="mt-auto pt-4 flex justify-center sm:justify-end">
+                  <div className="mt-auto pt-4 flex items-center justify-center sm:justify-end gap-2.5">
+                    {cls.batch && (
+                      <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-brand-blue text-xs font-bold shrink-0 border border-blue-100/60">
+                        {cls.batch}
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedClass(cls)}

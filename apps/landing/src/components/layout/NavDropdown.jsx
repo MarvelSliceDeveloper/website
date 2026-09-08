@@ -1,7 +1,31 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiChevronRight,
+  FiHome,
+  FiUser,
+  FiCode,
+  FiAward,
+  FiGrid,
+  FiBriefcase,
+  FiTrendingUp,
+  FiFileText,
+  FiPhone,
+  FiCompass,
+  FiBarChart2,
+  FiCpu,
+  FiBook,
+  FiShield,
+  FiClock,
+  FiCheckSquare,
+  FiDollarSign,
+  FiEdit3,
+  FiBell,
+  FiHelpCircle,
+  FiSettings,
+} from "react-icons/fi";
 import { useNavChildren } from "../../hooks/useSupabase";
 
 function hasChildren(item) {
@@ -480,6 +504,40 @@ export default function NavDropdown({
    MOBILE
    ================================================================== */
 
+const NAV_ICONS = {
+  'home': FiHome,
+  'about': FiUser,
+  'profil': FiUser,
+  'profile': FiUser,
+  'software learning': FiCode,
+  'competitive exam': FiAward,
+  'banking': FiDollarSign,
+  'services': FiBriefcase,
+  'career': FiTrendingUp,
+  'author': FiEdit3,
+  'blog': FiFileText,
+  'history': FiFileText,
+  'notifications': FiBell,
+  'help': FiHelpCircle,
+  'setting': FiSettings,
+  'settings': FiSettings,
+  'contact': FiPhone,
+  'aptitude': FiBarChart2,
+  'reasoning': FiCpu,
+  'english': FiBook,
+  'banking awareness': FiShield,
+  'affairs': FiClock,
+  'current affairs': FiClock,
+  "today's affairs": FiClock,
+  'mock exam': FiCheckSquare,
+};
+
+function getNavIcon(label) {
+  if (!label) return FiCompass;
+  const key = String(label).toLowerCase().trim();
+  return NAV_ICONS[key] || FiCompass;
+}
+
 function MobileNavItem({
   item,
   depth = 0,
@@ -500,20 +558,25 @@ function MobileNavItem({
   const hasSub = resolvedChildren.length > 0;
   const [childOpenIdx, setChildOpenIdx] = useState(null);
 
+  const Icon = getNavIcon(item.label);
+
   if (!hasSub) {
     const isActive = isItemOrSubtreeActive(item, path, parentParam, null);
 
     return (
       <Link
         to={item.path || "#"}
-        className={`flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all duration-200 ${
+        className={`flex items-center justify-between px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all duration-200 ${
           isActive
-            ? "bg-blue-50 text-brand-blue font-bold shadow-xs border-l-4 border-brand-blue"
-            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue font-semibold"
+            ? "bg-slate-100/90 text-brand-blue font-bold shadow-2xs"
+            : "text-slate-800 hover:bg-slate-50 hover:text-brand-blue"
         }`}
         onClick={onItemClick}
       >
-        <span>{item.label}</span>
+        <div className="flex items-center gap-3.5">
+          <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-brand-blue" : "text-slate-800"}`} />
+          <span>{item.label}</span>
+        </div>
       </Link>
     );
   }
@@ -525,13 +588,16 @@ function MobileNavItem({
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-base transition-all duration-200 cursor-pointer ${
+        className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-all duration-200 cursor-pointer ${
           isOpen || hasActiveChild
-            ? "bg-blue-50/80 text-brand-blue font-bold border-l-4 border-brand-blue"
-            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue font-semibold"
+            ? "bg-slate-100/90 text-brand-blue font-bold"
+            : "text-slate-800 hover:bg-slate-50 hover:text-brand-blue"
         }`}
       >
-        <span>{item.label}</span>
+        <div className="flex items-center gap-3.5">
+          <Icon className={`w-5 h-5 shrink-0 ${isOpen || hasActiveChild ? "text-brand-blue" : "text-slate-800"}`} />
+          <span>{item.label}</span>
+        </div>
         <FiChevronDown
           className={`w-4 h-4 transition-transform duration-200 text-slate-400 ${isOpen ? "rotate-180 text-brand-blue" : ""}`}
         />
@@ -575,7 +641,7 @@ export function MobileNav({ items, currentPath, onItemClick }) {
   const location = useLocation();
   const path = currentPath || location.pathname;
   return (
-    <div className="px-2 py-4 space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
+    <div className="px-1 py-2 space-y-1.5">
       {items.map((item, idx) => (
         <MobileNavItem
           key={idx}

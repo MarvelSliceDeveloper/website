@@ -120,7 +120,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                 {classes.slice(0, 4).map((cls, i) => (
                   <div key={cls.id} className="relative flex flex-col sm:flex-row items-start sm:items-center text-left gap-3 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-3 sm:py-3.5 sm:px-4 pt-7 sm:pt-3.5">
                     {cls.batch && (
-                      <span className="absolute top-2.5 right-3 sm:top-3 sm:right-4 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                      <span className="sm:hidden absolute top-2.5 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] font-bold shrink-0 border border-blue-100/60 z-10">
                         {cls.batch}
                       </span>
                     )}
@@ -138,7 +138,12 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                         )}
                       </div>
                     </div>
-                    <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-1.5 sm:mt-0 shrink-0">
+                    <div className="w-full sm:w-auto flex items-center justify-center sm:justify-end gap-2.5 mt-1.5 sm:mt-0 shrink-0">
+                      {cls.batch && (
+                        <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-brand-blue text-xs font-bold shrink-0 border border-blue-100/60">
+                          {cls.batch}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => setSelectedClass(cls)}
