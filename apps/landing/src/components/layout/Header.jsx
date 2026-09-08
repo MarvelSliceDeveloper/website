@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiChevronDown, FiLogIn, FiSettings, FiUser, FiMoreVertical } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiLogIn, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -305,30 +305,30 @@ export default function Header() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Modern Slide-Over Drawer Panel matching White Reference Design */}
+            {/* Modern Slide-Over Drawer Panel - Professional LMS Sidebar */}
             <motion.div
               ref={mobileMenuRef}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden rounded-l-[32px] overflow-hidden border-l border-slate-100"
+              className="fixed inset-y-0 right-0 z-[100] w-[65vw] min-w-[240px] sm:w-80 bg-white shadow-2xl flex flex-col lg:hidden rounded-l-[24px] overflow-hidden overflow-x-hidden border-l border-slate-100"
             >
-              {/* Header - Square Blue Logo Icon + Brand Name + Minimal Close Button */}
-              <div className="relative flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white min-h-[64px]">
+              {/* Header - Brand Logo + Minimal Close Button */}
+              <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-slate-100 shrink-0 bg-white min-h-[60px]">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-2 min-w-0"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-xs">
-                    {settings?.logo_url ? (
-                      <img src={settings.logo_url} alt="Logo" className="w-5 h-5 object-contain invert brightness-200" />
-                    ) : (
-                      <span className="font-black text-base">M</span>
-                    )}
-                  </div>
-                  <span className="text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  {settings?.logo_url && (
+                    <img
+                      src={settings.logo_url}
+                      alt="Marvel Slice Logo"
+                      className="h-11 sm:h-12 w-auto object-contain shrink-0"
+                    />
+                  )}
+                  <span className="text-[clamp(15px,4vw,19px)] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] shrink-0">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
@@ -337,14 +337,14 @@ export default function Header() {
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"
-                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center"
+                  className="w-9 h-9 rounded-xl bg-slate-100/70 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center shrink-0 ml-1"
                 >
-                  <FiX className="w-5.5 h-5.5" />
+                  <FiX className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Navigation Links List */}
-              <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
                 <MobileNav
                   items={topNav}
                   currentPath={pathname}
@@ -352,46 +352,16 @@ export default function Header() {
                 />
               </div>
 
-              {/* Bottom Action Section & Profile Footer matching Reference Design */}
-              <div className="border-t border-slate-100 mt-auto shrink-0 bg-white pt-2">
-                <div className="px-5 space-y-1 mb-2">
-                  <Link
-                    to="/contact"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                  >
-                    <FiSettings className="w-4.5 h-4.5 text-slate-500" />
-                    <span>Settings</span>
-                  </Link>
-                  <Link
-                    to="/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                  >
-                    <FiLogIn className="w-4.5 h-4.5 text-slate-500" />
-                    <span>Logout</span>
-                  </Link>
-                </div>
-
-                {/* User Profile Card Footer */}
-                <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[#2563eb] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
-                      JS
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-900 truncate">John Smith</p>
-                      <p className="text-[11px] text-slate-400 truncate">jnsmith99@gmail.com</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/50 transition-colors cursor-pointer"
-                    aria-label="Profile options"
-                  >
-                    <FiMoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
+              {/* Bottom Action Footer */}
+              <div className="p-3 border-t border-slate-100 mt-auto shrink-0 bg-slate-50/60 flex justify-start">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-6 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-extrabold text-xs sm:text-sm rounded-xl text-center shadow-md shadow-brand-blue/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <FiLogIn className="w-3.5 h-3.5 text-white" />
+                  <span>Log In</span>
+                </Link>
               </div>
             </motion.div>
           </>
