@@ -567,10 +567,10 @@ function MobileNavItem({
       return (
         <Link
           to={item.path || "#"}
-          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
             isActive
-              ? "bg-blue-50 text-brand-blue font-extrabold border-l-2 border-brand-blue pl-2"
-              : "text-slate-600 hover:text-brand-blue hover:bg-slate-50"
+              ? "bg-sky-100/80 text-brand-blue font-extrabold shadow-2xs"
+              : "text-slate-500 hover:text-brand-blue hover:bg-slate-50"
           }`}
           onClick={onItemClick}
         >
@@ -583,15 +583,15 @@ function MobileNavItem({
     return (
       <Link
         to={item.path || "#"}
-        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-[clamp(13px,3.6vw,16px)] font-semibold leading-snug transition-all duration-200 ${
+        className={`flex items-center justify-between px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 ${
           isActive
-            ? "bg-blue-50/90 text-brand-blue font-extrabold border-l-3 border-brand-blue"
+            ? "bg-[#eef6ff] text-brand-blue font-extrabold"
             : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue"
         }`}
         onClick={onItemClick}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-brand-blue" : "text-slate-400"}`} />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-brand-blue" : "text-slate-400"}`} />
           <span>{item.label}</span>
         </div>
       </Link>
@@ -605,14 +605,14 @@ function MobileNavItem({
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-[clamp(13px,3.6vw,16px)] font-semibold leading-snug transition-all duration-200 cursor-pointer ${
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 cursor-pointer ${
           isOpen || hasActiveChild
-            ? "bg-blue-50/90 text-brand-blue font-extrabold border-l-3 border-brand-blue"
+            ? "bg-[#eef6ff] text-brand-blue font-extrabold"
             : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue"
         }`}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon className={`w-4 h-4 shrink-0 ${isOpen || hasActiveChild ? "text-brand-blue" : "text-slate-400"}`} />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Icon className={`w-4.5 h-4.5 shrink-0 ${isOpen || hasActiveChild ? "text-brand-blue" : "text-slate-400"}`} />
           <span>{item.label}</span>
         </div>
         <FiChevronDown
@@ -629,7 +629,7 @@ function MobileNavItem({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="py-1 pl-4 border-l-2 border-slate-100 ml-5 my-1 space-y-1">
+            <div className="py-1 pl-3.5 border-l-2 border-slate-100 ml-4 my-1 space-y-1">
               {resolvedChildren.map((child, idx) => (
                 <MobileNavItem
                   key={idx}
@@ -656,7 +656,7 @@ export function MobileNav({ items, currentPath, onItemClick }) {
   const location = useLocation();
   const path = currentPath || location.pathname;
   return (
-    <div className="px-1 py-2 space-y-1.5">
+    <div className="px-1 py-1 space-y-1.5">
       {items.map((item, idx) => (
         <MobileNavItem
           key={idx}
