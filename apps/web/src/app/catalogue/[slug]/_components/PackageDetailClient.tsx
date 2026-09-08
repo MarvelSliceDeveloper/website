@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { PackageDetail } from "@/lib/api-types";
 import { RazorpayCheckoutWidget } from "./RazorpayCheckoutWidget";
 import { InternCheckoutWidget } from "./InternCheckoutWidget";
+import { CourseDerivedCheckoutWidget } from "./CourseDerivedCheckoutWidget";
 import {
   IconArrowRight,
   IconArrowLeft,
@@ -641,7 +642,9 @@ export function PackageDetailClient({ pkg }: Props) {
 
           {/* Right column — sticky checkout */}
           <div id="apply" className="lg:col-span-1">
-            {pkg.isInternship ? (
+            {(pkg as any)._derivedCourseId ? (
+              <CourseDerivedCheckoutWidget pkg={pkg} />
+            ) : pkg.isInternship ? (
               <InternCheckoutWidget pkg={pkg} />
             ) : (
               <RazorpayCheckoutWidget pkg={pkg} />
