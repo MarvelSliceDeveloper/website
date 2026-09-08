@@ -17,6 +17,7 @@ vi.mock("../../utils/prisma", () => ({
       create: vi.fn().mockResolvedValue({ id: "session-1" }),
       findUnique: vi.fn().mockResolvedValue({ active: true }),
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       findMany: vi.fn().mockResolvedValue([]),
     },
   },
@@ -52,7 +53,7 @@ describe("Session Security", () => {
       expect(decoded.sessionId).toBe("session-1");
     });
 
-    it("does NOT create AdminSession for STUDENT", async () => {
+    it("creates AdminSession for STUDENT (single-session enforcement)", async () => {
       const result = await authService.generateTokens({
         id: "u3",
         role: UserRole.STUDENT,
@@ -60,8 +61,23 @@ describe("Session Security", () => {
         name: "Student",
       });
 
+      expect(prisma.adminSession.create).toHaveBeenCalled();
       const decoded = jwt.decode(result.accessToken) as Record<string, unknown>;
-      expect(decoded.sessionId).toBeUndefined();
+      expect(decoded.sessionId).toBe("session-1");
+    });
+
+    it("invalidates previous sessions on new login (single active session)", async () => {
+      vi.mocked(prisma.adminSession.create).mockResolvedValueOnce({ id: "session-new" } as any);
+      await authService.generateTokens({
+        id: "u3",
+        role: UserRole.STUDENT,
+        email: "student@test.com",
+        name: "Student",
+      });
+      expect(prisma.adminSession.updateMany).toHaveBeenCalledWith({
+        where: { userId: "u3", active: true, id: { not: "session-new" } },
+        data: { active: false },
+      });
     });
 
     it("includes sessionTimeoutMin in JWT payload", async () => {

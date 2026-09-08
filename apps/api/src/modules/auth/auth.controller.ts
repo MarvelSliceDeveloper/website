@@ -120,7 +120,7 @@ export const authController = {
     }
   },
 
-  // POST /api/auth/logout — clear the auth cookie and record logout time
+  // POST /api/auth/logout — deactivate session, clear cookie, record logout time
   async logout(req: AuthRequest, res: Response) {
     if (req.user?.userId) {
       prisma.loginLog
@@ -131,6 +131,32 @@ export const authController = {
         .catch((err) =>
           console.error("[auth] Failed to update logoutAt:", err),
         );
+
+      // Deactivate current session (single-session enforcement)
+      try {
+        const token =
+          (req.headers.authorization?.split(" ")[1] as string | undefined) ||
+          (req as any).cookies?.accessToken;
+        if (token) {
+          const decoded = jwt.decode(token) as
+            | { sessionId?: string }
+            | null;
+          if (decoded?.sessionId) {
+            await prisma.adminSession.update({
+              where: { id: decoded.sessionId },
+              data: { active: false },
+            });
+          } else {
+            // Fallback: deactivate all active sessions for user (old tokens without sessionId)
+            await prisma.adminSession.updateMany({
+              where: { userId: req.user.userId, active: true },
+              data: { active: false },
+            });
+          }
+        }
+      } catch (err) {
+        console.error("[auth] Failed to deactivate session:", err);
+      }
     }
     res.clearCookie("accessToken", {
       httpOnly: true,
