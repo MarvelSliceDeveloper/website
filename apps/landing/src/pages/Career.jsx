@@ -645,7 +645,7 @@ export default function Career() {
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 text-center">
         {fc.headline && (
           <div>
-            <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy">
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-brand-blue">
               {fc.headline}
             </h2>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
@@ -653,7 +653,7 @@ export default function Career() {
         )}
 
         {fc.subtitle && (
-          <h3 className="text-base sm:text-xl font-bold text-dark-navy mt-4 mb-2">
+          <h3 className="text-lg sm:text-2xl font-extrabold text-brand-blue mt-4 mb-2">
             {fc.subtitle}
           </h3>
         )}
@@ -671,35 +671,40 @@ export default function Career() {
           </div>
         )}
 
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-8 sm:mt-12">
         {fc.categoriesSubtitle && (
           <div>
-            <h3 className="text-xl sm:text-3xl font-extrabold text-dark-navy mt-1">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-brand-blue mt-1">
               {fc.categoriesSubtitle}
             </h3>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-6 sm:mb-8" />
           </div>
         )}
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 mt-6 sm:mt-8 max-w-4xl mx-auto text-center">
-            {roleCategories.map((cat, idx) => (
-              <div
-                key={cat.id}
-                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2.5 h-full"
-              >
-                <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  (Math.floor(idx / 2) + (idx % 2)) % 2 === 0
-                    ? 'bg-orange-50 text-brand-orange border border-orange-100/80'
-                    : 'bg-emerald-50 text-brand-green border border-emerald-100/80'
-                }`}>
-                  <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-5 mt-6 sm:mt-8 max-w-5xl mx-auto">
+            {roleCategories.map((cat, idx) => {
+              const isGreen = idx % 2 === 0;
+              return (
+                <div
+                  key={cat.id}
+                  className={`group bg-white rounded-xl sm:rounded-[20px] p-3 sm:px-5 sm:py-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-1.5 sm:gap-4 h-full ${
+                    idx >= 8 ? 'hidden sm:flex' : ''
+                  }`}
+                >
+                  <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    isGreen
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/80'
+                      : 'bg-amber-50 text-amber-500 border border-amber-100/80'
+                  }`}>
+                    <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-dark-navy sm:text-brand-blue font-bold text-xs sm:text-base leading-snug break-words">
+                    {cat.name}
+                  </span>
                 </div>
-                <span className="text-dark-navy font-bold text-xs sm:text-sm md:text-base leading-snug break-words text-center">
-                  {cat.name}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -865,7 +870,7 @@ export default function Career() {
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
+              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-2 right-2 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
                 <FiX className="w-4 h-4 text-red-600" />
               </button>
               {selectedJob && (
