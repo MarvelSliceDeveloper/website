@@ -692,10 +692,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:hidden bg-white shadow-2xl flex flex-col rounded-none overflow-hidden overflow-x-hidden border-l border-slate-100"
+              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:hidden bg-gray-100 shadow-2xl flex flex-col rounded-none overflow-hidden overflow-x-hidden border-l border-gray-200"
             >
-              {/* Header - Original Logo + Brand Name + Close Button */}
-              <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-slate-100 shrink-0 bg-white min-h-[60px]">
+              {/* Header - White Header */}
+              <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-gray-200 shrink-0 bg-white min-h-[60px]">
                 <Link
                   to="/"
                   onClick={() => setMobileMenuOpen(false)}
@@ -717,7 +717,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
                   aria-label="Close menu"
-                  className="w-8 h-8 rounded-xl bg-slate-100/80 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center shrink-0 ml-1"
+                  className="w-8 h-8 rounded-xl bg-gray-200/80 hover:bg-gray-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center shrink-0 ml-1"
                 >
                   <svg className="w-4.5 h-4.5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="6" y1="5" x2="6" y2="19" />
@@ -727,13 +727,15 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 </button>
               </div>
 
-              {/* Navigation Items */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 space-y-1">
+              {/* Navigation Items - Grey Body */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 space-y-1 bg-gray-100">
                 <Link
                   to="/banking"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isAboutActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isAboutActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiDollarSign className={`w-4.5 h-4.5 shrink-0 ${isAboutActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -742,8 +744,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/aptitude"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isAptitudeActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isAptitudeActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiBarChart2 className={`w-4.5 h-4.5 shrink-0 ${isAptitudeActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -752,8 +756,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/reasoning"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isReasoningActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isReasoningActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiCpu className={`w-4.5 h-4.5 shrink-0 ${isReasoningActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -762,8 +768,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/english"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isEnglishActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isEnglishActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiBook className={`w-4.5 h-4.5 shrink-0 ${isEnglishActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -772,8 +780,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/banking-awareness"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isBankingAwarenessActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isBankingAwarenessActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiShield className={`w-4.5 h-4.5 shrink-0 ${isBankingAwarenessActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -782,8 +792,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/current-affairs"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isAffairsActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isAffairsActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiClock className={`w-4.5 h-4.5 shrink-0 ${isAffairsActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -792,8 +804,10 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <Link
                   to="/mock-exam"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isMockExamActive ? 'bg-[#eef6ff] text-brand-blue font-extrabold' : 'text-slate-700 hover:bg-slate-50'
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
+                    isMockExamActive
+                      ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs'
+                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent'
                   }`}
                 >
                   <FiCheckSquare className={`w-4.5 h-4.5 shrink-0 ${isMockExamActive ? 'text-brand-blue' : 'text-slate-400'}`} />
@@ -802,7 +816,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
               </div>
 
               {/* Bottom Action Footer - Single Blue Log In Button Aligned Left */}
-              <div className="p-4 border-t border-slate-100 mt-auto shrink-0 bg-slate-50/60 flex justify-start">
+              <div className="p-4 border-t border-gray-200 mt-auto shrink-0 bg-white flex justify-start">
                 <button
                   type="button"
                   onClick={() => {

@@ -567,14 +567,14 @@ function MobileNavItem({
       return (
         <Link
           to={item.path || "#"}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
             isActive
-              ? "bg-sky-100/80 text-brand-blue font-extrabold shadow-2xs"
-              : "text-slate-500 hover:text-brand-blue hover:bg-slate-50"
+              ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
+              : "text-slate-700 hover:text-brand-blue hover:bg-blue-50/60 border-l-4 border-transparent"
           }`}
           onClick={onItemClick}
         >
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-brand-blue" : "bg-slate-300"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-brand-blue" : "bg-slate-400"}`} />
           <span>{item.label}</span>
         </Link>
       );
@@ -583,15 +583,15 @@ function MobileNavItem({
     return (
       <Link
         to={item.path || "#"}
-        className={`flex items-center justify-between px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 ${
+        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 ${
           isActive
-            ? "bg-[#eef6ff] text-brand-blue font-extrabold"
-            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue"
+            ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
+            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent"
         }`}
         onClick={onItemClick}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-brand-blue" : "text-slate-400"}`} />
+          <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-brand-blue" : "text-slate-500"}`} />
           <span>{item.label}</span>
         </div>
       </Link>
@@ -605,10 +605,10 @@ function MobileNavItem({
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 cursor-pointer ${
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 cursor-pointer ${
           isOpen || hasActiveChild
-            ? "bg-[#eef6ff] text-brand-blue font-extrabold"
-            : "text-slate-700 hover:bg-slate-50 hover:text-brand-blue"
+            ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
+            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent"
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
