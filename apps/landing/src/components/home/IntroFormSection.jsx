@@ -104,6 +104,7 @@ export default function IntroFormSection({ section }) {
   const pcSize = formatSize(rawPcSize);
 
   const [formName, setFormName] = useState('');
+  const [formRole, setFormRole] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -116,6 +117,7 @@ export default function IntroFormSection({ section }) {
     e.preventDefault();
     const errs = {};
     if (!formName.trim()) errs.name = 'Please enter your name';
+    if (!formRole) errs.role = 'Please select your role';
     if (!formEmail.trim()) errs.email = 'Please enter your email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail.trim())) errs.email = 'Please enter a valid email';
     if (!formPhone.trim()) errs.phone = 'Please enter your phone number';
@@ -129,6 +131,7 @@ export default function IntroFormSection({ section }) {
     setSubmitting(true);
     const { error } = await supabase.from('form_submissions').insert({
       full_name: formName.trim(),
+      role: formRole,
       email: formEmail.trim(),
       phone: formPhone.trim(),
     });
@@ -140,13 +143,14 @@ export default function IntroFormSection({ section }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         full_name: formName.trim(),
+        role: formRole,
         email: formEmail.trim(),
         phone: formPhone.trim(),
       }),
     }).catch(() => {});
     trackFormSubmit('demo_class');
     setShowSuccessModal(true);
-    setFormName(''); setFormEmail(''); setFormPhone('');
+    setFormName(''); setFormRole(''); setFormEmail(''); setFormPhone('');
     setAgreeTerms(false);
     setSubmitting(false);
   }
@@ -231,10 +235,32 @@ export default function IntroFormSection({ section }) {
                       }}
                     />
                     <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
-                      <div>
-                        <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
-                          className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`} />
-                        {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Your Name"
+                            value={formName}
+                            onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
+                            required
+                            className={`w-full px-3.5 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none text-slate-800 placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`}
+                          />
+                          {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                        </div>
+                        <div>
+                          <select
+                            value={formRole}
+                            onChange={(e) => { setFormRole(e.target.value); if (errors.role) setErrors((p) => ({ ...p, role: undefined })); }}
+                            required
+                            className={`w-full px-3 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none text-slate-800 focus:ring-2 focus:ring-white/50 transition-all cursor-pointer ${errors.role ? 'ring-2 ring-red-400' : ''} ${!formRole ? 'text-gray-400' : ''}`}
+                          >
+                            <option value="" disabled className="text-gray-400">Select Role</option>
+                            <option value="Tutor / Mentor" className="text-slate-800">Tutor / Mentor</option>
+                            <option value="Student" className="text-slate-800">Student</option>
+                            <option value="Working professional" className="text-slate-800">Working professional</option>
+                          </select>
+                          {errors.role && <p className="!text-red-600 text-xs mt-1">{errors.role}</p>}
+                        </div>
                       </div>
                       <div>
                         <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required

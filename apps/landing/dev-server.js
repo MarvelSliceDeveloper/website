@@ -60,28 +60,32 @@ async function handleCareer(body) {
 }
 
 async function handleForm(body) {
-  const { full_name, email, phone } = body;
+  const { full_name, role, email, phone } = body;
   if (!full_name || !email || !phone) return { success: true };
   if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-    <div style="background:#74a916;padding:24px 32px;">
+    <div style="background:linear-gradient(135deg,#74a916,#5a8710);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Demo Request</h1>
       <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:14px;">Submitted on ${ts}</p>
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone)}
+        ${row('Full Name', full_name)}
+        ${role ? row('Role / Profile', role) : ''}
+        ${row('Email', email)}
+        ${row('Phone', phone)}
       </table>
     </div>
-    <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice \u2014 Home Page</div>
+    <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Home Page</div>
   </div>`;
   const autoReplyHtml = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-    <div style="background:#74a916;padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">Thank You for Your Interest</h1></div>
+    <div style="background:linear-gradient(135deg,#74a916,#5a8710);padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">Thank You for Your Interest</h1></div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for reaching out to <strong>Marvel Slice</strong>. We have received your demo request.</p>
+      ${role ? `<p style="font-size:14px;color:#2e4e04;line-height:1.6;background:#f2f9e6;padding:12px 16px;border-radius:8px;margin:16px 0;">Selected Profile: <strong>${role}</strong></p>` : ''}
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will contact you shortly to schedule your free demo class.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
     </div>

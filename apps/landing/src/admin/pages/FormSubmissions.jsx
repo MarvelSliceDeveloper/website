@@ -4,12 +4,14 @@ import { FiArrowLeft } from 'react-icons/fi';
 
 const columns = [
   { header: 'Name', accessor: 'full_name', className: 'min-w-[140px]' },
+  { header: 'Role', accessor: 'role', className: 'min-w-[120px]' },
   { header: 'Email', accessor: 'email', className: 'min-w-[180px]' },
   { header: 'Phone', accessor: 'phone', className: 'min-w-[120px]' },
 ];
 
 const detailFields = [
   { label: 'Full Name', accessor: 'full_name' },
+  { label: 'Role', accessor: 'role' },
   { label: 'Email', accessor: 'email' },
   { label: 'Phone', accessor: 'phone' },
 ];

@@ -810,6 +810,7 @@ $$;
 create table if not exists form_submissions (
   id uuid primary key default gen_random_uuid(),
   full_name text not null,
+  role text,
   email text not null,
   phone text not null,
   is_read boolean default false,
@@ -1450,6 +1451,7 @@ alter table public.contact_submissions add column if not exists full_name text;
 
 alter table public.form_submissions add column if not exists name text;
 alter table public.form_submissions add column if not exists full_name text;
+alter table public.form_submissions add column if not exists role text;
 
 alter table public.banking_enquiries add column if not exists name text;
 alter table public.banking_enquiries add column if not exists full_name text;

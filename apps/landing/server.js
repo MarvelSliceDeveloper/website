@@ -42,7 +42,7 @@ async function handleApiRequest(req, res, body) {
   const adminEmail = process.env.ADMIN_EMAIL;
 
   if (req.url === '/api/submit-contact' || req.url === '/api/submit-form' || req.url === '/api/submit-enquiry' || req.url === '/api/submit-about') {
-    const { full_name, name, email, phone, message, course_title, button_clicked } = body;
+    const { full_name, name, email, phone, role, message, course_title, button_clicked } = body;
     const clientName = full_name || name || 'User';
     if (!email) return res.end(JSON.stringify({ error: 'Email is required' }));
 
@@ -54,6 +54,7 @@ async function handleApiRequest(req, res, body) {
       <div style="padding:24px 32px;">
         <table style="width:100%;border-collapse:collapse;">
           ${row('Name', clientName)}
+          ${role ? row('Role', role) : ''}
           ${row('Email', email)}
           ${row('Phone', phone || '—')}
           ${course_title ? row('Course', course_title) : ''}
@@ -70,6 +71,7 @@ async function handleApiRequest(req, res, body) {
       <div style="padding:24px 32px;">
         <p style="font-size:15px;color:#1B2333;">Hi ${clientName},</p>
         <p style="font-size:15px;color:#1B2333;">Thank you for contacting <strong>Marvel Slice</strong>. We have received your submission and our team will get back to you shortly.</p>
+        ${role ? `<p style="font-size:14px;color:#0B2D6B;line-height:1.6;background:#f0f6ff;padding:12px 16px;border-radius:8px;margin:16px 0;">Registered Role / Profile: <strong>${role}</strong></p>` : ''}
       </div>
     </div>`;
 
