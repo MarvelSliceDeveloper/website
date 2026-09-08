@@ -176,7 +176,7 @@ function PublicLayout() {
           </>
         )}
       </div>
-      <main className={`flex-1 w-full max-w-full overflow-x-hidden ${isBankingPage ? 'pt-[124px] sm:pt-[130px] lg:pt-[136px]' : 'pt-[60px] lg:pt-[104px]'}`}>
+      <main className={`flex-1 w-full max-w-full ${isBankingPage ? 'pt-[124px] sm:pt-[130px] lg:pt-[136px]' : 'pt-[60px] lg:pt-[104px]'}`}>
         <AnimatedRoutes />
       </main>
       <Footer />

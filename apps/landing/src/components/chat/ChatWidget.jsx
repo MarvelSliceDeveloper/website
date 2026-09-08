@@ -172,6 +172,22 @@ function CloseConfirm({ onConfirm, onCancel }) {
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkSidebar = () => {
+      setIsSidebarOpen(document.body.classList.contains('sidebar-open'));
+    };
+    checkSidebar();
+
+    const observer = new MutationObserver(() => {
+      checkSidebar();
+    });
+
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   const [maximized, setMaximized] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -505,6 +521,8 @@ export default function ChatWidget() {
     setOpen(true);
     initChat(true);
   }
+
+  if (isSidebarOpen) return null;
 
   return (
     <>

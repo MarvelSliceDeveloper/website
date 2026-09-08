@@ -1,6 +1,5 @@
 import { FiMail, FiPhone } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { trackCtaClick, trackPhoneClick, trackEmailClick, trackSocialClick } from '../../lib/analytics';
 
@@ -51,20 +50,14 @@ export default function TopBar() {
           <a href="#" className="hover:underline transition-colors" onClick={() => trackCtaClick('Sign Up', 'topbar')}>Sign Up</a>
           <span className="text-white/40">|</span>
           <div className="flex items-center gap-3 ml-2">
-            <a href={social.twitter || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Twitter', social.twitter)} aria-label="X (Twitter)" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
-              <FaXTwitter className="w-3 h-3 text-black" />
-            </a>
-            <a href={social.facebook || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Facebook', social.facebook)} aria-label="Facebook" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
-              <FaFacebookF className="w-3 h-3 text-[#1877F2]" />
-            </a>
-            <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
-              <FaInstagram className="w-3 h-3 text-[#E4405F]" />
+            <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
+              <FaYoutube className="w-3 h-3 text-[#FF0000]" />
             </a>
             <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
               <FaLinkedinIn className="w-3 h-3 text-[#0A66C2]" />
             </a>
-            <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
-              <FaYoutube className="w-3 h-3 text-[#FF0000]" />
+            <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
+              <FaInstagram className="w-3 h-3 text-[#E4405F]" />
             </a>
           </div>
         </div>

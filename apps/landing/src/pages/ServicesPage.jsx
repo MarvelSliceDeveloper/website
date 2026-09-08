@@ -160,13 +160,13 @@ function ServiceCard({ title, description, icon, colorIdx }) {
       {/* Content Area */}
       <div className="relative z-10 mt-5 sm:mt-6 flex-1 flex flex-col justify-between">
         <div className="min-h-0 sm:min-h-[56px] flex flex-col justify-center">
-          <h3 className="text-xl sm:text-[17px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-slate-700">
+          <h3 className="text-base sm:text-lg font-bold leading-snug text-dark-navy transition-colors duration-300 group-hover:text-brand-orange">
             {title}
           </h3>
         </div>
 
         {description && (
-          <p className="mt-2.5 sm:mt-3 text-sm sm:text-sm leading-relaxed text-slate-600 font-normal">
+          <p className="mt-2.5 sm:mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal text-pretty">
             {description}
           </p>
         )}
@@ -255,10 +255,10 @@ export default function ServicesPage() {
       <section className="py-8 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal as="div" className="mb-4 text-center">
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-dark-navy">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
               {heading || 'Our Professional Services'}
             </h1>
-            <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-4" />
             {subheading && (
               <p className="mx-auto max-w-2xl text-sm sm:text-base font-normal text-slate-600 leading-relaxed">
                 {subheading}
@@ -289,10 +289,10 @@ export default function ServicesPage() {
         <section className="pt-8 sm:pt-12 pb-12 sm:pb-16 bg-neutral-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="div" className="mb-4 text-center">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-dark-navy">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-dark-navy">
                 {faqHeading || 'Frequently Asked Questions'}
               </h2>
-              <div className="mx-auto mt-3 mb-6 h-[3px] w-16 rounded-full bg-brand-orange" />
+              <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-4" />
               {faqSubheading && (
                 <p className="mx-auto max-w-2xl text-sm sm:text-base font-normal text-slate-600 leading-relaxed">
                   {faqSubheading}
@@ -308,7 +308,7 @@ export default function ServicesPage() {
                     isOpen={faqOpen === i}
                     onToggle={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
+                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal text-pretty">{faq.answer}</p>
                   </AccordionItem>
                 </StaggerItem>
               ))}

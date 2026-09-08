@@ -142,8 +142,8 @@ export default function CourseHero({
               </div>
             )}
 
-            {/* Mobile CTA Buttons: Compact 2-in-1 line side-by-side below video */}
-            <div className="flex lg:hidden flex-row items-center justify-center gap-2 sm:gap-3 mt-4 w-full max-w-sm mx-auto">
+            {/* Mobile CTA Buttons: 2 buttons side-by-side on 1 line */}
+            <div className="flex lg:hidden flex-row items-center justify-center gap-1.5 sm:gap-3 mt-4 w-full max-w-md mx-auto px-1">
               <button
                 type="button"
                 onClick={() => {
@@ -153,7 +153,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
                   }
                 }}
-                className="flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center leading-tight min-h-[42px]"
               >
                 {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
@@ -161,13 +161,13 @@ export default function CourseHero({
               <button
                 type="button"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="flex-1 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-center"
+                className="flex-1 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center leading-tight min-h-[42px]"
               >
                 {course.cta_right || 'Download Brochure'}
               </button>
             </div>
 
-            {/* Desktop CTA Buttons: Standard placement */}
+            {/* Desktop CTA Buttons: Standard placement with generous padding */}
             <div className="hidden lg:flex flex-row items-center justify-start gap-3.5 mt-8 w-auto">
               <button
                 type="button"
@@ -178,7 +178,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
                   }
                 }}
-                className="px-8 py-3.5 bg-brand-orange hover:bg-amber-600 text-white font-bold text-sm rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+                className="px-9 py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
               >
                 {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
@@ -186,7 +186,7 @@ export default function CourseHero({
               <button
                 type="button"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="px-8 py-3.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+                className="px-9 py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
               >
                 {course.cta_right || 'Download Brochure'}
               </button>

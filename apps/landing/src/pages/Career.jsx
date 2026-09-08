@@ -663,7 +663,7 @@ export default function Career() {
             {fc.description.split('\n\n').filter(Boolean).map((p, idx) => (
               <p
                 key={idx}
-                className="text-sm sm:text-base leading-relaxed text-left sm:text-justify [text-align-last:left] text-slate-600 w-full font-normal whitespace-pre-line mb-4"
+                className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 font-normal whitespace-pre-line mb-4"
               >
                 {p}
               </p>
@@ -682,20 +682,20 @@ export default function Career() {
         )}
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6 sm:mt-8 max-w-6xl mx-auto text-center">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 mt-6 sm:mt-8 max-w-4xl mx-auto text-center">
             {roleCategories.map((cat, idx) => (
               <div
                 key={cat.id}
-                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-2xl p-2.5 sm:p-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 h-full"
+                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2.5 h-full"
               >
-                <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  idx % 2 === 0
-                    ? 'bg-blue-50 text-brand-blue border border-blue-100/80'
-                    : 'bg-orange-50 text-brand-orange border border-orange-100/80'
+                <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  (Math.floor(idx / 2) + (idx % 2)) % 2 === 0
+                    ? 'bg-orange-50 text-brand-orange border border-orange-100/80'
+                    : 'bg-emerald-50 text-brand-green border border-emerald-100/80'
                 }`}>
                   <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-dark-navy group-hover:text-brand-blue font-bold text-[11px] sm:text-sm md:text-base leading-tight break-words text-center">
+                <span className="text-dark-navy font-bold text-xs sm:text-sm md:text-base leading-snug break-words text-center">
                   {cat.name}
                 </span>
               </div>
@@ -825,7 +825,7 @@ export default function Career() {
                             </div>
                             <Link
                               to={`/career/job/${item._type}/${item.id}`}
-                              className="shrink-0 inline-flex items-center justify-center gap-1 bg-brand-blue text-white font-bold text-xs sm:text-sm py-1.5 px-3.5 sm:py-2 sm:px-4.5 rounded-full hover:bg-blue-700 hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer"
+                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-extrabold text-xs sm:text-sm py-2.5 px-5 sm:py-3 sm:px-6 rounded-full hover:bg-blue-700 shadow-sm hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
                             >
                               <span>View Details</span>
                               <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:translate-x-0.5 transition-transform" />

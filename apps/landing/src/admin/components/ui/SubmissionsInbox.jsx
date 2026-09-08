@@ -5,7 +5,7 @@ import { LoadingState, EmptyState } from './EmptyState';
 import Pagination from '../Pagination';
 import {
   FiSearch, FiEye, FiX, FiChevronLeft, FiChevronRight, FiChevronDown, FiRefreshCw,
-  FiDownload, FiLoader, FiFileText, FiSend, FiTrash2, FiCheck, FiMail,
+  FiDownload, FiLoader, FiFileText, FiSend, FiTrash2, FiCheck, FiMail, FiPhone,
 } from 'react-icons/fi';
 import useConfirm from '../../hooks/useConfirm';
 import { CancelButton, SubmitButton } from '../FormButtons';
@@ -203,12 +203,175 @@ function ExportDialog({ type, data, columns, exportFilename, onClose }) {
   );
 }
 
-function DetailRow({ label, value }) {
-  if (!value) return null;
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function DetailModal({ selected, onClose, title, detailFields, formatDate, disableReply, markRead, markUnread, setReplyTo, remove }) {
+  if (!selected) return null;
+
+  const personName = selected.full_name || selected.name || selected.email || 'Applicant';
+  const initials = getInitials(personName);
+
+  const shortFields = [];
+  const longFields = [];
+
+  detailFields.forEach(field => {
+    const val = field.value ? field.value(selected) : selected[field.accessor];
+    if (!val) return;
+    const isLong = field.label.toLowerCase().includes('message') || 
+                   field.label.toLowerCase().includes('note') || 
+                   field.label.toLowerCase().includes('comment') ||
+                   String(val).length > 80;
+    if (isLong) {
+      longFields.push({ label: field.label, value: val });
+    } else {
+      shortFields.push({ label: field.label, value: val });
+    }
+  });
+
   return (
-    <div className="space-y-0.5">
-      <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{label}</p>
-      <p className="text-sm text-neutral-700 whitespace-pre-wrap break-words">{value}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 cursor-pointer" onClick={onClose}>
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer transition-opacity" onClick={onClose} />
+      
+      <div 
+        className="relative bg-white rounded-2xl border border-slate-200/90 shadow-2xl w-full max-w-xl cursor-pointer max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white shrink-0">
+          <div className="flex items-center gap-3.5 min-w-0 pr-2">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand-blue to-indigo-700 text-white font-bold text-sm sm:text-base flex items-center justify-center shadow-md shrink-0 ring-2 ring-blue-50">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate leading-snug">{personName}</h3>
+                {!disableReply && (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${
+                    selected.is_read ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
+                  }`}>
+                    {selected.is_read ? 'Read' : 'Unread'}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                <span className="font-medium text-slate-600">{title || 'Submission'}</span>
+                <span>•</span>
+                <span>{formatDate(selected.created_at)}</span>
+              </p>
+            </div>
+          </div>
+          
+          {/* X Close Button - top right corner */}
+          <button 
+            onClick={onClose} 
+            className="w-9 h-9 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 border border-rose-100 flex items-center justify-center transition-all shrink-0"
+            title="Close modal"
+          >
+            <FiX className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-slate-50/50">
+          
+          {/* Quick Contact Bar if email or phone exists */}
+          {(selected.email || selected.phone) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {selected.email && (
+                <a 
+                  href={`mailto:${selected.email}`} 
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 text-slate-700 hover:border-brand-blue hover:text-brand-blue hover:shadow-xs transition-all text-xs font-medium truncate"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center shrink-0">
+                    <FiMail className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="truncate">{selected.email}</span>
+                </a>
+              )}
+              {selected.phone && (
+                <a 
+                  href={`tel:${selected.phone}`} 
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200/80 text-slate-700 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-xs transition-all text-xs font-medium truncate"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <FiPhone className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="truncate">{selected.phone}</span>
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Details Grid */}
+          {shortFields.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs">
+              <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Submission Information</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {shortFields.map((field, i) => (
+                  <div key={i} className="space-y-1">
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">{field.label}</span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 break-words block">{field.value}</span>
+                  </div>
+                ))}
+                <div className="space-y-1">
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Submitted At</span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-800 break-words block">{formatDate(selected.created_at)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Message / Long Fields */}
+          {longFields.map((field, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs space-y-2">
+              <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</h4>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words bg-slate-50/80 p-3.5 rounded-lg border border-slate-100">
+                {field.value}
+              </p>
+            </div>
+          ))}
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-white border-t border-slate-100 shrink-0">
+          <div className="flex items-center gap-2">
+            {!disableReply && (
+              <button
+                onClick={() => selected.is_read ? markUnread(selected) : markRead(selected)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  selected.is_read 
+                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60' 
+                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                }`}
+              >
+                {selected.is_read ? <><FiMail className="w-3.5 h-3.5" /> Mark Unread</> : <><FiCheck className="w-3.5 h-3.5" /> Mark Read</>}
+              </button>
+            )}
+            <button
+              onClick={() => remove(selected.id)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-all border border-rose-200/60"
+            >
+              <FiTrash2 className="w-3.5 h-3.5" /> Delete
+            </button>
+          </div>
+
+          {!disableReply && (
+            <button
+              onClick={() => { setReplyTo(selected); onClose(); }}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold bg-brand-blue hover:bg-brand-blue/90 text-white transition-all shadow-md active:scale-95"
+            >
+              <FiSend className="w-3.5 h-3.5" /> Reply to {personName.split(' ')[0]}
+            </button>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }
@@ -460,121 +623,93 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
           </div>
         </div>
 
-      <div className="grid xl:grid-cols-3 gap-4 items-start w-full max-w-full min-w-0">
-        <div className={`w-full max-w-full min-w-0 ${selected ? 'xl:col-span-2' : 'xl:col-span-3'}`}>
-          <div className="bg-white border border-admin-200 shadow-sm overflow-hidden rounded-xl w-full max-w-full min-w-0">
-            {paged.length === 0 ? (
-              <EmptyState title={search ? 'No results match your search' : 'No submissions yet'} description={search ? 'Try adjusting your search or filters.' : 'Submissions will appear here once received.'} />
-            ) : (
-              <div className="admin-table-scroll w-full max-w-full min-w-0 overflow-x-auto">
-                <table className="admin-table min-w-[760px] w-full">
-                  <thead>
-                    <tr className="border-b border-admin-100 bg-brand-blue">
-                      <th className="w-10 text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">#</th>
+      <div className="w-full max-w-full min-w-0">
+        <div className="bg-white border border-admin-200 shadow-sm overflow-hidden rounded-xl w-full max-w-full min-w-0">
+          {paged.length === 0 ? (
+            <EmptyState title={search ? 'No results match your search' : 'No submissions yet'} description={search ? 'Try adjusting your search or filters.' : 'Submissions will appear here once received.'} />
+          ) : (
+            <div className="admin-table-scroll w-full max-w-full min-w-0 overflow-x-auto">
+              <table className="admin-table min-w-[760px] w-full">
+                <thead>
+                  <tr className="border-b border-admin-100 bg-brand-blue">
+                    <th className="w-10 text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">#</th>
+                    {columns.map((col, i) => (
+                      <th key={i} className={`text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap ${col.className || ''}`}>
+                        {col.header}
+                      </th>
+                    ))}
+                    <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paged.map((row, idx) => (
+                    <tr key={row.id}
+                      onClick={() => { setSelected(row); if (!row.is_read) markRead(row); }}
+                      className={`border-b border-gray-100 last:border-0 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'} ${selected?.id === row.id ? 'bg-indigo-50/70' : 'hover:bg-gray-50'} ${!disableReply && !row.is_read ? 'border-l-2 border-l-warning-500 bg-warning-50/30' : ''}`}
+                    >
+                      <td className="px-4 py-3.5 text-xs text-neutral-400 font-mono whitespace-nowrap text-left">{(page - 1) * pageSize + idx + 1}</td>
                       {columns.map((col, i) => (
-                        <th key={i} className={`text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap ${col.className || ''}`}>
-                          {col.header}
-                        </th>
-                      ))}
-                      <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paged.map((row, idx) => (
-                      <tr key={row.id}
-                        onClick={() => { setSelected(selected?.id === row.id ? null : row); if (!row.is_read) markRead(row); }}
-                        className={`border-b border-gray-100 last:border-0 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'} ${selected?.id === row.id ? 'bg-indigo-50/70' : 'hover:bg-gray-50'} ${!disableReply && !row.is_read ? 'border-l-2 border-l-warning-500 bg-warning-50/30' : ''}`}
-                      >
-                        <td className="px-4 py-3.5 text-xs text-neutral-400 font-mono whitespace-nowrap text-left">{(page - 1) * pageSize + idx + 1}</td>
-                        {columns.map((col, i) => (
-                          <td key={i} className={`px-4 py-3.5 text-sm align-middle ${col.className || ''}`}>
-                            <div className={!disableReply && !row.is_read ? 'font-semibold text-neutral-900' : 'text-neutral-700'}>
-                              {col.cell ? col.cell(row) : row[col.accessor]}
-                            </div>
-                          </td>
-                        ))}
-                        <td className="px-4 py-3.5 whitespace-nowrap text-left align-middle">
-                          <div className="flex items-center gap-1">
-                            {!disableReply && <button onClick={e => { e.stopPropagation(); row.is_read ? markUnread(row, e) : markRead(row, e); }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${row.is_read ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-500'}`}
-                              title={row.is_read ? 'Mark as unread' : 'Mark as read'}
-                            >
-                              {row.is_read ? <><FiCheck className="w-3 h-3" /><span className="hidden md:inline">Read</span></> : <><FiMail className="w-3 h-3" /><span className="hidden md:inline">Unread</span></>}
-                            </button>}
-                            {!disableReply && <button onClick={e => { e.stopPropagation(); setReplyTo(row); }}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white text-neutral-700 hover:bg-neutral-100 transition-all border border-gray-200"
-                              title="Reply"
-                            >
-                              <FiSend className="w-3 h-3" /><span className="hidden md:inline">Reply</span>
-                            </button>}
-                            <button onClick={e => { e.stopPropagation(); setSelected(selected?.id === row.id ? null : row); }}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all"
-                              title="View details"
-                            >
-                              <FiEye className="w-3.5 h-3.5 text-blue-500" /><span className="hidden md:inline">View</span>
-                            </button>
+                        <td key={i} className={`px-4 py-3.5 text-sm align-middle ${col.className || ''}`}>
+                          <div className={!disableReply && !row.is_read ? 'font-semibold text-neutral-900' : 'text-neutral-700'}>
+                            {col.cell ? col.cell(row) : row[col.accessor]}
                           </div>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div className="px-4 py-3 border-t border-admin-100 bg-white w-full max-w-full min-w-0">
-              <Pagination
-                totalItems={filtered.length}
-                itemsPerPage={pageSize}
-                currentPage={page}
-                onPageChange={setPage}
-                onItemsPerPageChange={(size) => { setPageSize(size); setPage(1); }}
-              />
+                      ))}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-left align-middle">
+                        <div className="flex items-center gap-1">
+                          {!disableReply && <button onClick={e => { e.stopPropagation(); row.is_read ? markUnread(row, e) : markRead(row, e); }}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${row.is_read ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-500'}`}
+                            title={row.is_read ? 'Mark as unread' : 'Mark as read'}
+                          >
+                            {row.is_read ? <><FiCheck className="w-3 h-3" /><span className="hidden md:inline">Read</span></> : <><FiMail className="w-3 h-3" /><span className="hidden md:inline">Unread</span></>}
+                          </button>}
+                          {!disableReply && <button onClick={e => { e.stopPropagation(); setReplyTo(row); }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white text-neutral-700 hover:bg-neutral-100 transition-all border border-gray-200"
+                            title="Reply"
+                          >
+                            <FiSend className="w-3 h-3" /><span className="hidden md:inline">Reply</span>
+                          </button>}
+                          <button onClick={e => { e.stopPropagation(); setSelected(row); if (!row.is_read) markRead(row); }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all"
+                            title="View details"
+                          >
+                            <FiEye className="w-3.5 h-3.5 text-blue-500" /><span className="hidden md:inline">View</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          )}
+
+          <div className="px-4 py-3 border-t border-admin-100 bg-white w-full max-w-full min-w-0">
+            <Pagination
+              totalItems={filtered.length}
+              itemsPerPage={pageSize}
+              currentPage={page}
+              onPageChange={setPage}
+              onItemsPerPageChange={(size) => { setPageSize(size); setPage(1); }}
+            />
           </div>
         </div>
-
-        {selected && (
-          <div className="bg-white rounded-xl border border-admin-200 shadow-lg overflow-hidden sticky top-4">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
-              <h3 className="text-sm font-semibold text-black">Details</h3>
-              <button onClick={() => setSelected(null)} className="p-1 text-destructive-500 hover:text-destructive-700 rounded-md hover:bg-destructive-50 transition-all">
-                <FiX className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              {detailFields.map((field, i) => (
-                <DetailRow key={i} label={field.label} value={field.value ? field.value(selected) : selected[field.accessor]} />
-              ))}
-              <DetailRow label="Submitted" value={formatDate(selected.created_at)} />
-            </div>
-            <div className="flex items-center justify-between px-5 py-4 border-t border-admin-100 bg-white/50">
-              <div className="flex flex-wrap items-center gap-2">
-                {!disableReply && <button onClick={() => selected.is_read ? markUnread(selected) : markRead(selected)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selected.is_read ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-500'}`}
-                >
-                  {selected.is_read ? <><FiCheck className="w-3.5 h-3.5" /> Read</> : <><FiMail className="w-3.5 h-3.5" /> Unread</>}
-                </button>}
-                {!disableReply && <button onClick={() => selected.is_read ? markUnread(selected) : markRead(selected)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!selected.is_read ? 'bg-success-50 text-success-700 hover:bg-success-50' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
-                >
-                  {selected.is_read ? <><FiMail className="w-3.5 h-3.5" /> Mark as Unread</> : <><FiCheck className="w-3.5 h-3.5" /> Mark as Read</>}
-                </button>}
-                {!disableReply && <button onClick={() => setReplyTo(selected)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-neutral-700 hover:bg-neutral-100 transition-all"
-                >
-                  <FiSend className="w-3.5 h-3.5" /> Reply
-                </button>}
-              </div>
-              <button onClick={() => remove(selected.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-destructive-500 hover:bg-destructive-50 transition-all"
-              >
-                <FiTrash2 className="w-3.5 h-3.5" /> Delete
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {selected && (
+        <DetailModal
+          selected={selected}
+          onClose={() => setSelected(null)}
+          title={title}
+          detailFields={detailFields}
+          formatDate={formatDate}
+          disableReply={disableReply}
+          markRead={markRead}
+          markUnread={markUnread}
+          setReplyTo={setReplyTo}
+          remove={remove}
+        />
+      )}
 
       {replyTo && <ReplyModal row={replyTo} pageTitle={title} onClose={() => setReplyTo(null)} />}
       {exportModal && <ExportDialog type={exportModal} data={filtered} columns={columns} exportFilename={exportFilename} onClose={() => setExportModal(null)} />}

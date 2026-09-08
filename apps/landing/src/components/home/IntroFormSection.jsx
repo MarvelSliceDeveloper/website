@@ -19,16 +19,16 @@ function getStatIcon(label) {
 
 function CourseButtons() {
   return (
-    <div className="flex flex-row gap-2.5 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
+    <div className="flex flex-row gap-2 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-bold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial px-4 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-bold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>
@@ -93,6 +93,15 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
+  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo Now!';
+  const rawMobileSize = content.form_title_size_mobile || '30px';
+  const rawTabletSize = content.form_title_size_tablet || '26px';
+  const rawPcSize = content.form_title_size_pc || '26px';
+
+  const formatSize = (val) => (!val ? '26px' : (isNaN(val) ? val : `${val}px`));
+  const mobileSize = formatSize(rawMobileSize);
+  const tabletSize = formatSize(rawTabletSize);
+  const pcSize = formatSize(rawPcSize);
 
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -168,10 +177,25 @@ export default function IntroFormSection({ section }) {
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-10">
+          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-2">
             <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0">
-              <p className="text-xl sm:text-3xl md:text-2xl lg:text-3xl font-extrabold text-center mb-1 w-full leading-tight whitespace-nowrap" style={{ color: '#ef4444' }}>
-                Book Your Free Demo Now!
+              <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
+                <style>{`
+                  .intro-form-title {
+                    font-size: ${mobileSize} !important;
+                  }
+                  @media (min-width: 640px) {
+                    .intro-form-title {
+                      font-size: ${tabletSize} !important;
+                    }
+                  }
+                  @media (min-width: 1024px) {
+                    .intro-form-title {
+                      font-size: ${pcSize} !important;
+                    }
+                  }
+                `}</style>
+                {formTitle}
               </p>
               <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
                 <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
@@ -229,7 +253,7 @@ export default function IntroFormSection({ section }) {
                         <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
                       </span>
                     </label>
-                    <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
+                    <button type="submit" disabled={submitting} className="home-intro-btn w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
                       {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
                       {submitting ? 'Submitting...' : 'Send Message'}
                     </button>
