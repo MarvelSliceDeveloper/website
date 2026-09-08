@@ -81,8 +81,6 @@ export default function SiteSettings() {
     contact_email: '',
     contact_phone_1: '',
     contact_phone_2: '',
-    twitter: '',
-    facebook: '',
     instagram: '',
     linkedin: '',
     youtube: '',
@@ -118,8 +116,6 @@ export default function SiteSettings() {
             contact_email: settingsData.contact_email || '',
             contact_phone_1: rawPhones[0] || (settingsData.contact_phone ? formatPhoneNumber(settingsData.contact_phone) : ''),
             contact_phone_2: rawPhones[1] || '',
-            twitter: social.twitter || '',
-            facebook: social.facebook || '',
             instagram: social.instagram || '',
             linkedin: social.linkedin || '',
             youtube: social.youtube || '',
@@ -153,8 +149,6 @@ export default function SiteSettings() {
       contact_email: form.contact_email || null,
       contact_phone: combinedPhone || null,
       social_links: {
-        twitter: form.twitter || null,
-        facebook: form.facebook || null,
         instagram: form.instagram || null,
         linkedin: form.linkedin || null,
         youtube: form.youtube || null,
@@ -265,11 +259,9 @@ export default function SiteSettings() {
               </h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { key: 'twitter', label: 'Twitter URL', placeholder: 'https://twitter.com/...' },
-                  { key: 'facebook', label: 'Facebook URL', placeholder: 'https://facebook.com/...' },
-                  { key: 'instagram', label: 'Instagram URL', placeholder: 'https://instagram.com/...' },
-                  { key: 'linkedin', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/...' },
                   { key: 'youtube', label: 'YouTube URL', placeholder: 'https://youtube.com/...' },
+                  { key: 'linkedin', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/...' },
+                  { key: 'instagram', label: 'Instagram URL', placeholder: 'https://instagram.com/...' },
                 ].map((s) => (
                   <div key={s.key}>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">{s.label}</label>

@@ -22,13 +22,13 @@ function CourseButtons() {
     <div className="flex flex-row gap-2 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>
@@ -230,7 +230,7 @@ export default function IntroFormSection({ section }) {
                         <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
                       </span>
                     </label>
-                    <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
+                    <button type="submit" disabled={submitting} className="home-intro-btn w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
                       {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
                       {submitting ? 'Submitting...' : 'Send Message'}
                     </button>

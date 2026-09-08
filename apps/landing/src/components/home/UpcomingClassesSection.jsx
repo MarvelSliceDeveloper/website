@@ -189,10 +189,15 @@ export default function UpcomingClassesSection({ section }) {
                 >
                   {doubled.map((cls, i) => (
                     <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
-                      <div className="group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
-                        <h4 className="text-dark-navy text-[16px] sm:text-lg font-bold">{cls.course_name}</h4>
+                      <div className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
+                        {cls.batch && (
+                          <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                            {cls.batch}
+                          </span>
+                        )}
+                        <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12">{cls.course_name}</h4>
                         {cls.date_time && (
-                          <p className="text-text-gray text-[11px] sm:text-sm mt-3">
+                          <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
@@ -241,10 +246,15 @@ export default function UpcomingClassesSection({ section }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {classes.map((cls) => (
-                <div key={cls.id} className="group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-                  <h4 className="text-dark-navy text-[16px] sm:text-lg font-bold">{cls.course_name}</h4>
+                <div key={cls.id} className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
+                  {cls.batch && (
+                    <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                      {cls.batch}
+                    </span>
+                  )}
+                  <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12">{cls.course_name}</h4>
                   {cls.date_time && (
-                    <p className="text-text-gray text-[11px] sm:text-sm mt-3">
+                    <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                       {formatDateTime(cls.date_time)}
                     </p>
                   )}

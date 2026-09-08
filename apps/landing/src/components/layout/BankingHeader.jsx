@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiMenu } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { trackSocialClick } from '../../lib/analytics';
@@ -169,40 +168,16 @@ export default function BankingHeader({ onOpenLoginModal }) {
 
           {/* Right Social Links */}
           <div className="flex items-center gap-2">
-            {social.facebook && (
+            {social.youtube && (
               <a
-                href={social.facebook}
+                href={social.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackSocialClick('facebook', 'banking_header')}
+                onClick={() => trackSocialClick('youtube', 'banking_header')}
                 className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="Facebook"
+                aria-label="YouTube"
               >
-                <FaFacebookF className="w-3.5 h-3.5 text-[#1877F2]" />
-              </a>
-            )}
-            {social.twitter && (
-              <a
-                href={social.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackSocialClick('twitter', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="Twitter"
-              >
-                <FaXTwitter className="w-3.5 h-3.5 text-black" />
-              </a>
-            )}
-            {social.instagram && (
-              <a
-                href={social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackSocialClick('instagram', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
+                <FaYoutube className="w-3.5 h-3.5 text-[#FF0000]" />
               </a>
             )}
             {social.linkedin && (
@@ -217,16 +192,16 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 <FaLinkedinIn className="w-3.5 h-3.5 text-[#0A66C2]" />
               </a>
             )}
-            {social.youtube && (
+            {social.instagram && (
               <a
-                href={social.youtube}
+                href={social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackSocialClick('youtube', 'banking_header')}
+                onClick={() => trackSocialClick('instagram', 'banking_header')}
                 className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="YouTube"
+                aria-label="Instagram"
               >
-                <FaYoutube className="w-3.5 h-3.5 text-[#FF0000]" />
+                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
               </a>
             )}
           </div>

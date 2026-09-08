@@ -93,11 +93,11 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-12 items-start text-center sm:text-left">
             <div className="md:col-span-7">
               {heading && (
-                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
+                <h2 className="font-bold text-[23px] sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
               )}
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mx-auto sm:mx-0" />
               {subheading && (
-                <p className="text-text-gray text-sm sm:text-base leading-relaxed max-w-2xl mt-3 whitespace-pre-line">{subheading}</p>
+                <p className="text-text-gray text-[13px] sm:text-base leading-relaxed max-w-2xl mt-3 whitespace-pre-line">{subheading}</p>
               )}
             </div>
             {imageUrl && (
@@ -118,20 +118,20 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
             <Reveal className="md:col-span-7">
               <div className="space-y-3 sm:space-y-3.5">
                 {classes.slice(0, 4).map((cls, i) => (
-                  <div key={cls.id} className="flex flex-col sm:flex-row items-start sm:items-center text-left gap-3 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-3 sm:py-3.5 sm:px-4">
+                  <div key={cls.id} className="relative flex flex-col sm:flex-row items-start sm:items-center text-left gap-3 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-3 sm:py-3.5 sm:px-4 pt-7 sm:pt-3.5">
+                    {cls.batch && (
+                      <span className="absolute top-2.5 right-3 sm:top-3 sm:right-4 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] sm:text-xs font-bold shrink-0 border border-blue-100/60 z-10">
+                        {cls.batch}
+                      </span>
+                    )}
                     <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
                       <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
                         <FiCalendar className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-bold text-slate-800 text-sm sm:text-base leading-snug">{cls.course_name}</p>
-                          {cls.batch && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[10px] sm:text-xs font-bold shrink-0">{cls.batch}</span>
-                          )}
-                        </div>
+                      <div className="min-w-0 flex-1 pr-12 sm:pr-0">
+                        <p className="font-bold text-slate-800 text-[13px] sm:text-base leading-snug">{cls.course_name}</p>
                         {cls.date_time && (
-                          <p className="flex items-center gap-1.5 text-slate-500 text-xs sm:text-sm mt-0.5">
+                          <p className="flex items-center gap-1.5 text-slate-500 text-[11px] sm:text-sm mt-0.5">
                             <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
                             {formatDateTime(cls.date_time)}
                           </p>
