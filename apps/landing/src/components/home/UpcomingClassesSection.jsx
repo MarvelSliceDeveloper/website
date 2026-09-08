@@ -189,14 +189,24 @@ export default function UpcomingClassesSection({ section }) {
                 >
                   {doubled.map((cls, i) => (
                     <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
-                      <div className="group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
-                        <h4 className="text-dark-navy text-[16px] sm:text-lg font-bold">{cls.course_name}</h4>
+                      <div className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
+                        {cls.batch && (
+                          <span className="sm:hidden absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] font-bold shrink-0 border border-blue-100/60 z-10">
+                            {cls.batch}
+                          </span>
+                        )}
+                        <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12 sm:pr-0">{cls.course_name}</h4>
                         {cls.date_time && (
-                          <p className="text-text-gray text-[11px] sm:text-sm mt-3">
+                          <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                             {formatDateTime(cls.date_time)}
                           </p>
                         )}
-                        <div className="mt-auto pt-4 flex justify-center sm:justify-end">
+                        <div className="mt-auto pt-4 flex items-center justify-center sm:justify-end gap-2.5">
+                          {cls.batch && (
+                            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-brand-blue text-xs font-bold shrink-0 border border-blue-100/60">
+                              {cls.batch}
+                            </span>
+                          )}
                           <button
                             type="button"
                             onClick={() => setSelectedClass(cls)}
@@ -241,14 +251,24 @@ export default function UpcomingClassesSection({ section }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {classes.map((cls) => (
-                <div key={cls.id} className="group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-                  <h4 className="text-dark-navy text-[16px] sm:text-lg font-bold">{cls.course_name}</h4>
+                <div key={cls.id} className="relative group w-full bg-white rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
+                  {cls.batch && (
+                    <span className="sm:hidden absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[9px] font-bold shrink-0 border border-blue-100/60 z-10">
+                      {cls.batch}
+                    </span>
+                  )}
+                  <h4 className="text-dark-navy text-[15px] sm:text-lg font-bold pr-12 sm:pr-0">{cls.course_name}</h4>
                   {cls.date_time && (
-                    <p className="text-text-gray text-[11px] sm:text-sm mt-3">
+                    <p className="text-text-gray text-[10px] sm:text-sm mt-3">
                       {formatDateTime(cls.date_time)}
                     </p>
                   )}
-                  <div className="mt-auto pt-4 flex justify-center sm:justify-end">
+                  <div className="mt-auto pt-4 flex items-center justify-center sm:justify-end gap-2.5">
+                    {cls.batch && (
+                      <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-brand-blue text-xs font-bold shrink-0 border border-blue-100/60">
+                        {cls.batch}
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedClass(cls)}
@@ -392,17 +412,17 @@ export default function UpcomingClassesSection({ section }) {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="w-fit mx-auto bg-brand-blue hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
                       >
                         {submitting ? (
                           <>
                             <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                            Submitting...
+                            Sending...
                           </>
                         ) : (
                           <>
                             <FiSend className="w-4 h-4" />
-                            Submit
+                            Send
                           </>
                         )}
                       </button>

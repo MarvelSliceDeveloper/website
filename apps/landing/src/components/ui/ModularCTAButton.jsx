@@ -33,12 +33,12 @@ export default function ModularCTAButton({
   const targetUrl = href || to;
   const Component = targetUrl ? motion.a : motion.button;
 
-  // Size variations (compact on mobile, bold on desktop)
+  // Size variations (generous padding on mobile, bold on desktop)
   const sizeClasses = {
-    sm: 'min-w-0 sm:min-w-[180px] min-h-[38px] sm:min-h-[52px] px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-lg',
-    md: 'min-w-0 sm:min-w-[200px] min-h-[42px] sm:min-h-[60px] px-5 sm:px-8 py-2.5 sm:py-4 text-sm sm:text-xl',
-    lg: 'min-w-0 sm:min-w-[240px] min-h-[46px] sm:min-h-[68px] px-6 sm:px-9 py-3 sm:py-4.5 text-base sm:text-2xl',
-  }[size] || 'min-w-0 sm:min-w-[200px] min-h-[42px] sm:min-h-[60px] px-5 sm:px-8 py-2.5 sm:py-4 text-sm sm:text-xl';
+    sm: 'min-w-0 sm:min-w-[180px] min-h-[42px] sm:min-h-[54px] px-5 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-lg',
+    md: 'min-w-0 sm:min-w-[200px] min-h-[46px] sm:min-h-[62px] px-6 sm:px-9 py-3 sm:py-4.5 text-sm sm:text-xl',
+    lg: 'min-w-0 sm:min-w-[240px] min-h-[52px] sm:min-h-[72px] px-7 sm:px-10 py-3.5 sm:py-5 text-base sm:text-2xl',
+  }[size] || 'min-w-0 sm:min-w-[200px] min-h-[46px] sm:min-h-[62px] px-6 sm:px-9 py-3 sm:py-4.5 text-sm sm:text-xl';
 
   // Variant backgrounds & glowing shadows
   const getVariantStyles = () => {

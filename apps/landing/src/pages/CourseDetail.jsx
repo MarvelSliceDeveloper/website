@@ -184,7 +184,7 @@ function OverviewSection({ course }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div>
           <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy text-center mb-10 whitespace-pre-line">Key Highlights</Reveal>
-          <Stagger className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 max-w-5xl mx-auto">
+          <Stagger className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-5xl mx-auto">
             {highlights.map((h, i) => (
               <StaggerItem key={h.id || i}>
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-brand-orange/30 flex flex-col sm:flex-row items-center text-center sm:text-left gap-2 sm:gap-4 p-2.5 sm:px-4 sm:py-4 border border-gray-100 transition-all duration-300 group cursor-pointer h-full justify-center sm:justify-start">
@@ -407,6 +407,14 @@ export default function CourseDetail() {
   const [isUnlocking, setIsUnlocking] = useState(false);
 
   function openEnquiryModal(sourceLabel) {
+    if (sourceLabel && sourceLabel.toLowerCase().includes('brochure')) {
+      setBrochureForm({ name: '', email: '', phone: '' });
+      setBrochureDone(false);
+      setBrochureError('');
+      setBrochureAgree(false);
+      setShowBrochure(true);
+      return;
+    }
     setEnquirySource(sourceLabel || 'Apply Now');
     setEnquiryForm({ name: '', email: '', phone: '' });
     setEnquiryDone(false);
@@ -494,7 +502,7 @@ export default function CourseDetail() {
   async function handleInterestSubmit(e) {
     e.preventDefault();
     if (!interestForm.name.trim() || !interestForm.email.trim() || !interestForm.phone.trim()) return;
-    if (!interestAgree) { setInterestError('Please agree to the terms and conditions.'); return; }
+    if (!interestAgree) { setInterestError('Please agree to receive notifications and accept the terms.'); return; }
     setInterestSubmitting(true);
     setInterestError('');
 
@@ -560,19 +568,18 @@ export default function CourseDetail() {
                     ))}
                   </ul>
                 )}
-                <div className="flex flex-col sm:flex-row gap-3 mt-8">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 mt-8 w-full max-w-md sm:max-w-none">
                   {notifiedSuccess ? (
                     <button
                       type="button"
                       disabled
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-md cursor-default transition-all"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
-                      <FiCheckCircle className="w-5 h-5" /> You're Notified!
+                      <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> You're Notified!
                     </button>
                   ) : (
-                    <Button
-                      variant="accent"
-                      size="lg"
+                    <button
+                      type="button"
                       onClick={() => {
                         setInterestForm({ name: '', email: '', phone: '' });
                         setInterestDone(false);
@@ -580,14 +587,18 @@ export default function CourseDetail() {
                         setInterestAgree(false);
                         setShowInterest(true);
                       }}
-                      className="w-full sm:w-auto"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
-                      <FiBell className="w-4 h-4" /> Notify Me
-                    </Button>
+                      <FiBell className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Notify Me
+                    </button>
                   )}
-                  <Button variant="outline" size="lg" to="/courses" className="w-full sm:w-auto !bg-brand-blue !text-white hover:!bg-blue-700 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                    Explore All Courses <FiArrowRight className="w-4 h-4" />
-                  </Button>
+                  <Link
+                    to="/courses"
+                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                  >
+                    <span>Explore All Courses</span>
+                    <FiArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  </Link>
                 </div>
               </div>
 
@@ -620,9 +631,16 @@ export default function CourseDetail() {
         {showInterest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowInterest(false)}>
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="px-6 pt-6 pb-4 border-b border-gray-100 relative text-center flex flex-col items-center justify-center">
-                <h2 className="text-lg font-bold text-gray-900 text-center">Register Your Interest</h2>
-                <button onClick={() => setShowInterest(false)} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
+              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
+                  <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
+                  <span>{course?.title || 'Register Your Interest'}</span>
+                </h2>
+                <button
+                  onClick={() => setShowInterest(false)}
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
                   <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
@@ -639,52 +657,54 @@ export default function CourseDetail() {
                       ? <> We'll email you on {new Date(course.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} when it launches.</>
                       : ' We\'ll notify you as soon as it launches.'}
                   </p>
-                  <button onClick={() => setShowInterest(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors cursor-pointer">
+                  <button onClick={() => setShowInterest(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
                     Done
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
-                  <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                    Get notified the moment enrollment opens for <strong className="text-gray-900">{course.title}</strong>.
-                  </p>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Name *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
                     <input value={interestForm.name} onChange={e => setInterestForm(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Email *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                     <input type="email" value={interestForm.email} onChange={e => setInterestForm(p => ({ ...p, email: e.target.value }))} placeholder="your@email.com" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
                     <input type="tel" value={interestForm.phone} onChange={e => setInterestForm(p => ({ ...p, phone: e.target.value }))} placeholder="Your phone number" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   {interestError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-700">
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 font-medium">
                       <FiAlertCircle className="w-4 h-4 shrink-0" /> {interestError}
                     </div>
                   )}
-                  <label className="flex items-start gap-2 cursor-pointer">
+                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                     <input type="checkbox" checked={interestAgree} onChange={(e) => {
                       setInterestAgree(e.target.checked);
                       if (interestError) setInterestError('');
-                    }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
-                    <span className="text-xs text-slate-600 leading-relaxed">
-                      I agree to the{' '}
-                      <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                    }} required className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue/20" />
+                    <span className="text-xs text-gray-600 leading-relaxed">
+                      I agree to receive course notifications and updates, and accept the{' '}
+                      <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
                       {' '}and{' '}
-                      <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                      <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
                     </span>
                   </label>
-                  <button type="submit" disabled={interestSubmitting}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors disabled:opacity-60 cursor-pointer">
-                    {interestSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-4 h-4" />}
-                    {interestSubmitting ? 'Registering...' : 'Notify Me'}
-                  </button>
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="submit"
+                      disabled={interestSubmitting}
+                      className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
+                    >
+                      {interestSubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
+                      {interestSubmitting ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
                 </form>
               )}
             </div>
@@ -807,10 +827,16 @@ export default function CourseDetail() {
               className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">Download Brochure</h2>
-                <button onClick={() => setShowBrochure(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-                  <FiX className="w-5 h-5 text-gray-400" />
+              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                  {course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request'}
+                </h2>
+                <button
+                  onClick={() => setShowBrochure(false)}
+                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-4 h-4 text-red-600" />
                 </button>
               </div>
               {brochureDone ? (
@@ -820,52 +846,57 @@ export default function CourseDetail() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-1">Thank You!</h3>
                   <p className="text-sm text-gray-500">We've received your request. The brochure will be sent to your email shortly.</p>
-                  <button onClick={() => setShowBrochure(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors cursor-pointer">
+                  <button onClick={() => setShowBrochure(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
                     Done
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleBrochureSubmit} className="p-6 space-y-4">
-                  <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <p className="text-xs text-gray-500 bg-gray-50 rounded-xl p-3 border border-gray-100">
                     Request a brochure for <strong className="text-gray-900">{course.title}</strong>
                   </p>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Name *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
                     <input value={brochureForm.name} onChange={e => setBrochureForm(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Email *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                     <input type="email" value={brochureForm.email} onChange={e => setBrochureForm(p => ({ ...p, email: e.target.value }))} placeholder="your@email.com" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
                     <input type="tel" value={brochureForm.phone} onChange={e => setBrochureForm(p => ({ ...p, phone: e.target.value }))} placeholder="Your phone number" required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
                   </div>
                   {brochureError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-700">
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 font-medium">
                       <FiAlertCircle className="w-4 h-4 shrink-0" /> {brochureError}
                     </div>
                   )}
-                  <label className="flex items-start gap-2 cursor-pointer">
+                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
                     <input type="checkbox" checked={brochureAgree} onChange={(e) => {
                       setBrochureAgree(e.target.checked);
                       if (brochureError) setBrochureError('');
-                    }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
-                    <span className="text-xs text-slate-600 leading-relaxed">
+                    }} required className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue/20" />
+                    <span className="text-xs text-gray-600 leading-relaxed">
                       I agree to the{' '}
-                      <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                      <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
                       {' '}and{' '}
-                      <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                      <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
                     </span>
                   </label>
-                  <button type="submit" disabled={brochureSubmitting}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors disabled:opacity-60 cursor-pointer">
-                    {brochureSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-4 h-4" />}
-                    {brochureSubmitting ? 'Sending...' : 'Get Brochure'}
-                  </button>
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="submit"
+                      disabled={brochureSubmitting}
+                      className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
+                    >
+                      {brochureSubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
+                      {brochureSubmitting ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
                 </form>
               )}
             </motion.div>
@@ -892,13 +923,11 @@ export default function CourseDetail() {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <h2 className="text-lg sm:text-xl font-extrabold !text-white leading-snug text-center" style={{ color: '#ffffff' }}>Enquire Now</h2>
-                  <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white text-dark-navy text-[11px] sm:text-xs font-semibold shadow-2xs max-w-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-blue shrink-0"></span>
-                    <span className="truncate">{course.title}</span>
-                  </div>
-                </div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                  {enquirySource?.toLowerCase().includes('brochure')
+                    ? (course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request')
+                    : (course?.title ? `${course.title} Enquiry` : 'Course Enquiry')}
+                </h2>
                 <button
                   onClick={() => setShowEnquiry(false)}
                   className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
@@ -990,10 +1019,10 @@ export default function CourseDetail() {
                     <button
                       type="submit"
                       disabled={enquirySubmitting}
-                      className="inline-flex items-center justify-center gap-1.5 px-5 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
+                      className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
                     >
                       {enquirySubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
-                      {enquirySubmitting ? 'Submitting Enquiry...' : 'Submit Enquiry'}
+                      {enquirySubmitting ? 'Sending...' : 'Send'}
                     </button>
                   </div>
                 </form>

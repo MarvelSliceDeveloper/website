@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Roboto', sans-serif;
+  --font-sans: 'Montserrat', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
   --font-roboto: 'Roboto', sans-serif;
   --color-neutral-50: #f8fafc;
   --color-neutral-100: #f1f5f9;
@@ -100,15 +101,17 @@
   --font-2xl: 20px;
 }
 
-html, body, #root {
-  overflow-x: hidden !important;
-  max-width: 100vw !important;
-  box-sizing: border-box;
-}
-
 html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  box-sizing: border-box;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+
+body, #root {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -397,14 +400,14 @@ select {
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Increase all paragraph font sizes by 2px on mobile view */
-  p {
+  /* Increase all paragraph, list, and table font sizes by 2px on mobile view */
+  p, li, td {
     font-size: calc(1em + 2px);
   }
-  p.text-xs { font-size: 14px; }
-  p.text-sm { font-size: 16px; }
-  p.text-base { font-size: 18px; }
-  p.text-lg { font-size: 20px; }
+  p.text-xs, li.text-xs, td.text-xs, .text-xs { font-size: 14px; }
+  p.text-sm, li.text-sm, td.text-sm, .text-sm { font-size: 16px; }
+  p.text-base, li.text-base, td.text-base, .text-base { font-size: 18px; }
+  p.text-lg, li.text-lg, td.text-lg, .text-lg { font-size: 20px; }
 
   .admin-table-scroll {
     margin-right: 0;
@@ -415,4 +418,11 @@ select {
   .admin-table {
     min-width: 760px;
   }
+}
+
+/* Hide Chat Widget while Sidebar Drawer is Open */
+body.sidebar-open .chat-widget-mild,
+body.sidebar-open .chat-widget-box,
+body.sidebar-open [class*="chat-widget"] {
+  display: none !important;
 }

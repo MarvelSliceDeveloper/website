@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiLogIn, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -195,6 +195,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   const { data: settings } = useSiteSettings();
@@ -233,11 +234,14 @@ export default function Header() {
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('sidebar-open');
     } else {
       document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
     }
     return () => {
       document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
     };
   }, [mobileOpen]);
 
@@ -304,46 +308,46 @@ export default function Header() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Modern Slide-Over Drawer Panel */}
+            {/* Modern Slide-Over Drawer Panel - Professional LMS Sidebar */}
             <motion.div
               ref={mobileMenuRef}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[88vw] max-w-sm sm:w-96 bg-white shadow-2xl flex flex-col lg:hidden border-l border-slate-100"
+              className="fixed inset-y-0 right-0 z-[100] w-[65vw] min-w-[240px] sm:w-80 bg-white shadow-2xl flex flex-col lg:hidden rounded-l-[24px] overflow-hidden overflow-x-hidden border-l border-slate-100"
             >
-              {/* Drawer Top Bar Header - Close ('X') Button on LEFT */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(false)}
-                  aria-label="Close menu"
-                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all duration-200 cursor-pointer active:scale-95 flex items-center justify-center"
-                >
-                  <FiX className="w-5 h-5" />
-                </button>
-
+              {/* Header - Brand Logo + Minimal Close Button */}
+              <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-slate-100 shrink-0 bg-white min-h-[60px]">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 min-w-0"
                 >
                   {settings?.logo_url && (
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-8 w-auto object-contain"
+                      className="h-11 sm:h-12 w-auto object-contain shrink-0"
                     />
                   )}
-                  <span className="text-lg font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  <span className="text-[clamp(15px,4vw,19px)] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] shrink-0">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="w-9 h-9 rounded-xl bg-slate-100/70 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center shrink-0 ml-1"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Drawer Navigation Body */}
-              <div className="flex-1 overflow-y-auto overscroll-contain py-4 px-3">
+              {/* Navigation Links List */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
                 <MobileNav
                   items={topNav}
                   currentPath={pathname}
@@ -351,20 +355,16 @@ export default function Header() {
                 />
               </div>
 
-              {/* Drawer Bottom Action CTA */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50/70 shrink-0 space-y-3">
+              {/* Bottom Action Footer */}
+              <div className="p-3 border-t border-slate-100 mt-auto shrink-0 bg-slate-50/60 flex justify-start">
                 <Link
-                  to="/contact"
+                  to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full py-3 px-4 bg-brand-orange hover:bg-brand-orange/90 active:scale-[0.98] text-white font-bold text-sm rounded-xl text-center shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="px-6 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-extrabold text-xs sm:text-sm rounded-xl text-center shadow-md shadow-brand-blue/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  Contact Us
+                  <FiLogIn className="w-3.5 h-3.5 text-white" />
+                  <span>Log In</span>
                 </Link>
-                {settings?.contact_phone && (
-                  <p className="text-xs text-center text-slate-500 font-medium">
-                    Call: <span className="text-slate-700 font-bold">{settings.contact_phone}</span>
-                  </p>
-                )}
               </div>
             </motion.div>
           </>

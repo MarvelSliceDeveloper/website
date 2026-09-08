@@ -109,6 +109,9 @@ const sectionDefs = [
       { name: 'intro_text', label: 'Intro Paragraph', type: 'textarea' },
       { name: 'pill_buttons', label: 'Pill Buttons (one per line)', type: 'multiline' },
       { name: 'form_title', label: 'Form Title', type: 'text' },
+      { name: 'form_title_size_mobile', label: 'Mobile View', type: 'font_size', defaultVal: 30 },
+      { name: 'form_title_size_tablet', label: 'Tablet View', type: 'font_size', defaultVal: 26 },
+      { name: 'form_title_size_pc', label: 'Desktop / PC View', type: 'font_size', defaultVal: 26 },
     ],
     hasList: true, listLabel: 'Stats', listItemFields: [
       { name: 'value', label: 'Value', type: 'text' },
@@ -878,6 +881,9 @@ function FieldEditor({ def, data, onChange }) {
   const showSubheading = !def.noSubheading;
   const isMultilineHeading = def.multilineHeading;
 
+  const fontFields = (def.fields || []).filter((f) => f.type === 'font_size');
+  const normalFields = (def.fields || []).filter((f) => f.type !== 'font_size');
+
   return (
     <div className="space-y-4">
       {!def.contentOnly && (
@@ -916,9 +922,19 @@ function FieldEditor({ def, data, onChange }) {
           )}
         </div>
       )}
-      {(def.fields || []).map((f) => (
+      {normalFields.map((f) => (
         <RenderField key={f.name} field={f} value={def.contentOnly ? content[f.name] : (content[f.name] ?? '')} onChange={(v) => updateContent(f.name, v)} />
       ))}
+      {fontFields.length > 0 && (
+        <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-2">
+          <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Form Title Font Sizes</h5>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {fontFields.map((f) => (
+              <RenderField key={f.name} field={f} value={def.contentOnly ? content[f.name] : (content[f.name] ?? '')} onChange={(v) => updateContent(f.name, v)} />
+            ))}
+          </div>
+        </div>
+      )}
       {def.hasList && !Array.isArray(def.hasList) && (
         <div className="pt-4">
           <ListEditor def={{ ...def, listKey: def.listKey || 'stats' }} data={data} onChange={onChange} />
@@ -998,8 +1014,76 @@ function SimpleListEditor({ def, data, onChange }) {
   );
 }
 
+function FontSizeStepper({ label, value, onChange, defaultVal = 26, min = 10, max = 100 }) {
+  const num = parseInt(value, 10) || defaultVal;
+
+  const handleDecrement = () => {
+    const newVal = Math.max(min, num - 1);
+    onChange(`${newVal}px`);
+  };
+
+  const handleIncrement = () => {
+    const newVal = Math.min(max, num + 1);
+    onChange(`${newVal}px`);
+  };
+
+  const handleInputChange = (e) => {
+    const val = parseInt(e.target.value, 10);
+    if (!isNaN(val)) {
+      onChange(`${val}px`);
+    } else if (e.target.value === '') {
+      onChange('');
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">{label}</label>
+      <div className="flex items-center gap-2 max-w-[200px] bg-white border border-admin-200 rounded-lg p-1 shadow-xs">
+        <button
+          type="button"
+          onClick={handleDecrement}
+          className="w-8 h-8 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-base flex items-center justify-center transition-colors cursor-pointer active:scale-95 shrink-0 select-none"
+          aria-label="Decrease font size"
+        >
+          -
+        </button>
+        <div className="flex-1 flex items-center justify-center min-w-0">
+          <input
+            type="number"
+            value={num}
+            onChange={handleInputChange}
+            min={min}
+            max={max}
+            className="w-12 text-center font-extrabold text-slate-800 text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          <span className="text-xs text-slate-400 font-semibold ml-0.5">px</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleIncrement}
+          className="w-8 h-8 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-base flex items-center justify-center transition-colors cursor-pointer active:scale-95 shrink-0 select-none"
+          aria-label="Increase font size"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function RenderField({ field, value, onChange }) {
   if (field.type === 'image') return <ImageUploader value={value} onChange={onChange} label={field.label} />;
+  if (field.type === 'font_size') {
+    return (
+      <FontSizeStepper
+        label={field.label}
+        value={value}
+        onChange={onChange}
+        defaultVal={field.defaultVal || 26}
+      />
+    );
+  }
   if (field.type === 'textarea') {
     return (
       <div>
