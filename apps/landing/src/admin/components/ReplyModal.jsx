@@ -105,16 +105,21 @@ export default function ReplyModal({ submission, type, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col cursor-pointer" onClick={e => e.stopPropagation()}>
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col cursor-default border border-slate-100" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          aria-label="Close modal"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-admin-200 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-black">Reply to {recipientName}</h2>
             <p className="text-xs text-neutral-500 mt-0.5">{recipientEmail}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-admin-400 hover:text-admin-600 hover:bg-admin-100 rounded-lg transition-colors">
-            <FiX className="w-5 h-5" />
-          </button>
         </div>
 
         {sent ? (

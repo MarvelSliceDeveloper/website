@@ -53,7 +53,7 @@ export default function ServicesSection({ section }) {
           </Reveal>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
           <Reveal variant="right" className="flex flex-col h-full">
             {leftImageUrl ? (
               <img
@@ -68,7 +68,7 @@ export default function ServicesSection({ section }) {
             {leftDescription && (
               <div className="space-y-3 mt-2.5">
                 {leftDescription.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full indent-0 whitespace-pre-line">
                     {p.trim()}
                   </p>
                 ))}

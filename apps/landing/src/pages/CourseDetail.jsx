@@ -213,7 +213,7 @@ function ProjectsSection({ projects }) {
     <section id="projects" data-section="projects" className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-8 whitespace-pre-line">Hands-On Projects</Reveal>
-        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {projectList.map((p, i) => {
             const techs = ensureArray(p.technologies);
             return (
@@ -231,7 +231,7 @@ function ProjectsSection({ projects }) {
                   </div>
                 )}
                 {p.description && (
-                  <p className="leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-4 sm:indent-6 whitespace-pre-line text-sm sm:text-base">
+                  <p className="leading-relaxed text-left text-slate-600 w-full indent-0 whitespace-pre-line text-sm sm:text-base">
                     {p.description}
                   </p>
                 )}
@@ -272,7 +272,7 @@ function CertificationSection({ certifications }) {
                   )}
                   <div className={`${imgUrl ? "md:col-span-6" : "md:col-span-12"} p-6 sm:p-8 lg:p-10 flex flex-col justify-center space-y-5`}>
                     {cert.description && (
-                      <p className="leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-4 sm:indent-6 whitespace-pre-line text-sm sm:text-base">
+                      <p className="leading-relaxed text-left text-slate-600 w-full indent-0 whitespace-pre-line text-sm sm:text-base">
                         {cert.description}
                       </p>
                     )}
@@ -630,83 +630,82 @@ export default function CourseDetail() {
 
         {showInterest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowInterest(false)}>
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
-                  <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
-                  <span>{course?.title || 'Register Your Interest'}</span>
-                </h2>
-                <button
-                  onClick={() => setShowInterest(false)}
-                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                  aria-label="Close modal"
-                >
-                  <FiX className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
-              {interestDone ? (
-                <div className="p-8 text-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                    <FiCheck className="w-7 h-7 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">You're on the list!</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    You've successfully registered your interest for{' '}
-                    <strong className="text-gray-900">{course.title}</strong>.
-                    {course.start_date
-                      ? <> We'll email you on {new Date(course.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} when it launches.</>
-                      : ' We\'ll notify you as soon as it launches.'}
-                  </p>
-                  <button onClick={() => setShowInterest(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
-                    Done
-                  </button>
+            <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-100" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setShowInterest(false)}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
+                    <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
+                    <span>{course?.title || 'Register Your Interest'}</span>
+                  </h2>
                 </div>
-              ) : (
-                <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
-                    <input value={interestForm.name} onChange={e => setInterestForm(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" required
-                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
-                    <input type="email" value={interestForm.email} onChange={e => setInterestForm(p => ({ ...p, email: e.target.value }))} placeholder="your@email.com" required
-                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
-                    <input type="tel" value={interestForm.phone} onChange={e => setInterestForm(p => ({ ...p, phone: e.target.value }))} placeholder="Your phone number" required
-                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
-                  </div>
-                  {interestError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 font-medium">
-                      <FiAlertCircle className="w-4 h-4 shrink-0" /> {interestError}
+                {interestDone ? (
+                  <div className="p-8 text-center">
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                      <FiCheck className="w-7 h-7 text-emerald-600" />
                     </div>
-                  )}
-                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
-                    <input type="checkbox" checked={interestAgree} onChange={(e) => {
-                      setInterestAgree(e.target.checked);
-                      if (interestError) setInterestError('');
-                    }} required className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue/20" />
-                    <span className="text-xs text-gray-600 leading-relaxed">
-                      I agree to receive course notifications and updates, and accept the{' '}
-                      <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
-                      {' '}and{' '}
-                      <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
-                    </span>
-                  </label>
-                  <div className="flex justify-center pt-1">
-                    <button
-                      type="submit"
-                      disabled={interestSubmitting}
-                      className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
-                    >
-                      {interestSubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
-                      {interestSubmitting ? 'Sending...' : 'Send'}
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">You're on the list!</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      You've successfully registered your interest for{' '}
+                      <strong className="text-gray-900">{course.title}</strong>.
+                      {course.start_date
+                        ? <> We'll email you on {new Date(course.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} when it launches.</>
+                        : ' We\'ll notify you as soon as it launches.'}
+                    </p>
+                    <button onClick={() => setShowInterest(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                      Done
                     </button>
                   </div>
-                </form>
-              )}
+                ) : (
+                  <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                      <input value={interestForm.name} onChange={e => setInterestForm(p => ({ ...p, name: e.target.value }))} placeholder="Your full name" required
+                        className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                      <input type="email" value={interestForm.email} onChange={e => setInterestForm(p => ({ ...p, email: e.target.value }))} placeholder="your@email.com" required
+                        className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
+                      <input type="tel" value={interestForm.phone} onChange={e => setInterestForm(p => ({ ...p, phone: e.target.value }))} placeholder="Your phone number" required
+                        className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all" />
+                    </div>
+                    {interestError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 font-medium">
+                        <FiAlertCircle className="w-4 h-4 shrink-0" /> {interestError}
+                      </div>
+                    )}
+                    <label className="flex items-start gap-2 cursor-pointer pt-1">
+                      <input type="checkbox" checked={interestAgree} onChange={e => setInterestAgree(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue" />
+                      <span className="text-xs text-gray-500 leading-normal">
+                        I agree to receive updates about this course &amp; accept the{' '}
+                        <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms</a> &amp;{' '}
+                        <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
+                      </span>
+                    </label>
+                    <div className="flex justify-center pt-1">
+                      <button
+                        type="submit"
+                        disabled={interestSubmitting}
+                        className="inline-flex items-center justify-center gap-1.5 px-6 py-2 text-xs sm:text-sm font-bold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-all disabled:opacity-60 cursor-pointer shadow-sm shadow-brand-blue/20 active:scale-95"
+                      >
+                        {interestSubmitting ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
+                        {interestSubmitting ? 'Sending...' : 'Send'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -824,21 +823,23 @@ export default function CourseDetail() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col border border-slate-100"
               onClick={e => e.stopPropagation()}
             >
-              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
-                  {course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request'}
-                </h2>
-                <button
-                  onClick={() => setShowBrochure(false)}
-                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                  aria-label="Close modal"
-                >
-                  <FiX className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowBrochure(false)}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                    {course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request'}
+                  </h2>
+                </div>
               {brochureDone ? (
                 <div className="p-8 text-center">
                   <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
@@ -899,6 +900,7 @@ export default function CourseDetail() {
                   </div>
                 </form>
               )}
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -919,23 +921,25 @@ export default function CourseDetail() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto cursor-default"
+              className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col border border-slate-100 cursor-default"
               onClick={e => e.stopPropagation()}
             >
-              <div className="px-5 py-4 bg-brand-blue rounded-t-2xl text-center flex flex-col items-center justify-center relative">
-                <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
-                  {enquirySource?.toLowerCase().includes('brochure')
-                    ? (course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request')
-                    : (course?.title ? `${course.title} Enquiry` : 'Course Enquiry')}
-                </h2>
-                <button
-                  onClick={() => setShowEnquiry(false)}
-                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                  aria-label="Close modal"
-                >
-                  <FiX className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowEnquiry(false)}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                    {enquirySource?.toLowerCase().includes('brochure')
+                      ? (course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request')
+                      : (course?.title ? `${course.title} Enquiry` : 'Course Enquiry')}
+                  </h2>
+                </div>
 
               {enquiryDone ? (
                 <div className="p-8 text-center">
@@ -1027,6 +1031,7 @@ export default function CourseDetail() {
                   </div>
                 </form>
               )}
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1041,17 +1046,19 @@ export default function CourseDetail() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-[26px] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] max-w-[430px] w-full p-6 sm:p-7 relative border border-slate-100 overflow-hidden text-left"
+              className="relative bg-white rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] max-w-[430px] w-full border border-slate-100 text-left"
               onClick={e => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
                 onClick={() => setShowChoicePopup(false)}
-                className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
-                <FiX className="w-4 h-4 text-red-600" />
+                <FiX className="w-5 h-5 text-red-600" />
               </button>
+
+              <div className="p-6 sm:p-7 overflow-y-auto rounded-3xl max-h-[90vh]">
 
               {/* Header Info */}
               <div className="mb-6 text-center flex flex-col items-center">
@@ -1130,6 +1137,7 @@ export default function CourseDetail() {
                     <FiArrowRight className="w-4 h-4" />
                   </div>
                 </button>
+              </div>
               </div>
             </motion.div>
           </div>

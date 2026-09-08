@@ -149,23 +149,25 @@ export default function FloatingContactButton() {
           onClick={close}
         >
           <div
-            className="fcb-modal relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl border border-slate-100"
+            className="fcb-modal relative w-full max-w-xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-100"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-              <button
-                type="button"
-                onClick={close}
-                aria-label="Close modal"
-                className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-              >
-                <FiX className="w-4 h-4 text-red-600" />
-              </button>
-              <h3 className="text-xl font-bold text-center">Enquiry</h3>
-              <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
-            </div>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+
+            <div className="overflow-y-auto rounded-3xl flex-1">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+                <h3 className="text-xl font-bold text-center">Enquiry</h3>
+                <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
+              </div>
 
             {sent ? (
               <div className="p-6 sm:p-8 text-center">
@@ -228,6 +230,7 @@ export default function FloatingContactButton() {
                 </div>
               </form>
             )}
+            </div>
           </div>
         </div>
       )}

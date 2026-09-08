@@ -88,7 +88,7 @@ export default function NavPage() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 1023px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
             </picture>
           ) : (

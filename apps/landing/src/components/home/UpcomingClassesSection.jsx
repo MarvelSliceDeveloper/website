@@ -47,7 +47,7 @@ export default function UpcomingClassesSection({ section }) {
   useEffect(() => {
     function update() {
       const w = window.innerWidth;
-      setVisibleCount(w >= 1024 ? 3 : w >= 640 ? 2 : 1);
+      setVisibleCount(w >= 1024 ? 4 : w >= 850 ? 3 : w >= 700 ? 2 : 1);
     }
     update();
     window.addEventListener('resize', update);
@@ -296,36 +296,38 @@ export default function UpcomingClassesSection({ section }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 relative"
+              className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              {showSuccess ? (
-                <div className="p-6 sm:p-8 text-center">
-                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiCheck className="w-8 h-8 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-1">Registration Successful!</h3>
-                  <p className="text-sm text-slate-500 mb-6">
-                    Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
-                  </p>
-                  <button
-                    onClick={closeModal}
-                    className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
+              <button
+                onClick={closeModal}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                {showSuccess ? (
+                  <div className="p-6 sm:p-8 text-center">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiCheck className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Registration Successful!</h3>
+                    <p className="text-sm text-slate-500 mb-6">
+                      Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
+                    </p>
                     <button
                       onClick={closeModal}
-                      className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                      aria-label="Close modal"
+                      className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer"
                     >
-                      <FiX className="w-4 h-4 text-red-600" />
+                      Close
                     </button>
-                    <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
                       {selectedClass.course_name}
                     </h3>
                     <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
@@ -430,6 +432,7 @@ export default function UpcomingClassesSection({ section }) {
                   </form>
                 </>
               )}
+              </div>
             </motion.div>
           </div>
         )}

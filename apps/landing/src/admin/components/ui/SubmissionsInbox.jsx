@@ -57,10 +57,17 @@ function ReplyModal({ row, onClose, pageTitle }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm cursor-pointer" onClick={onClose}>
-      <div className="bg-white rounded-xl border border-admin-200 shadow-2xl max-w-lg w-full cursor-pointer" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100">
+      <div className="relative bg-white rounded-3xl border border-admin-200 shadow-2xl max-w-lg w-full cursor-default" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          aria-label="Close modal"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100 rounded-t-3xl">
           <div><h3 className="text-base font-semibold text-black">Reply to {row.full_name || row.name || row.email}</h3><p className="text-xs text-neutral-400 mt-0.5">{row.email}</p></div>
-          <button onClick={onClose} className="p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-all"><FiX className="w-5 h-5" /></button>
         </div>
         <div className="p-6 space-y-4">
           <div>
@@ -160,10 +167,17 @@ function ExportDialog({ type, data, columns, exportFilename, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 cursor-pointer" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer" onClick={onClose} />
-      <div className="relative bg-white rounded-xl border border-admin-200 shadow-2xl w-full max-w-md cursor-pointer" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100">
+      <div className="relative bg-white rounded-3xl border border-admin-200 shadow-2xl w-full max-w-md cursor-default" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          aria-label="Close modal"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100 rounded-t-3xl">
           <div><h2 className="text-base font-semibold text-black">Export {type.toUpperCase()}</h2><p className="text-xs text-neutral-400 mt-0.5">Choose date range for the report</p></div>
-          <button onClick={onClose} className="p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-all"><FiX className="w-5 h-5" /></button>
         </div>
         <div className="p-6 space-y-4">
           <div>
@@ -238,11 +252,19 @@ function DetailModal({ selected, onClose, title, detailFields, formatDate, disab
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer transition-opacity" onClick={onClose} />
       
       <div 
-        className="relative bg-white rounded-2xl border border-slate-200/90 shadow-2xl w-full max-w-xl cursor-pointer max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
+        className="relative bg-white rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-xl cursor-default max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200" 
         onClick={e => e.stopPropagation()}
       >
+        <button 
+          onClick={onClose} 
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          aria-label="Close modal"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white shrink-0">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white shrink-0 rounded-t-3xl">
           <div className="flex items-center gap-3.5 min-w-0 pr-2">
             <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand-blue to-indigo-700 text-white font-bold text-sm sm:text-base flex items-center justify-center shadow-md shrink-0 ring-2 ring-blue-50">
               {initials}
@@ -265,15 +287,6 @@ function DetailModal({ selected, onClose, title, detailFields, formatDate, disab
               </p>
             </div>
           </div>
-          
-          {/* X Close Button - top right corner */}
-          <button 
-            onClick={onClose} 
-            className="w-9 h-9 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 border border-rose-100 flex items-center justify-center transition-all shrink-0"
-            title="Close modal"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Modal Body */}

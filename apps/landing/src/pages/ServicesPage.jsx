@@ -243,7 +243,7 @@ export default function ServicesPage() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobile_hero_image ? (
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobile_hero_image} />
+              <source media="(max-width: 1023px)" srcSet={mobile_hero_image} />
               <img src={hero_image || mobile_hero_image} alt="" className="w-full h-auto" />
             </picture>
           ) : (

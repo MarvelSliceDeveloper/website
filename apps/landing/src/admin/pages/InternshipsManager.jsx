@@ -231,12 +231,18 @@ export default function InternshipsManager() {
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/40 pt-8 sm:pt-12 cursor-pointer" onClick={closeForm}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col cursor-auto overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-admin-200 bg-gray-50/50 shrink-0">
+          <div className="relative bg-white rounded-3xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col cursor-auto border border-slate-100" onClick={e => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={closeForm}
+              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+              aria-label="Close modal"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+
+            <div className="flex items-center justify-between px-6 py-4 border-b border-admin-200 bg-gray-50/50 shrink-0 rounded-t-3xl">
               <h3 className="font-semibold text-black">{editing ? 'Edit Internship' : 'Add Internship'}</h3>
-              <button type="button" onClick={closeForm} className="p-1.5 text-blue-600 hover:text-blue-700 rounded-lg hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
             <div className="p-6 overflow-y-auto admin-scrollbar">
               <form id="internshipForm" onSubmit={save} className="space-y-4">

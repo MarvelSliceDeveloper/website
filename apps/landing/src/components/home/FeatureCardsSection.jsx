@@ -31,7 +31,7 @@ export default function FeatureCardsSection({ section }) {
           </Reveal>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-7 sm:gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 sm:gap-8 items-stretch">
           {cards.map((card, i) => {
             const cardTitle = card.heading || card.title || '';
             const cardDesc = card.description || card.desc || '';

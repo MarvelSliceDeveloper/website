@@ -97,7 +97,7 @@ export default function CourseHero({
           {/* LEFT SIDE (Content) ~ 48% width */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Dynamic Title */}
-            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight max-w-xl text-left whitespace-pre-line">
+            <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight w-full max-w-full lg:max-w-xl text-left whitespace-pre-line">
               {course.title}
             </h1>
 
@@ -110,7 +110,7 @@ export default function CourseHero({
 
             {/* Dynamic Description */}
             {course.description && (
-              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] sm:text-left sm:indent-0 w-full indent-6 whitespace-pre-line max-w-[600px]">
+              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] w-full max-w-full lg:max-w-[600px] indent-6 whitespace-pre-line">
                 {course.description}
               </p>
             )}
@@ -142,8 +142,8 @@ export default function CourseHero({
               </div>
             )}
 
-            {/* Mobile CTA Buttons: 2 buttons side-by-side on 1 line */}
-            <div className="flex lg:hidden flex-row items-center justify-center gap-1.5 sm:gap-3 mt-4 w-full max-w-md mx-auto px-1">
+            {/* Responsive CTA Buttons: Equal width (even) and centered on tablet & mobile */}
+            <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 mt-6 lg:mt-8 w-full max-w-xl mx-auto lg:mx-0">
               <button
                 type="button"
                 onClick={() => {
@@ -153,7 +153,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
                   }
                 }}
-                className="flex-1 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center leading-tight min-h-[42px]"
+                className="flex-1 px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center whitespace-nowrap min-h-[44px] sm:min-h-[48px]"
               >
                 {course.cta_left || 'Talk to Advisor/Pay Now'}
               </button>
@@ -161,32 +161,7 @@ export default function CourseHero({
               <button
                 type="button"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="flex-1 px-2.5 sm:px-4 py-2.5 sm:py-3 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-full shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center leading-tight min-h-[42px]"
-              >
-                {course.cta_right || 'Download Brochure'}
-              </button>
-            </div>
-
-            {/* Desktop CTA Buttons: Standard placement with generous padding */}
-            <div className="hidden lg:flex flex-row items-center justify-start gap-3.5 mt-8 w-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  if (onLeftCtaClick) {
-                    onLeftCtaClick();
-                  } else {
-                    openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
-                  }
-                }}
-                className="px-9 py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-              >
-                {course.cta_left || 'Talk to Advisor/Pay Now'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="px-9 py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+                className="flex-1 px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center whitespace-nowrap min-h-[44px] sm:min-h-[48px]"
               >
                 {course.cta_right || 'Download Brochure'}
               </button>

@@ -620,7 +620,7 @@ export default function Career() {
         <div className="relative w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 1023px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
             </picture>
           ) : (
@@ -689,7 +689,7 @@ export default function Career() {
                 <div
                   key={cat.id}
                   className={`group bg-white rounded-xl sm:rounded-[20px] p-3 sm:px-5 sm:py-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-1.5 sm:gap-4 h-full ${
-                    idx >= 8 ? 'hidden sm:flex' : ''
+                    idx >= 8 ? 'hidden lg:flex' : ''
                   }`}
                 >
                   <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
@@ -770,7 +770,7 @@ export default function Career() {
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ipad-pro-career-jobs-grid"
                   >
                     {pageItems.map((item) => {
                       const isIntern = item._type === 'intern';
@@ -869,7 +869,7 @@ export default function Career() {
             className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute -top-3.5 -right-3.5 sm:-top-4 sm:-right-4 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+            <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
               <FiX className="w-5 h-5 text-red-600" />
             </button>
 

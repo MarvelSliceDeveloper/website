@@ -90,8 +90,8 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
     <section className="pt-10 pb-16 bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-12 items-start text-center sm:text-left">
-            <div className="md:col-span-7">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-12 items-start text-center sm:text-left ipad-pro-header-grid">
+            <div className="md:col-span-7 ipad-pro-header-title">
               {heading && (
                 <h2 className="font-bold text-[23px] sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
               )}
@@ -101,7 +101,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               )}
             </div>
             {imageUrl && (
-              <div className="md:col-span-5 hidden md:flex items-center justify-center pt-1">
+              <div className="md:col-span-5 hidden md:flex items-center justify-center pt-1 ipad-pro-header-job-link">
                 <Link
                   to="/career"
                   className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
@@ -114,8 +114,8 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
         </Reveal>
 
         {classes.length > 0 && (
-          <div className="grid md:grid-cols-12 gap-6 lg:gap-12 items-stretch mt-8 lg:mt-10">
-            <Reveal className="md:col-span-7">
+          <div className="grid md:grid-cols-12 gap-6 lg:gap-12 items-stretch mt-8 lg:mt-10 ipad-pro-classes-grid">
+            <Reveal className="md:col-span-7 ipad-pro-classes-col">
               <div className="space-y-3 sm:space-y-3.5">
                 {classes.slice(0, 4).map((cls, i) => (
                   <div key={cls.id} className="relative flex flex-col sm:flex-row items-start sm:items-center text-left gap-3 rounded-2xl border border-gray-200/80 bg-white shadow-xs hover:shadow-md transition-all p-3 sm:py-3.5 sm:px-4 pt-7 sm:pt-3.5">
@@ -157,8 +157,8 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               </div>
             </Reveal>
             {imageUrl && (
-              <Reveal className="md:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 md:mt-0">
-                <div className="md:hidden flex items-center justify-center pt-2 pb-3">
+              <Reveal className="md:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 md:mt-0 ipad-pro-job-image-col">
+                <div className="md:hidden flex items-center justify-center pt-2 pb-3 ipad-pro-job-link-mobile">
                   <Link
                     to="/career"
                     className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
@@ -167,11 +167,11 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                   </Link>
                 </div>
                 {imageLink ? (
-                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50">
+                  <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50 ipad-pro-job-image-wrapper">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </a>
                 ) : (
-                  <div className="w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-slate-50">
+                  <div className="w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md bg-slate-50 ipad-pro-job-image-wrapper">
                     <img src={imageUrl} alt="Upcoming classes" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -195,36 +195,38 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 relative"
+              className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              {showSuccess ? (
-                <div className="p-6 sm:p-8 text-center">
-                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiCheck className="w-8 h-8 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-1">Registration Successful!</h3>
-                  <p className="text-sm text-slate-500 mb-6">
-                    Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
-                  </p>
-                  <button
-                    onClick={closeModal}
-                    className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
+              <button
+                onClick={closeModal}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                {showSuccess ? (
+                  <div className="p-6 sm:p-8 text-center">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiCheck className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Registration Successful!</h3>
+                    <p className="text-sm text-slate-500 mb-6">
+                      Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
+                    </p>
                     <button
                       onClick={closeModal}
-                      className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                      aria-label="Close modal"
+                      className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer"
                     >
-                      <FiX className="w-4 h-4 text-red-600" />
+                      Close
                     </button>
-                    <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
                       {selectedClass.course_name}
                     </h3>
                     <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
@@ -329,6 +331,7 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
                   </form>
                 </>
               )}
+              </div>
             </motion.div>
           </div>
         )}
