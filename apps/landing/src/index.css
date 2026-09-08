@@ -400,14 +400,14 @@ select {
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Increase all paragraph font sizes by 2px on mobile view */
-  p {
+  /* Increase all paragraph, list, and table font sizes by 2px on mobile view */
+  p, li, td {
     font-size: calc(1em + 2px);
   }
-  p.text-xs { font-size: 14px; }
-  p.text-sm { font-size: 16px; }
-  p.text-base { font-size: 18px; }
-  p.text-lg { font-size: 20px; }
+  p.text-xs, li.text-xs, td.text-xs, .text-xs { font-size: 14px; }
+  p.text-sm, li.text-sm, td.text-sm, .text-sm { font-size: 16px; }
+  p.text-base, li.text-base, td.text-base, .text-base { font-size: 18px; }
+  p.text-lg, li.text-lg, td.text-lg, .text-lg { font-size: 20px; }
 
   .admin-table-scroll {
     margin-right: 0;
