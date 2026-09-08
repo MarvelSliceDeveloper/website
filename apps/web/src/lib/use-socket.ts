@@ -24,7 +24,8 @@ export function useSocket(
     // Connect to backend socket
     const socket = io(API_URL, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      // polling first avoids 400 on direct websocket handshake behind nginx
+      transports: ["polling", "websocket"],
     });
 
     socketRef.current = socket;
