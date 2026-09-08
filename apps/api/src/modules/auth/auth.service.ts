@@ -131,7 +131,8 @@ export const authService = {
     });
   },
 
-  // Generate JWT access token for a user
+  // Generate JWT access token for a user — enforces single active session
+  // Every login invalidates previous sessions so one email = one active device.
   async generateTokens(user: {
     id: string;
     role: string;
@@ -143,22 +144,27 @@ export const authService = {
     ip?: string;
     userAgent?: string;
   }) {
-    const isAdmin =
-      user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
     let sessionId: string | undefined;
 
-    if (isAdmin) {
-      const session = await prisma.adminSession.create({
-        data: {
-          userId: user.id,
-          tokenPrefix: crypto.randomBytes(4).toString("hex"),
-          ip: user.ip || null,
-          userAgent: user.userAgent || null,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      });
-      sessionId = session.id;
-    }
+    // Single-session enforcement: create new session and invalidate all others.
+    // Works for every role (STUDENT/INSTRUCTOR/ADMIN/etc.) — AdminSession table
+    // is reused as the generic session store (name kept for backwards compat).
+    const session = await prisma.adminSession.create({
+      data: {
+        userId: user.id,
+        tokenPrefix: crypto.randomBytes(4).toString("hex"),
+        ip: user.ip || null,
+        userAgent: user.userAgent || null,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+    sessionId = session.id;
+
+    // Invalidate all other active sessions for this user (kick old device)
+    await prisma.adminSession.updateMany({
+      where: { userId: user.id, active: true, id: { not: sessionId } },
+      data: { active: false },
+    });
 
     const payload: {
       userId: string;

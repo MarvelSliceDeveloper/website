@@ -160,12 +160,9 @@ export const requireAuth = async (
       sessionTimeoutMin: payload.sessionTimeoutMin,
     };
 
-    // Verify admin session is still active (non-blocking for backward compat)
-    if (
-      req.user &&
-      (req.user.role === UserRole.ADMIN ||
-        req.user.role === UserRole.SUPER_ADMIN)
-    ) {
+    // Single-session enforcement for ALL roles — validates sessionId against AdminSession table
+    // Token issued before this feature (no sessionId) is allowed through for grace period
+    {
       const tokenPayload = jwt.decode(token) as
         | (jwt.JwtPayload & { sessionId?: string })
         | null;
@@ -176,9 +173,10 @@ export const requireAuth = async (
             select: { active: true },
           });
           if (!session || !session.active) {
-            return res
-              .status(401)
-              .json({ error: "Session has been terminated" });
+            return res.status(401).json({
+              error:
+                "Session has been terminated. You have been logged in from another device.",
+            });
           }
           // Update lastActiveAt periodically (once per minute)
           const now = Math.floor(Date.now() / 60000);

@@ -7,12 +7,43 @@ import type { LiveSession } from "@/lib/api-types";
 
 const POLL_INTERVAL_MS = 60_000;
 const DEFAULT_END_FALLBACK_MS = 2 * 60 * 60 * 1000;
+const HIDE_GRACE_MS = 60_000; // hysteresis — prevents 1s tick flop at exact end
+
 function resolveEndTime(session: LiveSession): number {
   const start = new Date(session.scheduledAt).getTime();
-  const end = session.endDateTime
-    ? new Date(session.endDateTime).getTime()
-    : start + DEFAULT_END_FALLBACK_MS;
+  // Handle both shapes: mapped liveSessions use endDateTime, raw /api/sessions uses scheduledEndAt
+  const rawEnd = (session as unknown as Record<string, unknown>).endDateTime as string | undefined
+    ?? (session as unknown as Record<string, unknown>).scheduledEndAt as string | undefined
+    ?? (session as unknown as Record<string, unknown>).endAt as string | undefined;
+  const end = rawEnd ? new Date(rawEnd as string).getTime() : start + DEFAULT_END_FALLBACK_MS;
+  if (Number.isNaN(end)) return start + DEFAULT_END_FALLBACK_MS;
   return end;
+}
+
+function normalizeSession(raw: unknown): LiveSession {
+  const r = raw as Record<string, unknown>;
+  const batch = r.batch as Record<string, unknown> | undefined;
+  const course = r.course as Record<string, unknown> | undefined;
+  const batchCourse = batch?.course as Record<string, unknown> | undefined;
+  const batchPackage = batch?.package as Record<string, unknown> | undefined;
+  const instructor = batch?.instructor as Record<string, unknown> | undefined;
+  const sAt = (r.scheduledAt as string) ?? "";
+  const rawEnd = (r.endDateTime as string) ?? (r.scheduledEndAt as string) ?? (r.endAt as string) ?? "";
+  const endIso = rawEnd || new Date(new Date(sAt).getTime() + DEFAULT_END_FALLBACK_MS).toISOString();
+  return {
+    id: String(r.id ?? ""),
+    title: String(r.title ?? "Live Session"),
+    courseTitle: String(
+      (r.courseTitle as string) ?? (course?.title as string) ?? (batchCourse?.title as string) ?? (batchPackage?.name as string) ?? (batch?.name as string) ?? "Live Class",
+    ),
+    instructor: String((r.instructor as string) ?? (instructor?.name as string) ?? "TBD"),
+    batchLabel: String((r.batchLabel as string) ?? (batch?.name as string) ?? "—"),
+    status: r.status as LiveSession["status"],
+    scheduledAt: sAt,
+    endDateTime: endIso,
+    joinUrl: r.joinUrl as string | undefined,
+    recordingSyncingIn: r.recordingSyncingIn as string | undefined,
+  };
 }
 
 function getSessionStatus(
@@ -31,7 +62,8 @@ function getSessionStatus(
   const end = resolveEndTime(session);
   if (Number.isNaN(end)) return "hidden";
 
-  if (nowMs >= end) return "hidden";
+  // Hide only after grace period — avoids appear/disappear flop at exact end boundary
+  if (nowMs >= end + HIDE_GRACE_MS) return "hidden";
 
   if (session.status === "LIVE") return "live";
   if (nowMs >= start && nowMs < end) return "live";
@@ -76,17 +108,18 @@ export default function LiveSessionBanner({
   onJoin?: (session: LiveSession) => void;
 }) {
   const [now, setNow] = useState(Date.now());
-  const [liveSessions, setLiveSessions] = useState<LiveSession[]>(sessions);
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>(() => sessions.map((s) => normalizeSession(s as unknown)));
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    setLiveSessions(sessions);
+    setLiveSessions(sessions.map((s) => normalizeSession(s as unknown)));
   }, [sessions]);
 
   const pollSessions = useCallback(async () => {
     try {
-      const data = await api.get<{ sessions: LiveSession[] }>("/api/sessions");
-      setLiveSessions(data.sessions || []);
+      const data = await api.get<{ sessions: unknown[] }>("/api/sessions");
+      const normalized = (data.sessions || []).map(normalizeSession);
+      setLiveSessions(normalized);
     } catch {
       // Silent fail — banner will hide if sessions become stale
     }
