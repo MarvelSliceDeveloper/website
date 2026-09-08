@@ -138,6 +138,20 @@ export default function BankingHeader({ onOpenLoginModal }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('sidebar-open');
+    };
+  }, [mobileMenuOpen]);
+
   const isAboutActive = pathname === '/banking' || pathname === '/bankingv2';
   const isAptitudeActive = pathname === '/aptitude';
   const isReasoningActive = pathname === '/reasoning';

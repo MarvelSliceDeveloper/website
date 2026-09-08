@@ -419,3 +419,10 @@ select {
     min-width: 760px;
   }
 }
+
+/* Hide Chat Widget while Sidebar Drawer is Open */
+body.sidebar-open .chat-widget-mild,
+body.sidebar-open .chat-widget-box,
+body.sidebar-open [class*="chat-widget"] {
+  display: none !important;
+}
