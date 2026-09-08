@@ -1,7 +1,7 @@
 import { FiBriefcase } from "react-icons/fi";
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell, FiCheckCircle, FiAward, FiCpu } from "react-icons/fi";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell, FiCheckCircle, FiAward, FiCpu, FiCheckSquare } from "react-icons/fi";
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 const navGroups = [
@@ -49,6 +49,7 @@ const navGroups = [
     { to: "/admin/upcoming-class-submissions", label: "Upcoming Class", icon: FiCalendar },
     { to: "/admin/course-interests", label: "Course Enquiries", icon: FiMessageSquare },
     { to: "/admin/banking-enquiries", label: "Banking Enrollments", icon: FiCheckCircle },
+    { to: "/admin/banking/mock-exam-submissions", label: "Mock Exam Submissions", icon: FiCheckSquare },
     { to: "/admin/upcoming-course-interests", label: "Course Interest", icon: FiBell },
     { to: "/admin/chat-submissions", label: "Chat Submissions", icon: FiMessageCircle },
     { to: "/admin/courses/reports", label: "Reports", icon: FiBarChart2 }
@@ -58,6 +59,12 @@ const navGroups = [
       { label: "Software Learning", children: [
         { to: "/admin/courses/wizard?category=Software%20Learning", label: "Add Course", icon: FiPlusCircle },
         { to: "/admin/courses?category=Software%20Learning", label: "View Courses", icon: FiBookOpen }
+      ]},
+      { label: "Competitive Exam", children: [
+        { label: "Banking", children: [
+          { to: "/admin/banking/mock-exams/new", label: "Add Mock Exam", icon: FiPlusCircle },
+          { to: "/admin/banking/mock-exams", label: "View Mock Exams", icon: FiCheckSquare }
+        ]}
       ]},
       { label: "Tags", children: [
         { to: "/admin/tags/add", label: "Add Tag", icon: FiPlusCircle },
@@ -110,6 +117,12 @@ const navGroups = [
     ];
 
 function isActive(pathname, item) {
+  if (!item) return false;
+  if (!item.to && item.children) {
+    return item.children.some((c) => isActive(pathname, c));
+  }
+  if (!item.to) return false;
+
   const fullPath = pathname.split("?")[0] || "/";
   const fullSearch = pathname.includes("?") ? pathname.split("?").slice(1).join("?") : "";
   const itemPath = (item.to.split("?")[0].replace(/\/$/, "") || "/");
@@ -163,22 +176,14 @@ function saveGroupState(state) {
 function useGroupOpen(pathname) {
   const [openIdx, setOpenIdx] = useState(() => {
     const idx = navGroups.findIndex((g) =>
-      g.items.some((item) => {
-        if (item.to) return isActive(pathname, item);
-        if (item.children) return item.children.some((c) => isActive(pathname, c));
-        return false;
-      })
+      g.items.some((item) => isActive(pathname, item))
     );
     return idx >= 0 ? idx : null;
   });
 
   useEffect(() => {
     const idx = navGroups.findIndex((g) =>
-      g.items.some((item) => {
-        if (item.to) return isActive(pathname, item);
-        if (item.children) return item.children.some((c) => isActive(pathname, c));
-        return false;
-      })
+      g.items.some((item) => isActive(pathname, item))
     );
     if (idx >= 0) {
       setOpenIdx(idx);
@@ -252,7 +257,17 @@ function NestedNavGroup({ item, pathname, onNavigate, isAccordionOpen, onToggleA
       </button>
       <Collapsible open={open}>
         <div className="ml-3 pl-2 mt-0.5 mb-1 space-y-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
-              {item.children.map((child) => {
+          {item.children.map((child) => {
+            if (child.children) {
+              return (
+                <NestedNavGroup
+                  key={child.label}
+                  item={child}
+                  pathname={pathname}
+                  onNavigate={onNavigate}
+                />
+              );
+            }
             const act = isActive(pathname, child);
             const ItemIcon = child.icon;
             return (
@@ -264,10 +279,10 @@ function NestedNavGroup({ item, pathname, onNavigate, isAccordionOpen, onToggleA
                 className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
                   act ? "" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
                 }`}
-                      style={act ? { color: '#ffffff' } : undefined}
+                style={act ? { color: '#ffffff' } : undefined}
               >
                 {ItemIcon && <ItemIcon className="w-3.5 h-3.5 shrink-0" style={{ color: '#707897' }} />}
-                      <span className="truncate" style={act ? activeLabelStyle : undefined}>{child.label}</span>
+                <span className="truncate" style={act ? activeLabelStyle : undefined}>{child.label}</span>
               </NavLink>
             );
           })}
@@ -280,17 +295,13 @@ function NestedNavGroup({ item, pathname, onNavigate, isAccordionOpen, onToggleA
 function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
   const [activeNested, setActiveNested] = useState(() => {
     const activeIdx = group.items.findIndex(item =>
-      item.children && item.children.some(c => isActive(pathname, c))
+      isActive(pathname, item)
     );
     return activeIdx >= 0 ? activeIdx : null;
   });
 
   const Icon = group.icon;
-  const groupActive = group.items.some((item) => {
-    if (item.to) return isActive(pathname, item);
-    if (item.children) return item.children.some((c) => isActive(pathname, c));
-    return false;
-  });
+  const groupActive = group.items.some((item) => isActive(pathname, item));
   const opened = isOpen(idx);
   const iconColor = '#64748b';
   const groupIconColor = iconColor;
