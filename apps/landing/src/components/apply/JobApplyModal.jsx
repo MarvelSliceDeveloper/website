@@ -191,7 +191,7 @@ export default function JobApplyModal({ job, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-          <button onClick={closeModal} className="absolute top-2 right-2 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
+          <button onClick={closeModal} className="absolute top-1.5 right-1.5 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
             <FiX className="w-4 h-4 text-red-600" />
           </button>
           <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">

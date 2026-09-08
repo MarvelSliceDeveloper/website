@@ -500,7 +500,7 @@ export default function JobDetail() {
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
-              <button onClick={() => setShowForm(false)} className="absolute top-2 right-2 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
+              <button onClick={() => setShowForm(false)} className="absolute top-1.5 right-1.5 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
                 <FiX className="w-4 h-4 text-red-600" />
               </button>
               <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
