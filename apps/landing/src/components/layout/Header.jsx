@@ -4,6 +4,7 @@ import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiLogIn, FiSettings, FiUser
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import AnimatedHamburgerIcon from '../ui/AnimatedHamburgerIcon';
 
 export const topNav = [
   { label: 'Home', path: '/' },
@@ -278,27 +279,19 @@ export default function Header() {
           <NavDropdown items={topNav} currentPath={pathname} />
         </div>
 
-        {/* Mobile Hamburger Toggle Button - Horizontal lines to open, Vertical lines to close */}
-        <button
+        {/* Mobile Hamburger Toggle Button - Animated 3 lines morphing to X with spring animation */}
+        <motion.button
           type="button"
-          className="lg:hidden p-2.5 -mr-2 text-gray-900 rounded-md hover:bg-gray-100 transition-colors cursor-pointer z-50"
+          ref={hamburgerBtnRef}
+          className="lg:hidden p-2 text-gray-900 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer z-[101] flex items-center justify-center relative"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
+          whileTap={{ scale: 0.9 }}
+          animate={{ rotate: mobileOpen ? 90 : 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
-          {mobileOpen ? (
-            <svg className="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="6" y1="5" x2="6" y2="19" />
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="18" y1="5" x2="18" y2="19" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="5" y1="6" x2="19" y2="6" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <line x1="5" y1="18" x2="19" y2="18" />
-            </svg>
-          )}
-        </button>
+          <AnimatedHamburgerIcon isOpen={mobileOpen} className="w-6 h-6 text-slate-800" />
+        </motion.button>
       </div>
 
       {isBankingPage && <SubHeaderMenu currentPath={pathname} />}
@@ -311,7 +304,7 @@ export default function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[99] lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
@@ -322,8 +315,8 @@ export default function Header() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:w-80 bg-gray-100 shadow-2xl flex flex-col lg:hidden rounded-none overflow-hidden overflow-x-hidden border-l border-gray-200"
+              transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:w-80 bg-gray-100 shadow-2xl flex flex-col lg:hidden rounded-none overflow-hidden overflow-x-hidden border-l border-gray-200 will-change-transform transform-gpu"
             >
               {/* Header - White Header */}
               <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-gray-200 shrink-0 bg-white min-h-[60px]">
@@ -344,18 +337,8 @@ export default function Header() {
                   </span>
                 </Link>
 
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(false)}
-                  aria-label="Close menu"
-                  className="w-8 h-8 rounded-xl bg-gray-200/80 hover:bg-gray-200 text-slate-500 hover:text-slate-900 transition-all cursor-pointer flex items-center justify-center shrink-0 ml-1"
-                >
-                  <svg className="w-4.5 h-4.5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="6" y1="5" x2="6" y2="19" />
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="18" y1="5" x2="18" y2="19" />
-                  </svg>
-                </button>
+                {/* Reserved space for z-[101] animated toggle button */}
+                <div className="w-9 h-9 shrink-0" />
               </div>
 
               {/* Navigation Links List - Grey Body */}

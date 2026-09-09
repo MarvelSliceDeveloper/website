@@ -94,10 +94,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
           {/* Logo & Contact Info Section */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-1 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left">
-            <div className="flex justify-center sm:justify-start mb-4 -mt-1 sm:-mt-3">
-              <Link to="/" aria-label="Go to Homepage" className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2.5 sm:gap-3.5 group">
+            <div className="flex justify-center sm:justify-start sm:pl-6 mb-4 -mt-1 sm:-mt-3">
+              <Link to="/" aria-label="Go to Homepage" className="flex flex-col items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-2.5 group">
                 {settings?.logo_url && (
-                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-16 sm:h-11 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-20 sm:h-24 lg:h-28 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
                 )}
                 <span className="text-[28px] sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif] leading-tight text-center sm:text-left">
                   Marvel <span className="text-brand-orange">Slice</span>
