@@ -97,7 +97,7 @@ model User {
   suspendedAt             DateTime?
   suspendedBy             String?
   rateLimitPerMin         Int                      @default(60)
-  sessionTimeoutMin       Int                      @default(480)
+  sessionTimeoutMin       Int                      @default(10)
   phone                   String?
   timezone                String?
   address                 String?                  @db.Text

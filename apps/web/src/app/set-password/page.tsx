@@ -486,7 +486,7 @@ export default function SetPasswordPage() {
               <button
                 type="submit"
                 disabled={!allPassed || !agreed || loading}
-                className="w-full h-11 mt-4 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF5E14] via-[#D83A00] to-[#0A47BF] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full h-11 mt-4 rounded-xl font-semibold text-sm text-white bg-[#FF5E15] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Setting Password..." : "Set Password"}
               </button>
