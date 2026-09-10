@@ -117,13 +117,13 @@ export default function ImageCropperModal({
         {/* Modal Body: Interactive Canvas Viewport */}
         <div className="p-6 flex flex-col items-center select-none bg-slate-900/5">
           
-          {/* Avatar Preview Ring */}
+          {/* Square Avatar Preview Box */}
           <div
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className="relative w-52 h-52 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-brand-blue/30 cursor-move bg-slate-200 flex items-center justify-center group"
+            className="relative w-52 h-52 rounded-2xl overflow-hidden border-4 border-white shadow-xl ring-4 ring-brand-blue/30 cursor-move bg-slate-200 flex items-center justify-center group"
           >
             {imageUrl ? (
               <img
