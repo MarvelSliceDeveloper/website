@@ -256,7 +256,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-6">
                   <Link
                     href="/login"
-                    className="w-full h-11 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF5E14] via-[#D83A00] to-[#0A47BF] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full h-11 rounded-xl font-semibold text-sm text-white bg-[#FF5E15] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <IconArrowLeft size={18} />
                     <span>Back to Login</span>
@@ -303,7 +303,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-11 mt-2 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF5E14] via-[#D83A00] to-[#0A47BF] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full h-11 mt-2 rounded-xl font-semibold text-sm text-white bg-[#FF5E15] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {submitting ? "Checking Account..." : "Send Reset Link"}
                 </button>

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   IconEye,
@@ -387,25 +386,25 @@ export default function LoginPage() {
           <div className="w-full max-w-[440px] mx-auto">
             {/* Logo Badge & Header (Enlarged Logo) */}
             <div className="text-center">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white shadow-[0_12px_35px_-8px_rgba(255,94,20,0.20)] border border-slate-100 flex items-center justify-center p-2.5 mx-auto transition-transform hover:scale-105">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white shadow-[0_12px_35px_-8px_rgba(255,94,20,0.20)] border border-slate-100 flex items-center justify-center p-2.5 mx-auto transition-transform hover:scale-105">
                 <Image
                   src="/images/Marvel_logo.png"
                   alt="Marvel Slice Logo"
-                  width={96}
-                  height={96}
+                  width={128}
+                  height={128}
                   priority
                   className="w-full h-full object-contain"
                 />
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 tracking-tight">
+              <h2 className="lg:hidden text-2xl sm:text-3xl font-black text-slate-900 mt-3 tracking-tight">
                 Marvel <span className="text-[#FF5E14]">Slice</span>
               </h2>
 
-              <h3 className="mt-1.5 text-base sm:text-lg font-bold text-slate-900">
+              <h3 className="mt-2 text-xl sm:text-2xl font-bold text-slate-900">
                 Welcome back!
               </h3>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-1 text-sm text-slate-500">
                 Log in to continue your learning journey
               </p>
             </div>
@@ -503,33 +502,12 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 mt-4 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF5E14] via-[#D83A00] to-[#0A47BF] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full h-11 mt-4 rounded-xl font-semibold text-sm text-white bg-[#FF5E15] shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/35 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? "Logging in..." : "Log In"}
                 </button>
               </form>
             )}
-
-            {/* Footer Links */}
-            <div className="flex flex-col items-center gap-2 mt-5 text-xs text-slate-500 font-medium">
-              <Link
-                href="/catalogue"
-                className="text-[#0052CC] font-bold hover:underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
-              >
-                <span>Browse Course Catalogue</span>
-                <span aria-hidden="true">&rarr;</span>
-              </Link>
-              <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                <span>Are you an instructor?</span>
-                <Link
-                  href="/instructor/login"
-                  className="text-[#FF5E14] font-bold hover:underline cursor-pointer inline-flex items-center gap-0.5 transition-colors"
-                >
-                  <span>Instructor Portal</span>
-                  <span aria-hidden="true">&rarr;</span>
-                </Link>
-              </div>
-            </div>
 
             {/* Demo Accounts (dev only) */}
             {process.env.NODE_ENV === "development" && (

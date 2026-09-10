@@ -176,7 +176,7 @@ export const authService = {
       userId: user.id,
       role: user.role,
       email: user.email,
-      sessionTimeoutMin: user.sessionTimeoutMin ?? 480,
+      sessionTimeoutMin: user.sessionTimeoutMin ?? 10,
       ...(sessionId ? { sessionId } : {}),
     };
 
