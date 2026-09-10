@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiClock, FiLoader, FiX, FiCheckCircle, FiChevronLeft, FiChevronRight, FiCalendar, FiSend, FiCheck } from 'react-icons/fi';
@@ -172,12 +171,9 @@ export default function UpcomingClassesSection({ section }) {
                 <p className="text-text-gray text-sm sm:text-base leading-relaxed mt-3 whitespace-pre-line">{subheading}</p>
               )}
             </div>
-            <Link
-              to="/career"
-              className="shrink-0 text-xl sm:text-2xl font-extrabold text-brand-blue leading-tight hover:underline cursor-pointer"
-            >
+            <h3 className="shrink-0 text-xl sm:text-2xl font-extrabold text-brand-blue leading-tight">
               Recent Job Openings !
-            </Link>
+            </h3>
           </div>
         </Reveal>
 

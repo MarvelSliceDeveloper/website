@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiClock, FiLoader, FiX, FiCheckCircle, FiCalendar, FiSend, FiCheck } from 'react-icons/fi';
@@ -165,12 +164,9 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
             {imageUrl && (
               <Reveal className="md:col-span-5 min-w-0 flex flex-col items-center justify-center w-full mt-4 md:mt-0 ipad-pro-job-image-col">
                 <div className="md:hidden flex items-center justify-center pt-2 pb-3 ipad-pro-job-link-mobile">
-                  <Link
-                    to="/career"
-                    className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight hover:underline cursor-pointer"
-                  >
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-brand-blue text-center leading-tight">
                     Recent Job Openings !
-                  </Link>
+                  </h3>
                 </div>
                 {imageLink ? (
                   <a href={imageLink} target={imageLink.startsWith('http') ? '_blank' : undefined} rel={imageLink.startsWith('http') ? 'noopener noreferrer' : undefined} className="block w-full h-full min-h-[220px] sm:min-h-[260px] md:min-h-full rounded-2xl overflow-hidden border border-gray-200 shadow-md group bg-slate-50 ipad-pro-job-image-wrapper">

@@ -44,163 +44,93 @@ function ForgotPasswordModal({ open, onClose }) {
 }
 
 /* ========================================================= */
-/* ANIMATED OPENED LAPTOP WITH LIVE CODING ANIMATION          */
+/* ANIMATED ISOMETRIC 3D SECURITY & PROFILE MODEL            */
 /* ========================================================= */
-function AnimatedLaptopCodingModel() {
-  const codeLines = [
-    { num: 1, content: <><span className="text-pink-400 font-bold">const</span> <span className="text-cyan-300 font-semibold">hero</span> <span className="text-white">=</span> <span className="text-amber-300 font-medium">'Marvel'</span>;</> },
-    { num: 2, content: <><span className="text-purple-400 font-bold">function</span> <span className="text-yellow-300 font-semibold">codeMagic</span><span className="text-cyan-300">()</span> <span className="text-cyan-300">&#123;</span></> },
-    { num: 3, content: <><span className="pl-3 text-emerald-400 font-semibold">console</span>.<span className="text-yellow-300">log</span><span className="text-cyan-300">(</span><span className="text-emerald-300">'🚀 100% Smooth!'</span><span className="text-cyan-300">)</span>;</> },
-    { num: 4, content: <><span className="text-cyan-300">&#125;</span></> },
-    { num: 5, content: <><span className="text-purple-400 font-bold">export default</span> <span className="text-yellow-300 font-semibold">codeMagic</span>;</> },
-  ];
-
+function AnimatedIsometricSecurityModel() {
   return (
     <motion.div 
       animate={{ y: [0, -8, 0] }}
-      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      className="w-full max-w-[340px] sm:max-w-[380px] mx-auto relative select-none"
+      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      className="w-full max-w-[320px] sm:max-w-[360px] mx-auto relative select-none flex items-center justify-center"
     >
       <svg
-        viewBox="0 0 400 320"
-        className="w-full h-auto drop-shadow-2xl overflow-visible"
+        width="100%"
+        height="100%"
+        viewBox="0 0 261 341"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-auto drop-shadow-xl overflow-visible"
       >
-        <style>{`
-          @keyframes codeScrollAnim {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-24px); }
-          }
-          .animate-code-scroll {
-            animation: codeScrollAnim 7s ease-in-out infinite;
-          }
-        `}</style>
-        <defs>
-          <linearGradient id="screenBezelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#334155" />
-            <stop offset="100%" stopColor="#1E293B" />
-          </linearGradient>
-          <linearGradient id="laptopBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#E2E8F0" />
-            <stop offset="100%" stopColor="#94A3B8" />
-          </linearGradient>
-          <linearGradient id="baseSideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#64748B" />
-            <stop offset="100%" stopColor="#334155" />
-          </linearGradient>
-          <filter id="cartoonShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="10" stdDeviation="12" floodColor="#0284C7" floodOpacity="0.25" />
-          </filter>
-        </defs>
+        {/* FLOATING BACKGROUND SHAPES */}
+        <path d="M13 105.5L21.5 101L30 105.5L21.5 110L13 105.5Z" fill="#DAD1FF" />
+        <path d="M198 90.5L210.5 84L225 91L211 98L198 90.5Z" fill="#E1D9FF" />
+        <path d="M238 148.5L246.5 144L255 148.5L246.5 153L238 148.5Z" fill="#DCD4FF" />
+        <path d="M3 229L14 223L26 229L14 235L3 229Z" fill="#E8E2FF" />
+        <path d="M95 276.5L109 269L123 276.5L109 284L95 276.5Z" fill="#CFC5FF" />
+        <path d="M244 208L261 198V216L250 222L244 218V208Z" fill="#C9C0FF" />
 
-        {/* Floating Cartoon Sparkles */}
-        <g className="animate-pulse">
-          <circle cx="40" cy="50" r="4" fill="#38BDF8" opacity="0.8" />
-          <circle cx="360" cy="70" r="6" fill="#F472B6" opacity="0.8" />
-          <circle cx="370" cy="200" r="5" fill="#FBBF24" opacity="0.8" />
-          <path d="M30 180 L36 186 L30 192 L24 186 Z" fill="#60A5FA" opacity="0.7" />
-        </g>
+        {/* ISOMETRIC FLOOR */}
+        <path d="M27 176L151 116L239 164L113 226L27 176Z" fill="#F0EDFF" />
+        <path d="M39 180L151 126L225 166L113 218L39 180Z" fill="#E7E3FF" />
+        <path d="M71 202L151 163L195 187L114 226L71 202Z" fill="#DCD7FF" opacity="0.55" />
 
-        {/* Drop Shadow Base */}
-        <ellipse cx="200" cy="295" rx="150" ry="18" fill="#0369A1" opacity="0.25" filter="blur(6px)" />
+        {/* MAIN BLUE SCREEN */}
+        <path d="M69 109L152 70V78L69 118V109Z" fill="#D7E7FF" />
+        <path d="M69 109L158 72V144L69 185V109Z" fill="#4D80F5" />
+        <path d="M55 116L158 72V144L55 189V116Z" fill="#4D82F4" />
+        <path d="M55 159L158 114V144L55 189V159Z" fill="#4779E7" opacity="0.55" />
+        <path d="M55 116L78 106V178L55 189V116Z" fill="#695DE7" />
 
-        {/* CARTOON LAPTOP BASE (KEYBOARD DECK IN 2.5D PERSPECTIVE) */}
-        {/* Base Side Thickness Edge */}
-        <path
-          d="M 50 240 L 70 270 L 330 270 L 350 240 Z"
-          fill="url(#baseSideGrad)"
-        />
-        {/* Base Front Lip */}
-        <path
-          d="M 70 270 L 70 276 C 70 282, 330 282, 330 276 L 330 270 Z"
-          fill="#1E293B"
-        />
+        {/* Screen highlight */}
+        <path d="M112 99L135 89" stroke="#D9E7FF" strokeWidth="3" strokeLinecap="round" />
+        <path d="M114 108L129 101" stroke="#BFD8FF" strokeWidth="2" strokeLinecap="round" />
 
-        {/* Base Top Keyboard Surface */}
-        <path
-          d="M 80 195 L 50 240 C 45 248, 355 248, 350 240 L 320 195 Z"
-          fill="url(#laptopBodyGrad)"
-          stroke="#CBD5E1"
-          strokeWidth="3"
-        />
+        {/* Screen text lines */}
+        <path d="M101 121L128 109" stroke="#7FA7FF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 128L121 119" stroke="#769EFF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 137L130 124" stroke="#759EFF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 146L116 139" stroke="#759EFF" strokeWidth="2" strokeLinecap="round" />
 
-        {/* Cartoon Keyboard Tray Recess */}
-        <path
-          d="M 92 202 L 72 232 L 328 232 L 308 202 Z"
-          fill="#1E293B"
-        />
+        {/* USER PROFILE INSIDE SCREEN */}
+        <circle cx="88" cy="136" r="6" fill="#AFA5F3" />
+        <path d="M80 151C80 146.5 83.5 144 88 144C92.5 144 96 146.5 96 151V157H80V151Z" fill="#AFA5F3" />
 
-        {/* Cartoon Keyboard Keys (Grid Lines / Key Caps) */}
-        {/* Row 1 Keys */}
-        <path d="M 97 205 L 303 205" stroke="#475569" strokeWidth="3" strokeDasharray="12 4" strokeLinecap="round" />
-        {/* Row 2 Keys */}
-        <path d="M 92 211 L 308 211" stroke="#475569" strokeWidth="3.5" strokeDasharray="14 4" strokeLinecap="round" />
-        {/* Row 3 Keys */}
-        <path d="M 87 218 L 313 218" stroke="#334155" strokeWidth="3.5" strokeDasharray="16 4" strokeLinecap="round" />
-        {/* Row 4 Spacebar Row */}
-        <path d="M 82 225 L 140 225" stroke="#475569" strokeWidth="3.5" strokeDasharray="12 3" strokeLinecap="round" />
-        <path d="M 150 225 L 250 225" stroke="#38BDF8" strokeWidth="4" strokeLinecap="round" /> {/* Cartoon Spacebar */}
-        <path d="M 260 225 L 318 225" stroke="#475569" strokeWidth="3.5" strokeDasharray="12 3" strokeLinecap="round" />
+        {/* CHECK CIRCLE */}
+        <circle cx="66" cy="111" r="12" fill="#46C9DF" />
+        <path d="M62.5 111L65 113.5L69.5 107.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
-        {/* Cartoon Trackpad */}
-        <rect x="175" y="235" width="50" height="9" rx="3" fill="#94A3B8" stroke="#64748B" strokeWidth="1.5" />
+        {/* DOCUMENT CARD */}
+        <path d="M75 163L104 174L88 215L75 207V163Z" fill="#D8D2F8" opacity="0.45" />
+        <path d="M77 160L105 174V204L78 216L77 160Z" fill="white" />
+        <path d="M96 169L105 174L96 178V169Z" fill="#E4E7F7" />
+        <path d="M83 181L98 175" stroke="#FF927F" strokeWidth="2" strokeLinecap="round" />
+        <path d="M83 187L97 181" stroke="#B7B9D7" strokeWidth="2" strokeLinecap="round" />
+        <path d="M83 193L96 188" stroke="#B7B9D7" strokeWidth="2" strokeLinecap="round" />
 
-        {/* Hinge Connection */}
-        <rect x="160" y="190" width="80" height="8" rx="3" fill="#334155" />
+        {/* SMALL RED CARD */}
+        <path d="M125 170L158 157L176 167L143 181L125 170Z" fill="#FF8D91" />
+        <path d="M143 181L176 167V179L143 193V181Z" fill="#E87983" />
+        <path d="M125 170L143 181V193L125 182V170Z" fill="#F47E88" />
+        <path d="M143 170L149 167L154 170L148 173L143 170Z" fill="white" opacity="0.9" />
+        <path d="M148 174L153 172" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
 
-        {/* CARTOON LAPTOP LID / SCREEN FRAME */}
-        {/* Outer Frame Back */}
-        <rect x="60" y="30" width="280" height="168" rx="20" fill="url(#screenBezelGrad)" stroke="#CBD5E1" strokeWidth="4" filter="url(#cartoonShadow)" />
-        
-        {/* Webcam Lens Dot */}
-        <circle cx="200" cy="41" r="3" fill="#0F172A" />
-        <circle cx="200" cy="41" r="1" fill="#38BDF8" />
+        {/* LOCK */}
+        <path d="M160 164L190 151L203 159L174 174L160 164Z" fill="#C7C1EA" opacity="0.4" />
+        <path d="M163 128L195 116V164L163 176V128Z" fill="#31B9D1" />
+        <path d="M195 116L201 120V160L195 164V116Z" fill="#27AFC9" />
+        <path d="M162 130L195 117V158L162 172V130Z" fill="#39C2D8" />
+        <path d="M171 128V119C171 112 175 107 181 105C187 103 192 106 192 112V121" stroke="#D9D7FA" strokeWidth="5" strokeLinecap="round" fill="none" />
+        <path d="M171 128V119C171 113 175 109 181 107C186 106 190 109 190 114V121" stroke="#E8E6FF" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <circle cx="179" cy="142" r="3" fill="#168BAA" />
+        <path d="M179 144V149" stroke="#168BAA" strokeWidth="2" strokeLinecap="round" />
 
-        {/* SCREEN INNER DISPLAY (IDE CODING ANIMATION) */}
-        <rect x="74" y="50" width="252" height="136" rx="12" fill="#0B1120" stroke="#1E293B" strokeWidth="2" />
+        {/* SOFT SHADOWS */}
+        <ellipse cx="126" cy="204" rx="51" ry="12" fill="#DAD5F3" opacity="0.22" />
+        <ellipse cx="179" cy="167" rx="22" ry="7" fill="#D3CDEF" opacity="0.25" />
 
-        {/* IDE Window Bar */}
-        <rect x="74" y="50" width="252" height="20" rx="10" fill="#070B14" />
-        <rect x="74" y="60" width="252" height="10" fill="#070B14" />
-        {/* Window Buttons */}
-        <circle cx="88" cy="60" r="3" fill="#EF4444" />
-        <circle cx="98" cy="60" r="3" fill="#F59E0B" />
-        <circle cx="108" cy="60" r="3" fill="#10B981" />
-        <text x="125" y="63" fill="#38BDF8" fontSize="9" fontFamily="sans-serif" fontWeight="bold">App.tsx</text>
-
-        {/* Live Code Animation embedded in Screen */}
-        <foreignObject x="76" y="72" width="248" height="112">
-          <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full p-2 text-[10px] font-mono text-left bg-transparent overflow-hidden">
-            <div className="space-y-1 animate-code-scroll">
-              {codeLines.map((line) => (
-                <div key={line.num} className="flex items-center gap-2 whitespace-nowrap leading-tight">
-                  <span className="text-slate-600 select-none w-3 text-right text-[9px] font-bold shrink-0">{line.num}</span>
-                  <div className="flex-1">{line.content}</div>
-                </div>
-              ))}
-
-              <div className="flex items-center gap-2 pt-0.5">
-                <span className="text-slate-600 select-none w-3 text-right text-[9px] font-bold shrink-0">6</span>
-                <span className="inline-block w-1.5 h-3 bg-cyan-400 animate-pulse rounded-xs shadow-[0_0_6px_#38BDF8]" />
-              </div>
-            </div>
-          </div>
-        </foreignObject>
-
-        {/* Screen Gloss Sheen */}
-        <path d="M 74 50 L 220 50 L 74 175 Z" fill="#FFFFFF" opacity="0.04" />
-
-        {/* Floating Cartoon Code Badge Accents */}
-        <g className="animate-bounce" style={{ animationDuration: '3s' }}>
-          <rect x="25" y="100" width="34" height="24" rx="8" fill="#38BDF8" />
-          <text x="32" y="116" fill="#FFFFFF" fontSize="11" fontWeight="extrabold" fontFamily="sans-serif">&lt;/&gt;</text>
-        </g>
-
-        <g className="animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
-          <rect x="340" y="110" width="32" height="24" rx="8" fill="#F472B6" />
-          <text x="348" y="126" fill="#FFFFFF" fontSize="12" fontWeight="extrabold" fontFamily="sans-serif">&#123;&nbsp;&#125;</text>
-        </g>
+        {/* EXTRA FLOATING ELEMENTS */}
+        <path d="M52 185L65 178L76 184L63 191L52 185Z" fill="#E0DAFF" opacity="0.8" />
+        <path d="M210 201L220 196L230 201L220 206L210 201Z" fill="#E4DFFF" />
       </svg>
     </motion.div>
   );
@@ -544,9 +474,9 @@ export default function Login() {
             />
           </div>
 
-          {/* Center Opened Laptop Model with Live Coding Animation */}
+          {/* Center Isometric 3D Security & Profile Illustration */}
           <div className="my-auto py-3 sm:py-5 flex items-center justify-center relative w-full z-20">
-            <AnimatedLaptopCodingModel />
+            <AnimatedIsometricSecurityModel />
           </div>
 
           <div />
