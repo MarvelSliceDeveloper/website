@@ -6,6 +6,7 @@ WORKDIR /app
 
 COPY apps/landing/dev-server.js ./dev-server.js
 COPY apps/landing/src/lib ./src/lib
+COPY apps/landing/api/lib ./api/lib
 
 RUN npm install nodemailer@^6.9.16 @supabase/supabase-js@^2.111.0 --no-save --ignore-scripts
 
