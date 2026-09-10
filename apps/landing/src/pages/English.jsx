@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader } from 'react-icons/fi';
@@ -139,6 +139,15 @@ export default function English() {
     setSelectedTopic(topic);
     setShowApplyModal(true);
   }
+
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        closeApplyModal();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted]);
 
   function closeApplyModal() {
     if (isSubmitting) return;
@@ -542,47 +551,41 @@ export default function English() {
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl max-h-[90vh] flex flex-col border border-blue-100"
             >
-              <button
-                type="button"
-                onClick={closeApplyModal}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
+              {!isSubmitted && (
+                <button
+                  type="button"
+                  onClick={closeApplyModal}
+                  className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-5 h-5 text-red-600" />
+                </button>
+              )}
 
               <div className="overflow-y-auto rounded-3xl flex-1">
-                <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 text-center relative border-b border-blue-600/30">
-                  <div className="flex flex-col items-center justify-center px-4">
-                    <h3 className="text-base sm:text-lg font-extrabold leading-tight text-center">
-                      English Course Enrollment
-                    </h3>
-                    <div className="flex items-center justify-center gap-2 mt-1">
-                      <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
-                        {enquiryType === 'topic' ? `Topic: ${selectedTopic}` : 'General English Enrollment'}
-                      </span>
+                {!isSubmitted && (
+                  <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 text-center relative border-b border-blue-600/30">
+                    <div className="flex flex-col items-center justify-center px-4">
+                      <h3 className="text-base sm:text-lg font-extrabold leading-tight text-center">
+                        English Course Enrollment
+                      </h3>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
+                          {enquiryType === 'topic' ? `Topic: ${selectedTopic}` : 'General English Enrollment'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
-                  <div className="text-center py-6 space-y-4">
-                    <div className="w-14 h-14 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mx-auto border border-blue-200 shadow-sm">
-                      <FiCheckCircle className="w-8 h-8 text-brand-blue" />
+                  <div className="text-center py-6">
+                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FiCheckCircle className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <h4 className="text-xl font-bold text-dark-navy">Enrollment Submitted!</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
-                      Thank you for enrolling. Our academic advisors will reach out to you shortly.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={closeApplyModal}
-                      className="mt-2 px-8 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-sm rounded-full transition-all shadow-md cursor-pointer mx-auto block"
-                    >
-                      Done
-                    </button>
+                    <h4 className="text-lg font-bold text-dark-navy">Success!</h4>
                   </div>
                 ) : (
                   <form onSubmit={handleApplySubmit} className="space-y-4">

@@ -71,21 +71,12 @@ export default function ContactForm() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex flex-col items-center py-10 text-center"
+              className="flex flex-col items-center py-6 text-center"
             >
-              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
-                <FiCheckCircle className="w-8 h-8 text-green-500" />
+              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <FiCheckCircle className="w-8 h-8 text-emerald-600" />
               </div>
-              <h4 className="text-lg font-bold text-[#1A1A2E] mb-2">Thank You!</h4>
-              <p className="text-sm text-neutral-500 max-w-xs">
-                Your message has been received. Our team will contact you soon.
-              </p>
-              <button
-                onClick={() => setStatus('idle')}
-                className="mt-6 text-sm font-semibold text-[#1E56C7] hover:underline"
-              >
-                Send Another Message
-              </button>
+              <h4 className="text-lg font-bold text-[#1A1A2E]">Success!</h4>
             </motion.div>
           ) : (
             <motion.form

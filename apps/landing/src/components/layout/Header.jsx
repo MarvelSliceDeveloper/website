@@ -39,20 +39,7 @@ const subNavItems = [
 ];
 
 function SubHeaderMenu({ currentPath, onItemClick }) {
-  const [affairsOpen, setAffairsOpen] = useState(false);
-  const affairsRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (affairsRef.current && !affairsRef.current.contains(e.target)) {
-        setAffairsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const isAffairsActive = currentPath === '/current-affairs' || currentPath === '/todays-affairs';
+  const isBankingActive = currentPath === '/banking' || currentPath === '/bankingv2';
 
   return (
     <div className="hidden sm:block bg-blue-50/90 border-t border-b border-blue-100/80 shadow-xs relative z-40">
@@ -62,131 +49,15 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
           className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto lg:overflow-visible no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
         >
           <Link
-            to="/aptitude"
+            to="/banking"
             onClick={onItemClick}
             className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
-              currentPath === '/aptitude'
+              isBankingActive
                 ? 'bg-brand-blue text-white font-bold shadow-xs'
                 : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
             }`}
           >
-            Aptitude
-          </Link>
-
-          <Link
-            to="/reasoning"
-            onClick={onItemClick}
-            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
-              currentPath === '/reasoning'
-                ? 'bg-brand-blue text-white font-bold shadow-xs'
-                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
-            }`}
-          >
-            Reasoning
-          </Link>
-
-          <Link
-            to="/english"
-            onClick={onItemClick}
-            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
-              currentPath === '/english'
-                ? 'bg-brand-blue text-white font-bold shadow-xs'
-                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
-            }`}
-          >
-            English
-          </Link>
-
-          <Link
-            to="/banking-awareness"
-            onClick={onItemClick}
-            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
-              currentPath === '/banking-awareness'
-                ? 'bg-brand-blue text-white font-bold shadow-xs'
-                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
-            }`}
-          >
-            Banking Awareness
-          </Link>
-
-          <div
-            ref={affairsRef}
-            className="relative shrink-0"
-            onMouseEnter={() => setAffairsOpen(true)}
-            onMouseLeave={() => setAffairsOpen(false)}
-          >
-            <button
-              type="button"
-              onClick={() => setAffairsOpen((prev) => !prev)}
-              aria-expanded={affairsOpen}
-              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-                isAffairsActive || affairsOpen
-                  ? 'bg-brand-blue text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
-              }`}
-            >
-              <span>Affairs</span>
-            </button>
-
-            <AnimatePresence>
-              {affairsOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-[90] lg:hidden"
-                    onClick={() => setAffairsOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 6 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="fixed lg:absolute left-4 lg:left-0 right-4 lg:right-auto top-[98px] lg:top-full mt-1 lg:mt-1.5 w-auto lg:w-48 bg-white rounded-xl shadow-xl border border-blue-100 py-1.5 z-[100] text-left"
-                  >
-                    <Link
-                      to="/current-affairs"
-                      onClick={() => {
-                        setAffairsOpen(false);
-                        if (onItemClick) onItemClick();
-                      }}
-                      className={`block px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
-                        currentPath === '/current-affairs'
-                          ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue'
-                          : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue'
-                      }`}
-                    >
-                      Current Affairs
-                    </Link>
-
-                    <Link
-                      to="/todays-affairs"
-                      onClick={() => {
-                        setAffairsOpen(false);
-                        if (onItemClick) onItemClick();
-                      }}
-                      className={`block px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors ${
-                        currentPath === '/todays-affairs'
-                          ? 'bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue'
-                          : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue'
-                      }`}
-                    >
-                      Today's Affairs
-                    </Link>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <Link
-            to="/mock-exam"
-            onClick={onItemClick}
-            className={`shrink-0 px-3 py-1.5 rounded-md transition-colors ${
-              currentPath === '/mock-exam'
-                ? 'bg-brand-blue text-white font-bold shadow-xs'
-                : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
-            }`}
-          >
-            Mock Exam
+            Banking
           </Link>
         </nav>
       </div>

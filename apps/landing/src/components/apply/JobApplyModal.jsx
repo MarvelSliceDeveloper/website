@@ -199,33 +199,32 @@ export default function JobApplyModal({ job, onClose }) {
         className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
         onClick={e => e.stopPropagation()}
       >
-        <button onClick={closeModal} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
-          <FiX className="w-5 h-5 text-red-600" />
-        </button>
+        {status?.type !== 'success' && (
+          <button onClick={closeModal} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+            <FiX className="w-5 h-5 text-red-600" />
+          </button>
+        )}
 
         <div className="overflow-y-auto rounded-3xl flex-1">
-          <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-            <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
-              Applying for: <span className="font-semibold">{job.title}</span>
-            </span>
-          </div>
+          {status?.type !== 'success' && (
+            <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+              <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
+                Applying for: <span className="font-semibold">{job.title}</span>
+              </span>
+            </div>
+          )}
 
         {status?.type === 'success' ? (
-          <div className="p-6 sm:p-8 text-center">
+          <div className="p-6 text-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <FiCheck className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-1">Application Submitted!</h3>
-              <p className="text-sm text-slate-500 mb-6">{status.message}</p>
-              <button onClick={closeModal}
-                className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
-                Close
-              </button>
+              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
             </motion.div>
           </div>
         ) : (

@@ -80,7 +80,7 @@ export default function FloatingContactButton() {
         setSent(false);
         setAgreeTerms(false);
         setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
-      }, 1200);
+      }, 1000);
     } catch {
       setErrors({ form: 'Submission failed. Please try again.' });
     } finally {
@@ -154,28 +154,31 @@ export default function FloatingContactButton() {
             role="dialog"
             aria-modal="true"
           >
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close modal"
-              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-            >
-              <FiX className="w-5 h-5 text-red-600" />
-            </button>
+            {!sent && (
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Close modal"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+            )}
 
             <div className="overflow-y-auto rounded-3xl flex-1">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-                <h3 className="text-xl font-bold text-center">Enquiry</h3>
-                <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
-              </div>
+              {!sent && (
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+                  <h3 className="text-xl font-bold text-center">Enquiry</h3>
+                  <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
+                </div>
+              )}
 
             {sent ? (
-              <div className="p-6 sm:p-8 text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="p-6 text-center">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FiCheck className="w-8 h-8 text-emerald-600" />
                 </div>
-                <h4 className="text-lg font-bold text-slate-800 mb-1">Message sent.</h4>
-                <p className="text-sm text-slate-500">We have received your enquiry. Our team will get in touch with you shortly.</p>
+                <h4 className="text-lg font-bold text-slate-800">Success!</h4>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="p-6 sm:p-8">
