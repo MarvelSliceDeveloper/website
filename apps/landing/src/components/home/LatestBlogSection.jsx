@@ -41,9 +41,9 @@ export default function LatestBlogSection({ section }) {
             </Link>
           </div>
         </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-6 mt-16">
+        <Stagger className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-16 ipad-pro-latest-blog-grid">
           {posts.map((post) => (
-            <StaggerItem key={post.id} className="h-full">
+            <StaggerItem key={post.id} className="h-full w-full max-w-sm mx-auto sm:mx-0">
               <Link
                 to={`/blog/${post.slug}`}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full"

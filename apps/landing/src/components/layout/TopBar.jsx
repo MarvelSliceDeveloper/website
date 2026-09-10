@@ -31,7 +31,7 @@ export default function TopBar() {
               <FiPhone className="w-3 h-3 shrink-0 text-white/90" />
               {phoneNumbers.map((num, i) => (
                 <span key={i} className="inline-flex items-center">
-                  {i > 0 && <span className="text-white/60 mx-1.5 font-normal">/</span>}
+                  {i > 0 && <span className="text-white/60 mx-1.5 font-normal">|</span>}
                   <a
                     href={cleanTelHref(num)}
                     onClick={() => trackPhoneClick(num, 'topbar')}

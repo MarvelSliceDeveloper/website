@@ -39,6 +39,9 @@ import UpcomingClassAdd from './pages/UpcomingClassAdd';
 import UpcomingClassSubmissions from './pages/UpcomingClassSubmissions';
 import CourseInterests from './pages/CourseInterests';
 import BankingEnquiries from './pages/BankingEnquiries';
+import MockExamsList from './pages/MockExamsList';
+import MockExamEditor from './pages/MockExamEditor';
+import MockExamSubmissions from './pages/MockExamSubmissions';
 import UpcomingCourseInterests from './pages/UpcomingCourseInterests';
 import TestimonialsManager from './pages/TestimonialsManager';
 import TestimonialEditor from './pages/TestimonialEditor';
@@ -169,6 +172,10 @@ export default function Admin() {
           <Route path="upcoming-class-submissions" element={<UpcomingClassSubmissions />} />
           <Route path="course-interests" element={<CourseInterests />} />
           <Route path="banking-enquiries" element={<BankingEnquiries />} />
+          <Route path="banking/mock-exams" element={<MockExamsList />} />
+          <Route path="banking/mock-exams/new" element={<MockExamEditor key="new" />} />
+          <Route path="banking/mock-exams/:id/edit" element={<MockExamEditor key="edit" />} />
+          <Route path="banking/mock-exam-submissions" element={<MockExamSubmissions />} />
           <Route path="upcoming-course-interests" element={<UpcomingCourseInterests />} />
           <Route path="newsletter-subscribers" element={<NewsletterSubscribers />} />
           <Route path="contact-submissions" element={<ContactSubmissions />} />

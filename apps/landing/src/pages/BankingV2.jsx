@@ -689,10 +689,11 @@ export default function BankingV2() {
                 <AccordionItem
                   variant="clean"
                   title={faq.question}
+                  titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                   isOpen={openFaqIndex === i}
                   onToggle={() => setOpenFaqIndex(openFaqIndex === i ? null : i)}
                 >
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">{faq.answer}</p>
+                  <p className="text-slate-600 text-xs sm:text-xs lg:text-base leading-relaxed">{faq.answer}</p>
                 </AccordionItem>
               </StaggerItem>
             ))}
@@ -709,30 +710,32 @@ export default function BankingV2() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 0 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl max-h-[90vh] flex flex-col border border-blue-100"
             >
-              {/* Modal Header */}
-              <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 text-center relative border-b border-blue-600/30">
-                <div className="flex flex-col items-center justify-center px-4">
-                  <h3 className="text-base sm:text-lg font-extrabold leading-tight text-center">
-                    Banking Enrollment
-                  </h3>
-                  <div className="flex items-center justify-center gap-2 mt-1">
-                    <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
-                      {enquiryType === 'topic' ? `Exam: ${selectedTopic}` : 'General Banking Enrollment'}
-                    </span>
+              <button
+                type="button"
+                onClick={closeApplyModal}
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+
+              <div className="overflow-y-auto rounded-3xl flex-1">
+                {/* Modal Header */}
+                <div className="bg-brand-blue text-white px-5 sm:px-6 py-3.5 text-center relative border-b border-blue-600/30">
+                  <div className="flex flex-col items-center justify-center px-4">
+                    <h3 className="text-base sm:text-lg font-extrabold leading-tight text-center">
+                      Banking Enrollment
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                      <span className="bg-white/15 text-white border border-white/25 text-[11px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" />
+                        {enquiryType === 'topic' ? `Exam: ${selectedTopic}` : 'General Banking Enrollment'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeApplyModal}
-                  className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center"
-                  aria-label="Close modal"
-                >
-                  <FiX className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
 
               {/* Modal Form Content */}
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
@@ -839,6 +842,7 @@ export default function BankingV2() {
                     </div>
                   </form>
                 )}
+              </div>
               </div>
             </motion.div>
           </div>

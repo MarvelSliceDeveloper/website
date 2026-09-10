@@ -58,9 +58,13 @@ export default function ExportDialog({ type, data, columns, exportFilename, onCl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 border border-admin-200">
-        <button onClick={onClose} className="absolute right-4 top-4 p-1 text-neutral-400 hover:text-neutral-600 rounded">
-          <FiX className="w-5 h-5" />
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 border border-slate-100">
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          aria-label="Close modal"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
         </button>
         <div className="flex items-start gap-4 mb-6">
           <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">

@@ -44,205 +44,95 @@ function ForgotPasswordModal({ open, onClose }) {
 }
 
 /* ========================================================= */
-/* PURE HARDWARE-ACCELERATED ANIMATED SVG DASHBOARD          */
+/* ANIMATED ISOMETRIC 3D SECURITY & PROFILE MODEL            */
 /* ========================================================= */
-function AnimatedAdminDashboardSvg() {
+function AnimatedIsometricSecurityModel() {
   return (
-    <div className="w-full max-w-[340px] sm:max-w-[370px] aspect-square flex items-center justify-center relative select-none">
-      <svg 
-        viewBox="0 0 400 400" 
-        className="w-full h-full drop-shadow-2xl" 
-        fill="none" 
+    <motion.div 
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      className="w-full max-w-[320px] sm:max-w-[360px] mx-auto relative select-none flex items-center justify-center"
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 261 341"
+        fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-auto drop-shadow-xl overflow-visible"
       >
-        <style>{`
-          @keyframes spinClockwise {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes spinCounter {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-          }
-          @keyframes sliderMove1 {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(18px); }
-          }
-          @keyframes sliderMove2 {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-16px); }
-          }
-          @keyframes sliderMove3 {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(14px); }
-          }
-          @keyframes pulseBar1 {
-            0%, 100% { transform: scaleY(0.7); }
-            50% { transform: scaleY(1.15); }
-          }
-          @keyframes pulseBar2 {
-            0%, 100% { transform: scaleY(1.05); }
-            50% { transform: scaleY(0.65); }
-          }
-          @keyframes pulseBar3 {
-            0%, 100% { transform: scaleY(0.6); }
-            50% { transform: scaleY(1.2); }
-          }
-          @keyframes floatGentle {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-6px) rotate(2deg); }
-          }
-          @keyframes glowPulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.9; }
-          }
-          .gear-1 {
-            animation: spinClockwise 22s linear infinite;
-            transform-origin: 95px 185px;
-          }
-          .gear-2 {
-            animation: spinCounter 18s linear infinite;
-            transform-origin: 75px 245px;
-          }
-          .knob-1 {
-            animation: sliderMove1 3.5s ease-in-out infinite;
-          }
-          .knob-2 {
-            animation: sliderMove2 4s ease-in-out infinite 0.3s;
-          }
-          .knob-3 {
-            animation: sliderMove3 3.8s ease-in-out infinite 0.7s;
-          }
-          .bar-1 {
-            animation: pulseBar1 2.8s ease-in-out infinite;
-            transform-origin: 138px 225px;
-          }
-          .bar-2 {
-            animation: pulseBar2 3.2s ease-in-out infinite 0.2s;
-            transform-origin: 154px 225px;
-          }
-          .bar-3 {
-            animation: pulseBar3 2.6s ease-in-out infinite 0.5s;
-            transform-origin: 170px 225px;
-          }
-          .monitor-unit {
-            animation: floatGentle 5s ease-in-out infinite;
-            transform-origin: 200px 200px;
-          }
-          .glow-ring {
-            animation: glowPulse 2.5s ease-in-out infinite;
-          }
-        `}</style>
+        {/* FLOATING BACKGROUND SHAPES */}
+        <path d="M13 105.5L21.5 101L30 105.5L21.5 110L13 105.5Z" fill="#DAD1FF" />
+        <path d="M198 90.5L210.5 84L225 91L211 98L198 90.5Z" fill="#E1D9FF" />
+        <path d="M238 148.5L246.5 144L255 148.5L246.5 153L238 148.5Z" fill="#DCD4FF" />
+        <path d="M3 229L14 223L26 229L14 235L3 229Z" fill="#E8E2FF" />
+        <path d="M95 276.5L109 269L123 276.5L109 284L95 276.5Z" fill="#CFC5FF" />
+        <path d="M244 208L261 198V216L250 222L244 218V208Z" fill="#C9C0FF" />
 
-        <defs>
-          <linearGradient id="monitorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3B82F6" />
-            <stop offset="100%" stopColor="#1D4ED8" />
-          </linearGradient>
-          <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor="#F8FAFC" />
-          </linearGradient>
-          <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#06B6D4" />
-            <stop offset="100%" stopColor="#0284C7" />
-          </linearGradient>
-          <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F97316" />
-            <stop offset="100%" stopColor="#EA580C" />
-          </linearGradient>
-          <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0F172A" floodOpacity="0.12" />
-          </filter>
-        </defs>
+        {/* ISOMETRIC FLOOR */}
+        <path d="M27 176L151 116L239 164L113 226L27 176Z" fill="#F0EDFF" />
+        <path d="M39 180L151 126L225 166L113 218L39 180Z" fill="#E7E3FF" />
+        <path d="M71 202L151 163L195 187L114 226L71 202Z" fill="#DCD7FF" opacity="0.55" />
 
-        {/* 1. Animated Rotating Mechanical Gears in Background */}
-        <g className="gear-1">
-          <circle cx="95" cy="185" r="32" fill="#E2E8F0" opacity="0.8" stroke="#CBD5E1" strokeWidth="4" strokeDasharray="10 8" />
-          <circle cx="95" cy="185" r="14" fill="#FFFFFF" />
-        </g>
+        {/* MAIN BLUE SCREEN */}
+        <path d="M69 109L152 70V78L69 118V109Z" fill="#D7E7FF" />
+        <path d="M69 109L158 72V144L69 185V109Z" fill="#4D80F5" />
+        <path d="M55 116L158 72V144L55 189V116Z" fill="#4D82F4" />
+        <path d="M55 159L158 114V144L55 189V159Z" fill="#4779E7" opacity="0.55" />
+        <path d="M55 116L78 106V178L55 189V116Z" fill="#695DE7" />
 
-        <g className="gear-2">
-          <circle cx="75" cy="245" r="24" fill="#E2E8F0" opacity="0.7" stroke="#CBD5E1" strokeWidth="3" strokeDasharray="8 6" />
-          <circle cx="75" cy="245" r="10" fill="#FFFFFF" />
-        </g>
+        {/* Screen highlight */}
+        <path d="M112 99L135 89" stroke="#D9E7FF" strokeWidth="3" strokeLinecap="round" />
+        <path d="M114 108L129 101" stroke="#BFD8FF" strokeWidth="2" strokeLinecap="round" />
 
-        {/* 2. Floating Monitor Unit */}
-        <g className="monitor-unit">
-          {/* Monitor Stand & Base */}
-          <ellipse cx="200" cy="335" rx="75" ry="12" fill="#CBD5E1" opacity="0.6" />
-          <path d="M185 270 L175 325 C175 330 185 334 200 334 C215 334 225 330 225 325 L215 270 Z" fill="#0077B6" />
-          <ellipse cx="200" cy="328" rx="42" ry="7" fill="#0096C7" />
+        {/* Screen text lines */}
+        <path d="M101 121L128 109" stroke="#7FA7FF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 128L121 119" stroke="#769EFF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 137L130 124" stroke="#759EFF" strokeWidth="2" strokeLinecap="round" />
+        <path d="M101 146L116 139" stroke="#759EFF" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Main Monitor Bezel */}
-          <rect x="105" y="85" width="200" height="185" rx="14" fill="#0077B6" stroke="#023E8A" strokeWidth="4" filter="url(#cardShadow)" />
-          <rect x="110" y="90" width="190" height="175" rx="10" fill="url(#screenGrad)" />
+        {/* USER PROFILE INSIDE SCREEN */}
+        <circle cx="88" cy="136" r="6" fill="#AFA5F3" />
+        <path d="M80 151C80 146.5 83.5 144 88 144C92.5 144 96 146.5 96 151V157H80V151Z" fill="#AFA5F3" />
 
-          {/* Window Header Bar with Action Dots */}
-          <path d="M110 90 H300 V115 H110 Z" fill="#1E293B" />
-          <circle cx="125" cy="102" r="3.5" fill="#EF4444" />
-          <circle cx="137" cy="102" r="3.5" fill="#F59E0B" />
-          <circle cx="149" cy="102" r="3.5" fill="#10B981" />
+        {/* CHECK CIRCLE */}
+        <circle cx="66" cy="111" r="12" fill="#46C9DF" />
+        <path d="M62.5 111L65 113.5L69.5 107.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
-          {/* User Profile Card on Screen Left */}
-          <g transform="translate(130, 125)">
-            <rect x="0" y="0" width="48" height="42" rx="7" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1.5" filter="url(#cardShadow)" />
-            {/* Avatar */}
-            <circle cx="24" cy="14" r="7" fill="#F43F5E" />
-            <path d="M12 34 C12 27 16 25 24 25 C32 25 36 27 36 34 Z" fill="#F43F5E" />
-          </g>
+        {/* DOCUMENT CARD */}
+        <path d="M75 163L104 174L88 215L75 207V163Z" fill="#D8D2F8" opacity="0.45" />
+        <path d="M77 160L105 174V204L78 216L77 160Z" fill="white" />
+        <path d="M96 169L105 174L96 178V169Z" fill="#E4E7F7" />
+        <path d="M83 181L98 175" stroke="#FF927F" strokeWidth="2" strokeLinecap="round" />
+        <path d="M83 187L97 181" stroke="#B7B9D7" strokeWidth="2" strokeLinecap="round" />
+        <path d="M83 193L96 188" stroke="#B7B9D7" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Sliders / Control Panel on Screen Right */}
-          <g transform="translate(190, 125)">
-            <rect x="0" y="0" width="95" height="62" rx="8" fill="url(#cyanGrad)" filter="url(#cardShadow)" />
-            
-            {/* Slider Vertical Tracks */}
-            <line x1="22" y1="12" x2="22" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
-            <line x1="48" y1="12" x2="48" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
-            <line x1="74" y1="12" x2="74" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
+        {/* SMALL RED CARD */}
+        <path d="M125 170L158 157L176 167L143 181L125 170Z" fill="#FF8D91" />
+        <path d="M143 181L176 167V179L143 193V181Z" fill="#E87983" />
+        <path d="M125 170L143 181V193L125 182V170Z" fill="#F47E88" />
+        <path d="M143 170L149 167L154 170L148 173L143 170Z" fill="white" opacity="0.9" />
+        <path d="M148 174L153 172" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
 
-            {/* Moving Slider Knobs */}
-            <g className="knob-1">
-              <circle cx="22" cy="20" r="5.5" fill="#FFFFFF" stroke="#0077B6" strokeWidth="2" />
-            </g>
-            <g className="knob-2">
-              <circle cx="48" cy="40" r="5.5" fill="#F97316" stroke="#C2410C" strokeWidth="2" />
-            </g>
-            <g className="knob-3">
-              <circle cx="74" cy="25" r="5.5" fill="#FFFFFF" stroke="#0077B6" strokeWidth="2" />
-            </g>
-          </g>
+        {/* LOCK */}
+        <path d="M160 164L190 151L203 159L174 174L160 164Z" fill="#C7C1EA" opacity="0.4" />
+        <path d="M163 128L195 116V164L163 176V128Z" fill="#31B9D1" />
+        <path d="M195 116L201 120V160L195 164V116Z" fill="#27AFC9" />
+        <path d="M162 130L195 117V158L162 172V130Z" fill="#39C2D8" />
+        <path d="M171 128V119C171 112 175 107 181 105C187 103 192 106 192 112V121" stroke="#D9D7FA" strokeWidth="5" strokeLinecap="round" fill="none" />
+        <path d="M171 128V119C171 113 175 109 181 107C186 106 190 109 190 114V121" stroke="#E8E6FF" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <circle cx="179" cy="142" r="3" fill="#168BAA" />
+        <path d="M179 144V149" stroke="#168BAA" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Animated Metrics Bar Chart */}
-          <g>
-            {/* Bar 1 (Cyan) */}
-            <rect className="bar-1" x="133" y="185" width="10" height="40" rx="3" fill="#06B6D4" />
-            {/* Bar 2 (Orange) */}
-            <rect className="bar-2" x="149" y="173" width="10" height="52" rx="3" fill="#F97316" />
-            {/* Bar 3 (Blue) */}
-            <rect className="bar-3" x="165" y="190" width="10" height="35" rx="3" fill="#2563EB" />
-          </g>
+        {/* SOFT SHADOWS */}
+        <ellipse cx="126" cy="204" rx="51" ry="12" fill="#DAD5F3" opacity="0.22" />
+        <ellipse cx="179" cy="167" rx="22" ry="7" fill="#D3CDEF" opacity="0.25" />
 
-          {/* Activity Mini Sparkline on Screen Bottom Right */}
-          <g transform="translate(190, 198)">
-            <rect x="0" y="0" width="95" height="28" rx="6" fill="#F1F5F9" />
-            <path d="M8 18 L24 10 L42 20 L62 8 L86 14" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <circle cx="86" cy="14" r="3" fill="#10B981" className="glow-ring" />
-          </g>
-        </g>
-
-        {/* 3. Floating Accent Code & Tech Badges */}
-        <g transform="translate(290, 80)">
-          <circle cx="16" cy="16" r="16" fill="url(#orangeGrad)" filter="url(#cardShadow)" />
-          <path d="M11 16 L14 13 M21 13 L24 16 M14 19 L11 16 M24 16 L21 19 M17 11 L15 21" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-
-        <g transform="translate(60, 110)">
-          <circle cx="14" cy="14" r="14" fill="#3B82F6" opacity="0.9" filter="url(#cardShadow)" />
-          <path d="M9 14 L12 17 L19 10" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
+        {/* EXTRA FLOATING ELEMENTS */}
+        <path d="M52 185L65 178L76 184L63 191L52 185Z" fill="#E0DAFF" opacity="0.8" />
+        <path d="M210 201L220 196L230 201L220 206L210 201Z" fill="#E4DFFF" />
       </svg>
-    </div>
+    </motion.div>
   );
 }
 
@@ -486,12 +376,12 @@ export default function Login() {
       >
         
         {/* ===================================================== */}
-        {/* LEFT COLUMN: Logo & Animated SVG Dashboard Graphic    */}
+        {/* LEFT COLUMN: Animated Circles & Pattern Mild Blue BG   */}
         {/* ===================================================== */}
-        <div className="md:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F4F7FE] to-[#F8FAFC] p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-100">
+        <div className="md:col-span-6 bg-gradient-to-br from-[#EFF4FF] via-[#E8F0FE] to-[#F3F7FF] p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-blue-100/80 min-h-[380px] md:min-h-[500px]">
           
-          {/* Top Brand Logo */}
-          <div className="flex items-center gap-2.5 z-10">
+          {/* Top-Left Brand Logo */}
+          <div className="flex items-center gap-2.5 z-20">
             <img
               src={logoUrl || "/apple-touch-icon.png"}
               alt="Marvel Slice"
@@ -502,9 +392,91 @@ export default function Login() {
             </span>
           </div>
 
-          {/* Center Animated SVG Graphic Illustration */}
-          <div className="my-auto py-4 sm:py-6 flex items-center justify-center relative w-full">
-            <AnimatedAdminDashboardSvg />
+          {/* Animated Pattern & Circle Shapes Mild Blue BG Overlay */}
+          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center overflow-hidden">
+            
+            {/* Mild Blue Dot Matrix Pattern Layer (...) */}
+            <div 
+              className="absolute inset-0 opacity-[0.25]"
+              style={{
+                backgroundImage: 'radial-gradient(#0055FE 1.35px, transparent 1.35px)',
+                backgroundSize: '22px 22px',
+              }}
+            />
+
+            {/* Central Animated Concentric Blue Circle Rings */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+              className="absolute w-[360px] h-[360px] rounded-full border border-dashed border-brand-blue/30"
+            />
+            <motion.div 
+              animate={{ rotate: -360 }}
+              transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+              className="absolute w-[270px] h-[270px] rounded-full border border-blue-300/50"
+            />
+            <motion.div 
+              animate={{ scale: [1, 1.08, 1], opacity: [0.35, 0.7, 0.35] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute w-[180px] h-[180px] rounded-full border-2 border-brand-blue/35"
+            />
+
+            {/* Soft Floating Ambient Blue Orbs */}
+            <motion.div 
+              animate={{ 
+                x: [0, 20, -15, 0],
+                y: [0, -25, 15, 0],
+                scale: [1, 1.15, 0.95, 1]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/4 left-1/4 w-36 h-36 rounded-full bg-gradient-to-tr from-brand-blue/25 to-indigo-500/15 blur-xl"
+            />
+            <motion.div 
+              animate={{ 
+                x: [0, -20, 15, 0],
+                y: [0, 20, -20, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full bg-gradient-to-br from-sky-400/20 to-blue-600/15 blur-xl"
+            />
+
+            {/* Floating Decorative Glass Blue Circles & Dots */}
+            <motion.div
+              animate={{ y: [0, -14, 0], opacity: [0.5, 0.9, 0.5] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-20 right-16 w-12 h-12 rounded-full bg-white/80 backdrop-blur-xs border border-brand-blue/30 shadow-xs flex items-center justify-center"
+            >
+              <div className="w-5 h-5 rounded-full bg-brand-blue/20 flex items-center justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [0, 16, 0], opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+              className="absolute bottom-20 left-16 w-10 h-10 rounded-full bg-white/80 backdrop-blur-xs border border-sky-400/30 shadow-xs flex items-center justify-center"
+            >
+              <div className="w-4 h-4 rounded-full bg-sky-400/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-sky-500" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="absolute top-1/2 left-10 w-4 h-4 rounded-full bg-brand-blue/50"
+            />
+            <motion.div
+              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              className="absolute bottom-1/3 right-12 w-5 h-5 rounded-full bg-sky-400/50"
+            />
+          </div>
+
+          {/* Center Isometric 3D Security & Profile Illustration */}
+          <div className="my-auto py-3 sm:py-5 flex items-center justify-center relative w-full z-20">
+            <AnimatedIsometricSecurityModel />
           </div>
 
           <div />
@@ -513,7 +485,7 @@ export default function Login() {
         {/* ===================================================== */}
         {/* RIGHT COLUMN: Modern Clean Login Form                 */}
         {/* ===================================================== */}
-        <div className="md:col-span-7 bg-white p-7 sm:p-11 lg:p-12 flex flex-col justify-center">
+        <div className="md:col-span-6 bg-white p-7 sm:p-9 lg:p-10 flex flex-col justify-center">
           
           {/* Welcome Heading */}
           <div className="mb-6">
@@ -570,8 +542,8 @@ export default function Login() {
             
             {/* Email Address Field with Left Mail Icon */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
-                EMAIL ADDRESS
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-blue">
@@ -601,8 +573,8 @@ export default function Login() {
 
             {/* Password Field with Left Lock Icon & Right Eye Toggle */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
-                PASSWORD
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-blue">

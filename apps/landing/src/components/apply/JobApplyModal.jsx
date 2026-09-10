@@ -84,6 +84,15 @@ export default function JobApplyModal({ job, onClose }) {
     }
   }, [job]);
 
+  useEffect(() => {
+    if (status?.type === 'success') {
+      const timer = setTimeout(() => {
+        closeModal();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
   if (!job) return null;
 
   const isInternship = form.category === 'Internship';
@@ -187,17 +196,19 @@ export default function JobApplyModal({ job, onClose }) {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
+        className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
         onClick={e => e.stopPropagation()}
       >
-        <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-          <button onClick={closeModal} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
-            <FiX className="w-4 h-4 text-red-600" />
-          </button>
-          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
-            Applying for: <span className="font-semibold">{job.title}</span>
-          </span>
-        </div>
+        <button onClick={closeModal} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+
+        <div className="overflow-y-auto rounded-3xl flex-1">
+          <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
+              Applying for: <span className="font-semibold">{job.title}</span>
+            </span>
+          </div>
 
         {status?.type === 'success' ? (
           <div className="p-6 sm:p-8 text-center">
@@ -331,6 +342,7 @@ export default function JobApplyModal({ job, onClose }) {
             </div>
           </form>
         )}
+        </div>
       </motion.div>
     </div>
   );

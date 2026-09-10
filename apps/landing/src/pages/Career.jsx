@@ -172,6 +172,17 @@ export default function Career() {
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  useEffect(() => {
+    if (status?.type === 'success') {
+      const timer = setTimeout(() => {
+        setShowForm(false);
+        setSelectedJob(null);
+        setStatus(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
   const [tab, setTab] = useState('all');
   const [page, setPage] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -620,7 +631,7 @@ export default function Career() {
         <div className="relative w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 1023px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
             </picture>
           ) : (
@@ -645,7 +656,7 @@ export default function Career() {
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 text-center">
         {fc.headline && (
           <div>
-            <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy">
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-brand-blue">
               {fc.headline}
             </h2>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3 mb-6" />
@@ -653,7 +664,7 @@ export default function Career() {
         )}
 
         {fc.subtitle && (
-          <h3 className="text-base sm:text-xl font-bold text-dark-navy mt-4 mb-2">
+          <h3 className="text-lg sm:text-2xl font-extrabold text-brand-blue mt-4 mb-2">
             {fc.subtitle}
           </h3>
         )}
@@ -671,35 +682,40 @@ export default function Career() {
           </div>
         )}
 
-        <div className="mt-8 sm:mt-10">
+        <div className="mt-8 sm:mt-12">
         {fc.categoriesSubtitle && (
           <div>
-            <h3 className="text-xl sm:text-3xl font-extrabold text-dark-navy mt-1">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-brand-blue mt-1">
               {fc.categoriesSubtitle}
             </h3>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-6 sm:mb-8" />
           </div>
         )}
 
         {roleCategories?.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 mt-6 sm:mt-8 max-w-4xl mx-auto text-center">
-            {roleCategories.map((cat, idx) => (
-              <div
-                key={cat.id}
-                className="group bg-gradient-to-b from-white to-slate-50/80 hover:to-white rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2.5 h-full"
-              >
-                <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  (Math.floor(idx / 2) + (idx % 2)) % 2 === 0
-                    ? 'bg-orange-50 text-brand-orange border border-orange-100/80'
-                    : 'bg-emerald-50 text-brand-green border border-emerald-100/80'
-                }`}>
-                  <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-5 mt-6 sm:mt-8 max-w-5xl mx-auto">
+            {roleCategories.map((cat, idx) => {
+              const isGreen = idx % 2 === 0;
+              return (
+                <div
+                  key={cat.id}
+                  className={`group bg-white rounded-xl sm:rounded-[20px] p-3 sm:px-5 sm:py-4 border border-slate-200/90 hover:border-brand-blue/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col sm:flex-row items-center justify-center sm:justify-start text-center sm:text-left gap-1.5 sm:gap-4 h-full ${
+                    idx >= 8 ? 'hidden lg:flex' : ''
+                  }`}
+                >
+                  <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    isGreen
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/80'
+                      : 'bg-amber-50 text-amber-500 border border-amber-100/80'
+                  }`}>
+                    <FiBriefcase className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-dark-navy sm:text-brand-blue font-bold text-xs sm:text-base leading-snug break-words">
+                    {cat.name}
+                  </span>
                 </div>
-                <span className="text-dark-navy font-bold text-xs sm:text-sm md:text-base leading-snug break-words text-center">
-                  {cat.name}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -765,7 +781,7 @@ export default function Career() {
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ipad-pro-career-jobs-grid"
                   >
                     {pageItems.map((item) => {
                       const isIntern = item._type === 'intern';
@@ -861,20 +877,23 @@ export default function Career() {
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
+            className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-              <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
-                <FiX className="w-4 h-4 text-red-600" />
-              </button>
-              {selectedJob && (
-                <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
-                  Applying for: <span className="font-semibold">{selectedJob.title}</span>
-                </span>
-              )}
+            <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+
+            <div className="overflow-y-auto rounded-3xl flex-1">
+              <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+                {selectedJob && (
+                  <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
+                    Applying for: <span className="font-semibold">{selectedJob.title}</span>
+                  </span>
+                )}
+              </div>
+              {renderForm()}
             </div>
-            {renderForm()}
           </motion.div>
         </div>
       )}

@@ -74,7 +74,7 @@ export default function Contact() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture className="w-full h-auto block">
-              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 1023px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto block" />
             </picture>
           ) : (

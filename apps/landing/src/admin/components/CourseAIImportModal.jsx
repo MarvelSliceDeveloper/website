@@ -507,11 +507,19 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData, ini
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-neutral-200 max-h-[90vh] flex flex-col"
+          className="relative bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col"
           onClick={e => e.stopPropagation()}
         >
+          <button
+            onClick={onClose}
+            className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            aria-label="Close modal"
+          >
+            <FiX className="w-5 h-5 text-red-600" />
+          </button>
+
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/80">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/80 rounded-t-3xl">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-orange/20 to-orange-500/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange">
                 <HiSparkles className="w-5 h-5 text-brand-orange" />
@@ -521,12 +529,6 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData, ini
                 <p className="text-xs text-neutral-500">Provide course name &amp; key points to generate all fields instantly</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-neutral-200/60 rounded-xl transition-colors text-neutral-400 hover:text-neutral-600 cursor-pointer"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
           </div>
 
           {/* Navigation Tabs */}

@@ -39,7 +39,7 @@ function Hero({ search, onSearchChange, onSearch, heroImage, mobileHeroImage, he
         {heroImage || mobileHeroImage ? (
           <div className="relative w-full flex items-center justify-center min-h-[290px] xs:min-h-[320px] sm:min-h-0">
             <picture className="w-full h-auto block">
-              {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+              {mobileHeroImage && <source media="(max-width: 1023px)" srcSet={mobileHeroImage} />}
               <img
                 src={heroImage || mobileHeroImage}
                 alt=""
@@ -492,7 +492,7 @@ export default function Blog() {
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
               <div className="lg:w-[70%] space-y-6 sm:space-y-8">
                 {isAllPage && featured && <FeaturedPost post={featured} />}
-                <Stagger key={`${category || 'all'}-${tag || 'all'}-${search}-${page}`} className="grid md:grid-cols-2 gap-6">
+                <Stagger key={`${category || 'all'}-${tag || 'all'}-${search}-${page}`} className="grid grid-cols-1 sm:grid-cols-2 gap-6 ipad-pro-blog-list-grid">
                   {gridPosts.map((post) => (
                     <StaggerItem key={post.id} className="h-full">
                       <PostCard post={post} />
@@ -509,8 +509,8 @@ export default function Blog() {
                   <PopularTags tags={popularTags || []} activeTag={tag} onTagClick={(t) => { const next = new URLSearchParams(searchParams); if (t === tag) next.delete('tag'); else next.set('tag', t); next.delete('category'); next.delete('page'); setSearchParams(next); }} />
                 </div>
 
-                {/* Mobile View Sidebar */}
-                <div className="block lg:hidden space-y-6">
+                {/* Mobile/Tablet View Sidebar: Popular Tags Left, Newsletter Right on Tablet */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:hidden items-start">
                   <PopularTags tags={popularTags || []} activeTag={tag} onTagClick={(t) => { const next = new URLSearchParams(searchParams); if (t === tag) next.delete('tag'); else next.set('tag', t); next.delete('category'); next.delete('page'); setSearchParams(next); }} />
                   <NewsletterForm />
                 </div>
@@ -519,13 +519,6 @@ export default function Blog() {
           </div>
         )}
       </section>
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.5, ease: 'easeOut' }}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-6 w-10 h-10 sm:w-10 sm:h-10 bg-brand-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-50 cursor-pointer">
-        <FiArrowUp className="w-5 h-5" /></motion.button>
     </div>
   );
 }

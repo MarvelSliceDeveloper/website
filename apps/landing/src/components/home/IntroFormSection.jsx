@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,14 +72,14 @@ function StatsGrid({ stats }) {
 
 function PillGrid({ pills }) {
   return (
-    <Stagger className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full max-w-md lg:max-w-none mx-auto">
+    <Stagger className="grid grid-cols-2 gap-2.5 sm:gap-3.5 lg:gap-2.5 w-full max-w-md lg:max-w-none mx-auto">
       {pills.map((label, i) => (
         <StaggerItem key={i} className="min-w-0">
-          <div className="flex items-center justify-start text-left gap-2 bg-white rounded-xl border border-slate-100 px-3 py-3 shadow-xs min-w-0 h-full min-h-[48px]">
-            <div className="w-6 h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
-              <FiCheckCircle className="w-3.5 h-3.5 text-brand-blue" />
+          <div className="flex items-center justify-start text-left gap-2 sm:gap-2.5 lg:gap-2 bg-white rounded-xl border border-slate-100 px-3 sm:px-4 py-3 sm:py-3.5 lg:px-3 lg:py-2.5 shadow-xs min-w-0 h-full min-h-[48px] sm:min-h-[52px] lg:min-h-[42px]">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-6 lg:h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
+              <FiCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 text-brand-blue" />
             </div>
-            <span className="text-xs font-bold text-slate-700 leading-snug flex-1 min-w-0 break-words text-left">{label}</span>
+            <span className="text-xs sm:text-sm lg:text-xs font-bold text-slate-700 leading-snug flex-1 min-w-0 break-words text-left">{label}</span>
           </div>
         </StaggerItem>
       ))}
@@ -104,6 +104,7 @@ export default function IntroFormSection({ section }) {
   const pcSize = formatSize(rawPcSize);
 
   const [formName, setFormName] = useState('');
+  const [formRole, setFormRole] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -112,10 +113,20 @@ export default function IntroFormSection({ section }) {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  useEffect(() => {
+    if (showSuccessModal) {
+      const timer = setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessModal]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     const errs = {};
     if (!formName.trim()) errs.name = 'Please enter your name';
+    if (!formRole) errs.role = 'Please select your role';
     if (!formEmail.trim()) errs.email = 'Please enter your email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail.trim())) errs.email = 'Please enter a valid email';
     if (!formPhone.trim()) errs.phone = 'Please enter your phone number';
@@ -129,6 +140,7 @@ export default function IntroFormSection({ section }) {
     setSubmitting(true);
     const { error } = await supabase.from('form_submissions').insert({
       full_name: formName.trim(),
+      role: formRole,
       email: formEmail.trim(),
       phone: formPhone.trim(),
     });
@@ -140,13 +152,14 @@ export default function IntroFormSection({ section }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         full_name: formName.trim(),
+        role: formRole,
         email: formEmail.trim(),
         phone: formPhone.trim(),
       }),
     }).catch(() => {});
     trackFormSubmit('demo_class');
     setShowSuccessModal(true);
-    setFormName(''); setFormEmail(''); setFormPhone('');
+    setFormName(''); setFormRole(''); setFormEmail(''); setFormPhone('');
     setAgreeTerms(false);
     setSubmitting(false);
   }
@@ -155,6 +168,7 @@ export default function IntroFormSection({ section }) {
     <section className="relative overflow-hidden bg-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 sm:py-16">
         <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* 1. Heading, Intro Text, Stats & Course Buttons */}
           <Reveal variant="up" className="md:col-span-7 lg:col-span-7 xl:col-span-8 space-y-5 text-left">
             {heading && (
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-left leading-tight sm:leading-snug max-w-none whitespace-pre-line">
@@ -173,100 +187,128 @@ export default function IntroFormSection({ section }) {
 
             <div className="space-y-5 pt-2">
               {stats.length > 0 && <StatsGrid stats={stats} />}
-              <CourseButtons />
+              <div className="hidden lg:flex">
+                <CourseButtons />
+              </div>
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-10 sm:mt-12 md:mt-16 lg:mt-2">
-            <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0">
-              <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
-                <style>{`
-                  .intro-form-title {
-                    font-size: ${mobileSize} !important;
-                  }
-                  @media (min-width: 640px) {
+          {/* 2. Form & Pills (Below Stats on mobile/tablet) */}
+          <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-6 lg:mt-2 intro-form-right-col">
+            <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0 intro-form-container">
+              <div className="w-full intro-form-box">
+                <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
+                  <style>{`
                     .intro-form-title {
-                      font-size: ${tabletSize} !important;
+                      font-size: ${mobileSize} !important;
                     }
-                  }
-                  @media (min-width: 1024px) {
-                    .intro-form-title {
-                      font-size: ${pcSize} !important;
+                    @media (min-width: 640px) {
+                      .intro-form-title {
+                        font-size: ${tabletSize} !important;
+                      }
                     }
-                  }
-                `}</style>
-                {formTitle}
-              </p>
-              <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-                <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      clipPath: 'polygon(0 0, 55% 0, 35% 100%, 0 100%)',
-                      backgroundColor: '#ffffff',
-                    }}
-                  >
-                    <div className="h-full flex items-center pl-5">
-                      <span className="text-xl font-serif font-bold" style={{ color: '#f59e0b' }}>Career</span>
+                    @media (min-width: 1024px) {
+                      .intro-form-title {
+                        font-size: ${pcSize} !important;
+                      }
+                    }
+                  `}</style>
+                  {formTitle}
+                </p>
+                <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+                  <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        clipPath: 'polygon(0 0, 55% 0, 35% 100%, 0 100%)',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <div className="h-full flex items-center pl-5">
+                        <span className="text-xl font-serif font-bold" style={{ color: '#f59e0b' }}>Career</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-end">
-                    <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#f59e0b' }}>
-                      Counselling
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative p-4 sm:p-5">
-                  <div
-                    className="absolute inset-0 pointer-events-none opacity-[0.04]"
-                    style={{
-                      backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 50 Q 30 20 50 50 T 90 50\' stroke=\'white\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")',
-                      backgroundSize: '120px 120px',
-                    }}
-                  />
-                  <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
-                    <div>
-                      <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`} />
-                      {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
-                    </div>
-                    <div>
-                      <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`} />
-                      {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
-                    </div>
-                    <div>
-                      <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.phone ? 'ring-2 ring-red-400' : ''}`} />
-                      {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
-                    </div>
-                    {formMsg?.type === 'error' && (
-                      <p className="!text-red-600 text-xs">{formMsg.text}</p>
-                    )}
-                    <label className="flex items-start gap-2 cursor-pointer">
-                      <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
-                      <span className="text-xs text-white/90 leading-relaxed">
-                        I agree to the{' '}
-                        <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
-                        {' '}and{' '}
-                        <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
+                    <div className="absolute inset-0 flex items-center justify-end">
+                      <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#f59e0b' }}>
+                        Counselling
                       </span>
-                    </label>
-                    <button type="submit" disabled={submitting} className="home-intro-btn w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
-                      {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
-                      {submitting ? 'Submitting...' : 'Send Message'}
-                    </button>
-                  </form>
+                    </div>
+                  </div>
+
+                  <div className="relative p-4 sm:p-5">
+                    <div
+                      className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                      style={{
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 50 Q 30 20 50 50 T 90 50\' stroke=\'white\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")',
+                        backgroundSize: '120px 120px',
+                      }}
+                    />
+                    <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Your Name"
+                            value={formName}
+                            onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
+                            required
+                            className={`w-full px-3.5 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none text-slate-800 placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`}
+                          />
+                          {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                        </div>
+                        <div>
+                          <select
+                            value={formRole}
+                            onChange={(e) => { setFormRole(e.target.value); if (errors.role) setErrors((p) => ({ ...p, role: undefined })); }}
+                            required
+                            className={`w-full px-3 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none text-slate-800 focus:ring-2 focus:ring-white/50 transition-all cursor-pointer ${errors.role ? 'ring-2 ring-red-400' : ''} ${!formRole ? 'text-gray-400' : ''}`}
+                          >
+                            <option value="" disabled className="text-gray-400">Select Role</option>
+                            <option value="Tutor / Mentor" className="text-slate-800">Tutor / Mentor</option>
+                            <option value="Student" className="text-slate-800">Student</option>
+                            <option value="Working professional" className="text-slate-800">Working professional</option>
+                          </select>
+                          {errors.role && <p className="!text-red-600 text-xs mt-1">{errors.role}</p>}
+                        </div>
+                      </div>
+                      <div>
+                        <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
+                          className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`} />
+                        {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
+                      </div>
+                      <div>
+                        <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
+                          className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.phone ? 'ring-2 ring-red-400' : ''}`} />
+                        {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
+                      </div>
+                      {formMsg?.type === 'error' && (
+                        <p className="!text-red-600 text-xs">{formMsg.text}</p>
+                      )}
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
+                        <span className="text-xs text-white/90 leading-relaxed">
+                          I agree to the{' '}
+                          <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
+                          {' '}and{' '}
+                          <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
+                        </span>
+                      </label>
+                      <button type="submit" disabled={submitting} className="home-intro-btn w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
+                        {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
+                        {submitting ? 'Submitting...' : 'Send Message'}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
 
               {/* Pill buttons right below form */}
-              {rawPills.length > 0 && (
-                <div className="w-full mt-6 sm:mt-8 lg:mt-10">
-                  <PillGrid pills={rawPills} />
+              <div className="w-full mt-6 sm:mt-8 lg:mt-10 intro-pills-box flex flex-col items-center">
+                {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+                <div className="mt-5 w-full lg:hidden">
+                  <CourseButtons />
                 </div>
-              )}
+              </div>
             </div>
           </Reveal>
         </div>
@@ -287,14 +329,15 @@ export default function IntroFormSection({ section }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center relative"
+              className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                aria-label="Close modal"
               >
-                <FiX className="w-5 h-5" />
+                <FiX className="w-5 h-5 text-red-600" />
               </button>
 
               <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center mb-4">

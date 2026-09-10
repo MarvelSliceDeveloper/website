@@ -1,12 +1,4 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+import { getGeneralTransporter } from './lib/emailTransporters.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,10 +11,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) {
     return res.status(200).json({ success: true });
   }
+
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const submittedAt = new Date().toLocaleString('en-US', {
     dateStyle: 'long',
@@ -78,13 +72,13 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: `"Marvel Slice Banking" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Slice Banking" <${smtpUser}>`,
       to: adminEmail,
       subject: adminSubject,
       html: adminHtml,
     });
     await transporter.sendMail({
-      from: `"Marvel Slice Banking" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Slice Banking" <${smtpUser}>`,
       to: email,
       subject: userSubject,
       html: userAutoReplyHtml,

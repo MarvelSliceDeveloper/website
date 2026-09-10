@@ -46,10 +46,11 @@ function FaqListSection({ section }) {
           <AccordionItem
             key={i}
             title={faq.question}
+            titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
             isOpen={openIdx === i}
             onToggle={() => setOpenIdx(openIdx === i ? null : i)}
           >
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
+            <p className="text-xs sm:text-xs lg:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
           </AccordionItem>
         ))}
       </div>
@@ -91,11 +92,11 @@ export default function SectionRenderer({ section, className }) {
               <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
                 <div className="space-y-4">
                   {paragraphs.map((b, i) => (
-                    <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{b.text}</p>
+                    <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full whitespace-pre-line">{b.text}</p>
                   ))}
                 </div>
-                <div className="flex justify-center">
-                  <img src={section.image_url} alt={heading} className="w-full h-auto max-w-[500px] rounded-2xl shadow-lg" />
+                <div className="flex justify-center w-full">
+                  <img src={section.image_url} alt={heading} className="w-full h-auto rounded-2xl shadow-lg" />
                 </div>
               </div>
             </Reveal>
@@ -120,7 +121,7 @@ export default function SectionRenderer({ section, className }) {
           {content && (
             <div className="space-y-4 sm:space-y-6">
               {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
+                <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full whitespace-pre-line">{p.trim()}</p>
               ))}
             </div>
           )}
@@ -162,12 +163,12 @@ export default function SectionRenderer({ section, className }) {
                   )}
                   <div className="max-w-[600px] space-y-4 sm:space-y-6 mx-auto lg:mx-0">
                     {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                      <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
+                      <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full whitespace-pre-line">{p.trim()}</p>
                     ))}
                   </div>
                 </div>
-                <div className="lg:mt-[40px] flex justify-center">
-                  <img src={section.image_url} alt={section.heading || ''} className="w-full h-auto max-w-[500px] rounded-2xl shadow-lg" />
+                <div className="lg:mt-[40px] flex justify-center w-full">
+                  <img src={section.image_url} alt={section.heading || ''} className="w-full h-auto rounded-2xl shadow-lg" />
                 </div>
               </div>
               {items.length > 0 && (
@@ -190,7 +191,7 @@ export default function SectionRenderer({ section, className }) {
               )}
               <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mb-8 sm:mb-12">
                 {content.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">{p.trim()}</p>
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full whitespace-pre-line">{p.trim()}</p>
                 ))}
               </div>
               {items.length > 0 && (

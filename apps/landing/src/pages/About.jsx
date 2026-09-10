@@ -68,7 +68,7 @@ export default function About() {
         <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto overflow-hidden">
           {mobileHeroImg ? (
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobileHeroImg} />
+              <source media="(max-width: 1023px)" srcSet={mobileHeroImg} />
               <img src={heroImg || mobileHeroImg} alt="" className="w-full h-auto" />
             </picture>
           ) : (
@@ -78,11 +78,11 @@ export default function About() {
       )}
 
       {(data.heading || data.subheading) && (
-        <section className="py-16 bg-white">
+        <section className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Reveal variant="up" className="space-y-4 sm:space-y-6 text-center">
+            <Reveal variant="up" className="space-y-4 sm:space-y-6 text-left">
               {data.heading && (
-                <div>
+                <div className="text-center">
                   <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy text-center leading-tight sm:leading-snug whitespace-pre-line">
                     {data.heading}
                   </h2>
@@ -90,9 +90,9 @@ export default function About() {
                 </div>
               )}
               {data.subheading && (
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-4 sm:space-y-6 text-left">
                   {data.subheading.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                    <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
+                    <p key={i} className="text-sm sm:text-base leading-relaxed text-left text-slate-600 w-full whitespace-pre-line">
                       {p.trim()}
                     </p>
                   ))}

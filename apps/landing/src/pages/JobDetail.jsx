@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -84,6 +84,16 @@ export default function JobDetail() {
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  useEffect(() => {
+    if (status?.type === 'success') {
+      const timer = setTimeout(() => {
+        setShowForm(false);
+        setStatus(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
 
   // Quick Career Enquiry Form State (career_contact_submissions)
   const [enquiryForm, setEnquiryForm] = useState({
@@ -496,17 +506,19 @@ export default function JobDetail() {
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto border border-gray-100"
+            className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
-              <button onClick={() => setShowForm(false)} className="absolute top-3.5 right-3.5 bg-white shadow-md text-red-600 hover:text-red-700 hover:scale-105 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10 flex items-center justify-center" aria-label="Close modal">
-                <FiX className="w-4 h-4 text-red-600" />
-              </button>
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
-                {job.title}
-              </h3>
-            </div>
+            <button onClick={() => setShowForm(false)} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+
+            <div className="overflow-y-auto rounded-3xl flex-1">
+              <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
+                  {job.title}
+                </h3>
+              </div>
 
             {status?.type === 'success' ? (
               <div className="p-6 sm:p-8 text-center">
@@ -600,6 +612,7 @@ export default function JobDetail() {
                 </div>
               </form>
             )}
+            </div>
           </motion.div>
         </div>
       )}

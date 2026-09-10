@@ -100,12 +100,17 @@ export default function TagsList() {
 
       {editTag && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setEditTag(null)}>
-          <div className="bg-white rounded-xl border border-admin-200 shadow-2xl max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100">
+          <div className="relative bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setEditTag(null)}
+              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+              aria-label="Close modal"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+
+            <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100 rounded-t-3xl">
               <h3 className="text-base font-semibold text-black">Edit Tag</h3>
-              <button onClick={() => setEditTag(null)} className="p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-all">
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
             <div className="p-6">
               <label className="block text-sm font-medium text-neutral-700 mb-1.5">Tag Name</label>

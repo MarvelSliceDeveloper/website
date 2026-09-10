@@ -59,7 +59,7 @@ export default function HeroSection({ section }) {
           {/* Base image dictates natural aspect ratio and natural image height automatically */}
           {mobileBannerImage ? (
             <picture className="w-full h-auto opacity-0 block pointer-events-none">
-              <source media="(max-width: 767px)" srcSet={mobileBannerImage} />
+              <source media="(max-width: 1023px)" srcSet={mobileBannerImage} />
               <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto" />
             </picture>
           ) : (
@@ -77,7 +77,7 @@ export default function HeroSection({ section }) {
             >
               {mobileBannerImage ? (
                 <picture className="w-full h-auto">
-                  <source media="(max-width: 767px)" srcSet={mobileBannerImage} />
+                  <source media="(max-width: 1023px)" srcSet={mobileBannerImage} />
                   <img src={bannerImage || mobileBannerImage} alt="" className="w-full h-auto object-cover" />
                 </picture>
               ) : (
