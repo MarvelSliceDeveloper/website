@@ -324,14 +324,7 @@ export default function Login() {
         />
       </svg>
 
-      {/* 3. Top-Right Modern Dot-Matrix Grid Panel */}
-      <div 
-        className="absolute top-4 right-4 sm:top-8 sm:right-8 w-64 h-64 sm:w-80 sm:h-80 pointer-events-none opacity-30 hidden md:block"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #FFFFFF 1.75px, transparent 1.75px)',
-          backgroundSize: '22px 22px'
-        }}
-      />
+
 
       {/* 4. Ambient Glowing Light Flares */}
       <motion.div 
@@ -372,35 +365,32 @@ export default function Login() {
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-[980px] min-h-[540px] bg-white rounded-3xl sm:rounded-[36px] shadow-[0_30px_90px_-15px_rgba(20,28,100,0.35),0_0_0_1px_rgba(255,255,255,0.2)] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-20"
+        className="w-full max-w-[960px] bg-white rounded-3xl sm:rounded-[36px] shadow-[0_30px_90px_-15px_rgba(20,28,100,0.35),0_0_0_1px_rgba(255,255,255,0.2)] overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-20"
       >
         
         {/* ===================================================== */}
         {/* LEFT COLUMN: Animated Circles & Pattern Mild Blue BG   */}
         {/* ===================================================== */}
-        <div className="md:col-span-6 bg-gradient-to-br from-[#EFF4FF] via-[#E8F0FE] to-[#F3F7FF] p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-blue-100/80 min-h-[380px] md:min-h-[500px]">
+        <div className="md:col-span-6 bg-gradient-to-br from-[#EFF4FF] via-[#E8F0FE] to-[#F3F7FF] p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-blue-100/80 min-h-[320px]">
           
           {/* Top-Left Brand Logo */}
-          <div className="flex items-center gap-2.5 z-20">
+          <div className="flex items-center z-20">
             <img
               src={logoUrl || "/apple-touch-icon.png"}
               alt="Marvel Slice"
               className="h-8 sm:h-9 w-auto object-contain"
             />
-            <span className="text-xl font-extrabold tracking-tight text-brand-blue">
-              Marvel <span className="text-brand-orange">Slice</span>
-            </span>
           </div>
 
-          {/* Animated Pattern & Circle Shapes Mild Blue BG Overlay */}
+          {/* Animated Circle Shapes & Subtle Blue Dot Grid BG Overlay */}
           <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center overflow-hidden">
             
-            {/* Mild Blue Dot Matrix Pattern Layer (...) */}
+            {/* Subtle Blue Dot Matrix Grid */}
             <div 
-              className="absolute inset-0 opacity-[0.25]"
+              className="absolute inset-0 opacity-[0.2]"
               style={{
-                backgroundImage: 'radial-gradient(#0055FE 1.35px, transparent 1.35px)',
-                backgroundSize: '22px 22px',
+                backgroundImage: 'radial-gradient(#4F46E5 1.25px, transparent 1.25px)',
+                backgroundSize: '18px 18px',
               }}
             />
 
@@ -408,7 +398,7 @@ export default function Login() {
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[360px] h-[360px] rounded-full border border-dashed border-brand-blue/30"
+              className="absolute w-[360px] h-[360px] rounded-full border border-solid border-brand-blue/20"
             />
             <motion.div 
               animate={{ rotate: -360 }}
@@ -445,37 +435,37 @@ export default function Login() {
             <motion.div
               animate={{ y: [0, -14, 0], opacity: [0.5, 0.9, 0.5] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-20 right-16 w-12 h-12 rounded-full bg-white/80 backdrop-blur-xs border border-brand-blue/30 shadow-xs flex items-center justify-center"
+              className="absolute top-14 right-12 w-10 h-10 rounded-full bg-white/80 backdrop-blur-xs border border-brand-blue/30 shadow-xs flex items-center justify-center"
             >
-              <div className="w-5 h-5 rounded-full bg-brand-blue/20 flex items-center justify-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
+              <div className="w-4 h-4 rounded-full bg-brand-blue/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-brand-blue" />
               </div>
             </motion.div>
 
             <motion.div
               animate={{ y: [0, 16, 0], opacity: [0.4, 0.8, 0.4] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-              className="absolute bottom-20 left-16 w-10 h-10 rounded-full bg-white/80 backdrop-blur-xs border border-sky-400/30 shadow-xs flex items-center justify-center"
+              className="absolute bottom-12 left-12 w-9 h-9 rounded-full bg-white/80 backdrop-blur-xs border border-sky-400/30 shadow-xs flex items-center justify-center"
             >
-              <div className="w-4 h-4 rounded-full bg-sky-400/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-sky-500" />
+              <div className="w-3.5 h-3.5 rounded-full bg-sky-400/20 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
               </div>
             </motion.div>
 
             <motion.div
               animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-              className="absolute top-1/2 left-10 w-4 h-4 rounded-full bg-brand-blue/50"
+              className="absolute top-1/2 left-8 w-3.5 h-3.5 rounded-full bg-brand-blue/50"
             />
             <motion.div
               animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
               transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-              className="absolute bottom-1/3 right-12 w-5 h-5 rounded-full bg-sky-400/50"
+              className="absolute bottom-1/3 right-8 w-4 h-4 rounded-full bg-sky-400/50"
             />
           </div>
 
           {/* Center Isometric 3D Security & Profile Illustration */}
-          <div className="my-auto py-3 sm:py-5 flex items-center justify-center relative w-full z-20">
+          <div className="my-auto py-1 sm:py-2 flex items-center justify-center relative w-full z-20">
             <AnimatedIsometricSecurityModel />
           </div>
 
@@ -485,7 +475,7 @@ export default function Login() {
         {/* ===================================================== */}
         {/* RIGHT COLUMN: Modern Clean Login Form                 */}
         {/* ===================================================== */}
-        <div className="md:col-span-6 bg-white p-7 sm:p-9 lg:p-10 flex flex-col justify-center">
+        <div className="md:col-span-6 bg-white p-5 sm:p-7 lg:p-8 flex flex-col justify-center">
           
           {/* Welcome Heading */}
           <div className="mb-6">

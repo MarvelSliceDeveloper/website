@@ -285,7 +285,15 @@ export default function IntroFormSection({ section }) {
                         <p className="!text-red-600 text-xs">{formMsg.text}</p>
                       )}
                       <label className="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
+                        <input
+                          type="checkbox"
+                          checked={agreeTerms}
+                          onChange={(e) => {
+                            setAgreeTerms(e.target.checked);
+                            if (formMsg) setFormMsg(null);
+                          }}
+                          className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0"
+                        />
                         <span className="text-xs text-white/90 leading-relaxed">
                           I agree to the{' '}
                           <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
@@ -328,33 +336,14 @@ export default function IntroFormSection({ section }) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', duration: 0.5 }}
-              className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border border-slate-100"
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-xs w-full p-6 text-center border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
-
-              <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center mb-4">
-                <FiCheckCircle className="w-8 h-8 text-green-500" />
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <FiCheckCircle className="w-8 h-8 text-emerald-600" />
               </div>
-
-              <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">Successfully Submitted!</h3>
-              <p className="text-sm text-neutral-500 leading-relaxed mb-6">
-                Thank you for your interest. We will reach out to you shortly.
-              </p>
-
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-3 rounded-lg bg-[#1E56C7] text-white font-semibold text-sm hover:bg-[#1642a0] transition-colors"
-              >
-                Close
-              </button>
+              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
             </motion.div>
           </motion.div>
         )}
