@@ -337,23 +337,9 @@ export default function UpcomingClassesSection({ section }) {
                   <>
                     <div className="bg-brand-blue px-6 py-5 text-white relative text-center flex flex-col items-center justify-center">
                       <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-snug text-center">
-                      {selectedClass.course_name}
-                    </h3>
-                    <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                      {selectedClass.batch && (
-                        <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 border border-white/10 text-center">
-                          <FiCalendar className="w-3.5 h-3.5 text-brand-orange" />
-                          <span>{selectedClass.batch}</span>
-                        </span>
-                      )}
-                      {selectedClass.date_time && (
-                        <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 border border-white/10 text-center">
-                          <FiClock className="w-3.5 h-3.5 text-brand-orange" />
-                          <span>{formatDateTime(selectedClass.date_time)}</span>
-                        </span>
-                      )}
+                        {selectedClass.course_name}
+                      </h3>
                     </div>
-                  </div>
                   <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-4">
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
