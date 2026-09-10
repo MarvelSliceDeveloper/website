@@ -45,13 +45,38 @@ export default function MockExamsList() {
       return;
     }
 
-    const { error } = await supabase
-      .from('mock_exams')
-      .delete()
-      .eq('id', id);
+    try {
+      // 1. Delete associated student submissions
+      const { error: subErr } = await supabase
+        .from('mock_exam_submissions')
+        .delete()
+        .eq('mock_exam_id', id);
 
-    if (!error) {
-      setExams(prev => prev.filter(e => e.id !== id));
+      if (subErr) console.warn('Error deleting submissions:', subErr);
+
+      // 2. Delete associated questions
+      const { error: qErr } = await supabase
+        .from('mock_exam_questions')
+        .delete()
+        .eq('mock_exam_id', id);
+
+      if (qErr) console.warn('Error deleting questions:', qErr);
+
+      // 3. Delete mock exam
+      const { error } = await supabase
+        .from('mock_exams')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting mock_exam:', error);
+        alert(`Failed to delete mock exam: ${error.message}`);
+      } else {
+        setExams(prev => prev.filter(e => e.id !== id));
+      }
+    } catch (err) {
+      console.error('Exception deleting mock_exam:', err);
+      alert('Failed to delete mock exam due to a system error.');
     }
   }
 

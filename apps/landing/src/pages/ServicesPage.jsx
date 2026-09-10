@@ -305,10 +305,11 @@ export default function ServicesPage() {
                 <StaggerItem key={`faq-item-${i}`}>
                   <AccordionItem
                     title={faq.question}
+                    titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                     isOpen={faqOpen === i}
                     onToggle={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal text-pretty">{faq.answer}</p>
+                    <p className="text-xs sm:text-xs lg:text-base text-slate-600 leading-relaxed font-normal text-pretty">{faq.answer}</p>
                   </AccordionItem>
                 </StaggerItem>
               ))}

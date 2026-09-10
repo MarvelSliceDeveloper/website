@@ -1,12 +1,4 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+import { getCareerTransporter } from './lib/emailTransporters.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,10 +7,12 @@ export default async function handler(req, res) {
 
   const { full_name, email, phone, position, category, description, file_url } = req.body;
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  const mailConfig = getCareerTransporter();
+  if (!mailConfig) {
     return res.status(200).json({ success: true });
   }
+
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const submittedAt = new Date().toLocaleString('en-US', {
     dateStyle: 'long',
@@ -41,14 +35,14 @@ export default async function handler(req, res) {
           ${row('Full Name', full_name)}
           ${row('Email', email)}
           ${row('Phone', phone)}
-          ${row('Position', position || '\u2014')}
-          ${row('Category', category || '\u2014')}
-          ${row('Description', (description || '\u2014').replace(/\n/g, '<br>'))}
+          ${row('Position', position || '—')}
+          ${row('Category', category || '—')}
+          ${row('Description', (description || '—').replace(/\n/g, '<br>'))}
           ${row('Document', fileLink)}
         </table>
       </div>
       <div style="padding: 16px 32px; background: #F5F6F8; font-size: 12px; color: #5F6B7A; text-align: center; border-top: 1px solid #e5e7eb;">
-        Marvel Slice \u2014 Career Page
+        Marvel Slice — Career Page
       </div>
     </div>`;
 
@@ -73,19 +67,19 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: `"Marvel Careers" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Careers" <${smtpUser}>`,
       to: adminEmail,
       subject: `New Application from ${full_name}`,
       html,
     });
     await transporter.sendMail({
-      from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Careers" <${smtpUser}>`,
       to: email,
       subject: 'Application Received — Marvel Slice',
       html: autoReplyHtml,
     });
   } catch (emailError) {
-    console.error('Email send failed:', emailError);
+    console.error('Career email send failed:', emailError);
   }
 
   return res.status(200).json({ success: true });

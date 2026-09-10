@@ -97,11 +97,8 @@ export default function Footer() {
             <div className="flex justify-center sm:justify-start sm:pl-6 mb-4 -mt-1 sm:-mt-3">
               <Link to="/" aria-label="Go to Homepage" className="flex flex-col items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-2.5 group">
                 {settings?.logo_url && (
-                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-20 sm:h-24 lg:h-28 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-30 sm:h-32 lg:h-36 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105" />
                 )}
-                <span className="text-[28px] sm:text-2xl font-extrabold text-white font-['Roboto',sans-serif] leading-tight text-center sm:text-left">
-                  Marvel <span className="text-brand-orange">Slice</span>
-                </span>
               </Link>
             </div>
             <div className="space-y-3.5 text-sm sm:text-base text-gray-200 text-center sm:text-left">
@@ -112,9 +109,9 @@ export default function Footer() {
                 </p>
               )}
               {phoneNumbers.length > 0 && (
-                <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                  <FiPhone className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-sm sm:text-base">
+                <div className="flex items-start justify-center sm:justify-start gap-2.5">
+                  <FiPhone className="w-4.5 h-4.5 sm:w-5 sm:h-5 mt-0.5 sm:mt-1 shrink-0 text-brand-orange" />
+                  <div className="flex flex-wrap items-center justify-center sm:flex-col sm:items-start gap-1.5 sm:gap-1 text-xs sm:text-base">
                     {phoneNumbers.map((num, i) => (
                       <span key={i} className="inline-flex items-center gap-1.5">
                         <a
@@ -124,7 +121,9 @@ export default function Footer() {
                         >
                           {num}
                         </a>
-                        {i < phoneNumbers.length - 1 && <span className="text-gray-400 font-medium">/</span>}
+                        {i < phoneNumbers.length - 1 && (
+                          <span className="text-gray-400 font-medium sm:hidden">|</span>
+                        )}
                       </span>
                     ))}
                   </div>

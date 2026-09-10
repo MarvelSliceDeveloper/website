@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiLogIn, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -194,7 +194,7 @@ function SubHeaderMenu({ currentPath, onItemClick }) {
   );
 }
 
-export default function Header() {
+export default function Header({ onOpenLoginModal }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
@@ -260,16 +260,16 @@ export default function Header() {
 
   return (
     <header className="bg-white border-b border-gray-100 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[60px] flex items-center justify-between py-1 lg:py-0">
         <Link to="/" className="flex items-center gap-2.5">
           {settings?.logo_url && (
             <img
               src={settings.logo_url}
               alt="Marvel Slice Logo"
-              className="h-9 sm:h-10 w-auto object-contain"
+              className="h-14 sm:h-16 lg:h-10 w-auto object-contain"
             />
           )}
-          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          <span className="text-[22px] sm:text-[26px] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </Link>
@@ -283,14 +283,14 @@ export default function Header() {
         <motion.button
           type="button"
           ref={hamburgerBtnRef}
-          className="lg:hidden p-2 text-gray-900 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer z-[101] flex items-center justify-center relative"
+          className="lg:hidden p-1 text-gray-900 hover:text-brand-blue transition-colors cursor-pointer z-[101] flex items-center justify-center relative"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
           whileTap={{ scale: 0.9 }}
           animate={{ rotate: mobileOpen ? 90 : 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 22 }}
         >
-          <AnimatedHamburgerIcon isOpen={mobileOpen} className="w-6 h-6 text-slate-800" />
+          <AnimatedHamburgerIcon isOpen={mobileOpen} className="w-[26px] h-[26px] text-slate-800" />
         </motion.button>
       </div>
 
@@ -304,7 +304,7 @@ export default function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[99] lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
@@ -316,23 +316,23 @@ export default function Header() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:w-80 bg-gray-100 shadow-2xl flex flex-col lg:hidden rounded-none overflow-hidden overflow-x-hidden border-l border-gray-200 will-change-transform transform-gpu"
+              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:w-80 bg-slate-50 shadow-2xl flex flex-col lg:hidden rounded-none overflow-hidden overflow-x-hidden border-l border-slate-200/80 will-change-transform transform-gpu"
             >
               {/* Header - White Header */}
-              <div className="relative flex items-center justify-between px-4 py-3.5 border-b border-gray-200 shrink-0 bg-white min-h-[60px]">
+              <div className="relative z-10 flex items-center justify-between px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200/80 shrink-0 bg-white min-h-[64px] shadow-[0_3px_14px_rgba(148,163,184,0.4)]">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2.5 min-w-0"
+                  className="flex items-center gap-3 min-w-0"
                 >
                   {settings?.logo_url && (
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-10 sm:h-11 w-auto object-contain shrink-0"
+                      className="h-14 sm:h-16 w-auto object-contain shrink-0"
                     />
                   )}
-                  <span className="text-[clamp(15px,4vw,19px)] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] shrink-0">
+                  <span className="text-[clamp(20px,4.5vw,24px)] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] shrink-0">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
@@ -342,7 +342,7 @@ export default function Header() {
               </div>
 
               {/* Navigation Links List - Grey Body */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 bg-gray-100">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 bg-slate-50">
                 <MobileNav
                   items={topNav}
                   currentPath={pathname}
@@ -350,16 +350,19 @@ export default function Header() {
                 />
               </div>
 
-              {/* Bottom Action Footer - Single Blue Log In Button Aligned Left */}
-              <div className="p-4 border-t border-gray-200 mt-auto shrink-0 bg-white flex justify-start">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-extrabold text-xs sm:text-sm rounded-xl text-center shadow-md shadow-brand-blue/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              {/* Drawer Footer - Left-Aligned Log In Brand Button with Slightly Darker Shadow */}
+              <div className="relative z-10 p-4 border-t border-slate-200/80 bg-white shrink-0 flex justify-start shadow-[0_-3px_14px_rgba(148,163,184,0.4)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    if (onOpenLoginModal) onOpenLoginModal('general', 'Log In');
+                  }}
+                  className="py-2 px-4 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all inline-flex items-center gap-2 cursor-pointer"
                 >
-                  <FiLogIn className="w-4 h-4 text-white" />
+                  <FiUser className="w-4 h-4 text-white" />
                   <span>Log In</span>
-                </Link>
+                </button>
               </div>
             </motion.div>
           </>

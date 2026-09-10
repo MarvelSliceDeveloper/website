@@ -239,9 +239,10 @@ export default function MockExam() {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-    if (!error && data && data.length > 0) {
-      setDbExams(data);
+    if (!error) {
+      setDbExams(data || []);
     } else {
+      console.error('Error fetching active mock_exams:', error);
       setDbExams(DEMO_EXAMS);
     }
     setLoadingExams(false);
@@ -404,7 +405,7 @@ export default function MockExam() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  const allExamsList = dbExams.length > 0 ? dbExams : DEMO_EXAMS;
+  const allExamsList = dbExams;
 
   return (
     <div className="bg-white min-h-screen text-slate-800">
@@ -940,6 +941,16 @@ export default function MockExam() {
               <div className="flex items-center justify-center py-12">
                 <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin" />
               </div>
+            ) : allExamsList.length === 0 ? (
+              <div className="text-center py-12 sm:py-16 bg-white rounded-2xl border border-dashed border-slate-200 p-8 space-y-3 shadow-xs max-w-lg mx-auto">
+                <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto">
+                  <FiHelpCircle className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-800">No Active Banking Mock Exams</h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                  There are currently no published mock exams available. Please check back later for updates!
+                </p>
+              </div>
             ) : (
               <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {allExamsList.map((exam) => {
@@ -1017,10 +1028,11 @@ export default function MockExam() {
                 <StaggerItem key={idx}>
                   <AccordionItem
                     title={faq.question}
+                    titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                     isOpen={openFaqIndex === idx}
                     onToggle={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
                   >
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
+                    <p className="text-xs sm:text-xs lg:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
                   </AccordionItem>
                 </StaggerItem>
               ))}

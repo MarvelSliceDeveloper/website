@@ -6,7 +6,7 @@ import {
   FiChevronRight,
   FiHome,
   FiUser,
-  FiCode,
+  FiBox,
   FiAward,
   FiGrid,
   FiBriefcase,
@@ -509,7 +509,8 @@ const NAV_ICONS = {
   'about': FiUser,
   'profil': FiUser,
   'profile': FiUser,
-  'software learning': FiCode,
+  'software learning': FiBox,
+  'software': FiBox,
   'competitive exam': FiAward,
   'banking': FiDollarSign,
   'services': FiBriefcase,
@@ -564,17 +565,18 @@ function MobileNavItem({
     const isActive = isItemOrSubtreeActive(item, path, parentParam, null);
 
     if (depth > 0) {
+      const SubIcon = Icon !== FiCompass ? Icon : FiChevronRight;
       return (
         <Link
           to={item.path || "#"}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[clamp(12px,3.2vw,14px)] font-semibold leading-snug transition-all ${
             isActive
-              ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
-              : "text-slate-700 hover:text-brand-blue hover:bg-blue-50/60 border-l-4 border-transparent"
+              ? "bg-blue-50 text-brand-blue font-bold shadow-2xs"
+              : "text-slate-700 hover:text-brand-blue hover:bg-blue-50/60"
           }`}
           onClick={onItemClick}
         >
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-brand-blue" : "bg-slate-400"}`} />
+          <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-brand-blue font-bold" : "text-slate-400"}`} />
           <span>{item.label}</span>
         </Link>
       );
@@ -585,8 +587,8 @@ function MobileNavItem({
         to={item.path || "#"}
         className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 ${
           isActive
-            ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
-            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent"
+            ? "bg-blue-50 text-brand-blue font-bold shadow-2xs"
+            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue"
         }`}
         onClick={onItemClick}
       >
@@ -607,8 +609,8 @@ function MobileNavItem({
         aria-expanded={isOpen}
         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold leading-snug transition-all duration-200 cursor-pointer ${
           isOpen || hasActiveChild
-            ? "bg-blue-50 text-brand-blue font-bold border-l-4 border-brand-blue shadow-2xs"
-            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue border-l-4 border-transparent"
+            ? "bg-blue-50 text-brand-blue font-bold shadow-2xs"
+            : "text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue"
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
@@ -626,7 +628,7 @@ function MobileNavItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
             className="overflow-hidden"
           >
             <div className="py-1 pl-3.5 border-l-2 border-slate-100 ml-4 my-1 space-y-1">
@@ -650,6 +652,26 @@ function MobileNavItem({
     </div>
   );
 }
+
+const navContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const navItemVariants = {
+  hidden: { opacity: 0, x: 20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
 export function MobileNav({ items, currentPath, onItemClick }) {
   const [openIdx, setOpenIdx] = useState(null);

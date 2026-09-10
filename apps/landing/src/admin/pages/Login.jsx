@@ -44,205 +44,165 @@ function ForgotPasswordModal({ open, onClose }) {
 }
 
 /* ========================================================= */
-/* PURE HARDWARE-ACCELERATED ANIMATED SVG DASHBOARD          */
+/* ANIMATED OPENED LAPTOP WITH LIVE CODING ANIMATION          */
 /* ========================================================= */
-function AnimatedAdminDashboardSvg() {
+function AnimatedLaptopCodingModel() {
+  const codeLines = [
+    { num: 1, content: <><span className="text-pink-400 font-bold">const</span> <span className="text-cyan-300 font-semibold">hero</span> <span className="text-white">=</span> <span className="text-amber-300 font-medium">'Marvel'</span>;</> },
+    { num: 2, content: <><span className="text-purple-400 font-bold">function</span> <span className="text-yellow-300 font-semibold">codeMagic</span><span className="text-cyan-300">()</span> <span className="text-cyan-300">&#123;</span></> },
+    { num: 3, content: <><span className="pl-3 text-emerald-400 font-semibold">console</span>.<span className="text-yellow-300">log</span><span className="text-cyan-300">(</span><span className="text-emerald-300">'🚀 100% Smooth!'</span><span className="text-cyan-300">)</span>;</> },
+    { num: 4, content: <><span className="text-cyan-300">&#125;</span></> },
+    { num: 5, content: <><span className="text-purple-400 font-bold">export default</span> <span className="text-yellow-300 font-semibold">codeMagic</span>;</> },
+  ];
+
   return (
-    <div className="w-full max-w-[340px] sm:max-w-[370px] aspect-square flex items-center justify-center relative select-none">
-      <svg 
-        viewBox="0 0 400 400" 
-        className="w-full h-full drop-shadow-2xl" 
-        fill="none" 
+    <motion.div 
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      className="w-full max-w-[340px] sm:max-w-[380px] mx-auto relative select-none"
+    >
+      <svg
+        viewBox="0 0 400 320"
+        className="w-full h-auto drop-shadow-2xl overflow-visible"
+        fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <style>{`
-          @keyframes spinClockwise {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes spinCounter {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-          }
-          @keyframes sliderMove1 {
+          @keyframes codeScrollAnim {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(18px); }
+            50% { transform: translateY(-24px); }
           }
-          @keyframes sliderMove2 {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-16px); }
-          }
-          @keyframes sliderMove3 {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(14px); }
-          }
-          @keyframes pulseBar1 {
-            0%, 100% { transform: scaleY(0.7); }
-            50% { transform: scaleY(1.15); }
-          }
-          @keyframes pulseBar2 {
-            0%, 100% { transform: scaleY(1.05); }
-            50% { transform: scaleY(0.65); }
-          }
-          @keyframes pulseBar3 {
-            0%, 100% { transform: scaleY(0.6); }
-            50% { transform: scaleY(1.2); }
-          }
-          @keyframes floatGentle {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-6px) rotate(2deg); }
-          }
-          @keyframes glowPulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.9; }
-          }
-          .gear-1 {
-            animation: spinClockwise 22s linear infinite;
-            transform-origin: 95px 185px;
-          }
-          .gear-2 {
-            animation: spinCounter 18s linear infinite;
-            transform-origin: 75px 245px;
-          }
-          .knob-1 {
-            animation: sliderMove1 3.5s ease-in-out infinite;
-          }
-          .knob-2 {
-            animation: sliderMove2 4s ease-in-out infinite 0.3s;
-          }
-          .knob-3 {
-            animation: sliderMove3 3.8s ease-in-out infinite 0.7s;
-          }
-          .bar-1 {
-            animation: pulseBar1 2.8s ease-in-out infinite;
-            transform-origin: 138px 225px;
-          }
-          .bar-2 {
-            animation: pulseBar2 3.2s ease-in-out infinite 0.2s;
-            transform-origin: 154px 225px;
-          }
-          .bar-3 {
-            animation: pulseBar3 2.6s ease-in-out infinite 0.5s;
-            transform-origin: 170px 225px;
-          }
-          .monitor-unit {
-            animation: floatGentle 5s ease-in-out infinite;
-            transform-origin: 200px 200px;
-          }
-          .glow-ring {
-            animation: glowPulse 2.5s ease-in-out infinite;
+          .animate-code-scroll {
+            animation: codeScrollAnim 7s ease-in-out infinite;
           }
         `}</style>
-
         <defs>
-          <linearGradient id="monitorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3B82F6" />
-            <stop offset="100%" stopColor="#1D4ED8" />
+          <linearGradient id="screenBezelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1E293B" />
           </linearGradient>
-          <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="100%" stopColor="#F8FAFC" />
+          <linearGradient id="laptopBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#E2E8F0" />
+            <stop offset="100%" stopColor="#94A3B8" />
           </linearGradient>
-          <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#06B6D4" />
-            <stop offset="100%" stopColor="#0284C7" />
+          <linearGradient id="baseSideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#64748B" />
+            <stop offset="100%" stopColor="#334155" />
           </linearGradient>
-          <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F97316" />
-            <stop offset="100%" stopColor="#EA580C" />
-          </linearGradient>
-          <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0F172A" floodOpacity="0.12" />
+          <filter id="cartoonShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="10" stdDeviation="12" floodColor="#0284C7" floodOpacity="0.25" />
           </filter>
         </defs>
 
-        {/* 1. Animated Rotating Mechanical Gears in Background */}
-        <g className="gear-1">
-          <circle cx="95" cy="185" r="32" fill="#E2E8F0" opacity="0.8" stroke="#CBD5E1" strokeWidth="4" strokeDasharray="10 8" />
-          <circle cx="95" cy="185" r="14" fill="#FFFFFF" />
+        {/* Floating Cartoon Sparkles */}
+        <g className="animate-pulse">
+          <circle cx="40" cy="50" r="4" fill="#38BDF8" opacity="0.8" />
+          <circle cx="360" cy="70" r="6" fill="#F472B6" opacity="0.8" />
+          <circle cx="370" cy="200" r="5" fill="#FBBF24" opacity="0.8" />
+          <path d="M30 180 L36 186 L30 192 L24 186 Z" fill="#60A5FA" opacity="0.7" />
         </g>
 
-        <g className="gear-2">
-          <circle cx="75" cy="245" r="24" fill="#E2E8F0" opacity="0.7" stroke="#CBD5E1" strokeWidth="3" strokeDasharray="8 6" />
-          <circle cx="75" cy="245" r="10" fill="#FFFFFF" />
+        {/* Drop Shadow Base */}
+        <ellipse cx="200" cy="295" rx="150" ry="18" fill="#0369A1" opacity="0.25" filter="blur(6px)" />
+
+        {/* CARTOON LAPTOP BASE (KEYBOARD DECK IN 2.5D PERSPECTIVE) */}
+        {/* Base Side Thickness Edge */}
+        <path
+          d="M 50 240 L 70 270 L 330 270 L 350 240 Z"
+          fill="url(#baseSideGrad)"
+        />
+        {/* Base Front Lip */}
+        <path
+          d="M 70 270 L 70 276 C 70 282, 330 282, 330 276 L 330 270 Z"
+          fill="#1E293B"
+        />
+
+        {/* Base Top Keyboard Surface */}
+        <path
+          d="M 80 195 L 50 240 C 45 248, 355 248, 350 240 L 320 195 Z"
+          fill="url(#laptopBodyGrad)"
+          stroke="#CBD5E1"
+          strokeWidth="3"
+        />
+
+        {/* Cartoon Keyboard Tray Recess */}
+        <path
+          d="M 92 202 L 72 232 L 328 232 L 308 202 Z"
+          fill="#1E293B"
+        />
+
+        {/* Cartoon Keyboard Keys (Grid Lines / Key Caps) */}
+        {/* Row 1 Keys */}
+        <path d="M 97 205 L 303 205" stroke="#475569" strokeWidth="3" strokeDasharray="12 4" strokeLinecap="round" />
+        {/* Row 2 Keys */}
+        <path d="M 92 211 L 308 211" stroke="#475569" strokeWidth="3.5" strokeDasharray="14 4" strokeLinecap="round" />
+        {/* Row 3 Keys */}
+        <path d="M 87 218 L 313 218" stroke="#334155" strokeWidth="3.5" strokeDasharray="16 4" strokeLinecap="round" />
+        {/* Row 4 Spacebar Row */}
+        <path d="M 82 225 L 140 225" stroke="#475569" strokeWidth="3.5" strokeDasharray="12 3" strokeLinecap="round" />
+        <path d="M 150 225 L 250 225" stroke="#38BDF8" strokeWidth="4" strokeLinecap="round" /> {/* Cartoon Spacebar */}
+        <path d="M 260 225 L 318 225" stroke="#475569" strokeWidth="3.5" strokeDasharray="12 3" strokeLinecap="round" />
+
+        {/* Cartoon Trackpad */}
+        <rect x="175" y="235" width="50" height="9" rx="3" fill="#94A3B8" stroke="#64748B" strokeWidth="1.5" />
+
+        {/* Hinge Connection */}
+        <rect x="160" y="190" width="80" height="8" rx="3" fill="#334155" />
+
+        {/* CARTOON LAPTOP LID / SCREEN FRAME */}
+        {/* Outer Frame Back */}
+        <rect x="60" y="30" width="280" height="168" rx="20" fill="url(#screenBezelGrad)" stroke="#CBD5E1" strokeWidth="4" filter="url(#cartoonShadow)" />
+        
+        {/* Webcam Lens Dot */}
+        <circle cx="200" cy="41" r="3" fill="#0F172A" />
+        <circle cx="200" cy="41" r="1" fill="#38BDF8" />
+
+        {/* SCREEN INNER DISPLAY (IDE CODING ANIMATION) */}
+        <rect x="74" y="50" width="252" height="136" rx="12" fill="#0B1120" stroke="#1E293B" strokeWidth="2" />
+
+        {/* IDE Window Bar */}
+        <rect x="74" y="50" width="252" height="20" rx="10" fill="#070B14" />
+        <rect x="74" y="60" width="252" height="10" fill="#070B14" />
+        {/* Window Buttons */}
+        <circle cx="88" cy="60" r="3" fill="#EF4444" />
+        <circle cx="98" cy="60" r="3" fill="#F59E0B" />
+        <circle cx="108" cy="60" r="3" fill="#10B981" />
+        <text x="125" y="63" fill="#38BDF8" fontSize="9" fontFamily="sans-serif" fontWeight="bold">App.tsx</text>
+
+        {/* Live Code Animation embedded in Screen */}
+        <foreignObject x="76" y="72" width="248" height="112">
+          <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full p-2 text-[10px] font-mono text-left bg-transparent overflow-hidden">
+            <div className="space-y-1 animate-code-scroll">
+              {codeLines.map((line) => (
+                <div key={line.num} className="flex items-center gap-2 whitespace-nowrap leading-tight">
+                  <span className="text-slate-600 select-none w-3 text-right text-[9px] font-bold shrink-0">{line.num}</span>
+                  <div className="flex-1">{line.content}</div>
+                </div>
+              ))}
+
+              <div className="flex items-center gap-2 pt-0.5">
+                <span className="text-slate-600 select-none w-3 text-right text-[9px] font-bold shrink-0">6</span>
+                <span className="inline-block w-1.5 h-3 bg-cyan-400 animate-pulse rounded-xs shadow-[0_0_6px_#38BDF8]" />
+              </div>
+            </div>
+          </div>
+        </foreignObject>
+
+        {/* Screen Gloss Sheen */}
+        <path d="M 74 50 L 220 50 L 74 175 Z" fill="#FFFFFF" opacity="0.04" />
+
+        {/* Floating Cartoon Code Badge Accents */}
+        <g className="animate-bounce" style={{ animationDuration: '3s' }}>
+          <rect x="25" y="100" width="34" height="24" rx="8" fill="#38BDF8" />
+          <text x="32" y="116" fill="#FFFFFF" fontSize="11" fontWeight="extrabold" fontFamily="sans-serif">&lt;/&gt;</text>
         </g>
 
-        {/* 2. Floating Monitor Unit */}
-        <g className="monitor-unit">
-          {/* Monitor Stand & Base */}
-          <ellipse cx="200" cy="335" rx="75" ry="12" fill="#CBD5E1" opacity="0.6" />
-          <path d="M185 270 L175 325 C175 330 185 334 200 334 C215 334 225 330 225 325 L215 270 Z" fill="#0077B6" />
-          <ellipse cx="200" cy="328" rx="42" ry="7" fill="#0096C7" />
-
-          {/* Main Monitor Bezel */}
-          <rect x="105" y="85" width="200" height="185" rx="14" fill="#0077B6" stroke="#023E8A" strokeWidth="4" filter="url(#cardShadow)" />
-          <rect x="110" y="90" width="190" height="175" rx="10" fill="url(#screenGrad)" />
-
-          {/* Window Header Bar with Action Dots */}
-          <path d="M110 90 H300 V115 H110 Z" fill="#1E293B" />
-          <circle cx="125" cy="102" r="3.5" fill="#EF4444" />
-          <circle cx="137" cy="102" r="3.5" fill="#F59E0B" />
-          <circle cx="149" cy="102" r="3.5" fill="#10B981" />
-
-          {/* User Profile Card on Screen Left */}
-          <g transform="translate(130, 125)">
-            <rect x="0" y="0" width="48" height="42" rx="7" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1.5" filter="url(#cardShadow)" />
-            {/* Avatar */}
-            <circle cx="24" cy="14" r="7" fill="#F43F5E" />
-            <path d="M12 34 C12 27 16 25 24 25 C32 25 36 27 36 34 Z" fill="#F43F5E" />
-          </g>
-
-          {/* Sliders / Control Panel on Screen Right */}
-          <g transform="translate(190, 125)">
-            <rect x="0" y="0" width="95" height="62" rx="8" fill="url(#cyanGrad)" filter="url(#cardShadow)" />
-            
-            {/* Slider Vertical Tracks */}
-            <line x1="22" y1="12" x2="22" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
-            <line x1="48" y1="12" x2="48" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
-            <line x1="74" y1="12" x2="74" y2="50" stroke="#E0F2FE" strokeWidth="3" strokeLinecap="round" />
-
-            {/* Moving Slider Knobs */}
-            <g className="knob-1">
-              <circle cx="22" cy="20" r="5.5" fill="#FFFFFF" stroke="#0077B6" strokeWidth="2" />
-            </g>
-            <g className="knob-2">
-              <circle cx="48" cy="40" r="5.5" fill="#F97316" stroke="#C2410C" strokeWidth="2" />
-            </g>
-            <g className="knob-3">
-              <circle cx="74" cy="25" r="5.5" fill="#FFFFFF" stroke="#0077B6" strokeWidth="2" />
-            </g>
-          </g>
-
-          {/* Animated Metrics Bar Chart */}
-          <g>
-            {/* Bar 1 (Cyan) */}
-            <rect className="bar-1" x="133" y="185" width="10" height="40" rx="3" fill="#06B6D4" />
-            {/* Bar 2 (Orange) */}
-            <rect className="bar-2" x="149" y="173" width="10" height="52" rx="3" fill="#F97316" />
-            {/* Bar 3 (Blue) */}
-            <rect className="bar-3" x="165" y="190" width="10" height="35" rx="3" fill="#2563EB" />
-          </g>
-
-          {/* Activity Mini Sparkline on Screen Bottom Right */}
-          <g transform="translate(190, 198)">
-            <rect x="0" y="0" width="95" height="28" rx="6" fill="#F1F5F9" />
-            <path d="M8 18 L24 10 L42 20 L62 8 L86 14" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <circle cx="86" cy="14" r="3" fill="#10B981" className="glow-ring" />
-          </g>
-        </g>
-
-        {/* 3. Floating Accent Code & Tech Badges */}
-        <g transform="translate(290, 80)">
-          <circle cx="16" cy="16" r="16" fill="url(#orangeGrad)" filter="url(#cardShadow)" />
-          <path d="M11 16 L14 13 M21 13 L24 16 M14 19 L11 16 M24 16 L21 19 M17 11 L15 21" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-
-        <g transform="translate(60, 110)">
-          <circle cx="14" cy="14" r="14" fill="#3B82F6" opacity="0.9" filter="url(#cardShadow)" />
-          <path d="M9 14 L12 17 L19 10" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <g className="animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+          <rect x="340" y="110" width="32" height="24" rx="8" fill="#F472B6" />
+          <text x="348" y="126" fill="#FFFFFF" fontSize="12" fontWeight="extrabold" fontFamily="sans-serif">&#123;&nbsp;&#125;</text>
         </g>
       </svg>
-    </div>
+    </motion.div>
   );
 }
 
@@ -486,12 +446,12 @@ export default function Login() {
       >
         
         {/* ===================================================== */}
-        {/* LEFT COLUMN: Logo & Animated SVG Dashboard Graphic    */}
+        {/* LEFT COLUMN: Animated Circles & Pattern Mild Blue BG   */}
         {/* ===================================================== */}
-        <div className="md:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F4F7FE] to-[#F8FAFC] p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-100">
+        <div className="md:col-span-6 bg-gradient-to-br from-[#EFF4FF] via-[#E8F0FE] to-[#F3F7FF] p-7 sm:p-9 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-blue-100/80 min-h-[380px] md:min-h-[500px]">
           
-          {/* Top Brand Logo */}
-          <div className="flex items-center gap-2.5 z-10">
+          {/* Top-Left Brand Logo */}
+          <div className="flex items-center gap-2.5 z-20">
             <img
               src={logoUrl || "/apple-touch-icon.png"}
               alt="Marvel Slice"
@@ -502,9 +462,91 @@ export default function Login() {
             </span>
           </div>
 
-          {/* Center Animated SVG Graphic Illustration */}
-          <div className="my-auto py-4 sm:py-6 flex items-center justify-center relative w-full">
-            <AnimatedAdminDashboardSvg />
+          {/* Animated Pattern & Circle Shapes Mild Blue BG Overlay */}
+          <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center overflow-hidden">
+            
+            {/* Mild Blue Dot Matrix Pattern Layer (...) */}
+            <div 
+              className="absolute inset-0 opacity-[0.25]"
+              style={{
+                backgroundImage: 'radial-gradient(#0055FE 1.35px, transparent 1.35px)',
+                backgroundSize: '22px 22px',
+              }}
+            />
+
+            {/* Central Animated Concentric Blue Circle Rings */}
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+              className="absolute w-[360px] h-[360px] rounded-full border border-dashed border-brand-blue/30"
+            />
+            <motion.div 
+              animate={{ rotate: -360 }}
+              transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+              className="absolute w-[270px] h-[270px] rounded-full border border-blue-300/50"
+            />
+            <motion.div 
+              animate={{ scale: [1, 1.08, 1], opacity: [0.35, 0.7, 0.35] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute w-[180px] h-[180px] rounded-full border-2 border-brand-blue/35"
+            />
+
+            {/* Soft Floating Ambient Blue Orbs */}
+            <motion.div 
+              animate={{ 
+                x: [0, 20, -15, 0],
+                y: [0, -25, 15, 0],
+                scale: [1, 1.15, 0.95, 1]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/4 left-1/4 w-36 h-36 rounded-full bg-gradient-to-tr from-brand-blue/25 to-indigo-500/15 blur-xl"
+            />
+            <motion.div 
+              animate={{ 
+                x: [0, -20, 15, 0],
+                y: [0, 20, -20, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full bg-gradient-to-br from-sky-400/20 to-blue-600/15 blur-xl"
+            />
+
+            {/* Floating Decorative Glass Blue Circles & Dots */}
+            <motion.div
+              animate={{ y: [0, -14, 0], opacity: [0.5, 0.9, 0.5] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-20 right-16 w-12 h-12 rounded-full bg-white/80 backdrop-blur-xs border border-brand-blue/30 shadow-xs flex items-center justify-center"
+            >
+              <div className="w-5 h-5 rounded-full bg-brand-blue/20 flex items-center justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [0, 16, 0], opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+              className="absolute bottom-20 left-16 w-10 h-10 rounded-full bg-white/80 backdrop-blur-xs border border-sky-400/30 shadow-xs flex items-center justify-center"
+            >
+              <div className="w-4 h-4 rounded-full bg-sky-400/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-sky-500" />
+              </div>
+            </motion.div>
+
+            <motion.div
+              animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="absolute top-1/2 left-10 w-4 h-4 rounded-full bg-brand-blue/50"
+            />
+            <motion.div
+              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              className="absolute bottom-1/3 right-12 w-5 h-5 rounded-full bg-sky-400/50"
+            />
+          </div>
+
+          {/* Center Opened Laptop Model with Live Coding Animation */}
+          <div className="my-auto py-3 sm:py-5 flex items-center justify-center relative w-full z-20">
+            <AnimatedLaptopCodingModel />
           </div>
 
           <div />
@@ -513,7 +555,7 @@ export default function Login() {
         {/* ===================================================== */}
         {/* RIGHT COLUMN: Modern Clean Login Form                 */}
         {/* ===================================================== */}
-        <div className="md:col-span-7 bg-white p-7 sm:p-11 lg:p-12 flex flex-col justify-center">
+        <div className="md:col-span-6 bg-white p-7 sm:p-9 lg:p-10 flex flex-col justify-center">
           
           {/* Welcome Heading */}
           <div className="mb-6">
@@ -570,8 +612,8 @@ export default function Login() {
             
             {/* Email Address Field with Left Mail Icon */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
-                EMAIL ADDRESS
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-blue">
@@ -601,8 +643,8 @@ export default function Login() {
 
             {/* Password Field with Left Lock Icon & Right Eye Toggle */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">
-                PASSWORD
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-blue">

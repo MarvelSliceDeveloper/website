@@ -519,10 +519,11 @@ export default function Aptitude() {
                 <AccordionItem
                   variant="clean"
                   title={faq.question}
+                  titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                   isOpen={openFaqIndex === i}
                   onToggle={() => setOpenFaqIndex(openFaqIndex === i ? null : i)}
                 >
-                  <p className="text-slate-600 text-sm sm:text-base leading-relaxed">{faq.answer}</p>
+                  <p className="text-slate-600 text-xs sm:text-xs lg:text-base leading-relaxed">{faq.answer}</p>
                 </AccordionItem>
               </StaggerItem>
             ))}
@@ -544,7 +545,7 @@ export default function Aptitude() {
               <button
                 type="button"
                 onClick={closeApplyModal}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <FiX className="w-5 h-5 text-red-600" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiUser, FiMail, FiPhone, FiCheckCircle, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal from '../ui/Reveal';
@@ -7,6 +7,15 @@ export default function ContactForm() {
   const [form, setForm] = useState({ full_name: '', email: '', phone: '' });
   const [status, setStatus] = useState('idle');
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (status === 'success') {
+      const timer = setTimeout(() => {
+        setStatus('idle');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
 
   function validate() {
     const errs = {};

@@ -26,10 +26,11 @@ export default function FAQSection({ section }) {
             <StaggerItem key={i}>
               <AccordionItem
                 title={item.question}
+                titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                 isOpen={openIdx === i}
                 onToggle={() => setOpenIdx(openIdx === i ? null : i)}
               >
-                <p className="text-gray-500 text-sm sm:text-base leading-relaxed">{item.answer}</p>
+                <p className="text-gray-500 text-xs sm:text-xs lg:text-base leading-relaxed">{item.answer}</p>
               </AccordionItem>
             </StaggerItem>
           ))}

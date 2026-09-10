@@ -60,7 +60,7 @@ function ReplyModal({ row, onClose, pageTitle }) {
       <div className="relative bg-white rounded-3xl border border-admin-200 shadow-2xl max-w-lg w-full cursor-default" onClick={e => e.stopPropagation()}>
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
           aria-label="Close modal"
         >
           <FiX className="w-5 h-5 text-red-600" />
@@ -170,7 +170,7 @@ function ExportDialog({ type, data, columns, exportFilename, onClose }) {
       <div className="relative bg-white rounded-3xl border border-admin-200 shadow-2xl w-full max-w-md cursor-default" onClick={e => e.stopPropagation()}>
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
           aria-label="Close modal"
         >
           <FiX className="w-5 h-5 text-red-600" />
@@ -239,7 +239,8 @@ function DetailModal({ selected, onClose, title, detailFields, formatDate, disab
     const isLong = field.label.toLowerCase().includes('message') || 
                    field.label.toLowerCase().includes('note') || 
                    field.label.toLowerCase().includes('comment') ||
-                   String(val).length > 80;
+                   field.label.toLowerCase().includes('description') ||
+                   (typeof val === 'string' && val.length > 80);
     if (isLong) {
       longFields.push({ label: field.label, value: val });
     } else {
@@ -257,7 +258,7 @@ function DetailModal({ selected, onClose, title, detailFields, formatDate, disab
       >
         <button 
           onClick={onClose} 
-          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+          className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
           aria-label="Close modal"
         >
           <FiX className="w-5 h-5 text-red-600" />

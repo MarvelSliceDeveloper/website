@@ -112,13 +112,13 @@ function Accordion({ items, titleKey = 'question', contentKey = 'answer' }) {
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between p-2.5 text-left font-semibold text-brand-orange hover:bg-gray-50 transition-colors gap-3 cursor-pointer"
           >
-            <span>{item[titleKey]}</span>
+            <span className="text-[13px] sm:text-[13px] lg:text-lg">{item[titleKey]}</span>
             <span className="shrink-0 w-8 h-8 p-1.5 flex items-center justify-center rounded-full bg-white text-brand-orange">
               {open === i ? <FiMinus className="w-3.5 h-3.5" strokeWidth={3} /> : <FiPlus className="w-3.5 h-3.5" strokeWidth={3} />}
             </span>
           </button>
           {open === i && (
-            <div className="px-6 pb-4 text-gray-500 leading-relaxed">{item[contentKey]}</div>
+            <div className="px-6 pb-4 text-xs sm:text-xs lg:text-base text-gray-500 leading-relaxed">{item[contentKey]}</div>
           )}
         </div>
       ))}
@@ -912,7 +912,7 @@ export default function ServiceDetail() {
           <div className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col border border-slate-100" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setEnquiryOpen(false)}
-              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
               aria-label="Close modal"
             >
               <FiX className="w-5 h-5 text-red-600" />

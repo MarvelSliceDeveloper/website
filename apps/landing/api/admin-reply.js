@@ -1,12 +1,4 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+import { getGeneralTransporter, getCareerTransporter } from './lib/emailTransporters.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -30,9 +22,15 @@ export default async function handler(req, res) {
   const cleanToEmail = String(to_email).replace(/[\r\n]/g, '').trim();
   const cleanToName = String(to_name || 'User').replace(/[\r\n]/g, ' ').trim();
 
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  const isCareerType = type === 'career' || type === 'jobs' || type === 'internship';
+  const mailConfig = isCareerType ? (getCareerTransporter() || getGeneralTransporter()) : getGeneralTransporter();
+
+  if (!mailConfig) {
     return res.status(200).json({ success: true });
   }
+
+  const { transporter, user: smtpUser } = mailConfig;
+  const senderName = isCareerType ? 'Marvel Careers' : 'Marvel Slice';
 
   let html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
@@ -62,7 +60,7 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
+      from: `"${senderName}" <${smtpUser}>`,
       to: cleanToEmail,
       subject: cleanSubject,
       html,

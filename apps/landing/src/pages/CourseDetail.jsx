@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiStar, FiArrowRight, FiArrowLeft, FiUsers, FiBarChart2, FiClock, FiBookOpen, FiAward, FiBell, FiCode, FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiVideo, FiCalendar, FiRefreshCw, FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiX, FiCheck, FiAlertCircle, FiSend, FiPlay, FiCheckCircle, FiCreditCard, FiExternalLink } from 'react-icons/fi';
@@ -336,10 +336,11 @@ function FAQSection({ faqs }) {
             <StaggerItem key={f.id || i}>
               <AccordionItem
                 title={f.question}
+                titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
                 isOpen={openIdx === i}
                 onToggle={() => setOpenIdx(openIdx === i ? null : i)}
               >
-                <p className="text-gray-500 text-base leading-relaxed">{f.answer}</p>
+                <p className="text-gray-500 text-xs sm:text-xs lg:text-base leading-relaxed">{f.answer}</p>
               </AccordionItem>
             </StaggerItem>
           ))}
@@ -405,6 +406,27 @@ export default function CourseDetail() {
   const [enquiryAgree, setEnquiryAgree] = useState(false);
   const [forceUnlocked, setForceUnlocked] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+
+  useEffect(() => {
+    if (brochureDone) {
+      const timer = setTimeout(() => setShowBrochure(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [brochureDone]);
+
+  useEffect(() => {
+    if (enquiryDone) {
+      const timer = setTimeout(() => setShowEnquiry(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [enquiryDone]);
+
+  useEffect(() => {
+    if (interestDone) {
+      const timer = setTimeout(() => setShowInterest(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [interestDone]);
 
   function openEnquiryModal(sourceLabel) {
     if (sourceLabel && sourceLabel.toLowerCase().includes('brochure')) {
@@ -633,7 +655,7 @@ export default function CourseDetail() {
             <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-100" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => setShowInterest(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <FiX className="w-5 h-5 text-red-600" />
@@ -828,7 +850,7 @@ export default function CourseDetail() {
             >
               <button
                 onClick={() => setShowBrochure(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <FiX className="w-5 h-5 text-red-600" />
@@ -926,7 +948,7 @@ export default function CourseDetail() {
             >
               <button
                 onClick={() => setShowEnquiry(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <FiX className="w-5 h-5 text-red-600" />
@@ -1052,7 +1074,7 @@ export default function CourseDetail() {
               {/* Close Button */}
               <button
                 onClick={() => setShowChoicePopup(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 hover:scale-110 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
                 aria-label="Close modal"
               >
                 <FiX className="w-5 h-5 text-red-600" />

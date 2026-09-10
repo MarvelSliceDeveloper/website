@@ -1,14 +1,6 @@
 import http from 'node:http';
-import nodemailer from 'nodemailer';
 import { fetchAndStoreCurrentAffairs } from './src/lib/rssService.js';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+import { getGeneralTransporter, getCareerTransporter, sendMailWithLogging } from './api/lib/emailTransporters.js';
 
 const PORT = process.env.DEV_API_PORT || 3001;
 
@@ -22,7 +14,10 @@ function row(label, value) {
 async function handleCareer(body) {
   const { full_name, email, phone, position, category, description, file_url } = body;
   if (!full_name || !email || !phone) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getCareerTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const fileLink = file_url ? `<a href="${file_url}" style="color: #1E56C7;">View Document</a>` : 'No file uploaded';
@@ -34,10 +29,10 @@ async function handleCareer(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone)}${row('Position', position || '\u2014')}${row('Category', category || '\u2014')}${row('Description', (description || '\u2014').replace(/\n/g, '<br>'))}${row('Document', fileLink)}
+        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone)}${row('Position', position || '—')}${row('Category', category || '—')}${row('Description', (description || '—').replace(/\n/g, '<br>'))}${row('Document', fileLink)}
       </table>
     </div>
-    <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice \u2014 Career Page</div>
+    <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Career Page</div>
   </div>`;
   const autoReplyHtml = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">Thank You for Your Application</h1></div>
@@ -51,18 +46,18 @@ async function handleCareer(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Careers" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Application from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Application Received \u2014 Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] Career emails sent');
-  } catch (err) { console.error('[dev-server] Career email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Application from ${full_name}`, html }, 'Career - Admin Notification');
+  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Application Received — Marvel Slice', html: autoReplyHtml }, 'Career - User Confirmation');
   return { success: true };
 }
 
 async function handleForm(body) {
   const { full_name, role, email, phone } = body;
   if (!full_name || !email || !phone) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -92,18 +87,18 @@ async function handleForm(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Demo Request from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Demo Request Received \u2014 Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] Form emails sent');
-  } catch (err) { console.error('[dev-server] Form email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Demo Request from ${full_name}`, html }, 'Demo Class - Admin Notification');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Demo Request Received — Marvel Slice', html: autoReplyHtml }, 'Demo Class - User Confirmation');
   return { success: true };
 }
 
 async function handleBrochure(body) {
   const { name, email, phone, course_title } = body;
   if (!name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -130,18 +125,18 @@ async function handleBrochure(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `Brochure Request from ${name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Brochure Request Received \u2014 Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] Brochure emails sent');
-  } catch (err) { console.error('[dev-server] Brochure email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `Brochure Request from ${name}`, html }, 'Brochure - Admin Notification');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Brochure Request Received \u2014 Marvel Slice', html: autoReplyHtml }, 'Brochure - User Confirmation');
   return { success: true };
 }
 
 async function handleCareerContact(body) {
   const { full_name, email, phone } = body;
   if (!full_name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getCareerTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -151,7 +146,7 @@ async function handleCareerContact(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '\u2014')}
+        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '—')}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Career Page</div>
@@ -168,18 +163,18 @@ async function handleCareerContact(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Careers" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Career Contact Request from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] Career contact emails sent');
-  } catch (err) { console.error('[dev-server] Career contact email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Career Contact Request from ${full_name}`, html }, 'Career Contact - Admin');
+  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Career Contact - User');
   return { success: true };
 }
 
 async function handleContact(body) {
   const { full_name, email, phone, message } = body;
   if (!full_name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -206,18 +201,18 @@ async function handleContact(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Contact Request from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] Contact emails sent');
-  } catch (err) { console.error('[dev-server] Contact email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Contact Request from ${full_name}`, html }, 'Contact Form - Admin');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Contact Form - User');
   return { success: true };
 }
 
 async function handleBanking(body) {
   const { full_name, email, phone, enquiry_type, topic_title, button_clicked } = body;
   if (!full_name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const topicName = topic_title || 'General Banking Enquiry';
@@ -246,18 +241,18 @@ async function handleBanking(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice Banking" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Banking Enquiry (${topicName}) from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice Banking" <${process.env.SMTP_EMAIL}>`, to: email, subject: `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`, html: autoReplyHtml });
-    console.log('[dev-server] Banking enquiry emails sent');
-  } catch (err) { console.error('[dev-server] Banking enquiry email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: adminEmail, subject: `New Banking Enquiry (${topicName}) from ${full_name}`, html }, 'Banking - Admin');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: email, subject: `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`, html: autoReplyHtml }, 'Banking - User');
   return { success: true };
 }
 
 async function handleAbout(body) {
   const { full_name, email, phone, subject, message } = body;
   if (!full_name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -283,18 +278,18 @@ async function handleAbout(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Enquiry Request from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml });
-    console.log('[dev-server] About enquiry emails sent');
-  } catch (err) { console.error('[dev-server] About enquiry email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Enquiry Request from ${full_name}`, html }, 'About - Admin');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'About - User');
   return { success: true };
 }
 
 async function handleEnquiry(body) {
   const { full_name, email, phone, course_title, button_clicked } = body;
   if (!full_name || !email) return { success: true };
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
@@ -320,11 +315,8 @@ async function handleEnquiry(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: process.env.ADMIN_EMAIL, subject: `New Course Enquiry for ${course_title || 'Course'} from ${full_name}`, html });
-    await transporter.sendMail({ from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`, to: email, subject: `Enquiry Confirmation: ${course_title || 'Course'} — Marvel Slice`, html: autoReplyHtml });
-    console.log('[dev-server] Course enquiry emails sent');
-  } catch (err) { console.error('[dev-server] Course enquiry email failed:', err); }
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Course Enquiry for ${course_title || 'Course'} from ${full_name}`, html }, 'Enquiry - Admin');
+  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: `Enquiry Confirmation: ${course_title || 'Course'} — Marvel Slice`, html: autoReplyHtml }, 'Enquiry - User');
   return { success: true };
 }
 
@@ -339,7 +331,9 @@ async function handleAdminReply(body) {
   const cleanToEmail = String(to_email).replace(/[\r\n]/g, '').trim();
   const cleanToName = String(to_name || 'User').replace(/[\r\n]/g, ' ').trim();
 
-  if (!process.env.ADMIN_EMAIL || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) return { success: true };
+  const mailConfig = getGeneralTransporter();
+  if (!mailConfig) return { success: true };
+  const { transporter, user: smtpUser } = mailConfig;
 
   let html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
@@ -367,15 +361,13 @@ async function handleAdminReply(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  try {
-    await transporter.sendMail({
-      from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
-      to: cleanToEmail,
-      subject: cleanSubject,
-      html,
-    });
-    console.log('[dev-server] Admin reply sent to', cleanToEmail);
-  } catch (err) { console.error('[dev-server] Admin reply failed:', err); }
+  await sendMailWithLogging(transporter, {
+    from: `"Marvel Slice" <${smtpUser}>`,
+    to: cleanToEmail,
+    subject: cleanSubject,
+    html,
+  }, 'Admin Reply');
+
   return { success: true };
 }
 

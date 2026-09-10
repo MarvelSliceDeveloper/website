@@ -1,12 +1,4 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+import { getCareerTransporter } from './lib/emailTransporters.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,10 +11,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  const mailConfig = getCareerTransporter();
+  if (!mailConfig) {
     return res.status(200).json({ success: true });
   }
+
+  const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
   const submittedAt = new Date().toLocaleString('en-US', {
     dateStyle: 'long',
@@ -40,7 +34,7 @@ export default async function handler(req, res) {
         <table style="width:100%;border-collapse:collapse;">
           ${row('Full Name', full_name)}
           ${row('Email', email)}
-          ${row('Phone', phone || '\u2014')}
+          ${row('Phone', phone || '—')}
         </table>
       </div>
       <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">
@@ -69,13 +63,13 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: `"Marvel Careers" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Careers" <${smtpUser}>`,
       to: adminEmail,
       subject: `New Career Contact Request from ${full_name}`,
       html: adminHtml,
     });
     await transporter.sendMail({
-      from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
+      from: `"Marvel Careers" <${smtpUser}>`,
       to: email,
       subject: 'Thank You for Contacting Us — Marvel Slice',
       html: autoReplyHtml,

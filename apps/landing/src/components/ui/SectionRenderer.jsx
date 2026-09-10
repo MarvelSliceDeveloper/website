@@ -46,10 +46,11 @@ function FaqListSection({ section }) {
           <AccordionItem
             key={i}
             title={faq.question}
+            titleClassName="text-[13px] sm:text-[13px] lg:text-lg leading-snug flex-1 font-semibold"
             isOpen={openIdx === i}
             onToggle={() => setOpenIdx(openIdx === i ? null : i)}
           >
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
+            <p className="text-xs sm:text-xs lg:text-base text-slate-600 leading-relaxed font-normal">{faq.answer}</p>
           </AccordionItem>
         ))}
       </div>
