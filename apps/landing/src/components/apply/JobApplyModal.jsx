@@ -4,15 +4,7 @@ import { FiUpload, FiSend, FiCheck, FiAlertCircle, FiX } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit, trackDownload } from '../../lib/analytics';
 
-async function uploadWithRetry(bucket, path, file, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
-    if (!error) return { error: null };
-    if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-    else return { error };
-  }
-  return { error: new Error('Upload failed after retries') };
-}
+
 
 async function compressImage(file, maxWidth = 1920, quality = 0.7) {
   return new Promise((resolve, reject) => {
@@ -178,19 +170,15 @@ export default function JobApplyModal({ job, onClose }) {
         try {
           uploadFile = await compressImage(file);
         } catch { }
-      }
-      const ext = uploadFile.name.split('.').pop();
-      const path = `career/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await uploadWithRetry('career-uploads', path, uploadFile);
-      if (uploadError) {
+      try {
+        file_url = await helperUploadFile(uploadFile);
+        setUploading(false);
+      } catch (uploadError) {
         setStatus({ type: 'error', message: `Upload failed: ${uploadError.message || 'Please try again.'}` });
         setUploading(false);
         setSubmitting(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('career-uploads').getPublicUrl(path);
-      file_url = urlData.publicUrl;
-      setUploading(false);
     }
 
     const { error: insertError } = await supabase

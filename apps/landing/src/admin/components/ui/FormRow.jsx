@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { supabase } from '../../../lib/supabaseClient';
+import { uploadFile } from '../../../lib/uploadHelper';
 
 export default function FormRow({ label, error, required, hint, children, className = '' }) {
   return (
@@ -66,14 +66,14 @@ export function ImageUpload({ value, onChange, label }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (!error) {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      onChange(data.publicUrl);
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   return (

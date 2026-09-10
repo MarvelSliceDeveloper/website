@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import AdminButton from '../components/AdminButton';
-import { FiCopy, FiTrash2, FiUpload, FiSearch, FiCheck, FiX, FiGrid, FiList, FiFolder, FiFile, FiLayers, FiArrowLeft } from 'react-icons/fi';
+import { FiCopy, FiTrash2, FiUpload, FiSearch, FiCheck, FiX, FiGrid, FiList, FiFolder, FiFile, FiLayers, FiDownload } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 
@@ -42,9 +42,31 @@ async function listFilesRecursive(bucket, prefix = '') {
   return all;
 }
 
+function getFileUrl(file) {
+  return supabase.storage.from(file._bucket).getPublicUrl(file._path).data.publicUrl;
+}
+
+async function downloadMediaFile(file) {
+  const url = getFileUrl(file);
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, '_blank');
+  }
+}
+
 function PreviewModal({ file, onClose }) {
   if (!file) return null;
-  const url = supabase.storage.from(file._bucket).getPublicUrl(file._path).data.publicUrl;
+  const url = getFileUrl(file);
 
   return (
     <div className="fixed inset-0 bg-admin-900/60 flex items-center justify-center z-50 p-4 cursor-pointer" onClick={onClose}>
@@ -66,8 +88,9 @@ function PreviewModal({ file, onClose }) {
             <div><span className="text-neutral-500">Size</span><p className="font-medium text-black">{formatSize(file.metadata?.size)}</p></div>
             {file.metadata?.mimetype && <div><span className="text-neutral-500">Type</span><p className="font-medium text-black">{file.metadata.mimetype}</p></div>}
             <div><span className="text-neutral-500">Uploaded</span><p className="font-medium text-black">{formatDate(file.created_at)}</p></div>
-            <div className="pt-2 flex gap-2">
+            <div className="pt-2 flex flex-wrap gap-2">
               <AdminButton variant="ghost" size="xs" onClick={() => { navigator.clipboard.writeText(url); }}><FiCopy className="w-3.5 h-3.5" /> Copy URL</AdminButton>
+              <AdminButton variant="secondary" size="xs" onClick={() => downloadMediaFile(file)}><FiDownload className="w-3.5 h-3.5" /> Download</AdminButton>
             </div>
           </div>
         </div>
@@ -112,7 +135,7 @@ const [confirm, confirmDialog] = useConfirm();
   }, [search, files]);
 
   function getUrl(file) {
-    return supabase.storage.from(file._bucket).getPublicUrl(file._path).data.publicUrl;
+    return getFileUrl(file);
   }
 
   async function handleUpload(e) {
@@ -321,6 +344,12 @@ const [confirm, confirmDialog] = useConfirm();
                         {copied === file._path ? <FiCheck className="w-3.5 h-3.5 text-emerald-600" /> : <FiCopy className="w-3.5 h-3.5" />}
                         {copied === file._path ? 'Copied' : 'Copy'}
                       </button>
+                      <button onClick={() => downloadMediaFile(file)}
+                        className="min-h-[40px] min-w-[40px] text-xs text-admin-600 hover:text-admin-800 hover:bg-neutral-100 rounded-lg p-1.5 transition-colors flex items-center justify-center active:scale-95"
+                        title="Download file"
+                      >
+                        <FiDownload className="w-3.5 h-3.5" />
+                      </button>
                       <button onClick={() => deleteFile(file)}
                         className="min-h-[40px] min-w-[40px] text-xs text-destructive-500 hover:text-destructive-700 hover:bg-destructive-50 rounded-lg p-1.5 transition-colors flex items-center justify-center active:scale-95"
                         title="Delete file"
@@ -353,6 +382,9 @@ const [confirm, confirmDialog] = useConfirm();
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => copyUrl(file)} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Copy URL">
                       {copied === file._path ? <FiCheck className="w-4 h-4 text-emerald-600" /> : <FiCopy className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => downloadMediaFile(file)} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-admin-600 hover:bg-admin-50 rounded-lg transition-colors" title="Download file">
+                      <FiDownload className="w-4 h-4" />
                     </button>
                     <button onClick={() => deleteFile(file)} className="min-h-[44px] px-3 text-xs font-semibold text-destructive-600 bg-destructive-50 hover:bg-destructive-100 rounded-lg transition-colors">
                       Delete

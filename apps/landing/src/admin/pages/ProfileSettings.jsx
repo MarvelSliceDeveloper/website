@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadFile } from '../../lib/uploadHelper';
 import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/ui/PageShell';
 import { SubmitButton } from '../components/FormButtons';
@@ -24,17 +25,15 @@ export default function ProfileSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `admin/profiles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (error) {
-      setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
-    } else {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      setProfilePic(data.publicUrl);
+    try {
+      const url = await uploadFile(file);
+      setProfilePic(url);
       setMessage(null);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleSaveProfile(e) {

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { FiX, FiSend, FiLoader, FiUpload, FiSearch, FiFileText, FiBookOpen } from 'react-icons/fi';
-import { supabase } from '../../lib/supabaseClient';
+import { uploadFile as uploadFileHelper } from '../../lib/uploadHelper';
 import { SubmitButton } from './FormButtons';
 
 export default function ReplyModal({ submission, type, onClose }) {
@@ -43,17 +43,15 @@ export default function ReplyModal({ submission, type, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingFile(true);
-    const filePath = `brochure-reply/${Date.now()}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from('pages').upload(filePath, file);
-    if (upErr) {
-      setError('Upload failed: ' + upErr.message);
+    try {
+      const url = await uploadFileHelper(file);
+      setUploadFile(file);
+      setUploadUrl(url);
+    } catch (err) {
+      setError('Upload failed: ' + err.message);
+    } finally {
       setUploadingFile(false);
-      return;
     }
-    const { data: urlData } = supabase.storage.from('pages').getPublicUrl(filePath);
-    setUploadFile(file);
-    setUploadUrl(urlData.publicUrl);
-    setUploadingFile(false);
   }
 
   function getAttachmentInfo() {

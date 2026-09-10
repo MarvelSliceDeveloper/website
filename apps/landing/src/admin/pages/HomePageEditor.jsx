@@ -5,6 +5,7 @@ import { RepeatableItemCard } from '../components/ui/RepeatableItemCard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadFile } from '../../lib/uploadHelper';
 import AddButton from '../components/AddButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
@@ -189,16 +190,14 @@ function ImageUploader({ value, onChange, label, hideInput }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `home/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (error) {
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (error) {
       alert('Upload failed: ' + error.message);
-    } else {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      onChange(data.publicUrl);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   if (hideInput) {
