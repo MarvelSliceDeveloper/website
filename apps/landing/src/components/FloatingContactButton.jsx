@@ -210,8 +210,13 @@ export default function FloatingContactButton() {
                 {errors.form && <p className="!text-red-500 text-xs mt-2">{errors.form}</p>}
                 <label className="mt-4 flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={agreeTerms} onChange={(e) => {
-                    setAgreeTerms(e.target.checked);
-                    if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                    const checked = e.target.checked;
+                    setAgreeTerms(checked);
+                    if (checked) {
+                      if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                    } else {
+                      setErrors((prev) => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+                    }
                   }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
                   <span className="text-sm text-slate-600 leading-relaxed">
                     I agree to the{' '}
@@ -220,7 +225,7 @@ export default function FloatingContactButton() {
                     <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
                   </span>
                 </label>
-                {errors.agree && <p className="!text-red-500 text-xs mt-1.5">{errors.agree}</p>}
+                {errors.agree && <p className="!text-red-500 text-xs mt-1.5 flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>{errors.agree}</p>}
                 <div className="mt-6 flex justify-center">
                   <button type="submit" disabled={submitting}
                     className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">

@@ -7,6 +7,7 @@ export default function ContactForm() {
   const [form, setForm] = useState({ full_name: '', email: '', phone: '' });
   const [status, setStatus] = useState('idle');
   const [errors, setErrors] = useState({});
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   useEffect(() => {
     if (status === 'success') {
@@ -24,6 +25,7 @@ export default function ContactForm() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Invalid email';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,15}$/.test(form.phone.trim())) errs.phone = 'Invalid phone number';
+    if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     return errs;
   }
 
@@ -45,6 +47,7 @@ export default function ContactForm() {
       if (data.success) {
         setStatus('success');
         setForm({ full_name: '', email: '', phone: '' });
+        setAgreeTerms(false);
       } else {
         setStatus('error');
       }
@@ -140,6 +143,38 @@ export default function ContactForm() {
                 </div>
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
               </div>
+
+              {/* Terms Checkbox */}
+              <label className="flex items-start gap-2.5 cursor-pointer text-left">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAgreeTerms(checked);
+                    if (checked) {
+                      setErrors((prev) => ({ ...prev, agree: undefined }));
+                    } else {
+                      setErrors((prev) => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-neutral-300 text-[#1E56C7] focus:ring-[#1E56C7]/20 shrink-0"
+                />
+                <span className="text-xs text-neutral-600 leading-relaxed">
+                  I agree to the{' '}
+                  <a href="/terms" className="text-[#1E56C7] underline hover:text-blue-700">Terms of Use</a>
+                  {' '}and{' '}
+                  <a href="/privacy" className="text-[#1E56C7] underline hover:text-blue-700">Privacy Policy</a>.
+                </span>
+              </label>
+              {errors.agree && (
+                <p className="text-xs font-medium !text-red-600 mt-1.5 flex items-center gap-1 text-left" style={{ color: '#dc2626' }}>
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#dc2626' }}>
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.agree}</span>
+                </p>
+              )}
 
               {/* Submit */}
               <button
