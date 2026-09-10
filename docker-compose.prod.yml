@@ -44,6 +44,7 @@ services:
     env_file: .env.production
     environment:
       - NODE_ENV=production
+      - PORT=4000 # pin: .env.production carries PORT=3001 (landing), must not hijack the API
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lms_prod}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lms_prod}
       - REDIS_URL=redis://redis:6379
       - SKIP_DB_PUSH=${SKIP_DB_PUSH:-1}
@@ -87,6 +88,7 @@ services:
     env_file: .env.production
     environment:
       - NODE_ENV=production
+      - PORT=3000 # pin: .env.production carries PORT=3001 (landing), must not hijack Next.js
       - NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
     depends_on:
       - api
