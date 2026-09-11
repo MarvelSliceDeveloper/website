@@ -11,6 +11,12 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
+// Public base used to build absolute file URLs (same pattern as lms-api's
+// `${webUrl}/uploads/...`). Set LANDING_PUBLIC_URL=https://marvelslice.com
+// in prod so emailed/admin links work outside the browser. Empty in dev →
+// keeps the relative path (vite proxies /api, page serves same-origin).
+const PUBLIC_BASE_URL = (process.env.LANDING_PUBLIC_URL || '').replace(/\/$/, '');
+
 function getMimeType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const mimeTypes = {
@@ -122,7 +128,7 @@ async function handleFileUpload(req) {
 
   fs.writeFileSync(savePath, file.data);
 
-  return { success: true, url: `/uploads/${safeFilename}` };
+  return { success: true, url: `${PUBLIC_BASE_URL}/uploads/${safeFilename}` };
 }
 
 function row(label, value) {
