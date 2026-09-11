@@ -181,25 +181,6 @@ function ScoreGauge({
   );
 }
 
-// Thin progress bar shown while the quiz is in progress, so completion is
-// visible at a glance instead of only as "3 of 10 answered" text.
-function ProgressBar({ answered, total }: { answered: number; total: number }) {
-  const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
-  return (
-    <div className="space-y-1">
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="text-[11px] text-muted-foreground text-right">
-        {answered} of {total} answered
-      </p>
-    </div>
-  );
-}
-
 // One consolidated state for an option marker, computed once instead of
 // scattered across cardClass / markerIconClass / label logic separately —
 // this is what used to drift out of sync and cause bugs.
@@ -483,10 +464,15 @@ export default function QuizContent({
   // ── Active (one question at a time) ─────────────────────────────────
   return (
     <div className="space-y-5">
+      {!quizSubmitted && (
+        <p className="text-sm font-medium text-muted-foreground text-right">
+          {answeredCount} of {totalQuestions} answered
+        </p>
+      )}
       {currentQuestion && (
         <div className="space-y-4 pt-4">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-semibold text-foreground leading-snug">
+            <p className="text-lg font-semibold text-foreground leading-snug">
               {currentIndex + 1}. {currentQuestion.questionText}
             </p>
             <span className="shrink-0 mt-0.5 text-[10px] font-bold text-white bg-muted px-2 py-0.5 rounded">
@@ -532,7 +518,7 @@ export default function QuizContent({
                     type="button"
                     disabled={quizSubmitted}
                     onClick={() => onAnswerSelect(currentQuestion.id, opt.id)}
-                    className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-sm text-left transition-colors ${styles.card} ${styles.text}`}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-base text-left transition-colors ${styles.card} ${styles.text}`}
                   >
                     <span
                       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold border-2"
@@ -577,12 +563,6 @@ export default function QuizContent({
             })()}
           </div>
 
-          {!quizSubmitted && phase === "active" && (
-            <div className="mx-auto max-w-md pt-1">
-              <ProgressBar answered={answeredCount} total={totalQuestions} />
-            </div>
-          )}
-
           <div className="flex items-center justify-between pt-2">
             <button
               onClick={() => goToQuestion(currentIndex - 1)}
@@ -591,9 +571,6 @@ export default function QuizContent({
             >
               <IconChevronLeft size={14} /> Previous
             </button>
-            <p className="text-xs text-muted-foreground hidden sm:block">
-              {answeredCount} of {totalQuestions} answered
-            </p>
             {currentIndex === totalQuestions - 1 ? (
               quizSubmitted ? (
                 // BUG FIX: previously a disabled "Submitted ✓" pill with no
