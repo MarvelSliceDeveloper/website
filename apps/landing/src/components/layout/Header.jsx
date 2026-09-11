@@ -18,7 +18,8 @@ export const topNav = [
   },
   { label: 'Services', path: '/services' },
   { label: 'Career', path: '/career' },
-  { label: 'Blog', path: '/blog' },
+  // Hidden: Blog link kept for future re-enable (hides from header, mobile drawer and footer via topNav)
+  // { label: 'Blog', path: '/blog' },
   { label: 'Contact', path: '/contact' },
 ];
 
