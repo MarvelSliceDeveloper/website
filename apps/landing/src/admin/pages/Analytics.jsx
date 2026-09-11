@@ -4,11 +4,12 @@ import {
   FiHelpCircle, FiCheckCircle, FiUsers, FiDownload, FiMessageSquare, FiTrendingUp, FiLayers, FiShield
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
+import { getEnv } from '../../lib/env';
 import PageShell from '../components/ui/PageShell';
 
 export default function Analytics() {
-  const envLookerUrl = import.meta.env?.VITE_LOOKER_STUDIO_URL || '';
-  const gaMeasurementId = import.meta.env?.VITE_GA_MEASUREMENT_ID || '';
+  const envLookerUrl = getEnv('VITE_LOOKER_STUDIO_URL');
+  const gaMeasurementId = getEnv('VITE_GA_MEASUREMENT_ID');
   
   const [embedUrl, setEmbedUrl] = useState(() => {
     return localStorage.getItem('admin_looker_studio_url') || envLookerUrl;

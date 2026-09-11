@@ -8,6 +8,7 @@ import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import FloatingContactButton from './components/FloatingContactButton';
 import { trackPageView, initAnalytics } from './lib/analytics';
+import { getEnv } from './lib/env';
 import Home from './pages/Home';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
@@ -43,7 +44,7 @@ function PageTracker() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const gaId = import.meta.env?.VITE_GA_MEASUREMENT_ID;
+    const gaId = getEnv('VITE_GA_MEASUREMENT_ID');
     if (gaId) {
       initAnalytics(gaId);
     }
