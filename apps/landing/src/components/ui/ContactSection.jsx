@@ -38,9 +38,9 @@ function ContactDetailItem({ icon: Icon, label, value, href, textColor, onClick 
     <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
   );
   return (
-    <div className="flex flex-col sm:flex-row items-start text-left gap-2 sm:gap-3">
-      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: textColor }} />
+    <div className="flex flex-row items-start text-left gap-2.5 sm:gap-3">
+      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" style={{ color: textColor }} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: hexToRgba(textColor, 0.65) }}>{label}</p>
@@ -196,7 +196,7 @@ export default function ContactSection({ section }) {
                         errors.full_name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                       }`}
                     />
-                    {errors.full_name && <p className="text-xs text-red-500 mt-1 text-left">{errors.full_name}</p>}
+                    {errors.full_name && <p className="text-xs !text-red-600 mt-1 text-left" style={{ color: '#dc2626' }}>{errors.full_name}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Email Address <span className="text-red-400">*</span></label>
@@ -210,7 +210,7 @@ export default function ContactSection({ section }) {
                         errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                       }`}
                     />
-                    {errors.email && <p className="text-xs text-red-500 mt-1 text-left">{errors.email}</p>}
+                    {errors.email && <p className="text-xs !text-red-600 mt-1 text-left" style={{ color: '#dc2626' }}>{errors.email}</p>}
                   </div>
                 </div>
                 <div>
@@ -225,7 +225,7 @@ export default function ContactSection({ section }) {
                       errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                     }`}
                   />
-                  {errors.phone && <p className="text-xs text-red-500 mt-1 text-left">{errors.phone}</p>}
+                  {errors.phone && <p className="text-xs !text-red-600 mt-1 text-left" style={{ color: '#dc2626' }}>{errors.phone}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 text-left">Message <span className="text-red-400">*</span></label>
@@ -239,13 +239,23 @@ export default function ContactSection({ section }) {
                       errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'
                     }`}
                   />
-                  {errors.message && <p className="text-xs text-red-500 mt-1 text-left">{errors.message}</p>}
+                  {errors.message && <p className="text-xs !text-red-600 mt-1 text-left" style={{ color: '#dc2626' }}>{errors.message}</p>}
                 </div>
                 <label className="flex items-start gap-2.5 cursor-pointer text-left">
-                  <input type="checkbox" checked={agreeTerms} onChange={(e) => {
-                    setAgreeTerms(e.target.checked);
-                    if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
-                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20 shrink-0" />
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setAgreeTerms(checked);
+                      if (checked) {
+                        setErrors((prev) => ({ ...prev, agree: undefined }));
+                      } else {
+                        setErrors((prev) => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+                      }
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20 shrink-0"
+                  />
                   <span className="text-xs text-slate-600 leading-relaxed">
                     I agree to the{' '}
                     <a href="/terms" className="text-brand-blue underline hover:text-blue-700">Terms of Use</a>
@@ -253,7 +263,14 @@ export default function ContactSection({ section }) {
                     <a href="/privacy" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</a>.
                   </span>
                 </label>
-                {errors.agree && <p className="text-xs text-red-500 mt-1 text-left">{errors.agree}</p>}
+                {errors.agree && (
+                  <p className="text-xs font-medium !text-red-600 mt-1.5 flex items-center gap-1 text-left" style={{ color: '#dc2626' }}>
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#dc2626' }}>
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span>{errors.agree}</span>
+                  </p>
+                )}
                 <div className="flex justify-center pt-2">
                   <button
                     type="submit"

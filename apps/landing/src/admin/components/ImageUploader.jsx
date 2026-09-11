@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { FiUpload, FiX, FiCopy, FiLink } from 'react-icons/fi';
 
+import { uploadFile } from '../../lib/uploadHelper';
+
 export default function ImageUploader({
   bucket = 'course-thumbnails',
   value = '',
@@ -23,27 +25,17 @@ export default function ImageUploader({
 
     setUploading(true);
     setUploadError('');
-    const filePath = `${Date.now()}-${file.name}`;
 
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
-
-    if (error) {
-      setUploadError(`Upload failed. Use URL option below instead.`);
+    try {
+      const url = await uploadFile(file);
+      setPreview(url);
+      onChange(url);
+    } catch (err) {
+      setUploadError(`Upload failed: ${err.message}. Use URL option below instead.`);
       setShowUrlInput(true);
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: publicUrlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-
-    const url = publicUrlData.publicUrl;
-    setPreview(url);
-    onChange(url);
-    setUploading(false);
   }
 
   function handleUrlChange(url) {

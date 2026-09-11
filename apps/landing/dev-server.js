@@ -1,8 +1,129 @@
 import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
 import { fetchAndStoreCurrentAffairs } from './src/lib/rssService.js';
 import { getGeneralTransporter, getCareerTransporter, sendMailWithLogging } from './api/lib/emailTransporters.js';
 
 const PORT = process.env.DEV_API_PORT || 3001;
+
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+function getMimeType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.pdf': 'application/pdf',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.txt': 'text/plain',
+    '.csv': 'text/csv',
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+function parseMultipartData(buffer, boundary) {
+  const parts = [];
+  const boundaryBuffer = Buffer.from(`--${boundary}`);
+  let start = 0;
+
+  while (true) {
+    const boundaryIndex = buffer.indexOf(boundaryBuffer, start);
+    if (boundaryIndex === -1) break;
+
+    if (start > 0) {
+      const partBuffer = buffer.slice(start, boundaryIndex - 2);
+      parts.push(partBuffer);
+    }
+    start = boundaryIndex + boundaryBuffer.length + 2;
+  }
+
+  const result = { files: [], fields: {} };
+
+  for (const part of parts) {
+    const headerEndIndex = part.indexOf('\r\n\r\n');
+    if (headerEndIndex === -1) continue;
+
+    const headerStr = part.slice(0, headerEndIndex).toString('utf8');
+    const bodyBuffer = part.slice(headerEndIndex + 4);
+
+    const nameMatch = headerStr.match(/name="([^"]+)"/);
+    const filenameMatch = headerStr.match(/filename="([^"]+)"/);
+
+    if (filenameMatch) {
+      const fieldName = nameMatch ? nameMatch[1] : 'file';
+      const filename = filenameMatch[1];
+      const contentTypeMatch = headerStr.match(/Content-Type:\s*([^\r\n]+)/i);
+      const contentType = contentTypeMatch ? contentTypeMatch[1] : 'application/octet-stream';
+
+      result.files.push({
+        fieldName,
+        filename,
+        contentType,
+        data: bodyBuffer,
+      });
+    } else if (nameMatch) {
+      result.fields[nameMatch[1]] = bodyBuffer.toString('utf8').trim();
+    }
+  }
+
+  return result;
+}
+
+async function handleFileUpload(req) {
+  const contentType = req.headers['content-type'] || '';
+  const match = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+  if (!match) {
+    return { error: 'Invalid content-type, expected multipart/form-data' };
+  }
+  const boundary = match[1] || match[2];
+
+  const chunks = [];
+  let totalSize = 0;
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
+
+  await new Promise((resolve, reject) => {
+    req.on('data', (chunk) => {
+      totalSize += chunk.length;
+      if (totalSize > MAX_SIZE) {
+        reject(new Error('File size exceeds 10MB limit'));
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', resolve);
+    req.on('error', reject);
+  });
+
+  const buffer = Buffer.concat(chunks);
+  const parsed = parseMultipartData(buffer, boundary);
+  if (!parsed.files || parsed.files.length === 0) {
+    return { error: 'No file uploaded' };
+  }
+
+  const file = parsed.files[0];
+  const ext = path.extname(file.filename).toLowerCase();
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv'];
+  
+  if (!allowedExts.includes(ext)) {
+    return { error: `File extension ${ext} is not allowed. Allowed formats: JPG, PNG, WEBP, PDF, DOC, DOCX` };
+  }
+
+  const safeFilename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
+  const savePath = path.join(UPLOADS_DIR, safeFilename);
+
+  fs.writeFileSync(savePath, file.data);
+
+  return { success: true, url: `/uploads/${safeFilename}` };
+}
 
 function row(label, value) {
   return `<tr>
@@ -373,12 +494,49 @@ async function handleAdminReply(body) {
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Serve uploads statically
+  if (req.method === 'GET' && req.url?.startsWith('/uploads/')) {
+    const filename = path.basename(req.url.split('?')[0]);
+    const filePath = path.join(UPLOADS_DIR, filename);
+
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const mime = getMimeType(filePath);
+      const fileStream = fs.createReadStream(filePath);
+      res.writeHead(200, {
+        'Content-Type': mime,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Access-Control-Allow-Origin': '*',
+      });
+      fileStream.pipe(res);
+      return;
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'File not found' }));
+      return;
+    }
+  }
+
+  // Handle file uploads
+  if (req.method === 'POST' && req.url === '/api/upload') {
+    try {
+      const result = await handleFileUpload(req);
+      const statusCode = result.error ? 400 : 200;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      console.error('[dev-server] Upload Error:', err);
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message || 'Upload failed' }));
+    }
     return;
   }
 

@@ -1,40 +1,73 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FiStar } from 'react-icons/fi';
+import { FiStar, FiBriefcase, FiAward } from 'react-icons/fi';
 import Reveal from '../ui/Reveal';
 import { supabase } from '../../lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 
 function TestimonialCard({ item }) {
   const count = Math.min(5, Math.max(1, parseInt(item.rating, 10) || 5));
+
   return (
-    <div className="group relative flex h-[240px] w-full flex-col overflow-hidden rounded-[18px] border border-[#E5E7EB] bg-white p-5 shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_2px_6px_rgba(0,0,0,0.07),0_18px_44px_rgba(0,0,0,0.15)]">
-      <div className="flex flex-1 min-h-0 items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-blue/10">
-          <span aria-hidden="true" className="select-none font-serif text-xl font-bold leading-none text-brand-blue">&ldquo;</span>
+    <div className="group relative w-full h-full min-h-[320px] sm:min-h-[420px] md:min-h-[460px] flex flex-col justify-center overflow-hidden rounded-3xl border border-blue-100/90 bg-white p-4 sm:p-10 md:p-12 shadow-[0_12px_36px_rgba(30,86,199,0.08)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(30,86,199,0.14)]">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 items-stretch h-full w-full relative z-10">
+        {/* LEFT HALF (~ 5 cols): Image on top -> Below: Name, Position, Star Rating */}
+        <div className="md:col-span-5 lg:col-span-4 flex flex-col items-center text-center justify-center border-b md:border-b-0 md:border-r border-blue-100/80 pb-5 md:pb-0 md:pr-8 h-full">
+          {/* Avatar Image */}
+          <div className="relative shrink-0 rounded-2xl p-1.5 bg-gradient-to-tr from-brand-blue via-blue-500 to-brand-orange shadow-lg mb-3">
+            {item.avatar_url ? (
+              <img
+                src={item.avatar_url}
+                alt={item.name}
+                className="h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48 rounded-xl object-cover object-top border-2 border-white shadow-inner"
+              />
+            ) : (
+              <div className="flex h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48 items-center justify-center rounded-xl bg-gradient-to-br from-brand-blue to-blue-700 text-2xl sm:text-4xl font-extrabold text-white border-2 border-white">
+                {(item.name || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          {/* Name */}
+          <h3 className="!text-xl sm:!text-2xl font-extrabold text-[#0B1E48] tracking-tight leading-snug">{item.name}</h3>
+
+          {/* Position & Bank Badges */}
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 min-h-[28px]">
+            {item.role && (
+              <div className="inline-flex items-center gap-1 rounded-full bg-blue-50/90 px-2.5 py-0.5 sm:px-3 sm:py-1 !text-[12px] sm:!text-sm font-semibold text-[#1E56C7] border border-blue-100">
+                <FiBriefcase className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#1E56C7] shrink-0" />
+                <span>{item.role}</span>
+              </div>
+            )}
+
+            {item.bank_name && (
+              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50/90 px-2.5 py-0.5 sm:px-3 sm:py-1 !text-[12px] sm:!text-sm font-semibold text-emerald-700 border border-emerald-200">
+                <FiAward className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0" />
+                <span>{item.bank_name}</span>
+              </div>
+            )}
+
+            {!item.role && !item.bank_name && (item.exam_name || item.badge_text) && (
+              <div className="inline-flex items-center gap-1 rounded-full bg-blue-50/90 px-2.5 py-0.5 sm:px-3 sm:py-1 !text-[12px] sm:!text-sm font-semibold text-[#1E56C7] border border-blue-100">
+                <FiBriefcase className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#1E56C7] shrink-0" />
+                <span>{item.exam_name || item.badge_text}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Star Rating */}
+          <div className="mt-2.5 flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <FiStar key={i} className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${i < count ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
+            ))}
+          </div>
         </div>
-        <blockquote className="flex-1 !text-[13px] sm:!text-[15px] leading-[1.6] text-text-gray line-clamp-4">
-          “{item.quote}”
-        </blockquote>
-      </div>
-      <div className="mt-3 flex items-start gap-3 border-t border-gray-100 pt-3">
-        <div className="shrink-0 rounded-full bg-gradient-to-br from-brand-blue to-brand-orange p-[2px]">
-          {item.avatar_url ? (
-            <img src={item.avatar_url} alt={item.name} className="h-14 w-14 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-base font-bold text-brand-blue">
-              {(item.name || '?').charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate !text-[12px] sm:!text-sm font-bold text-dark-navy">{item.name}</p>
-          {item.role && <p className="mt-0.5 truncate !text-[11px] sm:!text-xs text-text-gray">{item.role}</p>}
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <FiStar key={i} className={`w-3.5 h-3.5 ${i < count ? 'fill-yellow-500 text-yellow-500' : 'text-gray-200'}`} />
-          ))}
+
+        {/* RIGHT HALF (~ 7 cols): Description / Quote Text */}
+        <div className="md:col-span-7 lg:col-span-8 flex flex-col justify-center text-left md:pl-4 h-full">
+          <p className="!text-sm sm:!text-lg md:!text-xl font-normal leading-relaxed text-slate-600 whitespace-pre-line text-justify [text-align-last:left]">
+            {item.quote}
+          </p>
         </div>
       </div>
     </div>
@@ -43,54 +76,77 @@ function TestimonialCard({ item }) {
 
 export default function TestimonialsSection({ section }) {
   const { data: items = [] } = useQuery({
-    queryKey: ['testimonials', 'active'],
+    queryKey: ['combined_testimonials', 'active'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true })
-        .limit(6);
-      if (error) {
-        if (error.code === '42P01') return [];
-        throw error;
+      const [genRes, bankRes] = await Promise.all([
+        supabase
+          .from('testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('banking_testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true }),
+      ]);
+
+      const genItems = (genRes.data || []).map((item) => ({
+        id: item.id || `gen-${item.name}`,
+        name: item.name || item.full_name || '',
+        role: item.role || item.designation || '',
+        bank_name: item.bank_name || '',
+        badge_text: item.badge_text || '',
+        avatar_url: item.avatar_url || item.image_url || '',
+        quote: item.quote || item.content || '',
+        rating: item.rating || 5,
+        sort_order: item.sort_order || 0,
+      }));
+
+      const bankItems = (bankRes.data || []).map((item) => ({
+        id: item.id || `bank-${item.name}`,
+        name: item.name || item.full_name || '',
+        role: item.role || item.designation || '',
+        bank_name: item.bank_name || '',
+        badge_text: item.badge_text || item.exam_name || '',
+        avatar_url: item.avatar_url || item.image_url || '',
+        quote: item.quote || item.content || '',
+        rating: item.rating || 5,
+        sort_order: item.sort_order || 0,
+      }));
+
+      // Interleave both testimonial sources
+      const combined = [];
+      const maxLength = Math.max(genItems.length, bankItems.length);
+      for (let i = 0; i < maxLength; i++) {
+        if (i < genItems.length) combined.push(genItems[i]);
+        if (i < bankItems.length) combined.push(bankItems[i]);
       }
-      return data || [];
+
+      return combined;
     },
   });
 
   const [pos, setPos] = useState(0);
   const [animate, setAnimate] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(3);
   const timerRef = useRef(null);
   const n = items.length;
-  const isSlider = n > 0;
-  const visible = visibleCount;
-  const doubled = n > 0 ? [...items, ...items, ...items] : [];
+  const tripled = n > 0 ? [...items, ...items, ...items] : [];
 
   useEffect(() => {
-    function update() {
-      const w = window.innerWidth;
-      setVisibleCount(w >= 1024 ? 3 : w >= 640 ? 2 : 1);
-    }
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  useEffect(() => {
-    if (n === 0) return undefined;
+    if (n <= 1) return undefined;
     startAutoScroll();
     return () => clearInterval(timerRef.current);
-  }, [n, visibleCount]);
+  }, [n]);
 
   function startAutoScroll() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setAnimate(true);
       setPos((prev) => prev + 1);
-    }, 7500);
+    }, 7000);
   }
 
   function stopAutoScroll() {
@@ -98,47 +154,46 @@ export default function TestimonialsSection({ section }) {
     timerRef.current = null;
   }
 
-  function jumpTo(dotIndex) {
+  function jumpTo(idx) {
     setAnimate(true);
-    const stepSize = Math.max(1, Math.ceil(n / 3));
-    setPos(dotIndex * stepSize);
+    setPos(idx);
   }
-
-  if (!section) return null;
-
-  const content = section.content || {};
-  const heading = content.heading || section.heading || 'What Our Students Say';
-  const subheading = content.subheading || section.subheading || '';
 
   if (items.length === 0) return null;
 
-  // Active dot calculation (always 3 dots max)
-  const groupSize = Math.max(1, Math.ceil(n / 3));
-  const activeDotIndex = Math.floor((pos % n) / groupSize);
+  const content = section?.content || {};
+  const heading = content.heading || section?.heading || 'What Our Students Say';
+  const subheading = content.subheading || section?.subheading || 'Hear from successful aspirants and students who transformed their preparation into results.';
+
+  const activeIndex = pos % n;
 
   return (
-    <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50">
+    <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50 border-t border-gray-100">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-64 w-[720px] max-w-full -translate-x-1/2 rounded-full bg-brand-blue/[0.04] blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-48 w-96 max-w-full rounded-full bg-brand-orange/[0.06] blur-3xl" />
       </div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="text-center">
-            {heading && (
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">{heading}</h2>
-            )}
+          <div className="text-center mb-10">
+            <h2 className="font-extrabold !text-2xl sm:!text-3xl text-dark-navy whitespace-pre-line">
+              {heading}
+            </h2>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-3" />
             {subheading && (
-              <p className="text-text-gray text-sm sm:text-base leading-relaxed mt-3 mb-10 whitespace-pre-line">{subheading}</p>
+              <p className="text-slate-600 !text-sm sm:!text-base font-normal leading-relaxed mt-4 max-w-2xl mx-auto whitespace-pre-line">
+                {subheading}
+              </p>
             )}
           </div>
         </Reveal>
 
-        <div className="relative mx-auto w-full mt-12" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
+        {/* 1-at-a-time Carousel matching Banking Testimonials design */}
+        <div className="relative mx-auto w-full mt-6" onMouseEnter={stopAutoScroll} onMouseLeave={startAutoScroll}>
           <div className="overflow-hidden py-4">
             <motion.div
-              animate={{ x: `-${pos * (100 / visible)}%` }}
+              animate={{ x: `-${pos * 100}%` }}
               transition={animate ? { duration: 0.65, ease: [0.25, 1, 0.5, 1] } : { duration: 0 }}
               onAnimationComplete={() => {
                 if (pos >= n) {
@@ -148,31 +203,33 @@ export default function TestimonialsSection({ section }) {
               }}
               className="flex items-stretch"
             >
-              {doubled.map((item, i) => (
-                <div key={`${item.id}-${i}`} className="h-full shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
+              {tripled.map((item, idx) => (
+                <div key={`${item.id}-${idx}`} className="h-full w-full shrink-0 px-2 flex">
                   <TestimonialCard item={item} />
                 </div>
               ))}
             </motion.div>
           </div>
 
-          {/* EXACTLY 3 PAGINATION DOT INDICATORS (...) */}
-          <div className="flex justify-center items-center gap-2.5 mt-8">
-            {[0, 1, 2].map((dotIndex) => {
-              const isActive = activeDotIndex === dotIndex;
-              return (
-                <button
-                  key={dotIndex}
-                  type="button"
-                  aria-label={`Go to slide group ${dotIndex + 1}`}
-                  onClick={() => jumpTo(dotIndex)}
-                  className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    isActive ? 'w-8 bg-brand-orange shadow-xs' : 'w-2.5 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              );
-            })}
-          </div>
+          {/* Pagination Indicators */}
+          {n > 1 && (
+            <div className="flex justify-center items-center gap-2.5 mt-8">
+              {items.map((t, idx) => {
+                const isActive = activeIndex === idx;
+                return (
+                  <button
+                    key={t.id || idx}
+                    type="button"
+                    aria-label={`Go to slide ${idx + 1}`}
+                    onClick={() => jumpTo(idx)}
+                    className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      isActive ? 'w-8 bg-brand-orange shadow-xs' : 'w-2.5 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadFile } from '../../lib/uploadHelper';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import PageShell from '../components/ui/PageShell';
@@ -87,30 +88,27 @@ export default function BankingTestimonialEditor() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `testimonials/banking_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (error) {
+    try {
+      const url = await uploadFile(file);
+      setForm(prev => ({ ...prev, avatar_url: url }));
+    } catch (error) {
       setSaveError('Photo upload failed: ' + error.message);
-    } else {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleCropSave(croppedFile) {
     setUploading(true);
     setSaveError('');
-    const path = `testimonials/banking_cropped_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-    const { error } = await supabase.storage.from('pages').upload(path, croppedFile);
-    if (!error) {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      setForm(prev => ({ ...prev, avatar_url: data.publicUrl }));
-    } else {
+    try {
+      const url = await uploadFile(croppedFile);
+      setForm(prev => ({ ...prev, avatar_url: url }));
+    } catch (error) {
       setSaveError('Crop save failed: ' + error.message);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleSave(e) {

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
+import { uploadFile as helperUploadFile } from '../lib/uploadHelper';
 import { trackFormSubmit, trackDownload } from '../lib/analytics';
 import Reveal from '../components/ui/Reveal';
 import CTABannerSection from '../components/home/CTABannerSection';
@@ -47,15 +48,7 @@ function getFieldConfig(formConfig, key, defaults) {
   return { ...defaults, ...(formConfig?.fields?.[key] || {}) };
 }
 
-async function uploadWithRetry(bucket, path, file, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
-    if (!error) return { error: null };
-    if (i < retries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-    else return { error };
-  }
-  return { error: new Error('Upload failed after retries') };
-}
+
 
 async function compressImage(file, maxWidth = 1920, quality = 0.7) {
   return new Promise((resolve, reject) => {
@@ -173,12 +166,20 @@ export default function Career() {
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
 
+  function closeCareerForm() {
+    setShowForm(false);
+    setSelectedJob(null);
+    setForm({ full_name: '', email: '', phone: '', position: '', category: '', description: '' });
+    setFile(null);
+    setErrors({});
+    setStatus(null);
+    setAgreeTerms(false);
+  }
+
   useEffect(() => {
     if (status?.type === 'success') {
       const timer = setTimeout(() => {
-        setShowForm(false);
-        setSelectedJob(null);
-        setStatus(null);
+        closeCareerForm();
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -355,6 +356,36 @@ export default function Career() {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    if (status) setStatus(null);
+  }
+
+  function validateFile(f) {
+    if (!f) return 'Resume is required';
+    const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedExts = ['pdf', 'doc', 'docx'];
+    const ext = f.name?.split('.').pop()?.toLowerCase();
+    if (!allowed.includes(f.type) && !allowedExts.includes(ext)) {
+      return 'Only PDF, DOC, or DOCX document files are allowed';
+    }
+    if (f.size > 1 * 1024 * 1024) {
+      return 'File size must be under 1 MB';
+    }
+    return null;
+  }
+
+  function handleFileSelect(f) {
+    if (!f) {
+      setFile(null);
+      return;
+    }
+    const err = validateFile(f);
+    if (err) {
+      setFile(null);
+      setErrors(prev => ({ ...prev, file: err }));
+    } else {
+      setFile(f);
+      setErrors(prev => ({ ...prev, file: '' }));
+    }
   }
 
   function validate() {
@@ -366,23 +397,24 @@ export default function Career() {
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
     if (!form.position.trim()) errs.position = 'Position is required';
     if (!form.description.trim()) errs.description = 'Description is required';
-    if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
-    if (!file) errs.file = 'Resume is required';
-    else {
-      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      const allowedExts = ['pdf', 'doc', 'docx'];
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (!allowed.includes(file.type) && !allowedExts.includes(ext)) {
-        errs.file = 'Only PDF, DOC, or DOCX document files are allowed';
-      }
-      if (file.size > 10 * 1024 * 1024) errs.file = 'File must be under 10 MB';
+    if (!agreeTerms) {
+      errs.agree = 'Please agree to the terms and conditions';
     }
+    const fileErr = validateFile(file);
+    if (fileErr) errs.file = fileErr;
     setErrors(errs);
+    if (!agreeTerms) {
+      setStatus({ type: 'error', message: 'Please agree to the terms and conditions.' });
+    }
     return Object.keys(errs).length === 0;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!agreeTerms) {
+      setErrors(prev => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+      setStatus({ type: 'error', message: 'Please agree to the terms and conditions.' });
+    }
     if (!validate()) return;
 
     setSubmitting(true);
@@ -399,18 +431,15 @@ export default function Career() {
           uploadFile = await compressImage(file);
         } catch { }
       }
-      const ext = uploadFile.name.split('.').pop();
-      const path = `career/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await uploadWithRetry('career-uploads', path, uploadFile);
-      if (uploadError) {
+      try {
+        file_url = await helperUploadFile(uploadFile);
+        setUploading(false);
+      } catch (uploadError) {
         setStatus({ type: 'error', message: `Upload failed: ${uploadError.message || 'Please try again.'}` });
         setUploading(false);
         setSubmitting(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('career-uploads').getPublicUrl(path);
-      file_url = urlData.publicUrl;
-      setUploading(false);
     }
 
     const { error: insertError } = await supabase
@@ -430,6 +459,16 @@ export default function Career() {
     trackFormSubmit('career');
     if (file_url) trackDownload('career_resume');
     setStatus({ type: 'success', message: 'Application submitted successfully! We will get back to you soon.' });
+    setForm({
+      full_name: '',
+      email: '',
+      phone: '',
+      position: selectedJob?.title || '',
+      category: selectedJob?._type === 'intern' ? 'Internship' : (selectedJob?.type || 'Full-time'),
+      description: '',
+    });
+    setFile(null);
+    setErrors({});
     setAgreeTerms(false);
     setSubmitting(false);
   }
@@ -450,21 +489,16 @@ export default function Career() {
 
     if (status?.type === 'success') {
       return (
-        <div className="p-6 sm:p-8 text-center">
+        <div className="p-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <FiCheck className="w-8 h-8 text-emerald-600" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Application Submitted!</h3>
-            <p className="text-sm text-slate-500 mb-6">{status.message}</p>
-            <button onClick={() => { setShowForm(false); setSelectedJob(null); }}
-              className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
-              Close
-            </button>
+            <h3 className="text-lg font-bold text-slate-800">Success!</h3>
           </motion.div>
         </div>
       );
@@ -538,7 +572,14 @@ export default function Career() {
             {fieldDefs.file_upload.enabled !== false && (
               <div className="sm:col-span-2">
                 <Field label={fieldDefs.file_upload.label} required={fieldDefs.file_upload.required !== false} error={errors.file}>
-                  <label className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all group ${
+                  <label
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => {
+                      e.preventDefault();
+                      const f = e.dataTransfer?.files?.[0];
+                      handleFileSelect(f);
+                    }}
+                    className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all group ${
                     errors.file
                       ? 'border-red-300 bg-red-50/50'
                       : 'border-brand-blue/40 hover:border-brand-blue bg-blue-50/40 hover:bg-blue-50/80'
@@ -552,14 +593,13 @@ export default function Career() {
                       ) : (
                         <>
                           <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
-                          <p className="text-xs text-slate-400 mt-0.5">PDF, DOC, DOCX (max 10MB)</p>
+                          <p className="text-xs text-slate-400 mt-0.5">PDF, DOC, DOCX (max 1MB)</p>
                         </>
                       )}
                     </div>
                     <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e => {
                       const f = e.target.files?.[0];
-                      setFile(f || null);
-                      if (errors.file) setErrors(prev => ({ ...prev, file: '' }));
+                      handleFileSelect(f);
                     }} className="hidden" />
                     {file && (
                       <button type="button" onClick={() => { setFile(null); if (formRef.current) formRef.current.querySelector('input[type="file"]').value = ''; }}
@@ -575,8 +615,14 @@ export default function Career() {
             <div className="sm:col-span-2">
               <label className="flex items-start gap-2 cursor-pointer">
                 <input type="checkbox" checked={agreeTerms} onChange={(e) => {
-                  setAgreeTerms(e.target.checked);
-                  if (errors.agree) setErrors(prev => ({ ...prev, agree: '' }));
+                  const checked = e.target.checked;
+                  setAgreeTerms(checked);
+                  if (status) setStatus(null);
+                  if (checked) {
+                    if (errors.agree) setErrors(prev => ({ ...prev, agree: '' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+                  }
                 }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/20" />
                 <span className="text-sm text-slate-600 leading-relaxed">
                   I agree to the{' '}
@@ -585,7 +631,7 @@ export default function Career() {
                   <a href="/privacy" className="underline hover:opacity-80 text-brand-blue">Privacy Policy</a>.
                 </span>
               </label>
-              {errors.agree && <p className="text-xs text-red-500 mt-1">{errors.agree}</p>}
+              {errors.agree && <p className="text-xs !text-red-500 mt-1.5 flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>{errors.agree}</p>}
             </div>
 
             <div className="sm:col-span-2 pt-1">
@@ -872,7 +918,7 @@ export default function Career() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => { setShowForm(false); setSelectedJob(null); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={closeCareerForm}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -880,18 +926,22 @@ export default function Career() {
             className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
-              <FiX className="w-5 h-5 text-red-600" />
-            </button>
+            {status?.type !== 'success' && (
+              <button onClick={closeCareerForm} className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center" aria-label="Close modal">
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+            )}
 
             <div className="overflow-y-auto rounded-3xl flex-1">
-              <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-                {selectedJob && (
-                  <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
-                    Applying for: <span className="font-semibold">{selectedJob.title}</span>
-                  </span>
-                )}
-              </div>
+              {status?.type !== 'success' && (
+                <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+                  {selectedJob && (
+                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
+                      Applying for: <span className="font-semibold">{selectedJob.title}</span>
+                    </span>
+                  )}
+                </div>
+              )}
               {renderForm()}
             </div>
           </motion.div>

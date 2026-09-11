@@ -653,37 +653,31 @@ export default function CourseDetail() {
         {showInterest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowInterest(false)}>
             <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-100" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => setShowInterest(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
+              {!interestDone && (
+                <button
+                  onClick={() => setShowInterest(false)}
+                  className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-5 h-5 text-red-600" />
+                </button>
+              )}
 
               <div className="overflow-y-auto rounded-3xl flex-1">
-                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
-                    <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
-                    <span>{course?.title || 'Register Your Interest'}</span>
-                  </h2>
-                </div>
+                {!interestDone && (
+                  <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
+                      <FiBell className="w-5 h-5 text-amber-300 shrink-0" />
+                      <span>{course?.title || 'Register Your Interest'}</span>
+                    </h2>
+                  </div>
+                )}
                 {interestDone ? (
-                  <div className="p-8 text-center">
-                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                  <div className="p-6 text-center">
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
                       <FiCheck className="w-7 h-7 text-emerald-600" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">You're on the list!</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">
-                      You've successfully registered your interest for{' '}
-                      <strong className="text-gray-900">{course.title}</strong>.
-                      {course.start_date
-                        ? <> We'll email you on {new Date(course.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} when it launches.</>
-                        : ' We\'ll notify you as soon as it launches.'}
-                    </p>
-                    <button onClick={() => setShowInterest(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
-                      Done
-                    </button>
+                    <h3 className="text-lg font-bold text-gray-900">Success!</h3>
                   </div>
                 ) : (
                   <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
@@ -848,30 +842,30 @@ export default function CourseDetail() {
               className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col border border-slate-100"
               onClick={e => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowBrochure(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
+              {!brochureDone && (
+                <button
+                  onClick={() => setShowBrochure(false)}
+                  className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-5 h-5 text-red-600" />
+                </button>
+              )}
 
               <div className="overflow-y-auto rounded-3xl flex-1">
-                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
-                    {course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request'}
-                  </h2>
-                </div>
+                {!brochureDone && (
+                  <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                      {course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request'}
+                    </h2>
+                  </div>
+                )}
               {brochureDone ? (
-                <div className="p-8 text-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                <div className="p-6 text-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
                     <FiCheck className="w-7 h-7 text-emerald-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">Thank You!</h3>
-                  <p className="text-sm text-gray-500">We've received your request. The brochure will be sent to your email shortly.</p>
-                  <button onClick={() => setShowBrochure(false)} className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-xl bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
-                    Done
-                  </button>
+                  <h3 className="text-lg font-bold text-gray-900">Success!</h3>
                 </div>
               ) : (
                 <form onSubmit={handleBrochureSubmit} className="p-6 space-y-4">
@@ -946,37 +940,33 @@ export default function CourseDetail() {
               className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col border border-slate-100 cursor-default"
               onClick={e => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowEnquiry(false)}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
+              {!enquiryDone && (
+                <button
+                  onClick={() => setShowEnquiry(false)}
+                  className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-5 h-5 text-red-600" />
+                </button>
+              )}
 
               <div className="overflow-y-auto rounded-3xl flex-1">
-                <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
-                    {enquirySource?.toLowerCase().includes('brochure')
-                      ? (course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request')
-                      : (course?.title ? `${course.title} Enquiry` : 'Course Enquiry')}
-                  </h2>
-                </div>
+                {!enquiryDone && (
+                  <div className="px-5 py-4 bg-brand-blue rounded-t-3xl text-center flex flex-col items-center justify-center relative">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug text-center max-w-[85%] mx-auto" style={{ color: '#ffffff' }}>
+                      {enquirySource?.toLowerCase().includes('brochure')
+                        ? (course?.title ? `Brochure Request for ${course.title}` : 'Brochure Request')
+                        : (course?.title ? `${course.title} Enquiry` : 'Course Enquiry')}
+                    </h2>
+                  </div>
+                )}
 
               {enquiryDone ? (
-                <div className="p-8 text-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                <div className="p-6 text-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
                     <FiCheck className="w-7 h-7 text-emerald-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">Enquiry Submitted!</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                    Thank you <strong className="text-gray-900">{enquiryForm.name}</strong>! Your enquiry for{' '}
-                    <strong className="text-gray-900">{course.title}</strong> via <span className="font-semibold text-brand-blue">"{enquirySource}"</span> has been recorded.
-                    Our course advisor will contact you shortly.
-                  </p>
-                  <button onClick={() => setShowEnquiry(false)} className="px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-blue text-white hover:bg-blue-700 transition-colors cursor-pointer">
-                    Done
-                  </button>
+                  <h3 className="text-lg font-bold text-gray-900">Success!</h3>
                 </div>
               ) : (
                 <form onSubmit={handleEnquirySubmit} className="p-6 space-y-4">

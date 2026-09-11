@@ -51,6 +51,15 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
 
   if (!heading && classes.length === 0) return null;
 
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        closeModal();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
   function closeModal() {
     if (submitting) return;
     setSelectedClass(null);
@@ -200,30 +209,23 @@ export default function UpcomingClassesTableSection({ section, imageSection }) {
               className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={closeModal}
-                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                <FiX className="w-5 h-5 text-red-600" />
-              </button>
+              {!showSuccess && (
+                <button
+                  onClick={closeModal}
+                  className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <FiX className="w-5 h-5 text-red-600" />
+                </button>
+              )}
 
               <div className="overflow-y-auto rounded-3xl flex-1">
                 {showSuccess ? (
-                  <div className="p-6 sm:p-8 text-center">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="p-6 text-center">
+                    <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
                       <FiCheck className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-1">Registration Successful!</h3>
-                    <p className="text-sm text-slate-500 mb-6">
-                      Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
-                    </p>
-                    <button
-                      onClick={closeModal}
-                      className="inline-flex items-center gap-2 bg-brand-blue hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer"
-                    >
-                      Close
-                    </button>
+                    <h3 className="text-lg font-bold text-slate-800">Success!</h3>
                   </div>
                 ) : (
                   <>

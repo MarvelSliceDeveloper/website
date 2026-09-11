@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as LuIcons from 'react-icons/lu';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadFile } from '../../lib/uploadHelper';
 import AddButton from '../components/AddButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
@@ -67,17 +68,14 @@ function ImageUploader({ value, onChange, label }) {
     if (!file) return;
     setUploading(true);
     setUploadError('');
-    const ext = file.name.split('.').pop();
-    const path = `about/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (error) {
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (error) {
       setUploadError(error.message);
+    } finally {
       setUploading(false);
-      return;
     }
-    const { data } = supabase.storage.from('pages').getPublicUrl(path);
-    onChange(data.publicUrl);
-    setUploading(false);
   }
   return (
     <div>

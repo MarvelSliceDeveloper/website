@@ -80,7 +80,7 @@ export default function FloatingContactButton() {
         setSent(false);
         setAgreeTerms(false);
         setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
-      }, 1200);
+      }, 1000);
     } catch {
       setErrors({ form: 'Submission failed. Please try again.' });
     } finally {
@@ -154,28 +154,31 @@ export default function FloatingContactButton() {
             role="dialog"
             aria-modal="true"
           >
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close modal"
-              className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
-            >
-              <FiX className="w-5 h-5 text-red-600" />
-            </button>
+            {!sent && (
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Close modal"
+                className="absolute -top-3 -right-3 sm:-top-3 sm:-right-3 md:-top-3.5 md:-right-3.5 lg:-top-3.5 lg:-right-3.5 bg-white shadow-lg text-red-600 hover:text-red-700 p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+              >
+                <FiX className="w-5 h-5 text-red-600" />
+              </button>
+            )}
 
             <div className="overflow-y-auto rounded-3xl flex-1">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-                <h3 className="text-xl font-bold text-center">Enquiry</h3>
-                <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
-              </div>
+              {!sent && (
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
+                  <h3 className="text-xl font-bold text-center">Enquiry</h3>
+                  <div className="text-white text-xs mt-0.5 text-center">Fill the form and our team will contact you shortly.</div>
+                </div>
+              )}
 
             {sent ? (
-              <div className="p-6 sm:p-8 text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="p-6 text-center">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FiCheck className="w-8 h-8 text-emerald-600" />
                 </div>
-                <h4 className="text-lg font-bold text-slate-800 mb-1">Message sent.</h4>
-                <p className="text-sm text-slate-500">We have received your enquiry. Our team will get in touch with you shortly.</p>
+                <h4 className="text-lg font-bold text-slate-800">Success!</h4>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="p-6 sm:p-8">
@@ -207,8 +210,13 @@ export default function FloatingContactButton() {
                 {errors.form && <p className="!text-red-500 text-xs mt-2">{errors.form}</p>}
                 <label className="mt-4 flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={agreeTerms} onChange={(e) => {
-                    setAgreeTerms(e.target.checked);
-                    if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                    const checked = e.target.checked;
+                    setAgreeTerms(checked);
+                    if (checked) {
+                      if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                    } else {
+                      setErrors((prev) => ({ ...prev, agree: 'Please agree to the terms and conditions' }));
+                    }
                   }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
                   <span className="text-sm text-slate-600 leading-relaxed">
                     I agree to the{' '}
@@ -217,7 +225,7 @@ export default function FloatingContactButton() {
                     <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
                   </span>
                 </label>
-                {errors.agree && <p className="!text-red-500 text-xs mt-1.5">{errors.agree}</p>}
+                {errors.agree && <p className="!text-red-500 text-xs mt-1.5 flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>{errors.agree}</p>}
                 <div className="mt-6 flex justify-center">
                   <button type="submit" disabled={submitting}
                     className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">

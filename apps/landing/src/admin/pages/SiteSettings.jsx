@@ -9,6 +9,7 @@ import {
   FiMapPin
 } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
+import { uploadFile } from '../../lib/uploadHelper';
 
 function ImageUploader({ value, onChange, label }) {
   const inputRef = useRef(null);
@@ -18,17 +19,14 @@ function ImageUploader({ value, onChange, label }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `site/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (error) {
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (error) {
       alert('Upload failed: ' + error.message);
+    } finally {
       setUploading(false);
-      return;
     }
-    const { data: urlData } = supabase.storage.from('pages').getPublicUrl(path);
-    onChange(urlData.publicUrl);
-    setUploading(false);
   }
 
   return (

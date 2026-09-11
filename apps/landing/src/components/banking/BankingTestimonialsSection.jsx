@@ -76,19 +76,56 @@ function TestimonialCard({ item }) {
 
 export default function BankingTestimonialsSection() {
   const { data: items = [] } = useQuery({
-    queryKey: ['banking_testimonials', 'active'],
+    queryKey: ['combined_testimonials', 'active'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('banking_testimonials')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true });
-      if (error) {
-        if (error.code === '42P01') return [];
-        throw error;
+      const [genRes, bankRes] = await Promise.all([
+        supabase
+          .from('testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('banking_testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true }),
+      ]);
+
+      const genItems = (genRes.data || []).map((item) => ({
+        id: item.id || `gen-${item.name}`,
+        name: item.name || item.full_name || '',
+        role: item.role || item.designation || '',
+        bank_name: item.bank_name || '',
+        badge_text: item.badge_text || '',
+        avatar_url: item.avatar_url || item.image_url || '',
+        quote: item.quote || item.content || '',
+        rating: item.rating || 5,
+        sort_order: item.sort_order || 0,
+      }));
+
+      const bankItems = (bankRes.data || []).map((item) => ({
+        id: item.id || `bank-${item.name}`,
+        name: item.name || item.full_name || '',
+        role: item.role || item.designation || '',
+        bank_name: item.bank_name || '',
+        badge_text: item.badge_text || item.exam_name || '',
+        avatar_url: item.avatar_url || item.image_url || '',
+        quote: item.quote || item.content || '',
+        rating: item.rating || 5,
+        sort_order: item.sort_order || 0,
+      }));
+
+      // Interleave both testimonial sources
+      const combined = [];
+      const maxLength = Math.max(genItems.length, bankItems.length);
+      for (let i = 0; i < maxLength; i++) {
+        if (i < genItems.length) combined.push(genItems[i]);
+        if (i < bankItems.length) combined.push(bankItems[i]);
       }
-      return data || [];
+
+      return combined;
     },
   });
 

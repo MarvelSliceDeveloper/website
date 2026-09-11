@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadFile } from '../../lib/uploadHelper';
 import AddButton from '../components/AddButton';
 import useDirty from '../hooks/useDirty';
 import SaveBar from '../components/SaveBar';
@@ -45,14 +46,14 @@ function ImageUploader({ value, onChange, label }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split('.').pop();
-    const path = `career/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (!error) {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      onChange(data.publicUrl);
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
   return (
     <div>
