@@ -122,6 +122,11 @@ services:
     environment:
       - NODE_ENV=production
       - DEV_API_PORT=3001
+      - LANDING_PUBLIC_URL=https://marvelslice.com
+    volumes:
+      # Persist career resumes across redeploys (dev-server.js writes to /app/uploads).
+      # Named volume survives `up -d --build`; same pattern as postgres_data/redis_data.
+      - landing_uploads:/app/uploads
     restart: unless-stopped
     networks: [lms-network]
 
@@ -207,6 +212,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  landing_uploads:
   # uploads_data is kept for backwards-compatibility if you use the named
   # volume alternative above. Remove if you use the bind-mount.
   uploads_data:
