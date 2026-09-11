@@ -1,3 +1,5 @@
+import { getEnv } from './env.js';
+
 let isInitialized = false;
 let activeMeasurementId = null;
 
@@ -6,7 +8,7 @@ let activeMeasurementId = null;
  * @param {string} measurementId - E.g., 'G-XXXXXXXXXX'
  */
 export function initAnalytics(measurementId) {
-  const id = measurementId || (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_GA_MEASUREMENT_ID : null);
+  const id = measurementId || getEnv('VITE_GA_MEASUREMENT_ID');
   if (!id || typeof window === 'undefined') return;
 
   activeMeasurementId = id.trim();
