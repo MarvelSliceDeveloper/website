@@ -45,7 +45,8 @@ export default function Home() {
       <CTABannerSection section={sec('cta_banner')} />
       <TestimonialsSection section={sec('testimonials')} />
       <FAQSection section={sec('faqs')} />
-      <LatestBlogSection section={sec('latest_blog')} />
+      {/* Hidden: Latest Blog section kept for future re-enable */}
+      {/* <LatestBlogSection section={sec('latest_blog')} /> */}
     </>
   );
 }
