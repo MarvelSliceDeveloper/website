@@ -90,6 +90,18 @@ export default function CataloguePage() {
     undefined
   );
 
+  // Sidebar categories are fetched unfiltered (no category/search) so the
+  // left list + the "All Categories" count always show the full catalogue
+  // instead of shrinking to the current selection.
+  const categoriesQuery = useApiQuery<{
+    total: number;
+    categories?: { id: string; name: string; slug: string; description?: string; courseCount: number }[];
+  }>(
+    ["catalogue", "categories"],
+    "/api/courses/catalogue",
+    { page: "1", limit: "1" }
+  );
+
   const rawCourses = coursesQuery.data?.courses || [];
   const rawPackages = packagesQuery.data?.packages || [];
 
@@ -155,7 +167,7 @@ export default function CataloguePage() {
 
   // Combine categories
   const categoriesList = useMemo(() => {
-    const fromApi = coursesQuery.data?.categories;
+    const fromApi = categoriesQuery.data?.categories;
     if (fromApi && fromApi.length > 0) {
       return fromApi;
     }
@@ -163,9 +175,10 @@ export default function CataloguePage() {
       ...def,
       courseCount: 0,
     }));
-  }, [coursesQuery.data?.categories]);
+  }, [categoriesQuery.data?.categories]);
 
   const totalCourses = coursesQuery.data?.total || 0;
+  const allCoursesTotal = categoriesQuery.data?.total ?? totalCourses;
   const totalPackages = packageItems.length;
 
   // Active items for display: combine packages and single courses
@@ -268,7 +281,7 @@ export default function CataloguePage() {
                       : "text-slate-400 bg-slate-100"
                   }`}
                 >
-                  {totalCourses}
+                    {allCoursesTotal}
                 </span>
               </button>
 

@@ -217,8 +217,8 @@ export default function StudentPortalShell({
                     className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   />
                   <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">
-                    <span className="text-brand-blue">Marvel</span>
-                    <span className="text-brand-orange ml-0.5">Slice</span>
+                    <span className="text-[#175cdd]">Marvel</span>
+                    <span className="text-[#f59e0b] ml-0.5">Slice</span>
                   </span>
                 </div>
               )}

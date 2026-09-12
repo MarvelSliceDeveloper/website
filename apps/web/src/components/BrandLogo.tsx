@@ -27,8 +27,8 @@ export default function BrandLogo({
         className={`${s.img} object-contain shrink-0`}
       />
       <span className={`${s.text} font-extrabold tracking-tight`}>
-        <span className="text-foreground">Marvel</span>{" "}
-        <span className="text-primary">Slice</span>
+        <span className="text-[#175cdd]">Marvel</span>{" "}
+        <span className="text-[#f59e0b]">Slice</span>
       </span>
     </Link>
   );

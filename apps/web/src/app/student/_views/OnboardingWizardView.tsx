@@ -466,7 +466,7 @@ function AllSetStep() {
       <p className="mx-auto mt-5 max-w-md text-[11px] text-muted-foreground">
         By continuing, you agree to our{" "}
         <a
-          href="/pages/terms"
+          href="https://marvelslice.com/terms"
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
@@ -475,7 +475,7 @@ function AllSetStep() {
         </a>{" "}
         and{" "}
         <a
-          href="/pages/privacy"
+          href="https://marvelslice.com/privacy"
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-foreground underline underline-offset-2 hover:text-primary"

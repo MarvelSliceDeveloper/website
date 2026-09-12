@@ -295,7 +295,7 @@ function InstructorLoginContent() {
               </div>
               <div>
                 <span className="text-3xl xl:text-4xl font-black text-white tracking-tight">
-                  Marvel <span className="text-[#FF8A48]">Slice</span>
+                  <span className="text-[#175cdd]">Marvel</span> <span className="text-[#f59e0b]">Slice</span>
                 </span>
                 <span className="block text-[11px] font-bold tracking-widest uppercase text-orange-300 mt-0.5">
                   Instructor & Faculty Portal
