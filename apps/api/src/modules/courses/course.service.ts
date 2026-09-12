@@ -688,4 +688,47 @@ export const courseService = {
     });
     return { payment, enrollment, user: { id: user.id, email: user.email, name: user.name } };
   },
+
+  async listCatalogueBatches(courseId: string) {
+    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null }, select: { id: true } });
+    if (!course) throw new AppError(404, "Course not found");
+    const batches = await prisma.batch.findMany({
+      where: { courseId, status: { in: ["UPCOMING", "ACTIVE"] } },
+      include: { _count: { select: { enrollments: true } } },
+      orderBy: { startDate: "asc" },
+    });
+    return batches.map((b) => ({
+      id: b.id,
+      name: b.name,
+      startDate: b.startDate,
+      endDate: b.endDate,
+      status: b.status,
+      seatsAvailable: b.maxStudents ? b.maxStudents - b._count.enrollments : null,
+    }));
+  },
+
+  async enrollCatalogueBatch(courseId: string, payload: { paymentId: string; batchId: string; name: string; email: string; phone: string }) {
+    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+    if (!course) throw new AppError(404, "Course not found");
+    const payment = await prisma.payment.findUnique({ where: { id: payload.paymentId } });
+    if (!payment || payment.status !== "PAID" || payment.courseId !== course.id)
+      throw new AppError(400, "Payment not completed");
+    const batch = await prisma.batch.findUnique({ where: { id: payload.batchId } });
+    if (!batch || batch.courseId !== course.id || (batch.status !== "UPCOMING" && batch.status !== "ACTIVE"))
+      throw new AppError(400, "Batch not available for this course");
+    // Same guest handling as verifyCataloguePayment (email kept as provided)
+    let user = await prisma.user.findUnique({ where: { email: payload.email } });
+    if (!user) {
+      const bcrypt = await import("bcryptjs");
+      const dummy = Math.random().toString(36).slice(2, 10);
+      const hash = await bcrypt.hash(dummy, 10);
+      user = await prisma.user.create({ data: { name: payload.name, email: payload.email, passwordHash: hash, role: "STUDENT", phone: payload.phone } });
+    }
+    const enrollment = await prisma.courseEnrollment.upsert({
+      where: { paymentId: payment.id },
+      update: { batchId: batch.id, status: "APPROVED", userId: user.id },
+      create: { userId: user.id, courseId: course.id, paymentId: payment.id, batchId: batch.id, status: "APPROVED" },
+    });
+    return { enrollment, user: { id: user.id, email: user.email, name: user.name } };
+  },
 };

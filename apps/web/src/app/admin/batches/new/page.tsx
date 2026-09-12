@@ -31,8 +31,13 @@ type CourseOption = {
   course: { id: string; title: string; slug: string };
 };
 
+type BatchMode = "package" | "course";
+
 type FormState = {
+  mode: BatchMode;
   packageId: string;
+  courseId: string;
+  instructorId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -52,7 +57,10 @@ export default function CreateBatchPage() {
   const [attempted, setAttempted] = useState(false);
 
   const [form, setForm] = useState<FormState>({
+    mode: "package",
     packageId: "",
+    courseId: "",
+    instructorId: "",
     name: "",
     startDate: "",
     endDate: "",
@@ -64,6 +72,9 @@ export default function CreateBatchPage() {
   const packagesQuery = useApiQuery<{
     items: Array<{ id: string; name: string; status: string }>;
   }>(["admin", "packages"], "/api/admin/packages");
+  const coursesQuery = useApiQuery<{
+    courses: Array<{ id: string; title: string; status?: string }>;
+  }>(["admin", "batches", "courses"], "/api/admin/packages/courses");
   const instructorsQuery = useApiQuery<InstructorOption[]>(
     ["admin", "batches", "instructors"],
     "/api/admin/batches/instructors",
@@ -89,6 +100,22 @@ export default function CreateBatchPage() {
     [packagesQuery.data],
   );
   const instructors = instructorsQuery.data ?? [];
+  const [courseSearch, setCourseSearch] = useState("");
+  const [courseFocused, setCourseFocused] = useState(false);
+
+  const allBatchCourses = coursesQuery.data?.courses ?? [];
+  const filteredBatchCourses = useMemo(() => {
+    const q = courseSearch.trim().toLowerCase();
+    if (!q) return allBatchCourses.slice(0, 6);
+    return allBatchCourses
+      .filter((c) => c.title.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const aq = a.title.toLowerCase().startsWith(q) ? 0 : 1;
+        const bq = b.title.toLowerCase().startsWith(q) ? 0 : 1;
+        return aq - bq;
+      })
+      .slice(0, 6);
+  }, [courseSearch, allBatchCourses]);
 
   const packageCourses = useMemo(
     () =>
@@ -121,7 +148,10 @@ export default function CreateBatchPage() {
 
   const errors = useMemo(() => {
     const e: Partial<Record<keyof FormState, string>> = {};
-    if (!form.packageId) e.packageId = "Please select a package";
+    if (form.mode === "package" && !form.packageId)
+      e.packageId = "Please select a package";
+    if (form.mode === "course" && !form.courseId)
+      e.courseId = "Please select a course";
     if (form.name.trim().length < 3)
       e.name = "Name must be at least 3 characters";
     if (!form.startDate) e.startDate = "Start date is required";
@@ -144,7 +174,6 @@ export default function CreateBatchPage() {
   const createBatchMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = {
-        packageId: form.packageId,
         name: form.name,
         startDate: new Date(form.startDate).toISOString(),
         endDate: new Date(form.endDate).toISOString(),
@@ -155,10 +184,16 @@ export default function CreateBatchPage() {
           : undefined,
       };
 
-      const assigned = courseInstructors.filter(
-        (ci) => ci.instructorId && ci.instructorId.trim(),
-      );
-      if (assigned.length > 0) body.courseInstructors = assigned;
+      if (form.mode === "course") {
+        body.courseId = form.courseId;
+        if (form.instructorId.trim()) body.instructorId = form.instructorId;
+      } else {
+        body.packageId = form.packageId;
+        const assigned = courseInstructors.filter(
+          (ci) => ci.instructorId && ci.instructorId.trim(),
+        );
+        if (assigned.length > 0) body.courseInstructors = assigned;
+      }
 
       return api.post<{ id: string; name: string }>("/api/admin/batches", body);
     },
@@ -191,7 +226,11 @@ export default function CreateBatchPage() {
     <div className="w-full space-y-6">
       <AdminPageHeader
         title="Add Batch"
-        description="Select a package and assign instructors to each course."
+        description={
+          form.mode === "course"
+            ? "Select a standalone course and assign an instructor."
+            : "Select a package and assign instructors to each course."
+        }
         breadcrumbs={[
           { label: "Batches", href: "/admin/batches" },
           { label: "Add", href: "/admin/batches/new" },
@@ -215,30 +254,129 @@ export default function CreateBatchPage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Package <span className="text-danger">*</span>
+              Batch for
             </label>
-            <Select
-              value={form.packageId}
-              onValueChange={(v) => update("packageId", v)}
-            >
-              <SelectTrigger className="field w-full">
-                <SelectValue placeholder="Select a package" />
-              </SelectTrigger>
-              <SelectContent>
-                {packages.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {packages.length === 0 && (
-              <p className="mt-1 text-xs text-warning">
-                No active packages found. Create and activate a package first.
-              </p>
-            )}
-            {showError("packageId")}
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  { value: "package", label: "Package" },
+                  { value: "course", label: "Standalone course" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => update("mode", opt.value)}
+                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                    form.mode === opt.value
+                      ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
+                      : "border-border text-muted-foreground hover:bg-card-hover"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {form.mode === "package" ? (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Package <span className="text-danger">*</span>
+              </label>
+              <Select
+                value={form.packageId}
+                onValueChange={(v) => update("packageId", v)}
+              >
+                <SelectTrigger className="field w-full">
+                  <SelectValue placeholder="Select a package" />
+                </SelectTrigger>
+                <SelectContent>
+                  {packages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {packages.length === 0 && (
+                <p className="mt-1 text-xs text-warning">
+                  No active packages found. Create and activate a package first.
+                </p>
+              )}
+              {showError("packageId")}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  Course <span className="text-danger">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={courseSearch}
+                    onChange={(e) => {
+                      setCourseSearch(e.target.value);
+                      if (form.courseId) update("courseId", "");
+                    }}
+                    onFocus={() => setCourseFocused(true)}
+                    onBlur={() => setCourseFocused(false)}
+                    placeholder="Type to search courses…"
+                    className="field w-full"
+                  />
+                  {courseFocused && (
+                    <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border bg-background shadow-lg">
+                      {filteredBatchCourses.length === 0 ? (
+                        <p className="px-3 py-2 text-sm text-muted-foreground">
+                          {allBatchCourses.length === 0
+                            ? "No courses found"
+                            : "No courses match"}
+                        </p>
+                      ) : (
+                        filteredBatchCourses.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              update("courseId", c.id);
+                              setCourseSearch(c.title);
+                              setCourseFocused(false);
+                            }}
+                            className="block w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover"
+                          >
+                            {c.title}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                {showError("courseId")}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  Instructor
+                </label>
+                <Select
+                  value={form.instructorId}
+                  onValueChange={(v) => update("instructorId", v)}
+                >
+                  <SelectTrigger className="field w-full">
+                    <SelectValue placeholder="Select instructor (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {instructors.map((i) => (
+                      <SelectItem key={i.id} value={i.id}>
+                        {i.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -312,8 +450,8 @@ export default function CreateBatchPage() {
           </div>
         </div>
 
-        {/* Per-Course Instructors */}
-        {packageCourses.length > 0 && (
+        {/* Per-Course Instructors (package mode only) */}
+        {form.mode === "package" && packageCourses.length > 0 && (
           <div className="glass-card p-6 space-y-4">
             <h2 className="text-sm font-semibold text-foreground">
               Course Instructors

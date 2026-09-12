@@ -165,11 +165,13 @@ export default function CataloguePage() {
       }));
   }, [rawPackages, search, category]);
 
-  // Combine categories
+  // Combine categories — only show categories that actually have courses.
+  // The API returns every active category with its live courseCount, so drop
+  // the empty ones instead of showing the full list.
   const categoriesList = useMemo(() => {
     const fromApi = categoriesQuery.data?.categories;
     if (fromApi && fromApi.length > 0) {
-      return fromApi;
+      return fromApi.filter((c) => (c.courseCount ?? 0) > 0);
     }
     return DEFAULT_CATEGORIES.map((def) => ({
       ...def,
