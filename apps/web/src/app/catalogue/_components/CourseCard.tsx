@@ -30,7 +30,7 @@ export function CourseCard({
       onMouseEnter={handlePrefetch}
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col"
     >
-      <div className={`${bannerH} bg-gradient-to-br from-primary to-dark-navy flex items-center justify-center shrink-0 overflow-hidden relative`}>
+      <div className={`${bannerH} bg-gradient-to-br from-primary to-ink flex items-center justify-center shrink-0 overflow-hidden relative`}>
         <div className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
           {img ? (
             <img src={img} alt={course.title} className="w-full h-full object-cover" />
@@ -43,7 +43,7 @@ export function CourseCard({
         </span>
       </div>
       <div className="p-6 flex flex-col flex-1">
-        <h3 className="font-bold text-dark-navy text-lg group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
+        <h3 className="font-bold text-ink text-lg group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
         <p className="text-sm text-slate-600 leading-relaxed mt-2 line-clamp-2 flex-1">{course.description}</p>
         <div className="flex flex-wrap gap-2 mt-3 mb-3">
           {course.duration && (

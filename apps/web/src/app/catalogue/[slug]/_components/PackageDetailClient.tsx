@@ -8,26 +8,24 @@ import { RazorpayCheckoutWidget } from "./RazorpayCheckoutWidget";
 import { InternCheckoutWidget } from "./InternCheckoutWidget";
 import { CourseDerivedCheckoutWidget } from "./CourseDerivedCheckoutWidget";
 import {
-  IconArrowRight,
   IconArrowLeft,
   IconBook,
   IconCertificate,
   IconCheck,
   IconChevronDown,
-  IconClock,
-  IconCode,
   IconStack2,
-  IconUsers,
   IconBadge,
-  IconTarget,
   IconVideo,
   IconBriefcase,
-  IconRocket,
   IconAward,
-  IconSparkles,
-  IconLifebuoy,
   IconStar,
+  IconUsers,
+  IconLifebuoy,
   IconShare,
+  IconRocket,
+  IconCode,
+  IconClipboardCheck,
+  IconInfinity,
 } from "@tabler/icons-react";
 
 interface Props {
@@ -35,39 +33,6 @@ interface Props {
 }
 
 // ── Mock / attractive fallback content (frontend only) ─────────────────────────
-const HIGHLIGHTS = [
-  {
-    icon: IconRocket,
-    label: "Industry-Relevant Curriculum",
-    value: "Designed by working professionals",
-  },
-  {
-    icon: IconLifebuoy,
-    label: "Dedicated Mentor Support",
-    value: "1:1 guidance throughout",
-  },
-  {
-    icon: IconCertificate,
-    label: "Certificate of Completion",
-    value: "Shareable, recognized credential",
-  },
-  {
-    icon: IconBriefcase,
-    label: "Placement Assistance",
-    value: "Resume & interview prep",
-  },
-  {
-    icon: IconClock,
-    label: "Flexible Learning",
-    value: "Learn at your own pace",
-  },
-  {
-    icon: IconTarget,
-    label: "Hands-On Projects",
-    value: "Real-world case studies",
-  },
-];
-
 const FEATURES = [
   "Industry-relevant curriculum designed by experts",
   "Hands-on projects & real-world case studies",
@@ -132,28 +97,6 @@ const FAQS = [
   },
 ];
 
-function StatPill({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ size?: number | string; className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-6 py-6 backdrop-blur-sm">
-      <Icon size={18} className="text-white/90" />
-      <div>
-        <p className="text-[15px] font-bold uppercase tracking-wide text-white">
-          {label}
-        </p>
-        <p className="text-[15px] font-bold text-white">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 function SectionHeading({
   kicker,
   title,
@@ -164,13 +107,16 @@ function SectionHeading({
   subtitle?: string;
 }) {
   return (
-    <div className="mb-6 max-w-2xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+    <div className="mb-8 max-w-2xl">
+      <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+        <span className="h-px w-6 bg-primary" />
         {kicker}
       </p>
-      <h2 className="mt-2 text-2xl font-bold text-foreground">{title}</h2>
+      <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+        {title}
+      </h2>
       {subtitle && (
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
           {subtitle}
         </p>
       )}
@@ -178,27 +124,198 @@ function SectionHeading({
   );
 }
 
-function Highlights() {
+function PageHeading({ pkg }: { pkg: PackageDetail }) {
+  const isInternship = pkg.isInternship ?? false;
+  const hasPrice = pkg.price != null && pkg.price > 0;
+
+  const stats = isInternship
+    ? [
+        { icon: IconLifebuoy, label: "1:1 Mentorship" },
+        { icon: IconVideo, label: "Live Sessions" },
+        { icon: IconBriefcase, label: "Hands-on Assignments" },
+        { icon: IconCertificate, label: "Certificate on finish" },
+      ]
+    : [
+        { icon: IconBook, label: `${pkg.courses.length} Courses` },
+        { icon: IconVideo, label: `${pkg.totalLessons ?? 0} Lessons` },
+        { icon: IconBadge, label: `${pkg.totalQuizzes ?? 0} Quizzes` },
+        { icon: IconUsers, label: "1:1 Mentors" },
+      ];
+
   return (
-    <section className="py-8">
+    <div className="mb-8">
+      <div className="flex flex-wrap items-center gap-2">
+        {isInternship && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+            <IconBriefcase size={13} /> Internship Program
+          </span>
+        )}
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <IconStar size={13} className="text-primary" /> Career-Focused
+        </span>
+      </div>
+
+      <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        {pkg.name}
+      </h1>
+
+      {pkg.description && (
+        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
+          {pkg.description}
+        </p>
+      )}
+
+      <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex flex-wrap gap-2">
+          {stats.map((s) => (
+            <span
+              key={s.label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <s.icon size={14} className="text-primary" />
+              {s.label}
+            </span>
+          ))}
+        </div>
+        <a
+          href="#apply"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-md sm:ml-auto"
+        >
+          {isInternship ? "Apply Now" : hasPrice ? "Enroll Now" : "Contact Us"}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+const WHY_CHOOSE = [
+  {
+    icon: IconRocket,
+    title: "Industry-focused curriculum",
+    value: "Designed with inputs from working professionals.",
+  },
+  {
+    icon: IconCode,
+    title: "Hands-on practical projects",
+    value: "Learn by building real-world projects.",
+  },
+  {
+    icon: IconLifebuoy,
+    title: "1:1 mentor guidance",
+    value: "Get personal guidance whenever you're stuck.",
+  },
+  {
+    icon: IconAward,
+    title: "Recognized certificate",
+    value: "Earn a shareable certificate on completion.",
+  },
+];
+
+const JOURNEY_STEPS = [
+  { title: "Learn", value: "Master concepts through structured lessons." },
+  {
+    title: "Practice",
+    value: "Reinforce with quizzes and hands-on exercises.",
+  },
+  { title: "Build", value: "Apply your skills in real-world projects." },
+  { title: "Get Mentored", value: "1:1 guidance from industry mentors." },
+  {
+    title: "Get Certified",
+    value: "Earn a certificate to showcase your skills.",
+  },
+];
+
+const INTERN_JOURNEY_STEPS = [
+  { title: "Apply", value: "Submit your application for the program." },
+  {
+    title: "Get Selected",
+    value: "Our team reviews and confirms your seat.",
+  },
+  {
+    title: "Attend Live Sessions",
+    value: "Join interactive online sessions with mentors.",
+  },
+  {
+    title: "Complete Assignments",
+    value: "Submit hands-on assignments and get feedback.",
+  },
+  {
+    title: "Build Projects",
+    value: "Work on real projects for your portfolio.",
+  },
+  {
+    title: "Get Certified",
+    value: "Earn your internship certificate on completion.",
+  },
+];
+
+function WhyChoose() {
+  return (
+    <section className="pb-10">
+      <SectionHeading kicker="Why Choose Us" title="Why choose this program?" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {WHY_CHOOSE.map((h) => (
+          <div
+            key={h.title}
+            className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-orange/10"
+          >
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-orange-tint text-brand-orange">
+              <h.icon size={22} stroke={1.7} />
+            </div>
+            <p className="font-semibold text-foreground">{h.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{h.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WhatYoullLearn({ pkg }: { pkg: PackageDetail }) {
+  const blocks = pkg.courses
+    .map((pc) => ({
+      id: pc.course.id,
+      title: pc.course.title,
+      points:
+        pc.course.learningObjectives && pc.course.learningObjectives.length > 0
+          ? pc.course.learningObjectives
+          : (pc.course.modules ?? []).map((m) => m.title),
+    }))
+    .filter((b) => b.points.length > 0);
+  if (blocks.length === 0) return null;
+  const showCourseTitles = blocks.length > 1;
+
+  return (
+    <section className="py-10">
       <div className="mx-auto max-w-7xl px-4">
         <SectionHeading
-          kicker="Key Highlights"
-          title="Everything you get in this program"
-          subtitle="A complete learning journey — from fundamentals to career-ready skills."
+          kicker="Outcomes"
+          title="What you'll learn"
+          subtitle="Skills and outcomes you'll walk away with."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {HIGHLIGHTS.map((h) => (
-            <div
-              key={h.label}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-            >
-              <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-primary to-primary-hover opacity-60 transition-opacity group-hover:opacity-100" />
-              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <h.icon size={22} stroke={1.6} />
-              </div>
-              <p className="font-semibold text-foreground">{h.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{h.value}</p>
+        <div className="space-y-6">
+          {blocks.map((b) => (
+            <div key={b.id}>
+              {showCourseTitles && (
+                <p className="mb-3 text-sm font-bold text-foreground">
+                  {b.title}
+                </p>
+              )}
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {b.points.map((pt, idx) => (
+                  <li
+                    key={`${b.id}-${idx}`}
+                    className="flex items-start gap-3 rounded-2xl border border-border bg-card px-4 py-3.5"
+                  >
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-orange-tint text-brand-orange">
+                      <IconCheck size={13} stroke={2.5} />
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {pt}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
@@ -207,126 +324,231 @@ function Highlights() {
   );
 }
 
-function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
+function Curriculum({ pkg }: { pkg: PackageDetail }) {
+  const courses = pkg.courses.filter(
+    (pc) => (pc.course.modules?.length ?? 0) > 0,
+  );
+  const [openId, setOpenId] = useState<string | null>(
+    courses[0]?.course.id ?? null,
+  );
+  if (courses.length === 0) return null;
+
+  return (
+    <section className="py-10">
+      <div className="mx-auto max-w-7xl px-4">
+        <SectionHeading
+          kicker="Curriculum"
+          title="Program curriculum"
+          subtitle="Module-by-module breakdown of everything covered."
+        />
+        <div className="space-y-3">
+          {courses.map((pc, courseIdx) => {
+            const course = pc.course;
+            const modules = [...(course.modules ?? [])].sort(
+              (a, b) => a.order - b.order,
+            );
+            const open = openId === course.id;
+            return (
+              <div
+                key={course.id}
+                className={`overflow-hidden rounded-2xl border bg-card transition-colors ${
+                  open ? "border-primary/30" : "border-border"
+                }`}
+              >
+                <button
+                  onClick={() => setOpenId(open ? null : course.id)}
+                  className="flex w-full items-center gap-3 px-5 py-4 text-left"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-extrabold text-primary">
+                    {String(courseIdx + 1).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-foreground">
+                      {course.title}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {modules.length}{" "}
+                      {modules.length === 1 ? "module" : "modules"}
+                    </span>
+                  </span>
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      open
+                        ? "bg-primary text-white"
+                        : "bg-muted/60 text-muted-foreground"
+                    }`}
+                  >
+                    <IconChevronDown
+                      size={15}
+                      className={`transition-transform ${open ? "rotate-180" : ""}`}
+                    />
+                  </span>
+                </button>
+                {open && (
+                  <ul className="space-y-1 border-t border-border px-3 py-3">
+                    {modules.map((m, idx) => (
+                      <li
+                        key={m.id}
+                        className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted/40"
+                      >
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-orange-tint text-[11px] font-extrabold text-brand-orange">
+                          {idx + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                          {m.title}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgramJourney({ pkg }: { pkg: PackageDetail }) {
   const isInternship = pkg.isInternship ?? false;
-  const courses = pkg.courses;
-  const totalModules = courses.reduce(
+  const steps = isInternship ? INTERN_JOURNEY_STEPS : JOURNEY_STEPS;
+
+  return (
+    <section className="py-10">
+      <div className="mx-auto max-w-7xl px-4">
+        <SectionHeading
+          kicker="How It Works"
+          title="Your program journey"
+          subtitle="Know exactly how you'll go from enrollment to certification."
+        />
+        <div>
+          {steps.map((s, i) => (
+            <div key={s.title} className="relative flex gap-4 pb-6 last:pb-0">
+              <div className="flex flex-col items-center">
+                <span className="z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-orange text-sm font-extrabold text-white">
+                  {i + 1}
+                </span>
+                {i < steps.length - 1 && (
+                  <span className="w-px flex-1 bg-border" />
+                )}
+              </div>
+              <div className="pb-1 pt-1.5">
+                <p className="text-sm font-bold text-foreground">{s.title}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {s.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgramGlance({ pkg }: { pkg: PackageDetail }) {
+  const totalModules = pkg.courses.reduce(
     (sum, c) => sum + (c.course.modules?.length ?? 0),
     0,
   );
+  const rows = [
+    { icon: IconBook, label: "Courses", value: String(pkg.courses.length) },
+    { icon: IconStack2, label: "Modules", value: String(totalModules) },
+    {
+      icon: IconVideo,
+      label: "Lessons",
+      value: String(pkg.totalLessons ?? 0),
+    },
+    {
+      icon: IconBadge,
+      label: "Quizzes",
+      value: String(pkg.totalQuizzes ?? 0),
+    },
+    {
+      icon: IconClipboardCheck,
+      label: "Assignments",
+      value: String(pkg.totalAssignments ?? 0),
+    },
+    { icon: IconAward, label: "Certificate", value: "Yes" },
+    { icon: IconUsers, label: "Mentorship", value: "1:1" },
+    { icon: IconInfinity, label: "Access", value: "Lifetime" },
+  ];
 
   return (
-    <section className="bg-card border-y border-border py-8">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <p className="flex items-center gap-2 border-b border-border px-5 py-3.5 text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+        <span className="h-4 w-1 rounded-full bg-brand-orange" />
+        Program at a glance
+      </p>
+      <dl className="px-5 py-2">
+        {rows.map((r) => (
+          <div
+            key={r.label}
+            className="flex items-center justify-between border-b border-border py-2.5 text-sm last:border-0"
+          >
+            <dt className="flex items-center gap-2 text-muted-foreground">
+              <r.icon size={15} className="text-brand-orange" />
+              {r.label}
+            </dt>
+            <dd className="font-bold text-foreground">{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
+  const isInternship = pkg.isInternship ?? false;
+
+  return (
+    <section className="border-y border-border bg-card py-10">
       <div className="mx-auto max-w-7xl px-4">
         <SectionHeading
           kicker="What's Included"
           title="Everything you need to succeed"
+          subtitle="One program, complete package — learn, practice, and get certified."
         />
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="space-y-3">
-            {(isInternship ? INTERN_FEATURES : FEATURES).map((f) => (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {(isInternship ? INTERN_FEATURES : FEATURES).map((f) => (
+            <div
+              key={f}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3.5"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+                <IconCheck size={13} stroke={2.5} />
+              </span>
+              <p className="text-sm font-medium text-foreground">{f}</p>
+            </div>
+          ))}
+        </div>
+
+        {isInternship && (
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {INTERN_DELIVERABLES.map((d, idx) => (
               <div
-                key={f}
-                className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3"
+                key={d.label}
+                className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4 transition-colors hover:border-primary/30"
               >
-                <span className="mt-0.5 flex flex-col h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                  <IconCheck size={13} stroke={2.5} />
+                <span className="text-xs font-extrabold text-primary/40">
+                  {String(idx + 1).padStart(2, "0")}
                 </span>
-                <p className="text-bold text-foreground">{f}</p>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white">
+                  <d.icon size={22} stroke={1.7} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    {d.label}
+                  </p>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                    {d.value}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-
-          {isInternship ? (
-            <div className="flex flex-col gap-4">
-              {INTERN_DELIVERABLES.map((d) => (
-                <div
-                  key={d.label}
-                  className="flow-root flex items-start gap-4 rounded-xl border border-border bg-background p-5"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-hover text-white">
-                    <d.icon size={22} stroke={1.6} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      {d.label}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {d.value}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-border bg-background p-6">
-              <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-black">
-                Included Courses
-              </p>
-              <div className="flex flex-col gap-4">
-                {courses.map((pc) => {
-                  const course = pc.course;
-                  const moduleCount = course.modules?.length ?? 0;
-                  return (
-                    <div
-                      key={course.id}
-                      className="flow-root rounded-xl border border-border bg-card p-4"
-                    >
-                      <div className="flex flex-col gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-hover text-white">
-                          <IconBook size={18} stroke={1.6} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-foreground">
-                            {course.title}
-                          </p>
-                          {course.description && (
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {course.description}
-                            </p>
-                          )}
-                          <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                            <IconStack2 size={12} /> {moduleCount} modules
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
-                {[
-                  { icon: IconBook, value: courses.length, label: "Courses" },
-                  { icon: IconStack2, value: totalModules, label: "Modules" },
-                  {
-                    icon: IconVideo,
-                    value: pkg.totalLessons ?? 0,
-                    label: "Lessons",
-                  },
-                  {
-                    icon: IconBadge,
-                    value: pkg.totalQuizzes ?? 0,
-                    label: "Quizzes",
-                  },
-                ].map((s) => (
-                  <div key={s.label} className="text-center">
-                    <s.icon
-                      size={20}
-                      className="mx-auto mb-1 text-primary"
-                      stroke={1.6}
-                    />
-                    <p className="text-lg font-bold text-foreground">
-                      {s.value}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </section>
   );
@@ -335,46 +557,46 @@ function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
 function Certification({ pkg }: { pkg: PackageDetail }) {
   const isInternship = pkg.isInternship ?? false;
   return (
-    <section className="py-8">
+    <section className="py-10">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-primary/5 via-card to-card">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="flex items-center justify-center bg-gradient-to-br from-primary to-primary-hover p-10">
-              <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-white shadow-2xl shadow-primary/30">
-                <IconAward size={56} className="text-primary" stroke={1.4} />
-              </div>
+        <div className="grid grid-cols-1 overflow-hidden rounded-3xl border border-border bg-card lg:grid-cols-5">
+          <div className="relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary to-primary-hover p-10 lg:col-span-2">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-white/10" />
+            <div className="relative flex h-28 w-28 items-center justify-center rounded-3xl bg-white shadow-xl">
+              <IconAward size={52} className="text-primary" stroke={1.5} />
             </div>
-            <div className="flex flex-col justify-center p-8 lg:p-12">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                Certification
-              </p>
-              <h2 className="mt-2 text-2xl font-bold text-foreground">
-                Earn a certificate on completion
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {isInternship
-                  ? "Complete all mentorship sessions and assignments to earn a shareable certificate that showcases your internship experience to employers and recruiters."
-                  : "Complete all courses, quizzes, and assignments to earn a shareable certificate that showcases your new skills to employers and recruiters."}
-              </p>
-              <ul className="mt-5 space-y-2.5">
-                {[
-                  "Verified & shareable certificate",
-                  "Showcases your skills to employers",
-                  "Adds credibility to your resume & LinkedIn",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-2.5 text-sm text-foreground"
-                  >
-                    <IconSparkles
-                      size={16}
-                      className="mt-0.5 shrink-0 text-primary"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          </div>
+          <div className="flex flex-col justify-center p-8 lg:col-span-3 lg:p-12">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              <span className="h-px w-6 bg-primary" />
+              Certification
+            </p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-foreground">
+              Earn a certificate on completion
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {isInternship
+                ? "Complete all mentorship sessions and assignments to earn a shareable certificate that showcases your internship experience to employers and recruiters."
+                : "Complete all courses, quizzes, and assignments to earn a shareable certificate that showcases your new skills to employers and recruiters."}
+            </p>
+            <ul className="mt-5 space-y-2.5">
+              {[
+                "Verified & shareable certificate",
+                "Showcases your skills to employers",
+                "Adds credibility to your resume & LinkedIn",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-2.5 text-sm font-medium text-foreground"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <IconCheck size={12} stroke={3} className="text-primary" />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
@@ -386,7 +608,7 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
   const isInternship = pkg.isInternship ?? false;
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
-    <section className="bg-card border-t border-border py-8">
+    <section className="border-t border-border bg-card py-10">
       <div className="mx-auto max-w-3xl px-4">
         <SectionHeading kicker="FAQs" title="Frequently asked questions" />
         <div className="space-y-3">
@@ -395,7 +617,9 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
             return (
               <div
                 key={f.q}
-                className="overflow-hidden rounded-xl border border-border bg-background"
+                className={`overflow-hidden rounded-2xl border bg-background transition-colors ${
+                  open ? "border-primary/30" : "border-border"
+                }`}
               >
                 <button
                   onClick={() => setOpenIdx(open ? null : i)}
@@ -404,12 +628,18 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
                   <span className="text-sm font-semibold text-foreground">
                     {f.q}
                   </span>
-                  <IconChevronDown
-                    size={18}
-                    className={`shrink-0 text-muted-foreground transition-transform ${
-                      open ? "rotate-180" : ""
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      open
+                        ? "bg-primary text-white"
+                        : "bg-muted/60 text-muted-foreground"
                     }`}
-                  />
+                  >
+                    <IconChevronDown
+                      size={15}
+                      className={`transition-transform ${open ? "rotate-180" : ""}`}
+                    />
+                  </span>
                 </button>
                 {open && (
                   <p className="border-t border-border px-5 py-4 text-sm leading-relaxed text-muted-foreground">
@@ -442,8 +672,8 @@ function Header() {
             className="h-10 w-auto object-contain shrink-0"
           />
           <span className="text-xl sm:text-2xl font-extrabold tracking-tight">
-            <span className="text-foreground">Marvel</span>{" "}
-            <span className="text-primary">Slice</span>
+            <span className="text-blue-600">Marvel</span>{" "}
+            <span className="text-blue-500">Slice</span>
           </span>
         </Link>
 
@@ -474,181 +704,39 @@ function Header() {
   );
 }
 
-function Hero({ pkg }: { pkg: PackageDetail }) {
-  const isInternship = pkg.isInternship ?? false;
-  const hasPrice = pkg.price != null && pkg.price > 0;
-  const totalLessons = pkg.totalLessons ?? 0;
-  const totalQuizzes = pkg.totalQuizzes ?? 0;
-  const firstThumb = pkg.courses?.[0]?.course?.thumbnailUrl || null;
-
-  return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-primary-hover text-white">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-white/10 blur-2xl" />
-      <div className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full border border-white/10" />
-
-      <div className="relative mx-auto max-w-7xl px-4 py-14 lg:py-20">
-        <Link
-          href="/catalogue"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-white/80 transition-colors hover:text-white"
-        >
-          <IconArrowLeft size={15} /> Back to Catalogue
-        </Link>
-
-        <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12">
-          <div className="lg:col-span-2">
-            <div className="flex flex-wrap items-center gap-2">
-              {isInternship && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide backdrop-blur-sm">
-                  <IconBriefcase size={13} /> Internship Program
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide">
-                <IconStar size={13} /> Career-Focused
-              </span>
-            </div>
-
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
-              {pkg.name}
-            </h1>
-
-            {pkg.description && (
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/85">
-                {pkg.description}
-              </p>
-            )}
-
-            {isInternship ? (
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatPill
-                  icon={IconLifebuoy}
-                  label="1:1 Mentorship"
-                  value="Dedicated"
-                />
-                <StatPill
-                  icon={IconVideo}
-                  label="Live Sessions"
-                  value="Online"
-                />
-                <StatPill
-                  icon={IconBriefcase}
-                  label="Assignments"
-                  value="Hands-on"
-                />
-                <StatPill
-                  icon={IconCertificate}
-                  label="Certificate"
-                  value="On finish"
-                />
-              </div>
-            ) : (
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatPill
-                  icon={IconBook}
-                  label="Courses"
-                  value={String(pkg.courses.length)}
-                />
-                <StatPill
-                  icon={IconVideo}
-                  label="Lessons"
-                  value={String(totalLessons)}
-                />
-                <StatPill
-                  icon={IconBadge}
-                  label="Quizzes"
-                  value={String(totalQuizzes)}
-                />
-                <StatPill icon={IconUsers} label="Mentors" value="1:1" />
-              </div>
-            )}
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#apply"
-                className="nline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                {isInternship
-                  ? "Apply Now"
-                  : hasPrice
-                    ? "Enroll Now"
-                    : "Contact Us"}
-              </a>
-              <a
-                href="#courses"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                {isInternship ? "What's Included" : "Explore Courses"}{" "}
-                <IconArrowRight size={16} />
-              </a>
-            </div>
-          </div>
-
-          <div className="hidden lg:block">
-            {firstThumb ? (
-              <div className="rounded-2xl overflow-hidden bg-white/10 border border-white/15 backdrop-blur-md mb-4">
-                <img src={firstThumb} alt={pkg.name} className="w-full h-48 object-cover" />
-              </div>
-            ) : null}
-            <div className="flex h-full flex-col rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
-              <div className="mb-5 flex items-center gap-2">
-                <IconSparkles size={18} className="text-white/90" />
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
-                  Why choose this program
-                </p>
-              </div>
-              <div className="flex flex-1 flex-col justify-between gap-3">
-                {[
-                  { icon: IconCode, label: "Hands-on, practical learning" },
-                  { icon: IconTarget, label: "Goal-oriented curriculum" },
-                  { icon: IconAward, label: "Recognized certification" },
-                  { icon: IconLifebuoy, label: "Mentor & community support" },
-                ].map((f) => (
-                  <div
-                    key={f.label}
-                    className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-3.5"
-                  >
-                    <f.icon size={17} className="shrink-0 text-white/90" />
-                    <span className="text-sm font-medium text-white">
-                      {f.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export function PackageDetailClient({ pkg }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <Hero pkg={pkg} />
 
-      {/* Content */}
+      {/* Content — compact heading, then details */}
       <main className="mx-auto max-w-7xl px-4 py-8">
+        <PageHeading pkg={pkg} />
+        <WhyChoose />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left column — package detail */}
-          <div className="lg:col-span-2 space-y-8">
-            <Highlights />
+          <div className="space-y-10 lg:col-span-2">
+            <WhatYoullLearn pkg={pkg} />
+            <Curriculum pkg={pkg} />
+            <ProgramJourney pkg={pkg} />
             <div id="courses">
               <WhatYouGet pkg={pkg} />
             </div>
             <Certification pkg={pkg} />
           </div>
 
-          {/* Right column — sticky checkout */}
+          {/* Right column — sticky checkout + glance */}
           <div id="apply" className="lg:col-span-1">
-            {(pkg as any)._derivedCourseId ? (
-              <CourseDerivedCheckoutWidget pkg={pkg} />
-            ) : pkg.isInternship ? (
-              <InternCheckoutWidget pkg={pkg} />
-            ) : (
-              <RazorpayCheckoutWidget pkg={pkg} />
-            )}
+            <div className="space-y-6 lg:sticky lg:top-24">
+              {pkg._derivedCourseId ? (
+                <CourseDerivedCheckoutWidget pkg={pkg} />
+              ) : pkg.isInternship ? (
+                <InternCheckoutWidget pkg={pkg} />
+              ) : (
+                <RazorpayCheckoutWidget pkg={pkg} />
+              )}
+              <ProgramGlance pkg={pkg} />
+            </div>
           </div>
         </div>
       </main>

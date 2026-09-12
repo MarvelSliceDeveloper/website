@@ -27,7 +27,7 @@ const ACCESS_TOKEN_MAX_AGE = parseExpiryToMs(process.env.JWT_EXPIRY || "7d");
 export const paymentController = {
   async createOrder(req: AuthRequest, res: Response) {
     try {
-      const { packageId, name, email, couponCode } = req.body;
+      const { packageId, name, email, phone, couponCode } = req.body;
       if (!packageId) {
         return res.status(400).json({ error: "packageId is required" });
       }
@@ -44,7 +44,11 @@ export const paymentController = {
             .status(400)
             .json({ error: "name and email are required for guest checkout" });
         }
-        const result = await paymentService.createGuestUser(name, email);
+        const result = await paymentService.createGuestUser(
+          name,
+          email,
+          typeof phone === "string" ? phone : undefined,
+        );
         userId = result.user.id;
 
         // Set JWT cookie so subsequent calls are authenticated
@@ -110,7 +114,7 @@ export const paymentController = {
 
   async enrollInBatch(req: AuthRequest, res: Response) {
     try {
-      const { paymentId, batchId, name, email } = req.body;
+      const { paymentId, batchId, name, email, phone } = req.body;
       if (!paymentId || !batchId) {
         return res
           .status(400)
@@ -121,6 +125,7 @@ export const paymentController = {
         batchId,
         name || "",
         email || "",
+        typeof phone === "string" ? phone : undefined,
       );
       return res.status(200).json(result);
     } catch (err: unknown) {
@@ -131,7 +136,7 @@ export const paymentController = {
 
   async createConsentEnrollment(req: AuthRequest, res: Response) {
     try {
-      const { paymentId, name, email } = req.body;
+      const { paymentId, name, email, phone } = req.body;
       if (!paymentId) {
         return res.status(400).json({ error: "paymentId is required" });
       }
@@ -139,6 +144,7 @@ export const paymentController = {
         paymentId,
         name || "",
         email || "",
+        typeof phone === "string" ? phone : undefined,
       );
       return res.status(200).json(result);
     } catch (err: unknown) {

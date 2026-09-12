@@ -23,7 +23,7 @@ export function PackageCard({ pkg, bannerSize = "lg" }: PackageCardProps) {
       href={`/catalogue/${pkg.slug}`}
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col"
     >
-      <div className={`${bannerH} bg-gradient-to-br from-indigo-600 to-dark-navy flex items-center justify-center shrink-0 overflow-hidden relative`}>
+      <div className={`${bannerH} bg-gradient-to-br from-indigo-600 to-ink flex items-center justify-center shrink-0 overflow-hidden relative`}>
         <div className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
           {firstThumb ? (
             <img src={firstThumb} alt={pkg.name} className="w-full h-full object-cover" />
@@ -41,7 +41,7 @@ export function PackageCard({ pkg, bannerSize = "lg" }: PackageCardProps) {
       </div>
 
       <div className="p-6 flex flex-col flex-1">
-        <h3 className="font-bold text-dark-navy text-lg group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="font-bold text-ink text-lg group-hover:text-primary transition-colors line-clamp-2">
           {pkg.name}
         </h3>
         <p className="text-sm text-slate-600 leading-relaxed mt-2 line-clamp-2 flex-1">
