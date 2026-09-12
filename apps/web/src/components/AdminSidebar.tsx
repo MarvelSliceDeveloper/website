@@ -86,7 +86,7 @@ function ChildNavLink({
         href={child.href}
         className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${isChildActive
           ? "border-primary bg-primary/8 text-primary font-bold"
-          : "border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
+          : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
           }`}
       >
         <span
@@ -204,13 +204,13 @@ function NavGroup({
                       title={item.label}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${isActive
                         ? "border-primary bg-primary/8 text-primary font-bold"
-                        : "border-transparent text-black dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
+                        : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                         }`}
                     >
                       <item.icon
                         size={18}
                         stroke={1.8}
-                        className={`shrink-0 ${isActive ? "opacity-100" : "opacity-100"}`}
+                        className={`shrink-0 ${isActive ? "opacity-100" : "opacity-80"}`}
                       />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (

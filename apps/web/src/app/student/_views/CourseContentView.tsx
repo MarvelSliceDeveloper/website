@@ -61,65 +61,11 @@ const CertificationExamView = dynamic(
 
 type ContentPanel = "content" | "live";
 
-function ResizableSidebar({
-  children,
-  defaultWidth = 320,
-  minWidth = 260,
-  maxWidth = 480,
-}: {
-  children: React.ReactNode;
-  defaultWidth?: number;
-  minWidth?: number;
-  maxWidth?: number;
-}) {
-  const [width, setWidth] = useState(defaultWidth);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-
-  useEffect(() => {
-    function onMouseMove(e: MouseEvent) {
-      if (!isDragging.current || !containerRef.current) return;
-      const left = containerRef.current.getBoundingClientRect().left;
-      const newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX - left));
-      setWidth(newWidth);
-    }
-    function onMouseUp() {
-      isDragging.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    }
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [minWidth, maxWidth]);
-
-  return (
-    <div
-      ref={containerRef}
-      className="relative shrink-0 h-full border-r border-border"
-      style={{ width }}
-    >
-      <div className="h-full overflow-y-auto">{children}</div>
-
-      {/* Drag handle */}
-      <div
-        onMouseDown={() => {
-          isDragging.current = true;
-          document.body.style.cursor = "col-resize";
-          document.body.style.userSelect = "none";
-        }}
-        onDoubleClick={() => setWidth(defaultWidth)}
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize sidebar"
-        className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors"
-      />
-    </div>
-  );
-}
+const SIDEBAR_DEFAULT_WIDTH = 460;
+const SIDEBAR_MIN_WIDTH = 280;
+const SIDEBAR_MAX_WIDTH = 560;
+const SIDEBAR_WIDTH_KEY = "course-content-sidebar-width";
+const SIDEBAR_COLLAPSED_KEY = "course-content-sidebar-collapsed";
 function formatMinutes(totalSeconds: number) {
   const mins = Math.round(totalSeconds / 60);
   if (mins < 60) return `${mins}min`;
@@ -218,6 +164,99 @@ export default function CourseContentView({
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // ── Desktop sidebar: resizable + collapsible (persisted) ──────────────
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const isResizing = useRef(false);
+
+  useEffect(() => {
+    try {
+      const savedWidth = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY));
+      if (Number.isFinite(savedWidth)) {
+        setSidebarWidth(
+          Math.min(
+            SIDEBAR_MAX_WIDTH,
+            Math.max(SIDEBAR_MIN_WIDTH, savedWidth),
+          ),
+        );
+      }
+      setSidebarCollapsed(
+        localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true",
+      );
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!isResizing.current || !sidebarRef.current) return;
+      const rect = sidebarRef.current.getBoundingClientRect();
+      const newWidth = Math.min(
+        SIDEBAR_MAX_WIDTH,
+        Math.max(SIDEBAR_MIN_WIDTH, rect.right - e.clientX),
+      );
+      setSidebarWidth(newWidth);
+    }
+    function onMouseUp() {
+      if (!isResizing.current) return;
+      isResizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      try {
+        const rect = sidebarRef.current?.getBoundingClientRect();
+        if (rect) localStorage.setItem(SIDEBAR_WIDTH_KEY, String(Math.round(rect.width)));
+      } catch {
+        /* ignore */
+      }
+    }
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
+
+  const startSidebarResize = useCallback(() => {
+    isResizing.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const resetSidebarWidth = useCallback(() => {
+    setSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+    try {
+      localStorage.setItem(
+        SIDEBAR_WIDTH_KEY,
+        String(SIDEBAR_DEFAULT_WIDTH),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(!prev));
+      } catch {
+        /* ignore */
+      }
+      return !prev;
+    });
+  }, []);
+
+  // Contents button: drawer on mobile/tablet, collapse toggle on desktop.
+  const handleContentsButton = useCallback(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      toggleSidebarCollapsed();
+    } else {
+      setMobileSidebarOpen(true);
+    }
+  }, [toggleSidebarCollapsed]);
 
   const [showStickyWidget, setShowStickyWidget] = useState(false);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
@@ -1809,9 +1848,11 @@ export default function CourseContentView({
 
         <div className="flex items-center gap-1.5 sm:gap-3 px-3 sm:px-5 py-2.5 bg-card border-t border-border shrink-0">
           <button
-            onClick={() => setMobileSidebarOpen(true)}
+            onClick={handleContentsButton}
             className="hidden md:flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-            aria-label="Open course contents"
+            aria-label="Toggle course contents"
+            aria-pressed={!sidebarCollapsed}
+            title="Toggle contents sidebar (drawer on tablet, dock on desktop)"
           >
             <IconList size={13} /> Contents
           </button>
@@ -2001,29 +2042,63 @@ export default function CourseContentView({
         />
       )}
 
-      {/* Content panel: static on desktop, slide-in drawer on mobile */}
+      {/* Content panel: slide-in drawer on mobile/tablet, resizable + collapsible dock on desktop */}
       <aside
-        className={`hidden md:flex fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col border-l border-hairline bg-paper shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-115 lg:max-w-none lg:shrink-0 lg:shadow-none lg:translate-x-0 ${
+        ref={sidebarRef}
+        style={{ width: sidebarWidth }}
+        className={`hidden md:flex fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] flex-col border-l border-hairline bg-paper shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:max-w-none lg:shrink-0 lg:shadow-none lg:translate-x-0 relative ${
           mobileSidebarOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        } ${sidebarCollapsed ? "lg:hidden" : "lg:flex"}`}
         aria-label="Course contents"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-border lg:hidden">
-          <span className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-            Contents
-          </span>
+          <div
+            onMouseDown={startSidebarResize}
+            onDoubleClick={resetSidebarWidth}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize contents sidebar (double-click to reset)"
+            title="Drag to resize · double-click to reset"
+            className="absolute top-0 left-0 hidden h-full w-1.5 cursor-col-resize transition-colors hover:bg-primary/30 active:bg-primary/50 lg:block"
+          />
+          <div className="hidden shrink-0 items-center justify-end border-b border-border px-2 py-1.5 lg:flex">
+            <button
+              onClick={toggleSidebarCollapsed}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+              aria-label="Collapse contents sidebar"
+              title="Collapse sidebar"
+            >
+              <IconArrowRight size={15} />
+            </button>
+          </div>
+          <div className="flex shrink-0 items-center justify-between border-b border-border lg:hidden">
+            <span className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+              Contents
+            </span>
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+              aria-label="Close contents"
+            >
+              <IconX size={18} />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {renderContentPanel()}
+          </div>
+        </aside>
+
+      {sidebarCollapsed && (
+        <div className="hidden lg:flex w-12 shrink-0 flex-col items-center border-l border-hairline bg-paper py-3">
           <button
-            onClick={() => setMobileSidebarOpen(false)}
-            className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label="Close contents"
+            onClick={toggleSidebarCollapsed}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+            aria-label="Expand contents sidebar"
+            title="Expand contents sidebar"
           >
-            <IconX size={18} />
+            <IconList size={16} />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden">
-          {renderContentPanel()}
-        </div>
-      </aside>
+      )}
 
       {selectedModuleId && showStickyWidget && (
         <StickyNoteWidget

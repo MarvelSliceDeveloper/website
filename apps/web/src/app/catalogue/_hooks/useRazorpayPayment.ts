@@ -55,6 +55,8 @@ export function useRazorpayPayment() {
   const [mobile, setMobile] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [razorpayPaymentId, setRazorpayPaymentId] = useState<string | null>(null);
   const [batches, setBatches] = useState<BatchOption[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -75,6 +77,8 @@ export function useRazorpayPayment() {
     setMobile("");
     setErrorMsg("");
     setPaymentId(null);
+    setOrderId(null);
+    setRazorpayPaymentId(null);
     setBatches([]);
     setSelectedBatchId("");
     setLoading(false);
@@ -127,11 +131,12 @@ export function useRazorpayPayment() {
             key: orderData.keyId,
             amount: orderData.amount,
             currency: orderData.currency,
-            name: "MarvelSlice LMS",
+            name: "Marvel Slice",
             description: pkgName,
             order_id: orderData.orderId,
             handler: async function (response: RazorpayResponse) {
               setStep("verifying");
+              setRazorpayPaymentId(response.razorpay_payment_id);
               try {
                 await api.post("/api/payments/verify", {
                   razorpay_order_id: response.razorpay_order_id,
@@ -169,7 +174,7 @@ export function useRazorpayPayment() {
               email,
               contact: mobile || undefined,
             },
-            theme: { color: "#6d7dff" },
+            theme: { color: "#175cdd" },
           };
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -246,6 +251,7 @@ export function useRazorpayPayment() {
 
         setIsNewUser(result.isNewUser ?? false);
         setPaymentId(result.paymentId);
+        setOrderId(result.orderId);
 
         await openRazorpayCheckout(result, pkgName, pkgId);
       } catch (err: unknown) {
@@ -335,6 +341,8 @@ export function useRazorpayPayment() {
     mobile,
     isNewUser,
     paymentId,
+    orderId,
+    razorpayPaymentId,
     batches,
     selectedBatchId,
     errorMsg,

@@ -9,6 +9,7 @@ import { InternCheckoutWidget } from "./InternCheckoutWidget";
 import { CourseDerivedCheckoutWidget } from "./CourseDerivedCheckoutWidget";
 import {
   IconArrowLeft,
+  IconArrowRight,
   IconBook,
   IconCertificate,
   IconCheck,
@@ -179,7 +180,7 @@ function PageHeading({ pkg }: { pkg: PackageDetail }) {
         </div>
         <a
           href="#apply"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-md sm:ml-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-[#175cdd]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#175cdd]/35 sm:ml-auto"
         >
           {isInternship ? "Apply Now" : hasPrice ? "Enroll Now" : "Contact Us"}
         </a>
@@ -705,8 +706,15 @@ function Header() {
 }
 
 export function PackageDetailClient({ pkg }: Props) {
+  const hasPrice = pkg.price != null && pkg.price > 0;
+  const thumbnail =
+    pkg.courses?.[0]?.course?.thumbnailUrl ||
+    (pkg as any).thumbnailUrl ||
+    (pkg as any).coverImageUrl ||
+    null;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
 
       {/* Content — compact heading, then details */}
@@ -742,6 +750,44 @@ export function PackageDetailClient({ pkg }: Props) {
       </main>
 
       <FAQ pkg={pkg} />
+
+      {/* Floating Mobile Sticky Checkout Bar */}
+      {hasPrice && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/90 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md lg:hidden">
+          <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {thumbnail ? (
+                <img
+                  src={thumbnail}
+                  alt={pkg.name}
+                  className="h-10 w-12 shrink-0 rounded-lg border border-slate-200 object-cover shadow-2xs"
+                />
+              ) : null}
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-base font-black tracking-tight text-[#175cdd]">
+                    ₹{Math.round(pkg.price! / 100).toLocaleString("en-IN")}
+                  </span>
+                  <span className="rounded-md bg-[#f59e0b]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#b45309]">
+                    SPECIAL OFFER
+                  </span>
+                </div>
+                <p className="truncate text-[11px] font-medium text-slate-500">
+                  {pkg.name}
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="#apply"
+              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#175cdd]/30 transition-transform active:scale-95"
+            >
+              <span>{pkg.isInternship ? "Apply Now" : "Enroll Now"}</span>
+              <IconArrowRight size={14} />
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

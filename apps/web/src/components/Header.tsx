@@ -147,8 +147,8 @@ export default function Header({
             className="h-11 w-auto object-contain"
           />
           <span className="text-base font-extrabold tracking-tight text-foreground hidden sm:inline">
-            <span>Marvel</span>
-            <span className="text-primary ml-0.5">Slice</span>
+            <span className="text-[#175cdd]">Marvel</span>
+            <span className="text-[#f59e0b] ml-0.5">Slice</span>
           </span>
         </div>
 

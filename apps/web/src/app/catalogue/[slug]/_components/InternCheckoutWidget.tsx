@@ -285,7 +285,7 @@ export function InternCheckoutWidget({ pkg }: Props) {
             email,
             contact: phone || undefined,
           },
-          theme: { color: "#6d7dff" },
+          theme: { color: "#175cdd" },
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -333,6 +333,42 @@ export function InternCheckoutWidget({ pkg }: Props) {
 
         <div className="px-6 pb-6">
           <StepIndicator active={1} />
+
+          {/* Thumbnail preview */}
+          {(() => {
+            const thumbnail =
+              pkg.courses?.[0]?.course?.thumbnailUrl ||
+              (pkg as any).thumbnailUrl ||
+              (pkg as any).coverImageUrl ||
+              null;
+            return (
+              <div className="relative mb-4 aspect-[16/8] overflow-hidden rounded-xl border border-slate-200 bg-slate-900 shadow-2xs">
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={pkg.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#175cdd] to-slate-900 p-4">
+                    <p className="line-clamp-2 text-center text-xs font-bold text-white">
+                      {pkg.name}
+                    </p>
+                  </div>
+                )}
+                <div className="absolute left-2.5 top-2.5">
+                  <span className="rounded-md bg-[#175cdd] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-xs">
+                    Internship
+                  </span>
+                </div>
+                <div className="absolute right-2.5 top-2.5">
+                  <span className="rounded-md bg-[#f59e0b] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-xs">
+                    1:1 Mentorship
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Personal details */}
@@ -541,7 +577,7 @@ export function InternCheckoutWidget({ pkg }: Props) {
                 !fee ||
                 fields.length === 0
               }
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:shadow-none"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#175cdd]/25 transition-all hover:shadow-xl hover:shadow-[#175cdd]/30 active:scale-[0.99] disabled:opacity-50 disabled:shadow-none"
             >
               {loading
                 ? "Please wait..."

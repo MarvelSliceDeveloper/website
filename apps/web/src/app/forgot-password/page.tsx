@@ -150,7 +150,7 @@ export default function ForgotPasswordPage() {
                 />
               </div>
               <span className="text-4xl xl:text-5xl font-black text-white tracking-tight">
-                Marvel <span className="text-[#FF8A48]">Slice</span>
+                <span className="text-[#175cdd]">Marvel</span> <span className="text-[#f59e0b]">Slice</span>
               </span>
             </div>
 
@@ -232,7 +232,7 @@ export default function ForgotPasswordPage() {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3 tracking-tight">
-                Marvel <span className="text-[#FF5E14]">Slice</span>
+                <span className="text-[#175cdd]">Marvel</span> <span className="text-[#f59e0b]">Slice</span>
               </h2>
 
               <h3 className="mt-1.5 text-base sm:text-lg font-bold text-slate-900">
