@@ -650,7 +650,7 @@ export const courseService = {
     try {
       const { createRazorpayOrder } = await import("../payments/payment.service");
       const order = await createRazorpayOrder(course.price, "INR", `course_${courseId}_${Date.now()}`);
-      return { orderId: order.id, amount: course.price, currency: "INR", courseId };
+      return { orderId: order.id, amount: course.price, currency: "INR", courseId, keyId: process.env.RAZORPAY_KEY_ID };
     } catch {
       // fallback stub for testing without keys
       return { orderId: `stub_order_${Date.now()}`, amount: course.price, currency: "INR", courseId };
