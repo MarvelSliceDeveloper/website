@@ -312,7 +312,7 @@ export default function LoginPage() {
                 />
               </div>
               <span className="text-4xl xl:text-5xl font-black text-white tracking-tight">
-                <span className="text-[#175cdd]">Marvel</span> <span className="text-[#f59e0b]">Slice</span>
+                <span className="text-white">Marvel</span> <span className="text-[#f59e0b]">Slice</span>
               </span>
             </div>
 
