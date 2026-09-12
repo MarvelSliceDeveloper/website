@@ -21,7 +21,11 @@ export function getRazorpayInstance() {
   });
 }
 
-export async function createRazorpayOrder(amount: number, currency = "INR", receipt?: string) {
+export async function createRazorpayOrder(
+  amount: number,
+  currency = "INR",
+  receipt?: string,
+) {
   const razorpay = getRazorpayInstance();
   return razorpay.orders.create({
     amount,
@@ -67,14 +71,27 @@ export function generateDummyPassword(): string {
   return pw;
 }
 
+export function normalizePhone(phone?: string): string | undefined {
+  const digits = phone?.replace(/\D/g, "");
+  return digits ? digits : undefined;
+}
+
 export const paymentService = {
-  async createGuestUser(name: string, email: string) {
+  async createGuestUser(name: string, email: string, phone?: string) {
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = normalizePhone(phone);
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (user) {
+      // Existing user — backfill phone if we now have one and it's missing
+      if (normalizedPhone && !user.phone) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { phone: normalizedPhone },
+        });
+      }
       // Existing user — just generate a new JWT
       const tokens = await authService.generateTokens({
         id: user.id,
@@ -103,6 +120,7 @@ export const paymentService = {
       data: {
         name,
         email: normalizedEmail,
+        phone: normalizedPhone,
         passwordHash: hashed,
         mustChangePassword: true,
         role: "STUDENT",
@@ -321,6 +339,7 @@ export const paymentService = {
     batchId: string,
     name: string,
     email: string,
+    phone?: string,
   ) {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
@@ -328,6 +347,8 @@ export const paymentService = {
     });
     if (!payment || payment.status !== "PAID")
       throw new AppError(400, "Payment not completed");
+
+    const normalizedPhone = normalizePhone(phone);
 
     let user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -342,6 +363,7 @@ export const paymentService = {
         data: {
           name,
           email: email.toLowerCase(),
+          phone: normalizedPhone,
           passwordHash: hashed,
           mustChangePassword: true,
           role: "STUDENT",
@@ -386,6 +408,13 @@ export const paymentService = {
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
         );
+    }
+
+    if (user && normalizedPhone && !user.phone) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { phone: normalizedPhone },
+      });
     }
 
     if (!user) {
@@ -427,6 +456,7 @@ export const paymentService = {
     paymentId: string,
     name: string,
     email: string,
+    phone?: string,
   ) {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
@@ -434,6 +464,8 @@ export const paymentService = {
     });
     if (!payment || payment.status !== "PAID")
       throw new AppError(400, "Payment not completed");
+
+    const normalizedPhone = normalizePhone(phone);
 
     let user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -448,6 +480,7 @@ export const paymentService = {
         data: {
           name,
           email: email.toLowerCase(),
+          phone: normalizedPhone,
           passwordHash: hashed,
           mustChangePassword: true,
           role: "STUDENT",
@@ -492,6 +525,13 @@ export const paymentService = {
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
         );
+    }
+
+    if (user && normalizedPhone && !user.phone) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { phone: normalizedPhone },
+      });
     }
 
     if (!user) {

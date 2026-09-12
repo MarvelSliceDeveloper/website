@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   IconBook2,
-  IconCalendarEvent,
+  // IconCalendarEvent — re-add when re-enabling the hidden Live Session tab below
   IconArrowLeft,
   IconArrowRight,
   IconPencil,
@@ -763,19 +763,21 @@ export default function CourseContentView({
 
     if (selectedQuizId && quizData) {
       return (
-        <QuizContent
-          quizData={quizData}
-          selectedAnswers={selectedAnswers}
-          quizSubmitted={quizSubmitted}
-          quizSubmitting={quizSubmitMutation.isPending}
-          quizResult={quizResult}
-          onAnswerSelect={(questionId, optionId) =>
-            setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }))
-          }
-          onSubmit={handleSubmitQuiz}
-          onBack={clearQuizPreview}
-          passingPercentage={60}
-        />
+        <div className="rounded-xl bg-white border border-border/60 shadow-sm p-4 sm:p-6">
+          <QuizContent
+            quizData={quizData}
+            selectedAnswers={selectedAnswers}
+            quizSubmitted={quizSubmitted}
+            quizSubmitting={quizSubmitMutation.isPending}
+            quizResult={quizResult}
+            onAnswerSelect={(questionId, optionId) =>
+              setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }))
+            }
+            onSubmit={handleSubmitQuiz}
+            onBack={clearQuizPreview}
+            passingPercentage={60}
+          />
+        </div>
       );
     }
 
@@ -974,7 +976,7 @@ export default function CourseContentView({
               selectedModule?.title ??
               "Select a lesson"}
           </h2>
-          <p className="text-xs text-white bg-muted-foreground mt-0.5">
+          <p className="text-xs text-black mt-0.5">
             {selectedRecording ? (
               "Recorded live session"
             ) : (
@@ -992,7 +994,7 @@ export default function CourseContentView({
             )}
           </p>
           {d.batch?.instructor && (
-            <p className="text-xs text-white bg-muted-foreground mt-0.5">
+            <p className="text-xs text-black mt-0.5">
               Instructor: {d.batch.instructor}
             </p>
           )}
@@ -1007,7 +1009,7 @@ export default function CourseContentView({
         </div>
         <div className="bg-card border border-border rounded-xl p-4 mt-4 shadow-sm">
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               {selectedRecording ? (
                 <IconVideo size={15} />
               ) : (
@@ -1492,6 +1494,10 @@ export default function CourseContentView({
           <IconBook2 size={14} />
           Course content
         </button>
+        {/*
+          Hidden: Live Session tab kept for future re-enable (live + recorded sessions).
+          Live-session feature not in use currently — sidebar shows Course content only.
+          The live panel branch below is intentionally left intact.
         <button
           onClick={() => setContentPanel("live")}
           className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px] ${
@@ -1511,6 +1517,7 @@ export default function CourseContentView({
             <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
           )}
         </button>
+        */}
       </div>
 
       <div className="flex-1 overflow-y-auto bg-background">

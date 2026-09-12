@@ -52,6 +52,7 @@ export function useRazorpayPayment() {
   const [step, setStep] = useState<CheckoutStep>("idle");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [isNewUser, setIsNewUser] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [batches, setBatches] = useState<BatchOption[]>([]);
@@ -71,6 +72,7 @@ export function useRazorpayPayment() {
     setStep("idle");
     setName("");
     setEmail("");
+    setMobile("");
     setErrorMsg("");
     setPaymentId(null);
     setBatches([]);
@@ -86,7 +88,12 @@ export function useRazorpayPayment() {
     setLoading(true);
 
     try {
-      await api.post("/api/payments/consent", { paymentId, name, email });
+      await api.post("/api/payments/consent", {
+        paymentId,
+        name,
+        email,
+        phone: mobile || undefined,
+      });
       setStep("complete");
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
@@ -95,7 +102,7 @@ export function useRazorpayPayment() {
     } finally {
       setLoading(false);
     }
-  }, [paymentId, name, email]);
+  }, [paymentId, name, email, mobile]);
 
   const openRazorpayCheckout = useCallback(
     (
@@ -160,6 +167,7 @@ export function useRazorpayPayment() {
             prefill: {
               name,
               email,
+              contact: mobile || undefined,
             },
             theme: { color: "#6d7dff" },
           };
@@ -178,7 +186,7 @@ export function useRazorpayPayment() {
         document.body.appendChild(script);
       });
     },
-    [name, email, submitConsent],
+    [name, email, mobile, submitConsent],
   );
 
   const applyCoupon = useCallback(
@@ -214,7 +222,12 @@ export function useRazorpayPayment() {
   }, []);
 
   const createOrder = useCallback(
-    async (pkgId: string, pkgName: string, _pkgPrice: number) => {
+    async (
+      pkgId: string,
+      pkgName: string,
+      _pkgPrice: number,
+      phoneOverride?: string,
+    ) => {
       setStep("creating_order");
       setLoading(true);
       setErrorMsg("");
@@ -226,6 +239,7 @@ export function useRazorpayPayment() {
             packageId: pkgId,
             name,
             email,
+            phone: phoneOverride ?? mobile ?? undefined,
             couponCode: couponApplied?.code || undefined,
           },
         );
@@ -242,7 +256,7 @@ export function useRazorpayPayment() {
         setLoading(false);
       }
     },
-    [name, email, couponApplied, openRazorpayCheckout],
+    [name, email, mobile, couponApplied, openRazorpayCheckout],
   );
 
   const submitEnroll = useCallback(async () => {
@@ -252,7 +266,13 @@ export function useRazorpayPayment() {
     try {
       const result = await api.post<{ isNewUser: boolean; email: string }>(
         "/api/payments/enroll",
-        { paymentId, batchId: selectedBatchId, name, email },
+        {
+          paymentId,
+          batchId: selectedBatchId,
+          name,
+          email,
+          phone: mobile || undefined,
+        },
       );
 
       if (result.isNewUser && result.email) {
@@ -267,7 +287,7 @@ export function useRazorpayPayment() {
     } finally {
       setLoading(false);
     }
-  }, [paymentId, selectedBatchId, name, email]);
+  }, [paymentId, selectedBatchId, name, email, mobile]);
 
   const startCheckout = useCallback(
     async (pkg: { id: string; name: string; price: number | null }) => {
@@ -275,13 +295,19 @@ export function useRazorpayPayment() {
       setErrorMsg("");
 
       try {
-        const me = await api.get<{ user: { name: string; email: string } }>(
-          "/api/auth/me",
-        );
+        const me = await api.get<{
+          user: { name: string; email: string; phone?: string | null };
+        }>("/api/auth/me");
         if (me?.user) {
           setName(me.user.name);
           setEmail(me.user.email);
-          await createOrder(pkg.id, pkg.name, pkg.price);
+          if (me.user.phone) setMobile(me.user.phone);
+          await createOrder(
+            pkg.id,
+            pkg.name,
+            pkg.price,
+            me.user.phone ?? undefined,
+          );
           return;
         }
       } catch {
@@ -306,6 +332,7 @@ export function useRazorpayPayment() {
     step,
     name,
     email,
+    mobile,
     isNewUser,
     paymentId,
     batches,
@@ -320,6 +347,7 @@ export function useRazorpayPayment() {
     // Setters
     setName,
     setEmail,
+    setMobile,
     setSelectedBatchId,
     setErrorMsg,
     setCouponCode,

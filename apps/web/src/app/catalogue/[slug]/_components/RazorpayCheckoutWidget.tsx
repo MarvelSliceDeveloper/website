@@ -10,12 +10,12 @@ import {
   IconCalendarEvent,
   IconCheck,
   IconLock,
+  IconPhone,
   IconPlaylist,
-  IconReceipt,
-  IconRefresh,
   IconShieldCheck,
-  IconUser,
+  IconSparkles,
   IconUsers,
+  IconX,
 } from "@tabler/icons-react";
 
 interface BatchDisplay {
@@ -37,7 +37,9 @@ interface Props {
   pkg: PackageDetail;
 }
 
-const STEPS = ["Your Information", "Payment", "Batch & Enroll"] as const;
+// NOTE: steps collapsed from 3 to 3 (Details & Payment / Processing / Batch & Enroll) —
+// the old "idle" summary screen and "collecting_info" form are now the SAME screen.
+const STEPS = ["Details & Payment", "Processing", "Batch & Enroll"] as const;
 
 function SecureCheckoutHeader() {
   return (
@@ -46,18 +48,17 @@ function SecureCheckoutHeader() {
         <Image
           src="/images/logo.svg"
           alt="Marvel Slice"
-          width={28}
-          height={28}
-          className="h-7 w-auto"
+          width={40}
+          height={40}
+          className="h-10 w-auto"
         />
-        <span className="text-sm font-extrabold tracking-tight">
-          <span className="text-blue-600">Marvel</span>{" "}
-          <span className="text-blue-500">Slice</span>
+        <span className="text-base font-bold tracking-tight text-foreground">
+          Marvel Slice
         </span>
       </div>
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/10 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
-        <IconLock size={12} />
-        Secure Checkout
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/10 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+        <IconLock size={11} />
+        Secure checkout
       </span>
     </div>
   );
@@ -71,14 +72,11 @@ function StepIndicator({ active }: { active: number }) {
         const isActive = n === active;
         const isDone = n < active;
         return (
-          <li key={label} className="flex min-w-0 items-center gap-2">
-            {i > 0 && (
-              <div className="mx-1 h-[2px] w-5 shrink-0 rounded bg-border sm:w-8" />
-            )}
+          <li key={label} className="flex min-w-0 flex-1 items-center gap-2">
             <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                 isActive
-                  ? "bg-primary text-white ring-2 ring-primary ring-offset-2"
+                  ? "bg-primary text-white"
                   : isDone
                     ? "bg-primary/15 text-primary"
                     : "bg-muted/15 text-muted-foreground"
@@ -87,35 +85,21 @@ function StepIndicator({ active }: { active: number }) {
               {isDone ? <IconCheck size={12} stroke={3} /> : n}
             </span>
             <span
-              className={`hidden truncate text-xs font-medium sm:inline ${
-                isActive ? "text-primary" : "text-muted-foreground"
+              className={`hidden truncate text-xs sm:inline ${
+                isActive
+                  ? "font-semibold text-foreground"
+                  : "text-muted-foreground"
               }`}
             >
               {label}
             </span>
+            {i < STEPS.length - 1 && (
+              <div className="ml-auto h-px flex-1 bg-border" />
+            )}
           </li>
         );
       })}
     </ol>
-  );
-}
-
-function TrustRow() {
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-4 text-muted-foreground">
-      <span className="flex items-center gap-1.5 text-xs font-medium">
-        <IconShieldCheck size={15} className="text-primary" />
-        Razorpay Secure
-      </span>
-      <span className="flex items-center gap-1.5 text-xs font-medium">
-        <IconReceipt size={15} className="text-primary" />
-        Email Invoice
-      </span>
-      <span className="flex items-center gap-1.5 text-xs font-medium">
-        <IconRefresh size={15} className="text-primary" />
-        Money-back Guarantee
-      </span>
-    </div>
   );
 }
 
@@ -138,16 +122,14 @@ function CouponSection({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-foreground">
-        Have a coupon code?
-      </p>
       {couponApplied ? (
-        <div className="flex items-center justify-between rounded-lg border border-success/25 bg-success/10 px-3 py-2">
-          <div>
+        <div className="flex items-center justify-between rounded-lg bg-success/10 px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <IconSparkles size={13} className="text-success" />
             <span className="text-xs font-bold text-success">
               {couponApplied.code}
             </span>
-            <span className="ml-2 text-xs text-success/80">
+            <span className="text-xs text-success/80">
               {couponApplied.discountType === "PERCENTAGE"
                 ? `${couponApplied.discountValue}% off`
                 : `₹${couponApplied.discountValue} off`}
@@ -156,7 +138,7 @@ function CouponSection({
           <button
             type="button"
             onClick={onRemove}
-            className="text-xs font-medium text-danger hover:text-danger/80"
+            className="text-xs font-medium text-muted-foreground hover:text-danger"
           >
             Remove
           </button>
@@ -166,16 +148,16 @@ function CouponSection({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Enter coupon code"
+              placeholder="Coupon code"
               value={couponCode}
               onChange={(e) => onCodeChange(e.target.value.toUpperCase())}
-              className="field flex-1 text-xs font-mono"
+              className="field w-0 flex-1 text-xs font-mono"
             />
             <button
               type="button"
               onClick={onApply}
               disabled={couponLoading || !couponCode.trim()}
-              className="rounded-lg border border-primary px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+              className="rounded-lg bg-foreground px-3.5 py-2 text-xs font-semibold text-background transition-colors hover:opacity-90 disabled:opacity-40"
             >
               {couponLoading ? "..." : "Apply"}
             </button>
@@ -200,24 +182,22 @@ function PriceBreakdown({
     `₹${(amount / 100).toLocaleString("en-IN")}`;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">Subtotal</span>
         <span className="text-foreground">{formatPrice(pkg.price!)}</span>
       </div>
       {couponApplied && (
         <div className="flex justify-between text-sm">
-          <span className="font-medium text-success">
-            Discount ({couponApplied.code})
-          </span>
-          <span className="font-medium text-success">
+          <span className="text-success">Discount</span>
+          <span className="text-success">
             −{formatPrice(couponApplied.discountAmountPaise)}
           </span>
         </div>
       )}
-      <div className="flex justify-between border-t border-border pt-2 text-base">
-        <span className="font-semibold text-foreground">Total</span>
-        <span className="font-bold text-foreground">
+      <div className="flex items-baseline justify-between pt-1.5">
+        <span className="text-sm font-medium text-muted-foreground">Total</span>
+        <span className="text-2xl font-bold tracking-tight text-foreground">
           {formatPrice(
             couponApplied ? couponApplied.finalAmountPaise : pkg.price!,
           )}
@@ -232,6 +212,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
     step,
     name,
     email,
+    mobile,
     isNewUser,
     batches,
     selectedBatchId,
@@ -243,9 +224,9 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
     couponLoading,
     setName,
     setEmail,
+    setMobile,
     setSelectedBatchId,
     setCouponCode,
-    startCheckout,
     infoSubmit,
     submitEnroll,
     submitConsent,
@@ -269,16 +250,18 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   const finalAmount = couponApplied
     ? couponApplied.finalAmountPaise
     : pkg.price!;
+  const canPay =
+    name.trim().length > 0 &&
+    email.trim().length > 0 &&
+    mobile.trim().length === 10;
 
   const formatPrice = (amount: number) =>
     `₹${(amount / 100).toLocaleString("en-IN")}`;
 
-  const handleBuyNow = async () => {
-    await startCheckout(pkg);
-  };
-
-  const handleInfoSubmit = async (e: React.FormEvent) => {
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // infoSubmit now carries the checkout straight from the merged
+    // details+payment screen into order creation — no separate "idle" click first.
     await infoSubmit(pkg);
   };
 
@@ -294,92 +277,53 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
     );
   };
 
-  // Idle state — order summary with the primary action
-  if (step === "idle") {
+  // Merged step — package summary, name/email/mobile, coupon, price, and Pay
+  // all live on one screen. Was previously split into "idle" then "collecting_info".
+  if (step === "idle" || step === "collecting_info") {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <SecureCheckoutHeader />
-        <div className="space-y-5 p-6">
-          <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
-              Package
-            </p>
-            <h3 className="text-base font-semibold text-foreground">
-              {pkg.name}
-            </h3>
-          </div>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <IconBook size={16} className="shrink-0 text-primary" />
-              Courses included — {pkg.courses.length}
-            </div>
-            <div className="flex items-center gap-2">
-              <IconPlaylist size={16} className="shrink-0 text-primary" />
-              Lessons &amp; Quizzes — {pkg.totalLessons ?? 0} lessons ·{" "}
-              {pkg.totalQuizzes ?? 0} quizzes
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-4">
-            <CouponSection
-              couponCode={couponCode}
-              couponApplied={couponApplied}
-              couponError={couponError}
-              couponLoading={couponLoading}
-              onCodeChange={setCouponCode}
-              onApply={() => applyCoupon(pkg.id)}
-              onRemove={removeCoupon}
-            />
-          </div>
-
-          <PriceBreakdown pkg={pkg} couponApplied={couponApplied} />
-
-          <button
-            onClick={handleBuyNow}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
-          >
-            <IconLock size={15} />
-            Buy Now — {formatPrice(finalAmount)}
-          </button>
-
-          <p className="flex items-center justify-center gap-1 text-center text-[11px] text-muted-foreground">
-            <IconShieldCheck size={13} className="text-success" />
-            Secure payment via Razorpay
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Collecting info — guest checkout form (step 1)
-  if (step === "collecting_info") {
-    return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <SecureCheckoutHeader />
         <div className="space-y-6 p-6">
           <StepIndicator active={1} />
 
-          <form onSubmit={handleInfoSubmit} className="space-y-4">
-            <div>
-              <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <IconUser size={14} /> Your Details
-              </p>
-              <div className="space-y-4">
+          <div>
+            <p className="mb-1 text-[11px] font-semibold text-primary">
+              Package
+            </p>
+            <h3 className="text-base font-semibold leading-snug text-foreground">
+              {pkg.name}
+            </h3>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <IconBook size={14} className="text-primary" />
+                {pkg.courses.length} courses
+              </span>
+              <span className="flex items-center gap-1.5">
+                <IconPlaylist size={14} className="text-primary" />
+                {pkg.totalLessons ?? 0} lessons · {pkg.totalQuizzes ?? 0}{" "}
+                quizzes
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleDetailsSubmit} className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="field w-full text-sm"
+                  placeholder="Full name"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="field w-full text-sm"
-                    placeholder="Your full name"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Email
                   </label>
                   <input
@@ -388,9 +332,50 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="field w-full text-sm"
-                    placeholder="your@email.com"
+                    placeholder="you@email.com"
                   />
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Mobile
+                  </label>
+                  <div className="field flex items-center gap-1.5 py-0!">
+                    <IconPhone
+                      size={14}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                    <span className="text-sm text-muted-foreground">+91</span>
+                    <input
+                      type="tel"
+                      required
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={mobile}
+                      onChange={(e) =>
+                        setMobile(
+                          e.target.value.replace(/\D/g, "").slice(0, 10),
+                        )
+                      }
+                      className="w-full bg-transparent py-2 text-sm outline-none"
+                      placeholder="98765 43210"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-muted/10 p-4">
+              <CouponSection
+                couponCode={couponCode}
+                couponApplied={couponApplied}
+                couponError={couponError}
+                couponLoading={couponLoading}
+                onCodeChange={setCouponCode}
+                onApply={() => applyCoupon(pkg.id)}
+                onRemove={removeCoupon}
+              />
+              <div className="mt-3 border-t border-border pt-3">
+                <PriceBreakdown pkg={pkg} couponApplied={couponApplied} />
               </div>
             </div>
 
@@ -398,47 +383,25 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
 
             <button
               type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
+              disabled={loading || !canPay}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-muted/30 disabled:text-muted-foreground disabled:shadow-none"
             >
               {loading ? (
                 "Please wait..."
               ) : (
                 <>
-                  Continue to Payment
+                  <IconLock size={15} />
+                  Pay {formatPrice(finalAmount)}
                   <IconArrowRight size={15} />
                 </>
               )}
             </button>
           </form>
 
-          <TrustRow />
-
-          {/* Order summary — pay disabled until details are submitted */}
-          <div className="space-y-4 border-t border-border pt-4">
-            <CouponSection
-              couponCode={couponCode}
-              couponApplied={couponApplied}
-              couponError={couponError}
-              couponLoading={couponLoading}
-              onCodeChange={setCouponCode}
-              onApply={() => applyCoupon(pkg.id)}
-              onRemove={removeCoupon}
-            />
-            <PriceBreakdown pkg={pkg} couponApplied={couponApplied} />
-            <button
-              type="button"
-              disabled
-              className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-muted/30 py-3 text-sm font-semibold text-muted-foreground opacity-60"
-            >
-              <IconLock size={15} />
-              Pay {formatPrice(finalAmount)}
-            </button>
-            <p className="flex items-center justify-center gap-1 text-center text-[11px] text-muted-foreground">
-              <IconShieldCheck size={13} className="text-success" />
-              Secure payment via Razorpay
-            </p>
-          </div>
+          <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+            <IconShieldCheck size={13} className="text-success" />
+            Payments secured by Razorpay · Money-back guarantee
+          </p>
         </div>
       </div>
     );
@@ -451,16 +414,16 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
     step === "verifying"
   ) {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <SecureCheckoutHeader />
         <div className="p-6">
           <StepIndicator active={2} />
-          <div className="py-10 text-center">
-            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="py-14 text-center">
+            <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-[3px] border-primary border-t-transparent" />
             <p className="text-sm text-muted-foreground">
-              {step === "creating_order" && "Setting up payment..."}
-              {step === "processing_payment" && "Opening payment window..."}
-              {step === "verifying" && "Verifying payment..."}
+              {step === "creating_order" && "Setting up your payment…"}
+              {step === "processing_payment" && "Opening payment window…"}
+              {step === "verifying" && "Verifying payment…"}
             </p>
           </div>
         </div>
@@ -471,16 +434,16 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   // Batch selection (step 3)
   if (step === "selecting_batch") {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <SecureCheckoutHeader />
         <div className="space-y-5 p-6">
           <StepIndicator active={3} />
           <div>
             <h3 className="text-lg font-semibold text-foreground">
-              Select a Batch
+              Select a batch
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your payment was successful! Choose a batch to enroll in:
+              Payment successful — pick a batch to enroll in.
             </p>
           </div>
 
@@ -489,7 +452,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
               {batches.map((batch: BatchDisplay) => (
                 <label
                   key={batch.id}
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors ${
                     selectedBatchId === batch.id
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-border-hover"
@@ -507,19 +470,22 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
                     <p className="text-sm font-medium text-foreground">
                       {batch.name}
                     </p>
-                    {batch.startDate && (
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
-                        <IconCalendarEvent size={12} />
-                        Starts{" "}
-                        {new Date(batch.startDate).toLocaleDateString("en-IN")}
-                      </p>
-                    )}
-                    {batch.seatsAvailable != null && (
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
-                        <IconUsers size={12} />
-                        {batch.seatsAvailable} seats left
-                      </p>
-                    )}
+                    <div className="mt-0.5 flex items-center gap-3 text-xs text-muted">
+                      {batch.startDate && (
+                        <span className="flex items-center gap-1">
+                          <IconCalendarEvent size={12} />
+                          {new Date(batch.startDate).toLocaleDateString(
+                            "en-IN",
+                          )}
+                        </span>
+                      )}
+                      {batch.seatsAvailable != null && (
+                        <span className="flex items-center gap-1">
+                          <IconUsers size={12} />
+                          {batch.seatsAvailable} seats left
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </label>
               ))}
@@ -532,14 +498,14 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
             <button
               onClick={handleSubmitConsent}
               disabled={loading}
-              className="flex-1 rounded-lg border border-border py-2 text-sm text-foreground transition-colors hover:bg-card-hover"
+              className="flex-1 rounded-xl border border-border py-2.5 text-sm text-foreground transition-colors hover:bg-card-hover"
             >
               Contact me later
             </button>
             <button
               onClick={handleSubmitEnroll}
               disabled={!selectedBatchId || loading}
-              className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+              className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
             >
               {loading ? "Enrolling..." : "Enroll Now"}
             </button>
@@ -552,13 +518,15 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   // Complete
   if (step === "complete") {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <SecureCheckoutHeader />
-        <div className="space-y-4 p-6 py-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
-            <IconCheck size={32} className="text-success" stroke={2.5} />
+        <div className="space-y-3 p-6 py-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+            <IconCheck size={30} className="text-success" stroke={2.5} />
           </div>
-          <p className="font-medium text-foreground">Welcome aboard!</p>
+          <p className="text-base font-semibold text-foreground">
+            Welcome aboard!
+          </p>
           {isNewUser && (
             <p className="text-sm text-muted-foreground">
               Check your email for login credentials.
@@ -566,7 +534,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           )}
           <button
             onClick={reset}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+            className="mt-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             Done
           </button>
@@ -578,30 +546,18 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   // Error
   if (step === "error") {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <SecureCheckoutHeader />
-        <div className="space-y-4 p-6 py-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-danger/20">
-            <svg
-              className="h-8 w-8 text-danger"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+        <div className="space-y-3 p-6 py-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-danger/15">
+            <IconX size={30} className="text-danger" stroke={2.5} />
           </div>
-          <p className="text-sm text-danger">
+          <p className="text-sm font-medium text-danger">
             {errorMsg || "Something went wrong."}
           </p>
           <button
             onClick={reset}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+            className="mt-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             Try Again
           </button>

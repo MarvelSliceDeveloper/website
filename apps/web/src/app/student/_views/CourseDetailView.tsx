@@ -156,7 +156,7 @@ export default function CourseDetailView({ course, onEnroll }: CourseDetailViewP
                     <Icon size={18} className="text-indigo-500 group-hover:text-amber-600" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm text-dark-navy group-hover:text-primary">{h.label}</p>
+                    <p className="font-semibold text-sm text-ink group-hover:text-primary">{h.label}</p>
                     <p className="text-xs text-muted-foreground">{h.value}</p>
                   </div>
                 </div>

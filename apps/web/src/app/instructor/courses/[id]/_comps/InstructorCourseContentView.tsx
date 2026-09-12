@@ -561,7 +561,7 @@ export default function InstructorCourseContentView({
         </div>
         <div className="bg-card border border-border rounded-xl p-4 mt-4 shadow-sm">
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <IconBook2 size={15} />
             </span>
             <h3 className="text-sm font-semibold text-foreground">
