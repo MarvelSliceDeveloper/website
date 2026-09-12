@@ -41,6 +41,13 @@ interface CheckoutResponse {
   keyId?: string;
 }
 
+interface BatchOption {
+  id: string;
+  name: string;
+  startDate?: string;
+  seatsAvailable?: number | null;
+}
+
 function formatInr(paise: number): string {
   return `₹${Math.round(paise / 100).toLocaleString("en-IN")}`;
 }
@@ -209,6 +216,10 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [batches, setBatches] = useState<BatchOption[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [dbPaymentId, setDbPaymentId] = useState<string | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
   const [receiptData, setReceiptData] = useState<{
     orderId?: string;
     paymentId?: string;
@@ -225,6 +236,55 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
     name.trim().length > 0 &&
     email.trim().length > 0 &&
     phone.trim().length === 10;
+
+  // After payment is verified, fetch batches for this course (same as the
+  // package flow). If batches exist the student picks one; otherwise finish.
+  const afterPaymentVerified = async (
+    dbPaymentIdValue: string,
+    orderId: string,
+    payId: string,
+  ) => {
+    setReceiptData({ orderId, paymentId: payId });
+    setDbPaymentId(dbPaymentIdValue);
+    try {
+      const list = await api.get<BatchOption[]>(
+        `/api/courses/catalogue/${courseId}/batches`,
+      );
+      if (list && list.length > 0) {
+        setBatches(list);
+        toast.success("Payment confirmed! Choose your batch.");
+        return;
+      }
+    } catch {
+      // No batches endpoint / none available — fall through to completion
+    }
+    toast.success("Payment confirmed! Access granted.");
+    setComplete(true);
+  };
+
+  const handleEnrollBatch = async () => {
+    if (!dbPaymentId || !selectedBatchId) {
+      toast.error("Please select a batch");
+      return;
+    }
+    setBatchLoading(true);
+    try {
+      await api.post(`/api/courses/catalogue/${courseId}/enroll`, {
+        paymentId: dbPaymentId,
+        batchId: selectedBatchId,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+      });
+      toast.success("Enrolled in batch successfully!");
+      setBatches([]);
+      setComplete(true);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setBatchLoading(false);
+    }
+  };
 
   if (!hasPrice) {
     return (
@@ -300,6 +360,97 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
               className="w-full rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] py-3 text-xs font-bold text-white shadow-md shadow-[#175cdd]/25 hover:shadow-lg"
             >
               Submit Admission Inquiry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Batch Selection (same as package flow) ────────────────────────────────
+  if (!complete && batches.length > 0) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-[#175cdd]/5">
+        <SecureCheckoutHeader />
+        <div className="space-y-5 p-5 sm:p-6">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 text-center">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs">
+              <IconCheck size={16} stroke={3} />
+            </span>
+            <h3 className="mt-2 text-sm font-bold text-emerald-950">
+              Payment Successful!
+            </h3>
+            <p className="mt-0.5 text-xs text-emerald-700">
+              Select your preferred batch to complete enrollment.
+            </p>
+          </div>
+
+          <div className="max-h-64 space-y-2.5 overflow-y-auto pr-1">
+            {batches.map((batch) => {
+              const isSelected = selectedBatchId === batch.id;
+              return (
+                <label
+                  key={batch.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
+                    isSelected
+                      ? "border-[#175cdd] bg-[#175cdd]/5 shadow-sm ring-2 ring-[#175cdd]/15"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="course-batch"
+                    value={batch.id}
+                    checked={isSelected}
+                    onChange={(e) => setSelectedBatchId(e.target.value)}
+                    className="mt-1 h-4 w-4 accent-[#175cdd]"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-slate-900">
+                        {batch.name}
+                      </p>
+                      {batch.seatsAvailable != null && (
+                        <span className="rounded-full bg-[#f59e0b]/15 px-2 py-0.5 text-[10px] font-bold text-[#b45309]">
+                          {batch.seatsAvailable} seats left
+                        </span>
+                      )}
+                    </div>
+                    {batch.startDate && (
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Starts{" "}
+                        {new Date(batch.startDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setBatches([]);
+                setComplete(true);
+              }}
+              className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Skip for Now
+            </button>
+            <button
+              type="button"
+              onClick={handleEnrollBatch}
+              disabled={!selectedBatchId || batchLoading}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] py-2.5 text-xs font-bold text-white shadow-sm shadow-[#175cdd]/25 transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {batchLoading ? "Enrolling..." : "Enroll in Batch"}
+              {!batchLoading && <IconArrowRight size={14} />}
             </button>
           </div>
         </div>
@@ -412,7 +563,9 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
       const orderId = res.orderId ?? res.order_id ?? `order_${Date.now()}`;
       const payId = `pay_${Date.now()}`;
 
-      await api.post(`/api/courses/catalogue/${courseId}/verify`, {
+      const verifyRes = await api.post<{
+        payment?: { id: string };
+      }>(`/api/courses/catalogue/${courseId}/verify`, {
         razorpayPaymentId: payId,
         razorpayOrderId: orderId,
         razorpaySignature: "verified_signature",
@@ -421,9 +574,11 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
         phone: phone.trim(),
       });
 
-      setReceiptData({ orderId, paymentId: payId });
-      toast.success("Payment confirmed! Access granted.");
-      setComplete(true);
+      await afterPaymentVerified(
+        verifyRes.payment?.id ?? "",
+        orderId,
+        payId,
+      );
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {

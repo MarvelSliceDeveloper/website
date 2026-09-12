@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -9,13 +9,6 @@ import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconPackage, IconX } from "@tabler/icons-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   SUGGESTED_PACKAGE_NAMES,
   getRelatedCourseIds,
@@ -29,6 +22,9 @@ export default function CreatePackagePage() {
   usePageTitle("New Package");
   const router = useRouter();
   const [name, setName] = useState("");
+  const [nameFocused, setNameFocused] = useState(false);
+  const [courseSearch, setCourseSearch] = useState("");
+  const [courseFocused, setCourseFocused] = useState(false);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [isInternship, setIsInternship] = useState(false);
@@ -123,6 +119,30 @@ export default function CreatePackagePage() {
     (c) => !selectedCourseIds.includes(c.id),
   );
 
+  // Type-to-filter suggestions shown below each input
+  const filteredNameOptions = useMemo(() => {
+    const q = name.trim().toLowerCase();
+    const base = packageNameOptions as readonly string[];
+    if (!q) return base.slice(0, 6);
+    return base.filter((n) => n.toLowerCase().includes(q)).slice(0, 6);
+  }, [name, packageNameOptions]);
+
+  const filteredCourseOptions = useMemo(() => {
+    const q = courseSearch.trim().toLowerCase();
+    if (!q) return unselectedCourses.slice(0, 6);
+    return (
+      unselectedCourses
+        .filter((c) => c.title.toLowerCase().includes(q))
+        // rank prefix matches first
+        .sort((a, b) => {
+          const aq = a.title.toLowerCase().startsWith(q) ? 0 : 1;
+          const bq = b.title.toLowerCase().startsWith(q) ? 0 : 1;
+          return aq - bq;
+        })
+        .slice(0, 6)
+    );
+  }, [courseSearch, unselectedCourses]);
+
   return (
     <div className="motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
       <AdminPageHeader
@@ -154,22 +174,40 @@ export default function CreatePackagePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Name <span className="text-danger">*</span>
             </label>
-            <Select value={name} onValueChange={(val) => setName(val || "")}>
-              <SelectTrigger className="field w-full">
-                <SelectValue placeholder="-- Select a package name --" />
-              </SelectTrigger>
-              <SelectContent>
-                {packageNameOptions.map((n) => (
-                  <SelectItem key={n} value={n}>
-                    {n}
-                  </SelectItem>
-                ))}
-                {name &&
-                  !(packageNameOptions as readonly string[]).includes(name) && (
-                    <SelectItem value={name}>{name}</SelectItem>
-                  )}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
+                placeholder="Type a package name…"
+                className="field w-full"
+                maxLength={100}
+              />
+              {nameFocused && filteredNameOptions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-border bg-background shadow-lg">
+                  {filteredNameOptions.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setName(n);
+                        setNameFocused(false);
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover"
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Type freely — pick a suggestion below if it matches, or keep
+              your own custom name.
+            </p>
           </div>
 
           <div>
@@ -245,24 +283,43 @@ export default function CreatePackagePage() {
                     Courses matching this package were auto-selected below. You
                     can add more or remove any course.
                   </label>
-                  <Select onValueChange={addCourse}>
-                    <SelectTrigger className="field w-full">
-                      <SelectValue placeholder="-- Add a course --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unselectedCourses.length === 0 ? (
-                        <SelectItem value="none" disabled>
-                          All courses added
-                        </SelectItem>
-                      ) : (
-                        unselectedCourses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
-                            {course.title}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={courseSearch}
+                      onChange={(e) => setCourseSearch(e.target.value)}
+                      onFocus={() => setCourseFocused(true)}
+                      onBlur={() => setCourseFocused(false)}
+                      placeholder="Type to search courses…"
+                      className="field w-full"
+                    />
+                    {courseFocused && (
+                      <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border bg-background shadow-lg">
+                        {filteredCourseOptions.length === 0 ? (
+                          <p className="px-3 py-2 text-sm text-muted-foreground">
+                            {unselectedCourses.length === 0
+                              ? "All courses added"
+                              : "No courses match"}
+                          </p>
+                        ) : (
+                          filteredCourseOptions.map((course) => (
+                            <button
+                              key={course.id}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                addCourse(course.id);
+                                setCourseSearch("");
+                              }}
+                              className="block w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover"
+                            >
+                              {course.title}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {selectedCourses.length > 0 && (

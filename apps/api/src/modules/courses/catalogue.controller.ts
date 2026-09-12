@@ -47,4 +47,25 @@ export const catalogueController = {
       return res.status(statusCode).json(body);
     }
   },
+  async listBatches(req: Request, res: Response) {
+    try {
+      const batches = await courseService.listCatalogueBatches(req.params.id);
+      return res.json(batches);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+  async enroll(req: Request, res: Response) {
+    try {
+      const { paymentId, batchId, name, email, phone } = req.body;
+      if (!paymentId || !batchId || !name || !email || !phone)
+        return res.status(400).json({ error: "paymentId, batchId, name, email, phone required" });
+      const result = await courseService.enrollCatalogueBatch(req.params.id, { paymentId, batchId, name, email, phone });
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
 };
