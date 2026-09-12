@@ -131,17 +131,17 @@ function PageHeading({ pkg }: { pkg: PackageDetail }) {
 
   const stats = isInternship
     ? [
-        { icon: IconLifebuoy, label: "1:1 Mentorship" },
-        { icon: IconVideo, label: "Live Sessions" },
-        { icon: IconBriefcase, label: "Hands-on Assignments" },
-        { icon: IconCertificate, label: "Certificate on finish" },
-      ]
+      { icon: IconLifebuoy, label: "1:1 Mentorship" },
+      { icon: IconVideo, label: "Live Sessions" },
+      { icon: IconBriefcase, label: "Hands-on Assignments" },
+      { icon: IconCertificate, label: "Certificate on finish" },
+    ]
     : [
-        { icon: IconBook, label: `${pkg.courses.length} Courses` },
-        { icon: IconVideo, label: `${pkg.totalLessons ?? 0} Lessons` },
-        { icon: IconBadge, label: `${pkg.totalQuizzes ?? 0} Quizzes` },
-        { icon: IconUsers, label: "1:1 Mentors" },
-      ];
+      { icon: IconBook, label: `${pkg.courses.length} Courses` },
+      { icon: IconVideo, label: `${pkg.totalLessons ?? 0} Lessons` },
+      { icon: IconBadge, label: `${pkg.totalQuizzes ?? 0} Quizzes` },
+      { icon: IconUsers, label: "1:1 Mentors" },
+    ];
 
   return (
     <div className="mb-8">
@@ -180,7 +180,7 @@ function PageHeading({ pkg }: { pkg: PackageDetail }) {
         </div>
         <a
           href="#apply"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-[#175cdd]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#175cdd]/35 sm:ml-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-6 py-2.5 text-sm font-bold text-white  transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#175cdd]/35 sm:ml-auto"
         >
           {isInternship ? "Apply Now" : hasPrice ? "Enroll Now" : "Contact Us"}
         </a>
@@ -352,9 +352,8 @@ function Curriculum({ pkg }: { pkg: PackageDetail }) {
             return (
               <div
                 key={course.id}
-                className={`overflow-hidden rounded-2xl border bg-card transition-colors ${
-                  open ? "border-primary/30" : "border-border"
-                }`}
+                className={`overflow-hidden rounded-2xl border bg-card transition-colors ${open ? "border-primary/30" : "border-border"
+                  }`}
               >
                 <button
                   onClick={() => setOpenId(open ? null : course.id)}
@@ -373,11 +372,10 @@ function Curriculum({ pkg }: { pkg: PackageDetail }) {
                     </span>
                   </span>
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                      open
-                        ? "bg-primary text-white"
-                        : "bg-muted/60 text-muted-foreground"
-                    }`}
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${open
+                      ? "bg-primary text-white"
+                      : "bg-muted/60 text-muted-foreground"
+                      }`}
                   >
                     <IconChevronDown
                       size={15}
@@ -618,9 +616,8 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
             return (
               <div
                 key={f.q}
-                className={`overflow-hidden rounded-2xl border bg-background transition-colors ${
-                  open ? "border-primary/30" : "border-border"
-                }`}
+                className={`overflow-hidden rounded-2xl border bg-background transition-colors ${open ? "border-primary/30" : "border-border"
+                  }`}
               >
                 <button
                   onClick={() => setOpenIdx(open ? null : i)}
@@ -630,11 +627,10 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
                     {f.q}
                   </span>
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                      open
-                        ? "bg-primary text-white"
-                        : "bg-muted/60 text-muted-foreground"
-                    }`}
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${open
+                      ? "bg-primary text-white"
+                      : "bg-muted/60 text-muted-foreground"
+                      }`}
                   >
                     <IconChevronDown
                       size={15}

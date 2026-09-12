@@ -2060,16 +2060,6 @@ export default function CourseContentView({
             title="Drag to resize · double-click to reset"
             className="absolute top-0 left-0 hidden h-full w-1.5 cursor-col-resize transition-colors hover:bg-primary/30 active:bg-primary/50 lg:block"
           />
-          <div className="hidden shrink-0 items-center justify-end border-b border-border px-2 py-1.5 lg:flex">
-            <button
-              onClick={toggleSidebarCollapsed}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground"
-              aria-label="Collapse contents sidebar"
-              title="Collapse sidebar"
-            >
-              <IconArrowRight size={15} />
-            </button>
-          </div>
           <div className="flex shrink-0 items-center justify-between border-b border-border lg:hidden">
             <span className="px-4 py-3 text-xs font-semibold text-muted-foreground">
               Contents
