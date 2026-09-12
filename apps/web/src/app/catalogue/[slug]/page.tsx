@@ -53,9 +53,20 @@ function courseToPackageDetail(course: any): PackageDetail {
   } as PackageDetail & { _derivedCourseId?: string };
 }
 
+function resolveApiBase(): string {
+  // API_URL in production includes the "/api" suffix
+  // (see .env.production.example), while NEXT_PUBLIC_API_URL does not.
+  // Normalize so callers can safely append "/api/..." without doubling it.
+  const raw =
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:4000";
+  return raw.replace(/\/api\/?$/, "").replace(/\/+$/, "");
+}
+
 async function getPackage(slug: string): Promise<PackageDetail | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const apiUrl = resolveApiBase();
     const res = await fetch(`${apiUrl}/api/packages/public/${slug}`, {
       next: { revalidate: 60 },
     });
@@ -69,7 +80,7 @@ async function getPackage(slug: string): Promise<PackageDetail | null> {
 
 async function getCatalogueCourse(slug: string): Promise<any | null> {
   try {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const apiUrl = resolveApiBase();
     const res = await fetch(`${apiUrl}/api/courses/catalogue/${slug}`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const data = await res.json();

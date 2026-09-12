@@ -161,9 +161,10 @@ function PageHeading({ pkg }: { pkg: PackageDetail }) {
       </h1>
 
       {pkg.description && (
-        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
-          {pkg.description}
-        </p>
+        <div
+          className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted-foreground [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+          dangerouslySetInnerHTML={{ __html: pkg.description }}
+        />
       )}
 
       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
@@ -180,7 +181,7 @@ function PageHeading({ pkg }: { pkg: PackageDetail }) {
         </div>
         <a
           href="#apply"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-6 py-2.5 text-sm font-bold text-white  transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#175cdd]/35 sm:ml-auto"
+          className="enroll-cta inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#175cdd]/35 sm:ml-auto"
         >
           {isInternship ? "Apply Now" : hasPrice ? "Enroll Now" : "Contact Us"}
         </a>
@@ -776,7 +777,7 @@ export function PackageDetailClient({ pkg }: Props) {
 
             <a
               href="#apply"
-              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#175cdd] to-[#134cb5] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#175cdd]/30 transition-transform active:scale-95"
+              className="enroll-cta flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-md shadow-[#175cdd]/30 transition-transform active:scale-95"
             >
               <span>{pkg.isInternship ? "Apply Now" : "Enroll Now"}</span>
               <IconArrowRight size={14} />

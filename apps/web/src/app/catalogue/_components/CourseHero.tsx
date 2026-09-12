@@ -46,7 +46,7 @@ export default function CourseHero({ course, onEnroll, onEnquire }: { course: an
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             <h1 className="text-[22px] sm:text-3xl lg:text-4xl font-extrabold text-primary leading-tight">{course.title}</h1>
-            {course.description && <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed whitespace-pre-line max-w-[600px]">{course.description}</p>}
+            {course.description && <div className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed max-w-[600px] [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: course.description }} />}
             {points.length > 0 && (
               <div className="mt-6 w-full max-w-[600px]">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

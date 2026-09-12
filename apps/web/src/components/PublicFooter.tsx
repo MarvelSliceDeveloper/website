@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { IconPhone, IconArrowUp, IconGlobe } from "@tabler/icons-react";
@@ -26,6 +26,8 @@ const PHONES = ["+91 63809 57390", "+91 80882 18609"];
 
 export default function PublicFooter() {
   const [showTop, setShowTop] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  const footerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     function onScroll() {
@@ -35,8 +37,21 @@ export default function PublicFooter() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Hide the floating button while the footer is on screen so it never
+  // covers footer/pagination content at the bottom of the page.
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { threshold: 0.05 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <footer className="bg-black text-white">
+    <footer ref={footerRef} className="bg-black text-white">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-x-6 gap-y-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10 lg:grid-cols-4">
           {/* Brand + contact */}
@@ -192,12 +207,12 @@ export default function PublicFooter() {
         </div>
       </div>
 
-      {showTop && (
+      {showTop && !footerVisible && (
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Scroll to top"
-          className="fixed bottom-6 right-4 z-50 cursor-pointer rounded-full bg-[#2551d9] p-2.5 text-white shadow-lg transition-colors hover:bg-blue-700 sm:right-6"
+          className="fixed bottom-24 right-4 z-50 cursor-pointer rounded-full bg-[#2551d9] p-2.5 text-white shadow-lg transition-colors hover:bg-blue-700 sm:bottom-6 sm:right-6"
         >
           <IconArrowUp size={20} />
         </button>

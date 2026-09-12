@@ -44,7 +44,7 @@ export function CourseCard({
       </div>
       <div className="p-6 flex flex-col flex-1">
         <h3 className="font-bold text-ink text-lg group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
-        <p className="text-sm text-slate-600 leading-relaxed mt-2 line-clamp-2 flex-1">{course.description}</p>
+        <div className="text-sm text-slate-600 leading-relaxed mt-2 line-clamp-2 flex-1 [&_p]:m-0" dangerouslySetInnerHTML={{ __html: course.description ?? "" }} />
         <div className="flex flex-wrap gap-2 mt-3 mb-3">
           {course.duration && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
