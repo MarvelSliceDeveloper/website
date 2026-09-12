@@ -41,6 +41,12 @@ interface CheckoutResponse {
   keyId?: string;
 }
 
+interface RazorpayModalResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
 interface BatchOption {
   id: string;
   name: string;
@@ -561,29 +567,114 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
         { name: name.trim(), email: email.trim(), phone: phone.trim() },
       );
       const orderId = res.orderId ?? res.order_id ?? `order_${Date.now()}`;
-      const payId = `pay_${Date.now()}`;
 
-      const verifyRes = await api.post<{
-        payment?: { id: string };
-      }>(`/api/courses/catalogue/${courseId}/verify`, {
-        razorpayPaymentId: payId,
-        razorpayOrderId: orderId,
-        razorpaySignature: "verified_signature",
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-      });
+      // Stub order (no Razorpay keys) — verify directly without a modal.
+      // NOTE: real Razorpay order ids also start with "order_", so only the
+      // "stub_" prefix (or a missing keyId) means stub mode.
+      if (!res.keyId || orderId.startsWith("stub_")) {
+        const payId = `pay_${Date.now()}`;
+        const verifyRes = await api.post<{
+          payment?: { id: string };
+        }>(`/api/courses/catalogue/${courseId}/verify`, {
+          razorpayPaymentId: payId,
+          razorpayOrderId: orderId,
+          razorpaySignature: "verified_signature",
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+        });
+        await afterPaymentVerified(verifyRes.payment?.id ?? "", orderId, payId);
+        return;
+      }
 
-      await afterPaymentVerified(
-        verifyRes.payment?.id ?? "",
+      // Real order — open the Razorpay modal (same as the package flow).
+      await openRazorpayModal({
+        keyId: res.keyId,
         orderId,
-        payId,
-      );
+        amount: res.amount ?? originalPrice,
+        currency: res.currency ?? "INR",
+      });
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Opens the Razorpay checkout modal for a real order. On success verifies
+  // the payment with the real Razorpay ids + signature, then continues to
+  // batch selection via afterPaymentVerified.
+  const openRazorpayModal = (orderData: {
+    keyId: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+  }): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+
+      script.onload = () => {
+        const options = {
+          key: orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: "Marvel Slice",
+          description: pkg.name,
+          image: "/images/Marvel_logo.png",
+          order_id: orderData.orderId,
+          handler: async function (response: RazorpayModalResponse) {
+            try {
+              const verifyRes = await api.post<{
+                payment?: { id: string };
+              }>(`/api/courses/catalogue/${courseId}/verify`, {
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                name: name.trim(),
+                email: email.trim(),
+                phone: phone.trim(),
+              });
+              await afterPaymentVerified(
+                verifyRes.payment?.id ?? "",
+                response.razorpay_order_id,
+                response.razorpay_payment_id,
+              );
+              resolve();
+            } catch (err: unknown) {
+              toast.error(getErrorMessage(err));
+              reject(err);
+            } finally {
+              setLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              setLoading(false);
+              reject(new Error("Payment cancelled"));
+            },
+          },
+          prefill: {
+            name: name.trim(),
+            email: email.trim(),
+            contact: phone.trim() || undefined,
+          },
+          theme: { color: "#175cdd" },
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      };
+
+      script.onerror = () => {
+        toast.error("Failed to load payment gateway. Please try again.");
+        reject(new Error("Failed to load Razorpay SDK"));
+      };
+
+      document.body.appendChild(script);
+    });
   };
 
   return (
