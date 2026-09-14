@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
@@ -53,6 +53,11 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 export default function AdminPackagesPage() {
   usePageTitle("Packages");
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
+  const refreshCatalogue = () => {
+    queryClient.invalidateQueries({ queryKey: ["catalogue"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "packages"] });
+  };
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -72,6 +77,7 @@ export default function AdminPackagesPage() {
     onSuccess: () => {
       toast.success("Package deleted");
       void packagesQuery.refetch();
+      void refreshCatalogue();
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });

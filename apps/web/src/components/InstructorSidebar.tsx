@@ -18,6 +18,10 @@ import {
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
+import {
+  getNavIconClass,
+  getNavItemColors,
+} from "@/components/shared/sidebarNav";
 
 const overviewItems: NavItem[] = [
   {
@@ -119,10 +123,7 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${isChildActive
-          ? "border-primary bg-primary/8 text-primary font-bold"
-          : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
+        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${getNavItemColors(isChildActive)}`}
       >
         <span
           className={`h-1.5 w-1.5 rounded-full transition-transform ${isChildActive
@@ -197,6 +198,8 @@ function NavGroup({
             });
           const isActive = isParentActive || isAnyChildActive;
 
+          const navItemColors = getNavItemColors(isActive);
+
           return (
             <li key={item.label} className="space-y-0.5">
               {hasChildren ? (
@@ -205,12 +208,9 @@ function NavGroup({
                     type="button"
                     title={item.label}
                     onClick={() => toggleGroup(item.label)}
-                    className={`w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${isActive
-                      ? "bg-primary/10 text-primary border-r-3 border-primary"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                      }`}
+                    className={`w-full flex items-center justify-center p-3 text-[13.5px] font-semibold transition-colors cursor-pointer border-l-3 ${navItemColors}`}
                   >
-                    <item.icon size={18} stroke={1.8} className="shrink-0" />
+                    <item.icon size={18} stroke={1.8} className={getNavIconClass(isActive)} />
                   </button>
                 ) : (
                   <div className="space-y-0.5">
@@ -218,15 +218,12 @@ function NavGroup({
                       type="button"
                       onClick={() => toggleGroup(item.label)}
                       title={item.label}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${isActive
-                        ? "border-primary bg-primary/8 text-primary"
-                        : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                        }`}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${navItemColors}`}
                     >
                       <item.icon
                         size={18}
                         stroke={1.8}
-                        className="shrink-0 opacity-80"
+                        className={getNavIconClass(isActive)}
                       />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (
@@ -263,18 +260,15 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
-                    ? "justify-center p-3"
+                  className={`relative flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
+                    ? "justify-center p-3 border-l-3"
                     : "gap-3 px-4 py-2.5 border-l-3"
-                    } ${isActive
-                      ? "border-primary bg-primary/8 text-primary font-bold"
-                      : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                    }`}
+                    } ${navItemColors}`}
                 >
                   <item.icon
                     size={18}
                     stroke={1.8}
-                    className="shrink-0 opacity-80"
+                    className={getNavIconClass(isActive)}
                   />
                   <span
                     className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}

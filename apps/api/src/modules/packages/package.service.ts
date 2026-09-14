@@ -24,7 +24,7 @@ export const UpdatePackageSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().nullable().optional(),
   price: z.number().int().positive().nullable().optional(),
-  courseIds: z.array(z.string().cuid()).min(1).optional(),
+  courseIds: z.array(z.string().cuid()).optional(),
   isInternship: z.boolean().optional(),
 });
 
@@ -183,24 +183,29 @@ export const packageService = {
     });
     if (!existing) throw new AppError(404, "Package not found");
 
-    // If updating courses, verify they all exist
-    if (data.courseIds && data.courseIds.length > 0) {
-      const courses = await prisma.course.findMany({
-        where: { id: { in: data.courseIds } },
-      });
-      if (courses.length !== data.courseIds.length) {
-        throw new AppError(404, "One or more courses not found");
+    // If updating courses, verify they all exist. An explicit empty array
+    // clears all course links (used when flipping a package to internship).
+    if (data.courseIds !== undefined) {
+      if (data.courseIds.length > 0) {
+        const courses = await prisma.course.findMany({
+          where: { id: { in: data.courseIds } },
+        });
+        if (courses.length !== data.courseIds.length) {
+          throw new AppError(404, "One or more courses not found");
+        }
       }
 
       // Remove old course links and create new ones
       await prisma.packageCourse.deleteMany({ where: { packageId } });
-      await prisma.packageCourse.createMany({
-        data: data.courseIds.map((courseId, index) => ({
-          packageId,
-          courseId,
-          order: index,
-        })),
-      });
+      if (data.courseIds.length > 0) {
+        await prisma.packageCourse.createMany({
+          data: data.courseIds.map((courseId, index) => ({
+            packageId,
+            courseId,
+            order: index,
+          })),
+        });
+      }
     }
 
     const { courseIds, ...updateData } = data;
@@ -516,6 +521,10 @@ export const packageService = {
                 slug: true,
                 description: true,
                 thumbnailUrl: true,
+                categoryId: true,
+                categoryRelation: {
+                  select: { id: true, name: true, slug: true },
+                },
                 learningObjectives: true,
                 modules: {
                   select: {
@@ -642,13 +651,17 @@ export const packageService = {
           include: {
             courses: {
               include: {
-                course: {
-                  select: {
-                    id: true,
-                    title: true,
-                    slug: true,
-                    description: true,
-                    thumbnailUrl: true,
+            course: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                description: true,
+                thumbnailUrl: true,
+                categoryId: true,
+                categoryRelation: {
+                  select: { id: true, name: true, slug: true },
+                },
                     modules: {
                       select: { id: true, title: true, order: true },
                     },
