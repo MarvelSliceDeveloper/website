@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
@@ -44,6 +44,9 @@ export default function CourseDetailPage() {
     `/api/admin/courses/${id}`,
   );
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
+  const refreshCatalogue = () =>
+    queryClient.invalidateQueries({ queryKey: ["catalogue"] });
 
   const [activeTab, setActiveTab] = useState<
     "details" | "content" | "certification"
@@ -146,7 +149,10 @@ export default function CourseDetailPage() {
         },
       ),
     onSuccess: (result) => {
-      if (result.published) void courseQuery.refetch();
+      if (result.published) {
+        void courseQuery.refetch();
+        void refreshCatalogue();
+      }
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
@@ -159,7 +165,10 @@ export default function CourseDetailPage() {
         loading: "Unpublishing course...",
         success: () => "Course unpublished",
       }),
-    onSuccess: () => void courseQuery.refetch(),
+    onSuccess: () => {
+      void courseQuery.refetch();
+      void refreshCatalogue();
+    },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
 

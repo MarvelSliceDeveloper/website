@@ -33,6 +33,10 @@ import {
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
+import {
+  getNavIconClass,
+  getNavItemColors,
+} from "@/components/shared/sidebarNav";
 
 // Small count badge, e.g. "3" or "9+". Renders nothing if count is falsy.
 function UnreadBadge({ count }: { count?: number }) {
@@ -84,10 +88,7 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${isChildActive
-          ? "border-primary bg-primary/8 text-primary font-bold"
-          : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
+        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${getNavItemColors(isChildActive)}`}
       >
         <span
           className={`h-1.5 w-1.5 rounded-full transition-transform ${isChildActive
@@ -178,6 +179,8 @@ function NavGroup({
           }, 0);
           const itemCount = ownCount ?? (childrenTotal || undefined);
 
+          const navItemColors = getNavItemColors(isActive);
+
           return (
             <li key={item.label} className="space-y-0.5">
               {hasChildren ? (
@@ -186,12 +189,9 @@ function NavGroup({
                     type="button"
                     title={item.label}
                     onClick={() => toggleGroup(item.label)}
-                    className={`relative w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${isActive
-                      ? "bg-primary/8 text-primary border-r-3 border-primary font-bold"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                      }`}
+                    className={`relative w-full flex items-center justify-center p-3 text-[13.5px] font-semibold transition-colors cursor-pointer border-l-3 ${navItemColors}`}
                   >
-                    <item.icon size={18} stroke={1.8} className={`shrink-0 ${isActive ? "opacity-100" : "opacity-80"}`} />
+                    <item.icon size={18} stroke={1.8} className={getNavIconClass(isActive)} />
                     {!!itemCount && (
                       <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
                     )}
@@ -202,15 +202,12 @@ function NavGroup({
                       type="button"
                       onClick={() => toggleGroup(item.label)}
                       title={item.label}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${isActive
-                        ? "border-primary bg-primary/8 text-primary font-bold"
-                        : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                        }`}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${navItemColors}`}
                     >
                       <item.icon
                         size={18}
                         stroke={1.8}
-                        className={`shrink-0 ${isActive ? "opacity-100" : "opacity-80"}`}
+                        className={getNavIconClass(isActive)}
                       />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (
@@ -252,15 +249,12 @@ function NavGroup({
                   className={`relative flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
                     ? "justify-center p-3"
                     : "gap-3 px-4 py-2.5 border-l-3"
-                    } ${isActive
-                      ? "border-primary bg-primary/8 text-primary font-bold"
-                      : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                    }`}
+                    } ${navItemColors}`}
                 >
                   <item.icon
                     size={18}
                     stroke={1.8}
-                    className={`shrink-0 ${isActive ? "opacity-100" : "opacity-80"}`}
+                    className={getNavIconClass(isActive)}
                   />
                   <span
                     className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}
@@ -422,6 +416,23 @@ export default function AdminSidebar({
                 stroke?: number | string;
                 className?: string;
               }>,
+            },
+            {
+              label: "Packages",
+              href: "/admin/packages",
+              icon: IconPackage,
+              children: [
+                { label: "View Packages", href: "/admin/packages" },
+                { label: "Add Package", href: "/admin/packages/new" },
+                {
+                  label: "Pending Enrollments",
+                  href: "/admin/packages/enrollments?status=PENDING",
+                },
+                {
+                  label: "Active Packages",
+                  href: "/admin/packages?status=ACTIVE",
+                },
+              ],
             },
             {
               label: "Mentorship",

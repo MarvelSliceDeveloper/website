@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
@@ -76,6 +76,9 @@ function CoursesPageContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
+  const refreshCatalogue = () =>
+    queryClient.invalidateQueries({ queryKey: ["catalogue"] });
 
   // List query keyed on the active filter/search/page so any change refetches.
   const coursesQuery = useApiQuery<CourseListResponse>(
@@ -106,6 +109,7 @@ function CoursesPageContent() {
     onSuccess: () => {
       toast.success("Course archived");
       void coursesQuery.refetch();
+      void refreshCatalogue();
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
@@ -147,6 +151,7 @@ function CoursesPageContent() {
       },
     }).then(() => {
       void coursesQuery.refetch();
+      void refreshCatalogue();
     });
   };
 
@@ -160,6 +165,7 @@ function CoursesPageContent() {
       success: () => "Course unpublished",
     }).then(() => {
       void coursesQuery.refetch();
+      void refreshCatalogue();
     });
   };
 

@@ -80,14 +80,16 @@ export default function CataloguePage() {
       ...(search.trim() ? { search: search.trim() } : {}),
       page: String(page),
       limit: String(PER_PAGE),
-    }
+    },
+    { staleTime: 0 },
   );
 
   // Fetch active packages
   const packagesQuery = useApiQuery<{ packages: any[] }>(
     ["catalogue", "packages"],
     "/api/packages/public",
-    undefined
+    undefined,
+    { staleTime: 0 },
   );
 
   // Sidebar categories are fetched unfiltered (no category/search) so the
@@ -99,7 +101,8 @@ export default function CataloguePage() {
   }>(
     ["catalogue", "categories"],
     "/api/courses/catalogue",
-    { page: "1", limit: "1" }
+    { page: "1", limit: "1" },
+    { staleTime: 0 },
   );
 
   const rawCourses = coursesQuery.data?.courses || [];
@@ -168,19 +171,44 @@ export default function CataloguePage() {
   // Combine categories — only show categories that actually have courses.
   // The API returns every active category with its live courseCount, so drop
   // the empty ones instead of showing the full list.
+  // Packages also count: a package belongs to every category its courses
+  // belong to (counted once per category), so creating a package bumps counts.
+  const packageCountByCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    const bump = (key: string) => counts.set(key, (counts.get(key) ?? 0) + 1);
+    for (const p of rawPackages as any[]) {
+      const slugs = new Set<string>();
+      for (const pc of p.courses || []) {
+        if (pc.course?.categoryRelation?.slug) slugs.add(pc.course.categoryRelation.slug);
+        if (pc.course?.categoryId) slugs.add(pc.course.categoryId);
+      }
+      slugs.forEach(bump);
+    }
+    return counts;
+  }, [rawPackages]);
+
   const categoriesList = useMemo(() => {
     const fromApi = categoriesQuery.data?.categories;
     if (fromApi && fromApi.length > 0) {
-      return fromApi.filter((c) => (c.courseCount ?? 0) > 0);
+      return fromApi
+        .map((c) => ({
+          ...c,
+          courseCount:
+            (c.courseCount ?? 0) +
+            (packageCountByCategory.get(c.slug) ?? 0) +
+            (packageCountByCategory.get(c.id) ?? 0),
+        }))
+        .filter((c) => (c.courseCount ?? 0) > 0);
     }
     return DEFAULT_CATEGORIES.map((def) => ({
       ...def,
       courseCount: 0,
     }));
-  }, [categoriesQuery.data?.categories]);
+  }, [categoriesQuery.data?.categories, packageCountByCategory]);
 
   const totalCourses = coursesQuery.data?.total || 0;
-  const allCoursesTotal = categoriesQuery.data?.total ?? totalCourses;
+  const allCoursesTotal =
+    (categoriesQuery.data?.total ?? totalCourses) + rawPackages.length;
   const totalPackages = packageItems.length;
 
   // Active items for display: combine packages and single courses

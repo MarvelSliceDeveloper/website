@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
@@ -19,6 +19,7 @@ import {
   IconBook,
   IconCheck,
   IconLink,
+  IconPencil,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -69,6 +70,7 @@ type PackageDetail = {
   name: string;
   slug: string;
   description: string | null;
+  price: number | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
   isInternship?: boolean;
@@ -178,6 +180,11 @@ export default function PackageDetailPage({
   const confirmDelete = useConfirmDialog();
   const { id } = use(params);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const refreshCatalogue = () => {
+    queryClient.invalidateQueries({ queryKey: ["catalogue"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "packages"] });
+  };
 
   const packageQuery = useApiQuery<PackageDetail>(
     ["admin", "package", "detail", id],
@@ -189,6 +196,14 @@ export default function PackageDetailPage({
   // Enroll modal state
   const [enrollModal, setEnrollModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState("");
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
+  const [editIsInternship, setEditIsInternship] = useState(false);
 
   // Approve modal state
   const [approveModal, setApproveModal] = useState<PackageEnrollment | null>(
@@ -205,6 +220,71 @@ export default function PackageDetailPage({
   });
   const students = studentsQuery.data?.users ?? [];
   const loadingStudents = studentsQuery.isPending;
+
+  const availableCoursesQuery = useApiQuery<{
+    courses: { id: string; title: string }[];
+  }>(
+    ["admin", "packages", "courses"],
+    "/api/admin/packages/courses",
+    undefined,
+    { enabled: editModal },
+  );
+  const availableCourses = availableCoursesQuery.data?.courses ?? [];
+
+  const openEditModal = () => {
+    if (!pkg) return;
+    setEditName(pkg.name);
+    setEditDescription(pkg.description ?? "");
+    setEditPrice(
+      pkg.price != null ? String(Math.round(pkg.price / 100)) : "",
+    );
+    setEditCourseIds(pkg.courses.map((c) => c.courseId));
+    setEditIsInternship(Boolean(pkg.isInternship));
+    setEditModal(true);
+  };
+
+  const toggleEditCourse = (courseId: string) => {
+    setEditCourseIds((prev) =>
+      prev.includes(courseId)
+        ? prev.filter((c) => c !== courseId)
+        : [...prev, courseId],
+    );
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      description?: string | null;
+      price?: number | null;
+      courseIds?: string[];
+      isInternship?: boolean;
+    }) => api.put(`/api/admin/packages/${id}`, payload),
+    onSuccess: () => {
+      toast.success("Package updated");
+      setEditModal(false);
+      void packageQuery.refetch();
+      void refreshCatalogue();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleUpdate = () => {
+    if (!editName.trim()) {
+      toast.error("Package name is required");
+      return;
+    }
+    if (!editIsInternship && editCourseIds.length === 0) {
+      toast.error("Select at least one course");
+      return;
+    }
+    updateMutation.mutate({
+      name: editName.trim(),
+      description: editDescription.trim() || null,
+      price: editPrice ? parseInt(editPrice, 10) * 100 : null,
+      courseIds: editIsInternship ? [] : editCourseIds,
+      isInternship: editIsInternship,
+    });
+  };
 
   useEffect(() => {
     if (packageQuery.isError) {
@@ -223,6 +303,7 @@ export default function PackageDetailPage({
     onSuccess: (_data, status) => {
       toast.success(`Package ${status.toLowerCase()}`);
       void packageQuery.refetch();
+      void refreshCatalogue();
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
@@ -362,6 +443,13 @@ export default function PackageDetailPage({
                 Copy Link
               </button>
             )}
+            <button
+              onClick={openEditModal}
+              className="btn-secondary text-sm flex items-center gap-1.5"
+            >
+              <IconPencil size={16} stroke={1.5} />
+              Edit
+            </button>
             {pkg.status === "DRAFT" && (
               <button
                 onClick={() => handleStatusChange("ACTIVE")}
@@ -701,6 +789,134 @@ export default function PackageDetailPage({
               ))}
             </div>
           </div>
+        </FormModal>
+      )}
+      {editModal && (
+        <FormModal
+          open={true}
+          onClose={() => setEditModal(false)}
+          title="Edit Package"
+          size="lg"
+          footer={
+            <>
+              <button
+                onClick={() => setEditModal(false)}
+                className="btn-secondary text-sm"
+                disabled={updateMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
+                className="btn-primary text-sm flex items-center gap-1.5"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </>
+          }
+        >
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Name <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="field w-full"
+              maxLength={100}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Description
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="field w-full min-h-[80px]"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Price (₹)
+              <span className="text-xs text-muted-foreground">
+                {" "}
+                — leave empty for free
+              </span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={editPrice}
+              onChange={(e) => setEditPrice(e.target.value)}
+              className="field w-full"
+            />
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3">
+            <input
+              type="checkbox"
+              id="editIsInternship"
+              checked={editIsInternship}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setEditIsInternship(checked);
+                if (checked) setEditCourseIds([]);
+              }}
+              className="h-4 w-4 accent-primary"
+            />
+            <label htmlFor="editIsInternship" className="cursor-pointer">
+              <span className="block text-sm font-medium text-foreground">
+                Internship package
+              </span>
+            </label>
+          </div>
+          {!editIsInternship && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Courses <span className="text-danger">*</span>
+              </label>
+              {availableCoursesQuery.isPending ? (
+                <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
+              ) : availableCourses.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No published courses available.
+                </p>
+              ) : (
+                <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-lg border border-border p-2">
+                  {availableCourses.map((course) => (
+                    <label
+                      key={course.id}
+                      className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-card-hover"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={editCourseIds.includes(course.id)}
+                        onChange={() => toggleEditCourse(course.id)}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      <span className="text-sm text-foreground">
+                        {course.title}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Selected: {editCourseIds.length}
+              </p>
+            </div>
+          )}
         </FormModal>
       )}
     </div>

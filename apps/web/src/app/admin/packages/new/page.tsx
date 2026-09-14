@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
@@ -21,6 +21,11 @@ type Course = PackagedCourse;
 export default function CreatePackagePage() {
   usePageTitle("New Package");
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const refreshCatalogue = () => {
+    queryClient.invalidateQueries({ queryKey: ["catalogue"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "packages"] });
+  };
   const [name, setName] = useState("");
   const [nameFocused, setNameFocused] = useState(false);
   const [courseSearch, setCourseSearch] = useState("");
@@ -53,6 +58,11 @@ export default function CreatePackagePage() {
   // When a package name is chosen, auto-select the related courses so the
   // admin gets a sensible starter set (they can still add/remove via the UI).
   useEffect(() => {
+    if (isInternship) {
+      setRelatedCourseIds([]);
+      setSelectedCourseIds([]);
+      return;
+    }
     const ids = name ? getRelatedCourseIds(name, availableCourses) : [];
     setRelatedCourseIds(ids);
     setSelectedCourseIds((prev) => {
@@ -60,7 +70,7 @@ export default function CreatePackagePage() {
       if (prev.length === union.size) return prev;
       return [...union];
     });
-  }, [name, availableCourses]);
+  }, [name, availableCourses, isInternship]);
 
   const addCourse = (courseId: string) => {
     if (!selectedCourseIds.includes(courseId)) {
@@ -86,6 +96,7 @@ export default function CreatePackagePage() {
           ? "Internship package created successfully"
           : "Package created successfully",
       );
+      void refreshCatalogue();
       router.push("/admin/packages");
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
@@ -107,7 +118,7 @@ export default function CreatePackagePage() {
       name: name.trim(),
       description: description.trim() || undefined,
       price: priceNum,
-      courseIds: selectedCourseIds,
+      courseIds: isInternship ? [] : selectedCourseIds,
       isInternship,
     });
   };
@@ -246,7 +257,15 @@ export default function CreatePackagePage() {
               type="checkbox"
               id="isInternship"
               checked={isInternship}
-              onChange={(e) => setIsInternship(e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsInternship(checked);
+                if (checked) {
+                  setSelectedCourseIds([]);
+                  setRelatedCourseIds([]);
+                  setCourseSearch("");
+                }
+              }}
               className="h-4 w-4 accent-primary"
             />
             <label htmlFor="isInternship" className="cursor-pointer">

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -41,6 +41,7 @@ const ALLOWED_THUMBNAIL_TYPES = new Set([
 export default function CreateCoursePage() {
   usePageTitle("New Course");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
@@ -305,6 +306,8 @@ export default function CreateCoursePage() {
       return course;
     },
     onSuccess: (course) => {
+      queryClient.invalidateQueries({ queryKey: ["catalogue"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "courses"] });
       router.push(`/admin/courses/${course.slug || course.id}`);
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
