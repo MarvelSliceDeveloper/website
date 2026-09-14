@@ -532,7 +532,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Handle file uploads
-  if (req.method === 'POST' && req.url === '/api/upload') {
+  if (req.method === 'POST' && req.url?.startsWith('/api/upload')) {
     try {
       const result = await handleFileUpload(req);
       const statusCode = result.error ? 400 : 200;
