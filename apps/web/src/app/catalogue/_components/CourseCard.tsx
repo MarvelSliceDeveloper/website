@@ -67,7 +67,7 @@ export function CourseCard({
         </div>
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-sm mt-auto">
           <span className="text-xs text-muted-foreground">{course._count?.modules ?? 0} modules</span>
-          <span className="text-sm font-semibold text-primary">View Course →</span>
+          <span className="text-sm font-semibold text-primary">Buy Now →</span>
         </div>
       </div>
     </Link>

@@ -81,7 +81,7 @@ export function PackageCard({ pkg, bannerSize = "lg" }: PackageCardProps) {
             {pkg.batches?.length ? `${pkg.batches.length} active batches` : "Certificate included"}
           </span>
           <span className="text-sm font-semibold text-primary">
-            {isInternship ? "Apply Now →" : "View Package →"}
+            {isInternship ? "Apply Now →" : "Buy Now →"}
           </span>
         </div>
       </div>

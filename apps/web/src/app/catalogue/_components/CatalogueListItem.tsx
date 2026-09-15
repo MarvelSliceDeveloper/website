@@ -152,7 +152,7 @@ export function CatalogueListItem({ item }: CatalogueListItemProps) {
           )}
         </div>
         <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
-          {isPackage ? (isInternship ? "Apply Now" : "View Package") : "View Course"}
+          {isPackage ? (isInternship ? "Apply Now" : "Buy Now") : "Buy Now"}
           <IconArrowRight size={16} />
         </span>
       </div>
