@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import BrandLogo from "@/components/BrandLogo";
 import { api } from "@/lib/api";
+import { getErrorMessage } from "@/lib/toast";
 import { useRazorpayPayment } from "../../_hooks/useRazorpayPayment";
 import type { PackageDetail } from "@/lib/api-types";
 
@@ -33,9 +34,28 @@ export default function SinglePaymentPage({ pkg }: Props) {
   const [formError, setFormError] = useState("");
   const pkgId = pkg.id;
   const pkgName = pkg.name;
+  const derivedCourseId =
+    (pkg as { _derivedCourseId?: string })._derivedCourseId ?? null;
+  // Derived-course (single course) checkout state — backend supports only
+  // { name, email, phone } (no coupon) and requires name/email/phone on verify.
+  const [courseBusy, setCourseBusy] = useState(false);
+  const [courseComplete, setCourseComplete] = useState(false);
+  const [courseReceipt, setCourseReceipt] = useState<{
+    orderId?: string;
+    paymentId?: string;
+  } | null>(null);
+  const [courseBatches, setCourseBatches] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [courseBatchId, setCourseBatchId] = useState("");
+  const [courseDbPaymentId, setCourseDbPaymentId] = useState<string | null>(
+    null,
+  );
+  const [courseBatchLoading, setCourseBatchLoading] = useState(false);
   const canPay =
     basePrice != null &&
     basePrice > 0 &&
+    !courseBusy &&
     pay.step !== "creating_order" &&
     pay.step !== "processing_payment" &&
     pay.step !== "verifying";
@@ -78,6 +98,150 @@ export default function SinglePaymentPage({ pkg }: Props) {
     }
     setFormError("");
     return true;
+  }
+
+  async function afterCourseVerified(
+    dbPaymentIdValue: string,
+    orderId: string,
+    payId: string,
+  ) {
+    setCourseReceipt({ orderId, paymentId: payId });
+    setCourseDbPaymentId(dbPaymentIdValue);
+    try {
+      const list = await api.get<{ id: string; name: string }[]>(
+        `/api/courses/catalogue/${derivedCourseId}/batches`,
+      );
+      if (list && list.length > 0) {
+        setCourseBatches(list);
+        return;
+      }
+    } catch {
+      // No batches endpoint / none available — fall through to completion
+    }
+    setCourseComplete(true);
+  }
+
+  async function payForDerivedCourse() {
+    if (!derivedCourseId) return;
+    setCourseBusy(true);
+    setFormError("");
+    try {
+      const name = pay.name.trim();
+      const email = pay.email.trim();
+      const phone = pay.mobile.trim();
+      const res = await api.post<{
+        orderId?: string;
+        order_id?: string;
+        amount?: number;
+        currency?: string;
+        keyId?: string;
+        payment?: { id: string };
+      }>(`/api/courses/catalogue/${derivedCourseId}/checkout`, {
+        name,
+        email,
+        phone,
+      });
+      const orderId = res.orderId ?? res.order_id ?? `order_${Date.now()}`;
+
+      // Stub order (no Razorpay keys) — verify directly without a modal.
+      if (!res.keyId || orderId.startsWith("stub_")) {
+        const payId = `pay_${Date.now()}`;
+        const verifyRes = await api.post<{ payment?: { id: string } }>(
+          `/api/courses/catalogue/${derivedCourseId}/verify`,
+          {
+            razorpayPaymentId: payId,
+            razorpayOrderId: orderId,
+            razorpaySignature: "verified_signature",
+            name,
+            email,
+            phone,
+          },
+        );
+        await afterCourseVerified(verifyRes.payment?.id ?? "", orderId, payId);
+        return;
+      }
+
+      // Real order — open the Razorpay modal.
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = () => {
+          const rzp = new (
+            window as unknown as {
+              Razorpay: new (o: object) => { open: () => void };
+            }
+          ).Razorpay({
+            key: res.keyId,
+            amount: res.amount ?? basePrice ?? 0,
+            currency: res.currency ?? "INR",
+            name: "Marvel Slice",
+            description: pkg.name,
+            order_id: orderId,
+            handler: async (response: {
+              razorpay_order_id: string;
+              razorpay_payment_id: string;
+              razorpay_signature: string;
+            }) => {
+              try {
+                const verifyRes = await api.post<{ payment?: { id: string } }>(
+                  `/api/courses/catalogue/${derivedCourseId}/verify`,
+                  {
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpayOrderId: response.razorpay_order_id,
+                    razorpaySignature: response.razorpay_signature,
+                    name,
+                    email,
+                    phone,
+                  },
+                );
+                await afterCourseVerified(
+                  verifyRes.payment?.id ?? "",
+                  response.razorpay_order_id,
+                  response.razorpay_payment_id,
+                );
+                resolve();
+              } catch (err: unknown) {
+                reject(err instanceof Error ? err : new Error(getErrorMessage(err)));
+              }
+            },
+            modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+            prefill: { name, email, contact: phone || undefined },
+            theme: { color: "#6c5bff" },
+          });
+          rzp.open();
+        };
+        script.onerror = () => reject(new Error("Failed to load Razorpay SDK"));
+        document.body.appendChild(script);
+      });
+    } catch (err: unknown) {
+      setFormError(getErrorMessage(err));
+    } finally {
+      setCourseBusy(false);
+    }
+  }
+
+  async function enrollCourseBatch() {
+    if (!derivedCourseId || !courseDbPaymentId || !courseBatchId) {
+      setFormError("Please select a batch");
+      return;
+    }
+    setCourseBatchLoading(true);
+    try {
+      await api.post(`/api/courses/catalogue/${derivedCourseId}/enroll`, {
+        paymentId: courseDbPaymentId,
+        batchId: courseBatchId,
+        name: pay.name.trim(),
+        email: pay.email.trim(),
+        phone: pay.mobile.trim(),
+      });
+      setCourseBatches([]);
+      setCourseComplete(true);
+    } catch (err: unknown) {
+      setFormError(getErrorMessage(err));
+    } finally {
+      setCourseBatchLoading(false);
+    }
   }
 
   return (
@@ -131,47 +295,57 @@ export default function SinglePaymentPage({ pkg }: Props) {
               </div>
             </div>
             <div className="mt-4">
-              <label
-                htmlFor="spp-coupon"
-                className="block text-xs font-semibold text-slate-600"
-              >
-                Coupon
-              </label>
-              <div className="mt-1 flex gap-2">
-                <input
-                  id="spp-coupon"
-                  value={pay.couponCode}
-                  onChange={(e) => pay.setCouponCode(e.target.value)}
-                  placeholder="Coupon code"
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                />
-                {pay.couponApplied ? (
-                  <button
-                    type="button"
-                    onClick={pay.removeCoupon}
-                    className="rounded-lg border px-3 py-2 text-xs font-bold"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => pay.applyCoupon(pkgId)}
-                    disabled={pay.couponLoading}
-                    className="rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50"
-                  >
-                    Apply
-                  </button>
-                )}
-              </div>
-              {pay.couponError ? (
-                <p className="mt-1 text-xs text-red-600">{pay.couponError}</p>
-              ) : null}
-              {pay.couponApplied ? (
-                <p className="mt-1 text-xs text-emerald-600">
-                  Coupon {pay.couponApplied.code} applied
+              {isDerivedCourse ? (
+                <p className="text-xs text-slate-500">
+                  Coupons apply to packages only.
                 </p>
-              ) : null}
+              ) : (
+                <>
+                  <label
+                    htmlFor="spp-coupon"
+                    className="block text-xs font-semibold text-slate-600"
+                  >
+                    Coupon
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      id="spp-coupon"
+                      value={pay.couponCode}
+                      onChange={(e) => pay.setCouponCode(e.target.value)}
+                      placeholder="Coupon code"
+                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    />
+                    {pay.couponApplied ? (
+                      <button
+                        type="button"
+                        onClick={pay.removeCoupon}
+                        className="rounded-lg border px-3 py-2 text-xs font-bold"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => pay.applyCoupon(pkgId)}
+                        disabled={pay.couponLoading}
+                        className="rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50"
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </div>
+                  {pay.couponError ? (
+                    <p className="mt-1 text-xs text-red-600">
+                      {pay.couponError}
+                    </p>
+                  ) : null}
+                  {pay.couponApplied ? (
+                    <p className="mt-1 text-xs text-emerald-600">
+                      Coupon {pay.couponApplied.code} applied
+                    </p>
+                  ) : null}
+                </>
+              )}
             </div>
           </div>
           <div className="p-6">
@@ -251,10 +425,7 @@ export default function SinglePaymentPage({ pkg }: Props) {
                 onClick={async () => {
                   if (!valid()) return;
                   if (isDerivedCourse) {
-                    // Course flow wires in Task 2
-                    setFormError(
-                      "Course checkout wires in the next step — try a package slug for now.",
-                    );
+                    await payForDerivedCourse();
                     return;
                   }
                   // Prefilled or guest: submit directly (avoids stale step read).
@@ -266,15 +437,55 @@ export default function SinglePaymentPage({ pkg }: Props) {
                 }}
                 className="mt-4 w-full rounded-lg bg-[#6c5bff] py-3 text-sm font-bold text-white disabled:opacity-50"
               >
-                {pay.step === "creating_order"
-                  ? "Setting up payment..."
-                  : pay.step === "processing_payment"
-                    ? "Opening Razorpay..."
-                    : pay.step === "verifying"
-                      ? "Verifying..."
-                      : `Pay Now ${formatINR(totalPaise)}`}
+                {courseBusy
+                  ? "Processing..."
+                  : pay.step === "creating_order"
+                    ? "Setting up payment..."
+                    : pay.step === "processing_payment"
+                      ? "Opening Razorpay..."
+                      : pay.step === "verifying"
+                        ? "Verifying..."
+                        : `Pay Now ${formatINR(totalPaise)}`}
               </button>
             )}
+            {courseBatches.length > 0 && !courseComplete ? (
+              <div className="mt-4 rounded-lg border p-3">
+                <p className="text-xs font-bold">Select batch</p>
+                <select
+                  value={courseBatchId}
+                  onChange={(e) => setCourseBatchId(e.target.value)}
+                  className="mt-1 w-full rounded border px-2 py-2 text-sm"
+                >
+                  <option value="">Choose batch</option>
+                  {courseBatches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={enrollCourseBatch}
+                  disabled={!courseBatchId || courseBatchLoading}
+                  className="mt-2 w-full rounded-lg bg-emerald-600 py-2 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  Confirm Enrollment
+                </button>
+              </div>
+            ) : null}
+            {courseComplete ? (
+              <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">
+                Payment successful. Order: {courseReceipt?.orderId ?? "—"} ·
+                Payment: {courseReceipt?.paymentId ?? "—"}
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="mt-2 w-full rounded-lg border border-emerald-300 bg-white py-2 font-bold"
+                >
+                  Download invoice (PDF via print)
+                </button>
+              </div>
+            ) : null}
             {pay.step === "selecting_batch" ? (
               <div className="mt-4 rounded-lg border p-3">
                 <p className="text-xs font-bold">Select batch</p>

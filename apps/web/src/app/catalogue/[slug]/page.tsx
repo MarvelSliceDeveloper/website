@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PackageDetailClient } from "./_components/PackageDetailClient";
+import SinglePaymentPage from "./_components/SinglePaymentPage";
 import type { PackageDetail } from "@/lib/api-types";
 
 function courseToPackageDetail(course: any): PackageDetail {
@@ -99,7 +99,7 @@ export default async function PackageDetailPage({
   const course = await getCatalogueCourse(slug);
   if (course) {
     const derived = courseToPackageDetail(course);
-    return <PackageDetailClient pkg={derived} />;
+    return <SinglePaymentPage pkg={derived} />;
   }
   const pkg = await getPackage(slug);
 
@@ -121,5 +121,5 @@ export default async function PackageDetailPage({
     );
   }
 
-  return <PackageDetailClient pkg={pkg} />;
+  return <SinglePaymentPage pkg={pkg} />;
 }
