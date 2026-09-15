@@ -112,8 +112,25 @@ function AnimatedRoutes() {
       <Route path="/career/jobs" element={<Navigate to="/career" replace />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/banking" element={<BankingV2 />} />
+      <Route path="/banking" element={<Banking />} />
+      <Route path="/banking/aptitude" element={<Aptitude />} />
+      <Route path="/banking/reasoning" element={<Reasoning />} />
+      <Route path="/banking/english" element={<English />} />
+      <Route path="/banking/banking-awareness" element={<BankingAwareness />} />
+      <Route path="/banking/current-affairs" element={<CurrentAffairs />} />
+      <Route path="/banking/affairs" element={<CurrentAffairs />} />
+      <Route path="/banking/todays-affairs" element={<Navigate to="/banking/current-affairs?filter=today" replace />} />
+      <Route path="/banking/mock-exam" element={<MockExam />} />
+
       <Route path="/bankingv2" element={<BankingV2 />} />
+      <Route path="/bankingv2/aptitude" element={<Aptitude />} />
+      <Route path="/bankingv2/reasoning" element={<Reasoning />} />
+      <Route path="/bankingv2/english" element={<English />} />
+      <Route path="/bankingv2/banking-awareness" element={<BankingAwareness />} />
+      <Route path="/bankingv2/current-affairs" element={<CurrentAffairs />} />
+      <Route path="/bankingv2/affairs" element={<CurrentAffairs />} />
+      <Route path="/bankingv2/todays-affairs" element={<Navigate to="/bankingv2/current-affairs?filter=today" replace />} />
+      <Route path="/bankingv2/mock-exam" element={<MockExam />} />
       <Route path="/aptitude" element={<Aptitude />} />
       <Route path="/reasoning" element={<Reasoning />} />
       <Route path="/english" element={<English />} />
