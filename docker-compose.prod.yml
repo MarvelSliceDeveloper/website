@@ -124,9 +124,13 @@ services:
       - DEV_API_PORT=3001
       - LANDING_PUBLIC_URL=https://marvelslice.com
     volumes:
-      # Persist career resumes across redeploys (dev-server.js writes to /app/uploads).
-      # Named volume survives `up -d --build`; same pattern as postgres_data/redis_data.
-      - landing_uploads:/app/uploads
+      # ── Persistent uploads (career resumes) ──
+      # Bind-mount to the host filesystem so files are visible on the device
+      # at ./apps/landing/uploads (on server: /opt/lms/website/apps/landing/uploads),
+      # survive `docker compose down -v`, and are easy to back up/inspect.
+      # Override the host path via LANDING_UPLOADS_HOST_PATH env var if needed.
+      # Same pattern as the LMS api UPLOADS_HOST_PATH bind-mount above.
+      - ${LANDING_UPLOADS_HOST_PATH:-./apps/landing/uploads}:/app/uploads
     restart: unless-stopped
     networks: [lms-network]
 
@@ -212,6 +216,10 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  # landing_uploads is kept for backwards-compatibility (pre-bind-mount data
+  # lives in this named volume). Migrate once with:
+  #   docker run --rm -v lms-prod_landing_uploads:/from -v "$(pwd)/apps/landing/uploads:/to" alpine sh -c "cp -an /from/. /to/ 2>/dev/null; echo migrated"
+  # then `docker volume rm lms-prod_landing_uploads` when verified.
   landing_uploads:
   # uploads_data is kept for backwards-compatibility if you use the named
   # volume alternative above. Remove if you use the bind-mount.
