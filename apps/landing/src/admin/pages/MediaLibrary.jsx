@@ -4,6 +4,7 @@ import AdminButton from '../components/AdminButton';
 import { FiCopy, FiTrash2, FiUpload, FiSearch, FiCheck, FiX, FiGrid, FiList, FiFolder, FiFile, FiLayers, FiDownload } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
+import { uploadFile } from '../../lib/uploadHelper';
 
 const BUCKETS = ['hero-images', 'course-thumbnails', 'certificates', 'company-logos', 'nav-icons', 'pages'];
 
@@ -141,14 +142,17 @@ const [confirm, confirmDialog] = useConfirm();
   async function handleUpload(e) {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
-    if (bucket === 'all') {
-      alert('Select a specific bucket to upload files.');
-      if (uploadRef.current) uploadRef.current.value = '';
-      return;
-    }
     for (const file of fileList) {
-      const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      await supabase.storage.from(bucket).upload(path, file);
+      try {
+        await uploadFile(file);
+        if (bucket !== 'all') {
+          const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          await supabase.storage.from(bucket).upload(path, file).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Server storage upload failed:', err);
+        alert(`Upload failed: ${err.message}`);
+      }
     }
     loadFiles();
     if (uploadRef.current) uploadRef.current.value = '';
@@ -159,13 +163,17 @@ const [confirm, confirmDialog] = useConfirm();
     setIsDragging(false);
     const fileList = e.dataTransfer.files;
     if (!fileList || fileList.length === 0) return;
-    if (bucket === 'all') {
-      alert('Select a specific bucket to upload files.');
-      return;
-    }
     for (const file of fileList) {
-      const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      await supabase.storage.from(bucket).upload(path, file);
+      try {
+        await uploadFile(file);
+        if (bucket !== 'all') {
+          const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          await supabase.storage.from(bucket).upload(path, file).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Server storage upload failed:', err);
+        alert(`Upload failed: ${err.message}`);
+      }
     }
     loadFiles();
   }
