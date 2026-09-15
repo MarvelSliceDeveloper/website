@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown, FiChevronRight, FiMail, FiPhone } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FaFacebookF, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';

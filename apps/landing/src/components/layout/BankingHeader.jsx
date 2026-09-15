@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiMenu, FiDollarSign, FiBarChart2, FiCpu, FiBook, FiShield, FiClock, FiCheckSquare, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
-import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { trackSocialClick } from '../../lib/analytics';
@@ -206,18 +206,6 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 aria-label="LinkedIn"
               >
                 <FaLinkedinIn className="w-3.5 h-3.5 text-[#0A66C2]" />
-              </a>
-            )}
-            {social.instagram && (
-              <a
-                href={social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackSocialClick('instagram', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
               </a>
             )}
           </div>

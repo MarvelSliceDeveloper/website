@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowUp, FiPhone, FiMail, FiMapPin, FiClock } from 'react-icons/fi';
-import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { topNav } from './Header';
@@ -189,7 +189,6 @@ export default function Footer() {
               <div className="flex flex-wrap items-center gap-2.5 mt-3 justify-center sm:justify-start">
                 <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaYoutube className="w-4 h-4 text-[#FF0000]" /></a>
                 <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaLinkedinIn className="w-4 h-4 text-[#0A66C2]" /></a>
-                <a href={social.instagram || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('Instagram', social.instagram)} aria-label="Instagram" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaInstagram className="w-4 h-4 text-[#E4405F]" /></a>
               </div>
             </div>
           )}
