@@ -26,11 +26,14 @@ export default function SinglePaymentPage({ pkg }: Props) {
   const totalPaise = pay.couponApplied
     ? pay.couponApplied.finalAmountPaise
     : (basePrice ?? 0);
+  // GST-inclusive breakup: list prices include 18% GST, so the net payable
+  // splits 82% base value / 18% GST. gst = net - base keeps the sum exact.
+  const baseValuePaise = Math.round((totalPaise * 82) / 100);
+  const gstPaise = totalPaise - baseValuePaise;
   const discountPaise = pay.couponApplied
     ? pay.couponApplied.discountAmountPaise
     : 0;
 
-  const [method, setMethod] = useState<"card" | "bank">("card");
   const [formError, setFormError] = useState("");
   const pkgId = pkg.id;
   const pkgName = pkg.name;
@@ -89,9 +92,7 @@ export default function SinglePaymentPage({ pkg }: Props) {
       setFormError("Enter a valid email");
       return false;
     }
-    const digits = pay.mobile
-      .replace(/\D/g, "")
-      .replace(/^91(?=\d{10}$)/, "");
+    const digits = pay.mobile.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
     if (digits.length !== 10) {
       setFormError("Enter a 10-digit mobile number");
       return false;
@@ -202,7 +203,9 @@ export default function SinglePaymentPage({ pkg }: Props) {
                 );
                 resolve();
               } catch (err: unknown) {
-                reject(err instanceof Error ? err : new Error(getErrorMessage(err)));
+                reject(
+                  err instanceof Error ? err : new Error(getErrorMessage(err)),
+                );
               }
             },
             modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
@@ -245,24 +248,24 @@ export default function SinglePaymentPage({ pkg }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#6c5bff] relative overflow-hidden">
-      <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/10" />
-      <div className="absolute bottom-0 left-0 h-64 w-full bg-[#4f46e5]/40" />
-      <div className="relative mx-auto max-w-4xl px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#7a6bff] via-[#6c5bff] to-[#5847e6] relative overflow-hidden">
+      <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+      <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+      <div className="relative mx-auto max-w-6xl px-4 py-10">
         <h1 className="mb-6 text-2xl font-bold text-white">Payment Page</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-2xl bg-white shadow-2xl">
           <div className="bg-slate-50 p-6">
-            <BrandLogo size="md" />
-            <div className="mt-4 flex items-center gap-3">
+            <BrandLogo size="xl" />
+            <div className="mt-4 flex items-center gap-4">
               {thumb ? (
                 <img
                   src={thumb}
                   alt={title}
-                  className="h-12 w-12 rounded-lg object-cover"
+                  className="h-16 w-16 shrink-0 rounded-lg object-cover"
                 />
               ) : null}
-              <div>
-                <p className="font-bold text-slate-900">{title}</p>
+              <div className="min-w-0">
+                <p className="truncate font-bold text-slate-900">{title}</p>
                 <p className="text-xs text-slate-500">
                   {isDerivedCourse
                     ? "Course"
@@ -272,7 +275,7 @@ export default function SinglePaymentPage({ pkg }: Props) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 space-y-2 text-sm">
+            <div className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between">
                 <span>Price</span>
                 <span>{formatINR(basePrice)}</span>
@@ -282,19 +285,23 @@ export default function SinglePaymentPage({ pkg }: Props) {
                 <span>
                   {discountPaise
                     ? `- ${formatINR(discountPaise)}`
-                    : "$ 0.00"}
+                    : formatINR(0)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Tax</span>
-                <span>$ 0.00</span>
+                <span>Base Value (82%)</span>
+                <span>{formatINR(baseValuePaise)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>GST (18% incl.)</span>
+                <span>{formatINR(gstPaise)}</span>
               </div>
               <div className="flex justify-between border-t pt-2 font-bold">
                 <span>Total</span>
                 <span>{formatINR(totalPaise)}</span>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-6">
               {isDerivedCourse ? (
                 <p className="text-xs text-slate-500">
                   Coupons apply to packages only.
@@ -349,22 +356,6 @@ export default function SinglePaymentPage({ pkg }: Props) {
             </div>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setMethod("card")}
-                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${method === "card" ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-500"}`}
-              >
-                Credit or Debit Card
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethod("bank")}
-                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${method === "bank" ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-500"}`}
-              >
-                Bank Transfer
-              </button>
-            </div>
             <label
               htmlFor="spp-name"
               className="mt-4 block text-xs font-semibold text-slate-600"

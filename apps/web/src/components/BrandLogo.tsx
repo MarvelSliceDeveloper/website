@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface BrandLogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
@@ -14,6 +14,7 @@ export default function BrandLogo({
     sm: { box: "h-10 w-10", img: "h-8 w-auto", text: "text-xl" },
     md: { box: "h-12 w-12", img: "h-10 w-auto", text: "text-2xl" },
     lg: { box: "h-14 w-14", img: "h-12 w-auto", text: "text-3xl" },
+    xl: { box: "h-16 w-16", img: "h-14 w-auto", text: "text-4xl" },
   };
   const s = sizes[size];
 
