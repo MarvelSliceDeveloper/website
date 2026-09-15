@@ -233,8 +233,8 @@ export default function CourseEditor() {
     cta_description: '',
     cta_text: '',
     cta_link: '',
-    cta_left: 'Talk to Advisor/Pay Now',
-    cta_right: 'Download Brochure',
+    cta_left: 'Talk to Advisor',
+    cta_right: 'Brochure Enquiry',
     cta_left_action: 'choice_popup',
     pay_now_url: '',
     cta_phone: '',
@@ -280,8 +280,8 @@ export default function CourseEditor() {
           setCourse((p) => ({
             ...p,
             ...courseRes.data,
-            cta_left: courseRes.data.cta_left || 'Talk to Advisor/Pay Now',
-            cta_right: courseRes.data.cta_right || 'Download Brochure',
+            cta_left: courseRes.data.cta_left || 'Talk to Advisor',
+            cta_right: (!courseRes.data.cta_right || courseRes.data.cta_right === 'Download Brochure' || courseRes.data.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : courseRes.data.cta_right,
             cta_left_action: courseRes.data.cta_left_action || 'choice_popup',
             pay_now_url: courseRes.data.pay_now_url || courseRes.data.cta_link || '',
             cta_link: courseRes.data.cta_link || courseRes.data.pay_now_url || '',
@@ -534,7 +534,7 @@ export default function CourseEditor() {
         cta_text: course.cta_text,
         cta_link: course.pay_now_url || course.cta_link || null,
         cta_left: course.cta_left || 'Talk to Advisor',
-        cta_right: course.cta_right || 'Download Brochure',
+        cta_right: (!course.cta_right || course.cta_right === 'Download Brochure' || course.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : course.cta_right,
         cta_phone: course.cta_phone,
         cta_background_image: course.cta_background_image,
         is_published: course.is_published,
@@ -713,21 +713,13 @@ export default function CourseEditor() {
                   <label className="block text-sm font-semibold text-black">
                     Description
                   </label>
-                  <span className={`text-xs font-semibold ${
-                    (course.description || "").length >= 300 || ((course.description || "").trim().split(/\s+/).filter(Boolean).length >= 35)
-                      ? "text-amber-600 font-bold"
-                      : "text-neutral-400"
-                  }`}>
-                    {(course.description || "").trim().split(/\s+/).filter(Boolean).length}/35 words | {(course.description || "").length}/300 chars
-                  </span>
                 </div>
                 <textarea
                   value={course.description || ""}
-                  onChange={(e) => update("description", limitDescriptionText(e.target.value))}
-                  maxLength={300}
+                  onChange={(e) => update("description", e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                  placeholder="Detailed course description (max 35 words / 300 characters)..."
+                  placeholder="Detailed course description..."
                 />
               </div>
               <div className="border-t border-admin-200 pt-4 mt-4">
@@ -758,15 +750,15 @@ export default function CourseEditor() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Left Button Text / Label</label>
-                      <input value={course.cta_left || 'Talk to Advisor/Pay Now'} onChange={(e) => update('cta_left', e.target.value)}
+                      <input value={course.cta_left || 'Talk to Advisor'} onChange={(e) => update('cta_left', e.target.value)}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="Talk to Advisor/Pay Now" />
+                        placeholder="Talk to Advisor" />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Right Button Label</label>
-                      <input value={course.cta_right || ''} onChange={(e) => update('cta_right', e.target.value)}
+                      <input value={course.cta_right || 'Brochure Enquiry'} onChange={(e) => update('cta_right', e.target.value)}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="Download Brochure" />
+                        placeholder="Brochure Enquiry" />
                     </div>
                   </div>
 

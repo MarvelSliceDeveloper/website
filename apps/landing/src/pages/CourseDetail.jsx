@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiStar, FiArrowRight, FiArrowLeft, FiUsers, FiBarChart2, FiClock, FiBookOpen, FiAward, FiBell, FiCode, FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiVideo, FiCalendar, FiRefreshCw, FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiX, FiCheck, FiAlertCircle, FiSend, FiPlay, FiCheckCircle, FiCreditCard, FiExternalLink } from 'react-icons/fi';
+import { FiStar, FiArrowRight, FiArrowLeft, FiHome, FiUsers, FiBarChart2, FiClock, FiBookOpen, FiAward, FiBell, FiCode, FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiVideo, FiCalendar, FiRefreshCw, FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiX, FiCheck, FiAlertCircle, FiSend, FiPlay, FiCheckCircle, FiCreditCard, FiExternalLink } from 'react-icons/fi';
 import Button from '../components/ui/Button';
 import TabBar from '../components/ui/TabBar';
 import { trackFormSubmit, trackDownload, trackCtaClick, trackVideoPlay } from '../lib/analytics';
@@ -561,14 +561,13 @@ export default function CourseDetail() {
         />
         <section className="bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-8 sm:pt-4 sm:pb-10 lg:pt-6 lg:pb-12">
-            <button
-              type="button"
-              onClick={handleBackNavigation}
+            <Link
+              to="/courses"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-brand-orange transition-colors mb-2 cursor-pointer group"
             >
-              <FiArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform group-hover:-translate-x-0.5" />
-              <span>Back</span>
-            </button>
+              <FiBookOpen className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform" />
+              <span>Back to Courses</span>
+            </Link>
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
                 <h1 className="text-[clamp(1.75rem,3.5vw,3rem)] font-extrabold text-dark-navy leading-[1.15]">
@@ -595,7 +594,7 @@ export default function CourseDetail() {
                     <button
                       type="button"
                       disabled
-                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-semibold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
                       <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> You're Notified!
                     </button>
@@ -609,14 +608,14 @@ export default function CourseDetail() {
                         setInterestAgree(false);
                         setShowInterest(true);
                       }}
-                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-semibold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
                       <FiBell className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Notify Me
                     </button>
                   )}
                   <Link
                     to="/courses"
-                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-semibold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                   >
                     <span>Explore All Courses</span>
                     <FiArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -783,7 +782,7 @@ export default function CourseDetail() {
       {/* Dynamic Futuristic Course CTA */}
       <CourseCTA
         course={course}
-        onCtaClick={() => handleLeftCtaClick()}
+        onCtaClick={(label) => openEnquiryModal(label || 'Course Enquiry')}
       />
 
 
@@ -800,7 +799,7 @@ export default function CourseDetail() {
             <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">More Courses You Might Like</Reveal>
             <Link
               to="/courses"
-              className="hidden sm:inline-flex items-center gap-2 bg-brand-orange text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
+              className="hidden sm:inline-flex items-center gap-2 bg-brand-orange text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -812,7 +811,7 @@ export default function CourseDetail() {
           <div className="mt-8 flex justify-center sm:hidden">
             <Link
               to="/courses"
-              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-xs px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm active:scale-95 transition-all cursor-pointer w-auto text-center group"
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-semibold text-xs px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm active:scale-95 transition-all cursor-pointer w-auto text-center group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

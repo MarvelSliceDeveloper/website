@@ -185,8 +185,8 @@ export default function CourseWizard() {
     description: "",
     hero_image_url: "",
     video_url: "",
-    cta_left: "Talk to Advisor/Pay Now",
-    cta_right: "Download Brochure",
+    cta_left: "Talk to Advisor",
+    cta_right: "Brochure Enquiry",
     cta_left_action: "choice_popup",
     pay_now_url: "",
     cta_heading: '',
@@ -373,8 +373,8 @@ export default function CourseWizard() {
         hero_image_url: c.hero_image_url,
         video_thumbnail_url: null,
         video_url: c.video_url || null,
-        cta_left: c.cta_left || 'Talk to Advisor/Pay Now',
-        cta_right: c.cta_right || 'Download Brochure',
+        cta_left: c.cta_left || 'Talk to Advisor',
+        cta_right: (!c.cta_right || c.cta_right === 'Download Brochure' || c.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : c.cta_right,
         cta_heading: c.cta_heading,
         cta_description: c.cta_description,
         cta_text: c.cta_text,
@@ -654,11 +654,11 @@ export default function CourseWizard() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-black mb-1">CTA Left <span className="text-destructive-500">*</span></label>
-                <input value={c.cta_left || "Talk to Advisor/Pay Now"} onChange={(e) => u("cta_left", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Talk to Advisor/Pay Now" />
+                <input value={c.cta_left || "Talk to Advisor"} onChange={(e) => u("cta_left", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Talk to Advisor" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-black mb-1">CTA Right <span className="text-destructive-500">*</span></label>
-                <input value={c.cta_right || "Download Brochure"} onChange={(e) => u("cta_right", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Download Brochure" />
+                <input value={c.cta_right || "Brochure Enquiry"} onChange={(e) => u("cta_right", e.target.value)} className="w-full px-3 py-2.5 border border-admin-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-admin-500/20 text-sm transition-all" placeholder="Brochure Enquiry" />
               </div>
             </div>
 

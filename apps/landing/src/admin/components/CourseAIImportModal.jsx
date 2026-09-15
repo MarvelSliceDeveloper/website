@@ -22,8 +22,8 @@ const SAMPLE_JSON = {
   "_SCHEMA_RULES_": {
     "title": "Required course name",
     "description": "Required course summary (2-4 sentences)",
-    "cta_left": "Talk to Advisor/Pay Now",
-    "cta_right": "Download Brochure",
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Brochure Enquiry",
     "cta_heading": "Required banner CTA heading",
     "cta_description": "Required banner CTA description",
     "cta_text": "Apply Now",
@@ -39,8 +39,8 @@ const SAMPLE_JSON = {
   slug: "ui-ux-design-masterclass",
   subtitle: "Master UI/UX Design from Scratch with User Research, Wireframing, and Figma Systems",
   description: "Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.",
-  cta_left: "Talk to Advisor/Pay Now",
-  cta_right: "Download Brochure",
+  cta_left: "Talk to Advisor",
+  cta_right: "Brochure Enquiry",
   cta_heading: "Design Better Digital Experiences with UI/UX",
   cta_description: "Learn user research, wireframing, prototyping, and visual design with expert mentors.",
   cta_text: "Apply Now",
@@ -179,7 +179,7 @@ const SAMPLE_JSON = {
 };
 
 const SAMPLE_CSV = `title,description,cta_left,cta_right,cta_heading,cta_description,cta_text,checklist_items,duration,mode
-"UI/UX Design Masterclass","Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.","Talk to Advisor/Pay Now","Download Brochure","Design Better Digital Experiences with UI/UX","Learn user research, wireframing, prototyping, and visual design with expert mentors.","Apply Now","UI Design Principles | UX Research | Wireframing | Figma Design Systems","3 months","Online"`;
+"UI/UX Design Masterclass","Master UI/UX design from scratch through user research, wireframing, prototyping, and modern interface design.","Talk to Advisor","Brochure Enquiry","Design Better Digital Experiences with UI/UX","Learn user research, wireframing, prototyping, and visual design with expert mentors.","Apply Now","UI Design Principles | UX Research | Wireframing | Figma Design Systems","3 months","Online"`;
 
 export default function CourseAIImportModal({ isOpen, onClose, onImportData, initialCourseName = '' }) {
   const [activeTab, setActiveTab] = useState('ai_prompt');
@@ -391,8 +391,8 @@ export default function CourseAIImportModal({ isOpen, onClose, onImportData, ini
       description: parsed.description || fallbackCourse.description,
       hero_image_url: '',
       video_url: '',
-      cta_left: parsed.cta_left || 'Talk to Advisor/Pay Now',
-      cta_right: parsed.cta_right || 'Download Brochure',
+      cta_left: parsed.cta_left || 'Talk to Advisor',
+      cta_right: parsed.cta_right || 'Brochure Enquiry',
       cta_heading: parsed.cta_heading || fallbackCourse.cta_heading,
       cta_description: parsed.cta_description || fallbackCourse.cta_description,
       cta_text: parsed.cta_text || 'Apply Now',

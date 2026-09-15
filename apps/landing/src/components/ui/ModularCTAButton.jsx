@@ -89,14 +89,14 @@ export default function ModularCTAButton({
         aria-label={ariaLabel || (typeof text === 'string' ? text : '')}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`relative group cursor-pointer select-none inline-flex items-center justify-center w-auto focus:outline-none focus:ring-4 focus:ring-amber-400/50 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl ${sizeClasses}`}
+        className={`relative group cursor-pointer select-none inline-flex items-center justify-center w-auto focus:outline-none focus:ring-4 focus:ring-amber-400/50 rounded-full overflow-hidden shadow-xl sm:shadow-2xl ${sizeClasses}`}
         whileHover={shouldReduceMotion ? {} : { y: -4, scale: 1.02 }}
         whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         {/* Dynamic Background & Animated Neon Glow */}
         <motion.div
-          className="absolute inset-0 rounded-xl sm:rounded-2xl transition-all duration-300 pointer-events-none"
+          className="absolute inset-0 rounded-full transition-all duration-300 pointer-events-none"
           style={getVariantStyles()}
         />
 
@@ -119,7 +119,7 @@ export default function ModularCTAButton({
 
         {/* High Contrast Content & Spring Arrow Animation */}
         <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3.5 whitespace-nowrap">
-          <span className="text-white font-black tracking-wide drop-shadow-md">
+          <span className="text-white font-semibold tracking-wide drop-shadow-md">
             {text}
           </span>
           {Icon && (

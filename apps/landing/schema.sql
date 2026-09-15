@@ -63,7 +63,7 @@ create table if not exists courses (
   review_count int default 0,
   learner_count int default 0,
   cta_left text default 'Talk to Advisor',
-  cta_right text default 'Download Brochure',
+  cta_right text default 'Brochure Enquiry',
   duration text,
   mode text,
   status text default 'Active',
