@@ -131,6 +131,53 @@ async function handleFileUpload(req) {
   return { success: true, url: `${PUBLIC_BASE_URL}/uploads/${safeFilename}` };
 }
 
+function handleListUploads() {
+  if (!fs.existsSync(UPLOADS_DIR)) return [];
+  try {
+    const filenames = fs.readdirSync(UPLOADS_DIR);
+    const files = [];
+    for (const name of filenames) {
+      try {
+        const filePath = path.join(UPLOADS_DIR, name);
+        const stat = fs.statSync(filePath);
+        if (!stat.isFile()) continue;
+        const mime = getMimeType(filePath);
+        files.push({
+          id: name,
+          name,
+          _path: name,
+          _bucket: 'server-storage',
+          created_at: stat.mtime.toISOString(),
+          url: `${PUBLIC_BASE_URL}/uploads/${name}`,
+          metadata: {
+            size: stat.size,
+            mimetype: mime,
+          },
+        });
+      } catch {}
+    }
+    return files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } catch (err) {
+    console.error('[dev-server] Failed to list uploads:', err);
+    return [];
+  }
+}
+
+function handleDeleteUpload(filename) {
+  if (!filename) return { error: 'Filename required' };
+  const safeName = path.basename(filename);
+  const filePath = path.join(UPLOADS_DIR, safeName);
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      return { success: true };
+    } catch (err) {
+      return { error: err.message };
+    }
+  }
+  return { error: 'File not found' };
+}
+
 function row(label, value) {
   return `<tr>
     <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #5F6B7A; font-size: 13px; width: 120px; vertical-align: top;">${label}</td>
@@ -546,6 +593,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // List uploads in server storage
+  if (req.method === 'GET' && req.url === '/api/uploads') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, files: handleListUploads() }));
+    return;
+  }
+
   if (req.method !== 'POST' || !req.url?.startsWith('/api/')) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
@@ -570,6 +624,7 @@ const server = http.createServer(async (req, res) => {
       else if (req.url === '/api/submit-about') result = await handleAbout(parsed);
       else if (req.url === '/api/submit-enquiry') result = await handleEnquiry(parsed);
       else if (req.url === '/api/admin-reply') result = await handleAdminReply(parsed);
+      else if (req.url === '/api/delete-upload') result = handleDeleteUpload(parsed.filename);
       else if (req.url === '/api/fetch-current-affairs') result = await fetchAndStoreCurrentAffairs();
       else { res.writeHead(404); res.end(JSON.stringify({ error: 'Not found' })); return; }
       res.writeHead(200, { 'Content-Type': 'application/json' });

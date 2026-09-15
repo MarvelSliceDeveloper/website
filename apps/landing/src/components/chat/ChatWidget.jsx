@@ -296,6 +296,10 @@ export default function ChatWidget() {
     return () => window.removeEventListener('open-chat-widget', handleOpenEvent);
   }, [initChat]);
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('chat-widget-status', { detail: { open } }));
+  }, [open]);
+
   // Realtime Supabase subscription
   useEffect(() => {
     if (!conversationId) return;

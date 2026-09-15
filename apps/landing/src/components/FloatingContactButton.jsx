@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiPhone, FiPhoneCall, FiX, FiSend, FiCheck, FiMessageCircle } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { supabase } from '../lib/supabaseClient';
@@ -34,6 +34,18 @@ export default function FloatingContactButton() {
   const waLink = cleanWaHref(primaryPhone, 'Hello, I have an enquiry regarding courses.');
 
   const [open, setOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  useEffect(() => {
+    const handleStatus = (e) => setIsChatOpen(!!e.detail?.open);
+    const handleOpen = () => setIsChatOpen(true);
+    window.addEventListener('chat-widget-status', handleStatus);
+    window.addEventListener('open-chat-widget', handleOpen);
+    return () => {
+      window.removeEventListener('chat-widget-status', handleStatus);
+      window.removeEventListener('open-chat-widget', handleOpen);
+    };
+  }, []);
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -152,72 +164,80 @@ export default function FloatingContactButton() {
       `}</style>
 
       {/* Floating Action Buttons Stack (Vertically Centered on Right Side) */}
-      <div className="fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-40 flex flex-col items-end gap-3 pointer-events-auto">
+      {!isChatOpen && (
+        <div className="fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-40 flex flex-col items-end gap-3 pointer-events-auto">
 
-        {/* 1. Chat Button (Smooth expandable pill with animated starburst icon) */}
-        <div className="relative flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget'))}
-            aria-label="Open Chat"
-            className="fcb-btn group/chat flex h-12 w-12 sm:h-13 sm:w-13 hover:w-28 sm:hover:w-30 items-center justify-start px-3 sm:px-3.5 rounded-full bg-brand-green text-white font-bold border-2 border-white shadow-lg hover:bg-brand-green/90 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
-          >
-            <span className="relative w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-white">
-              <FiMessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-              <svg className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                {[0, 1, 2].map((i) => (
-                  <circle
-                    key={i}
-                    cx={9 + i * 3}
-                    cy="12.5"
-                    r="1.4"
-                    fill="currentColor"
-                    style={{
-                      transformBox: 'fill-box',
-                      animation: `chat-dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
-                    }}
-                  />
-                ))}
-              </svg>
-            </span>
-            <span className="opacity-0 group-hover/chat:opacity-100 translate-x-2 group-hover/chat:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base ml-1.5 select-none">
-              Chat
-            </span>
-          </button>
-        </div>
+          {/* 1. Chat Button (Smooth expandable pill with animated starburst icon) */}
+          <div className="relative flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget'))}
+              aria-label="Open Chat"
+              className="fcb-btn group/chat flex h-12 w-12 sm:h-13 sm:w-13 hover:w-28 sm:hover:w-30 items-center justify-start rounded-full bg-brand-green text-white font-bold shadow-lg hover:bg-brand-green/90 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <span className="relative w-5 h-5 sm:w-6 sm:h-6 text-white flex items-center justify-center">
+                  <FiMessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <svg className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    {[0, 1, 2].map((i) => (
+                      <circle
+                        key={i}
+                        cx={9 + i * 3}
+                        cy="12.5"
+                        r="1.4"
+                        fill="currentColor"
+                        style={{
+                          transformBox: 'fill-box',
+                          animation: `chat-dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                        }}
+                      />
+                    ))}
+                  </svg>
+                </span>
+              </div>
+              <span className="opacity-0 group-hover/chat:opacity-100 translate-x-2 group-hover/chat:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                Chat
+              </span>
+            </button>
+          </div>
 
-        {/* 2. Direct Call Button (Blue - smooth expandable pill) */}
-        <div className="relative flex items-center justify-end">
-          <a
-            href={telLink}
-            onClick={() => trackPhoneClick(primaryPhone, 'floating_call_btn')}
-            aria-label="Call Us"
-            className="fcb-btn group/call flex h-12 w-12 sm:h-13 sm:w-13 hover:w-30 sm:hover:w-32 items-center justify-start px-3 sm:px-3.5 rounded-full bg-brand-blue text-white font-bold border-2 border-white shadow-lg hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
-          >
-            <FiPhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0 animate-phone-ring group-hover/call:scale-110" />
-            <span className="opacity-0 group-hover/call:opacity-100 translate-x-2 group-hover/call:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base ml-2 select-none">
-              Call Us
-            </span>
-          </a>
-        </div>
+          {/* 2. Direct Call Button (Blue - smooth expandable pill) */}
+          <div className="relative flex items-center justify-end">
+            <a
+              href={telLink}
+              onClick={() => trackPhoneClick(primaryPhone, 'floating_call_btn')}
+              aria-label="Call Us"
+              className="fcb-btn group/call flex h-12 w-12 sm:h-13 sm:w-13 hover:w-30 sm:hover:w-32 items-center justify-start rounded-full bg-brand-blue text-white font-bold shadow-lg hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <FiPhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-phone-ring group-hover/call:scale-110" />
+              </div>
+              <span className="opacity-0 group-hover/call:opacity-100 translate-x-2 group-hover/call:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                Call Us
+              </span>
+            </a>
+          </div>
 
-        {/* 3. Direct WhatsApp Button (Green - smooth expandable pill) */}
-        <div className="relative flex items-center justify-end">
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackSocialClick('WhatsApp', primaryPhone)}
-            aria-label="WhatsApp Us"
-            className="fcb-btn group/wa flex h-12 w-12 sm:h-13 sm:w-13 hover:w-32 sm:hover:w-36 items-center justify-start px-2.5 sm:px-3 rounded-full bg-[#25D366] text-white font-bold border-2 border-white shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
-          >
-            <FaWhatsapp className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-white shrink-0 animate-wa-bounce group-hover/wa:scale-110" />
-            <span className="opacity-0 group-hover/wa:opacity-100 translate-x-2 group-hover/wa:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base ml-1.5 select-none">
-              WhatsApp
-            </span>
-          </a>
+          {/* 3. Direct WhatsApp Button (Green - smooth expandable pill) */}
+          <div className="relative flex items-center justify-end">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackSocialClick('WhatsApp', primaryPhone)}
+              aria-label="WhatsApp Us"
+              className="fcb-btn group/wa flex h-12 w-12 sm:h-13 sm:w-13 hover:w-32 sm:hover:w-36 items-center justify-start rounded-full bg-[#25D366] text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <FaWhatsapp className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-white animate-wa-bounce group-hover/wa:scale-110" />
+              </div>
+              <span className="opacity-0 group-hover/wa:opacity-100 translate-x-2 group-hover/wa:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                WhatsApp
+              </span>
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       {open && (
         <div
