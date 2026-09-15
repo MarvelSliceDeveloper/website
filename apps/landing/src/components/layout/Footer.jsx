@@ -91,9 +91,9 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
           {/* Logo & Contact Info Section */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left flex flex-col items-center sm:items-start">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-2 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left flex flex-col items-center sm:items-start">
             <div className="flex justify-center sm:justify-start mb-4 -mt-1 sm:-mt-3">
               <Link to="/" aria-label="Go to Homepage" className="flex flex-col items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-2.5 group">
                 {settings?.logo_url && (
@@ -101,43 +101,48 @@ export default function Footer() {
                 )}
               </Link>
             </div>
-            <div className="space-y-3 text-sm sm:text-base text-gray-200 text-center sm:text-left flex flex-col items-center sm:items-start">
+            <div className="space-y-3.5 text-sm sm:text-base text-gray-200 text-center sm:text-left flex flex-col items-center sm:items-start w-full">
               {address && (
-                <p className="flex items-center justify-center sm:justify-start text-center sm:text-left gap-2 sm:gap-2.5">
-                  <FiMapPin className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                  <span>{address}</span>
-                </p>
+                <div className="flex items-start justify-center sm:justify-start gap-2.5 text-center sm:text-left">
+                  <FiMapPin className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange mt-0.5" />
+                  <span className="leading-snug">{address}</span>
+                </div>
               )}
               {phoneNumbers.length > 0 && (
-                <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 text-center sm:text-left">
-                  <FiPhone className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-xs sm:text-base">
-                    {phoneNumbers.map((num, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5">
-                        <a
-                          href={cleanTelHref(num)}
-                          onClick={() => trackPhoneClick(num, 'footer')}
-                          className="hover:text-brand-orange transition-colors whitespace-nowrap"
-                        >
-                          {num}
-                        </a>
-                        {i < phoneNumbers.length - 1 && (
-                          <span className="text-gray-400 font-medium sm:hidden">|</span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
+                <div className="space-y-3 text-center sm:text-left w-full">
+                  {phoneNumbers.map((num, i) => {
+                    const label = i === 0 ? 'Competitive Exam Enquiry' : i === 1 ? 'Software Enquiry' : 'Enquiry';
+                    return (
+                      <div key={i} className="flex flex-col items-center sm:items-start text-center sm:text-left">
+                        <h5 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm mb-1">
+                          {label}
+                        </h5>
+                        <div className="inline-flex items-center gap-2 mt-0.5">
+                          <FiPhone className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-white" />
+                          <a
+                            href={cleanTelHref(num)}
+                            onClick={() => trackPhoneClick(num, 'footer')}
+                            className="text-brand-orange font-semibold hover:underline transition-colors text-sm sm:text-base inline-block"
+                          >
+                            {num}
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {email && (
-                <a 
-                  href={`mailto:${email}`}
-                  onClick={() => trackEmailClick(email, 'footer')}
-                  className="flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 hover:text-brand-orange transition-colors text-center sm:text-left"
-                >
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 hover:text-brand-orange transition-colors text-center sm:text-left">
                   <FiMail className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                  <span>{email}</span>
-                </a>
+                  <a 
+                    href={`mailto:${email}`}
+                    onClick={() => trackEmailClick(email, 'footer')}
+                    className="leading-snug hover:text-brand-orange transition-colors"
+                  >
+                    {email}
+                  </a>
+                </div>
               )}
             </div>
           </div>

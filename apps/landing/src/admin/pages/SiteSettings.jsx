@@ -218,7 +218,7 @@ export default function SiteSettings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Primary Phone (Phone 1)</label>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Phone 1 — Competitive Exam Enquiry</label>
                   <div className="relative">
                     <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
                     <input
@@ -230,10 +230,10 @@ export default function SiteSettings() {
                       placeholder="+91 63809 57390"
                     />
                   </div>
-                  <p className="text-[11px] text-neutral-400 mt-1">E.g., +91 63809 57390</p>
+                  <p className="text-[11px] text-neutral-400 mt-1">Competitive Exam Enquiry number (e.g., +91 63809 57390)</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Secondary Phone (Phone 2)</label>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Phone 2 — Software Enquiry</label>
                   <div className="relative">
                     <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
                     <input
@@ -245,7 +245,7 @@ export default function SiteSettings() {
                       placeholder="+91 80882 18609"
                     />
                   </div>
-                  <p className="text-[11px] text-neutral-400 mt-1">E.g., +91 80882 18609</p>
+                  <p className="text-[11px] text-neutral-400 mt-1">Software Enquiry number (e.g., +91 80882 18609)</p>
                 </div>
               </div>
             </div>
