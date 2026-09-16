@@ -522,6 +522,14 @@ body.sidebar-open [class*="chat-widget"] {
     font-weight: 800 !important;
   }
 
+@media (min-width: 1024px) {
+  a.home-intro-btn,
+  .home-intro-btn {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+}
+
 
 
   .grid.ipad-pro-courses-grid,

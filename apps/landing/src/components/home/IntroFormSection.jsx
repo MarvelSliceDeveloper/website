@@ -22,13 +22,13 @@ function CourseButtons() {
     <div className="flex flex-row gap-2 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm lg:font-semibold lg:text-base hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm lg:font-semibold lg:text-base hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>

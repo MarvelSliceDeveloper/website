@@ -366,7 +366,7 @@ export default function JobDetail() {
       <section className="bg-white py-5 sm:py-7">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-left">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-navy tracking-tight leading-tight mt-1 text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-bold text-dark-navy tracking-tight leading-tight mt-1 text-left">
               {job.title}
             </h1>
             <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-2 mb-4" />
@@ -389,10 +389,10 @@ export default function JobDetail() {
         <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
                 Key Requirements
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-3.5" />
+              <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-3.5" />
               <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.key_requirements)}
               </ul>
@@ -406,10 +406,10 @@ export default function JobDetail() {
         <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
                 Responsibilities
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-3.5" />
+              <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-3.5" />
               <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.responsibilities)}
               </ul>
@@ -422,10 +422,10 @@ export default function JobDetail() {
       <section className="bg-white py-2 sm:py-4 pb-8 sm:pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+            <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
               Position Summary
             </h2>
-            <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-4" />
+            <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-4" />
 
             <div className="pl-0 sm:pl-6">
               {(job.title || empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications || job.skills) && (
