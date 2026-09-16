@@ -25,8 +25,8 @@ function NavColumn({ parentLabel, defaultChildren }) {
       { label: 'Banking', path: '/banking' }
     ];
     return (
-      <div className="col-span-1 text-center sm:text-left">
-        <h4 className="font-bold text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white">
+      <div className="text-center sm:text-left shrink-0">
+        <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">
           {formatFooterLabel(parentLabel)}
         </h4>
         <ul className="space-y-2 text-center sm:text-left">
@@ -45,8 +45,8 @@ function NavColumn({ parentLabel, defaultChildren }) {
 
   if (items.length === 0) return null;
   return (
-    <div className="col-span-1 text-center sm:text-left">
-      <h4 className="font-bold text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white">
+    <div className="text-center sm:text-left shrink-0">
+      <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">
         {formatFooterLabel(parentLabel)}
       </h4>
       <ul className="space-y-2 text-center sm:text-left">
@@ -91,9 +91,9 @@ export default function Footer() {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-x-6 sm:gap-x-8 gap-y-8 sm:gap-y-10 items-start">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-12 xl:gap-16">
           {/* Logo & Contact Info Section */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left flex flex-col items-center sm:items-start">
+          <div className="w-full lg:w-[260px] xl:w-[290px] shrink-0 sm:pb-6 sm:border-b sm:border-white/10 lg:border-b-0 lg:pb-0 text-center sm:text-left flex flex-col items-center sm:items-start">
             <div className="flex justify-center sm:justify-start mb-4 -mt-1 sm:-mt-3">
               <Link to="/" aria-label="Go to Homepage" className="flex flex-col items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-2.5 group">
                 {settings?.logo_url && (
@@ -147,56 +147,59 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links Column */}
-          <div className="col-span-1 text-center sm:text-left">
-            <h4 className="font-bold text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white">Quick Links</h4>
-            <ul className="space-y-2 text-center sm:text-left">
-              {linkItems.map((item, i) => (
-                <li key={i}>
-                  <Link to={item.path} className="text-sm sm:text-base text-gray-200 hover:text-brand-orange transition-colors py-1 inline-block">
-                    {formatFooterLabel(item.label)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Dynamic Category Navigation Columns */}
-          {columnItems.map((item) => (
-            <NavColumn key={item.label} parentLabel={item.label} defaultChildren={item.children} />
-          ))}
-
-          {/* Working Hours & Social Links Column */}
-          {(hours.weekday || hours.saturday) && (
-            <div className="col-span-1 text-center sm:text-left flex flex-col items-center sm:items-start">
-              <h4 className="font-bold text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white">Working Hours</h4>
-              <ul className="space-y-3 text-sm sm:text-base text-gray-200 text-center sm:text-left flex flex-col items-center sm:items-start">
-                {hours.weekday && (
-                  <li className="text-center sm:text-left">
-                    <p className="text-white font-medium inline-flex items-center gap-1.5 justify-center sm:justify-start">
-                      <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                      <span>Monday - Friday</span>
-                    </p>
-                    <p className="text-gray-200 mt-0.5">{hours.weekday}</p>
+          {/* Dynamic Navigation Columns with evenly balanced spacing */}
+          <div className="w-full flex-1 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:justify-between gap-y-8 sm:gap-y-10 gap-x-6 sm:gap-x-12 lg:gap-x-6 items-start">
+            {/* Quick Links Column */}
+            <div className="text-center sm:text-left shrink-0">
+              <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">Quick Links</h4>
+              <ul className="space-y-2 text-center sm:text-left">
+                {linkItems.map((item, i) => (
+                  <li key={i}>
+                    <Link to={item.path} className="text-sm sm:text-base text-gray-200 hover:text-brand-orange transition-colors py-1 inline-block">
+                      {formatFooterLabel(item.label)}
+                    </Link>
                   </li>
-                )}
-                {hours.saturday && (
-                  <li className="text-center sm:text-left">
-                    <p className="text-white font-medium inline-flex items-center gap-1.5 justify-center sm:justify-start">
-                      <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
-                      <span>Saturday</span>
-                    </p>
-                    <p className="text-gray-200 mt-0.5">{hours.saturday}</p>
-                  </li>
-                )}
+                ))}
               </ul>
-              <h4 className="font-bold text-[15px] sm:text-base uppercase tracking-wider mb-3 mt-6 text-white">Social Links</h4>
-              <div className="flex flex-wrap items-center gap-2.5 mt-3 justify-center sm:justify-start">
-                <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaYoutube className="w-4 h-4 text-[#FF0000]" /></a>
-                <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaLinkedinIn className="w-4 h-4 text-[#0A66C2]" /></a>
-              </div>
             </div>
-          )}
+
+            {/* Dynamic Category Navigation Columns */}
+            {columnItems.map((item) => (
+              <NavColumn key={item.label} parentLabel={item.label} defaultChildren={item.children} />
+            ))}
+
+            {/* Working Hours & Social Links Column */}
+            {(hours.weekday || hours.saturday) && (
+              <div className="text-center sm:text-left flex flex-col items-center sm:items-start shrink-0">
+                <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">Working Hours</h4>
+                <ul className="space-y-3 text-sm sm:text-base text-gray-200 text-center sm:text-left flex flex-col items-center sm:items-start">
+                  {hours.weekday && (
+                    <li className="text-center sm:text-left">
+                      <p className="text-white font-medium inline-flex items-center gap-1.5 justify-center sm:justify-start">
+                        <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
+                        <span>Monday - Friday</span>
+                      </p>
+                      <p className="text-gray-200 mt-0.5">{hours.weekday}</p>
+                    </li>
+                  )}
+                  {hours.saturday && (
+                    <li className="text-center sm:text-left">
+                      <p className="text-white font-medium inline-flex items-center gap-1.5 justify-center sm:justify-start">
+                        <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-brand-orange" />
+                        <span>Saturday</span>
+                      </p>
+                      <p className="text-gray-200 mt-0.5">{hours.saturday}</p>
+                    </li>
+                  )}
+                </ul>
+                <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 mt-6 text-white whitespace-nowrap">Social Links</h4>
+                <div className="flex flex-wrap items-center gap-2.5 mt-3 justify-center sm:justify-start">
+                  <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaYoutube className="w-4 h-4 text-[#FF0000]" /></a>
+                  <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaLinkedinIn className="w-4 h-4 text-[#0A66C2]" /></a>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -157,7 +157,7 @@ export default function CourseHero({
                     openEnquiryModal?.(course.cta_left || 'Talk to Advisor');
                   }
                 }}
-                className="flex-1 !font-semibold text-xs sm:text-base px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
+                className="flex-1 !font-semibold text-xs sm:text-[18px] lg:text-[18px] px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 {course.cta_left || 'Talk to Advisor'}
               </Button>
@@ -167,7 +167,7 @@ export default function CourseHero({
                 shape="pill"
                 size="lg"
                 onClick={() => openEnquiryModal?.(course.cta_right || 'Brochure Enquiry')}
-                className="flex-1 !bg-brand-blue hover:!bg-blue-700 !font-semibold text-xs sm:text-base px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
+                className="flex-1 !bg-brand-blue hover:!bg-blue-700 !font-semibold text-xs sm:text-[18px] lg:text-[18px] px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 {course.cta_right || 'Brochure Enquiry'}
               </Button>

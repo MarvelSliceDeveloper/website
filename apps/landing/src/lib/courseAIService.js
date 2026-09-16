@@ -178,8 +178,7 @@ export function synthesizeFallbackCourse({ courseName, keyPoints = '', duration 
               question: 'Phase 3: Backend Architecture, REST/GraphQL APIs & Databases',
               answers: [
                 'Asynchronous server runtimes, event loops, and non-blocking I/O operations',
-                'RESTful API architecture: Resource URI design, status codes, and error handling',
-                'GraphQL API development: Schemas, queries, mutations, and resolvers',
+                'RESTful and GraphQL API architecture: Resource URI design, status codes, and GraphQL resolvers',
                 'Relational database design (PostgreSQL/MySQL), SQL queries, indexing, and migrations',
                 'NoSQL document modeling with MongoDB and in-memory caching with Redis',
                 'Hands-On Lab: Engineering a multi-tenant RESTful backend with Redis caching'
@@ -211,6 +210,7 @@ export function synthesizeFallbackCourse({ courseName, keyPoints = '', duration 
                 'Test-Driven Development (TDD) with modern unit and integration test runners',
                 'End-to-End (E2E) browser automation using Playwright and Cypress',
                 'Application Performance Monitoring (APM), structured logging, and metrics',
+                'Continuous regression test suites, performance benchmarking, and production release audits',
                 'Hands-On Lab: Writing an automated test suite achieving 90%+ code coverage'
               ]
             }
@@ -327,6 +327,7 @@ Category: "${category}"
 
 Generate a complete JSON object matching the exact database schema below. Do NOT include image URLs or fake image links (leave image fields empty strings).
 Ensure all 4 tabs (Overview, Curriculum, Projects, Certification) are populated with in-depth paragraphs and rich accordion Q&As.
+CRITICAL REQUIREMENT FOR CURRICULUM TAB: In the 'Curriculum' tab, each Q&A item MUST contain EXACTLY 5 comprehensive, professional sentences in the 'answers' array (covering core theoretical concepts, practical implementation workflows, tools/frameworks, industry best practices, and a hands-on lab exercise).
 
 {
   "title": "${courseName}",
@@ -449,25 +450,31 @@ Ensure all 4 tabs (Overview, Curriculum, Projects, Certification) are populated 
           {
             "question": "Phase 1: Core Fundamentals & Programming Logic",
             "answers": [
-              "Core syntax, data types, control structures, and modular functions",
-              "Object-Oriented Programming (OOP) and clean architecture principles",
-              "Hands-on Lab: Implementing CLI utility tools and algorithmic problem solvers"
+              "Master core language syntax, primitive types, control flow structures, and memory lifecycle management.",
+              "Implement modular architecture using pure functions, closures, higher-order methods, and robust error handling.",
+              "Apply Object-Oriented Programming (OOP) design patterns including inheritance, polymorphism, encapsulation, and abstraction.",
+              "Solve algorithmic challenges using core data structures including arrays, linked lists, stacks, queues, and hash maps.",
+              "Hands-on Lab: Engineer modular CLI utilities and automated algorithmic problem solvers."
             ]
           },
           {
             "question": "Phase 2: Modern Development & API Architecture",
             "answers": [
-              "Component architecture, responsive styling, and state management",
-              "Backend API engineering, database schema normalization, and caching",
-              "Hands-on Lab: Engineering a scalable multi-tenant RESTful backend"
+              "Build component-driven user interfaces with declarative state management, custom hooks, and virtual DOM rendering.",
+              "Design responsive, accessible layouts utilizing modern CSS systems, design tokens, and flex/grid architectures.",
+              "Architect scalable RESTful and GraphQL APIs with input schema validation, route controllers, and authentication middleware.",
+              "Manage relational and NoSQL database schemas with automated migrations, indexing, and transactional integrity.",
+              "Hands-on Lab: Engineer a scalable multi-tenant REST backend integrated with real-time web services."
             ]
           },
           {
             "question": "Phase 3: Cloud, DevOps & Production Ready",
             "answers": [
-              "Docker containerization, automated testing (TDD), and CI/CD releases",
-              "Cloud deployment, APM monitoring, and system optimization",
-              "Hands-on Lab: Containerizing and deploying full-stack applications to cloud"
+              "Package microservices and web runtimes into optimized multi-stage Docker container environments.",
+              "Set up Continuous Integration and Continuous Deployment (CI/CD) pipelines with automated testing suites.",
+              "Provision cloud infrastructure, secure environment secrets management, and distributed object storage.",
+              "Implement structured logging, health check endpoints, and Application Performance Monitoring (APM).",
+              "Hands-on Lab: Deploy production-grade containerized full-stack applications with custom domain SSL."
             ]
           }
         ]

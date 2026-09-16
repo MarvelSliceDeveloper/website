@@ -128,8 +128,21 @@ const SAMPLE_JSON = {
           {
             question: "Module 1: User Research & Information Architecture",
             answers: [
-              "User Personas & Customer Journey Maps",
-              "Information Architecture & Card Sorting"
+              "Master quantitative and qualitative user research methodologies, empathy mapping, and user personas.",
+              "Conduct detailed competitor benchmarking and map end-to-end customer journey workflows.",
+              "Structure information architecture using card sorting, site maps, and logical navigation hierarchies.",
+              "Translate user findings into low-fidelity paper sketches and interactive user flow diagrams in Figma.",
+              "Hands-on Lab: Execute end-to-end user interviews and build a validated Figma research case study."
+            ]
+          },
+          {
+            question: "Module 2: Wireframing, UI Component Design & Design Systems",
+            answers: [
+              "Understand typography hierarchies, accessibility contrast ratios, and modern color theory.",
+              "Build responsive low-to-high fidelity wireframes leveraging Auto-Layout and constraint grids in Figma.",
+              "Develop scalable component libraries with atomic design principles, variants, and interactive states.",
+              "Create interactive micro-animations and clickable prototypes for seamless usability testing.",
+              "Hands-on Lab: Design an enterprise multi-screen dashboard with full design system documentation."
             ]
           }
         ]

@@ -1007,10 +1007,14 @@ export default function CourseEditor() {
                         To ensure tabs look even on the course page, aim for consistent content density across overview & syllabus tabs:
                       </p>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2.5 text-xs font-medium">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-2.5 text-xs font-medium">
                       <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${isUnbalanced ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                         <span><strong>Q&A Items:</strong> 2 – 4 per tab</span>
+                      </div>
+                      <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span><strong>Curriculum Q&A:</strong> 5 sentences</span>
                       </div>
                       <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -1307,7 +1311,11 @@ export default function CourseEditor() {
                                 <div>
                                   <div className="flex items-center justify-between mb-1.5">
                                     <label className="block text-xs font-medium text-neutral-600">Feature Bullets / Answers (one per line)</label>
-                                    <span className="text-[10px] text-neutral-400 font-medium">1 bullet point per line</span>
+                                    <span className="text-[10px] text-neutral-400 font-medium">
+                                      {t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum'
+                                        ? '5 sentences required for Curriculum'
+                                        : '1 bullet point per line'}
+                                    </span>
                                   </div>
                                   <textarea
                                     value={(qa.answers || []).join("\n")}
@@ -1318,9 +1326,13 @@ export default function CourseEditor() {
                                       n[i] = { ...n[i], content: { ...n[i].content, qa: qaArr } };
                                       update("tabs", n);
                                     }}
-                                    rows={3}
+                                    rows={t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum' ? 5 : 3}
                                     className="w-full px-3 py-2 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 font-sans"
-                                    placeholder="Enter bullet point 1&#10;Enter bullet point 2&#10;Enter bullet point 3"
+                                    placeholder={
+                                      t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum'
+                                        ? "Sentence 1: Theoretical foundation and core concepts&#10;Sentence 2: Practical implementation workflow&#10;Sentence 3: Tools, frameworks, and architecture&#10;Sentence 4: Industry standards and optimization&#10;Sentence 5: Hands-on lab exercise or capstone deliverable"
+                                        : "Enter bullet point 1&#10;Enter bullet point 2&#10;Enter bullet point 3"
+                                    }
                                   />
                                 </div>
                               </div>
