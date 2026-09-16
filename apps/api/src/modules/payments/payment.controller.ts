@@ -3,6 +3,8 @@ import { paymentService } from "./payment.service";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { authService } from "../auth/auth.service";
 import { handleControllerError } from "../../utils/errors";
+import { prisma } from "../../utils/prisma";
+import { UserRole } from "@lms/types";
 
 function parseExpiryToMs(expiry: string): number {
   const match = expiry.match(/^(\d+)([dhms])$/);
@@ -171,6 +173,75 @@ export const paymentController = {
     try {
       const stats = await paymentService.getRevenueStats();
       return res.status(200).json(stats);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // GET /:paymentId/invoice — downloads the invoice PDF using the exact
+  // same generator as the emailed invoice (invoice.service.ts).
+  async downloadInvoice(req: AuthRequest, res: Response) {
+    try {
+      const { paymentId } = req.params;
+      const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: {
+          user: { select: { name: true, email: true } },
+          package: { select: { name: true } },
+          course: { select: { title: true } },
+        },
+      });
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+      const isOwner = !!req.user && payment.userId === req.user.userId;
+      const isAdmin =
+        !!req.user &&
+        (req.user.role === UserRole.ADMIN ||
+          req.user.role === UserRole.SUPER_ADMIN);
+      // Guests have no session (course verify sets no cookie), so they
+      // prove ownership with the Razorpay order+payment ids from their own
+      // completed checkout (both are random, unguessable values).
+      const { razorpayOrderId, razorpayPaymentId } = req.query as {
+        razorpayOrderId?: string;
+        razorpayPaymentId?: string;
+      };
+      const hasProof =
+        !!razorpayOrderId &&
+        !!razorpayPaymentId &&
+        payment.razorpayOrderId === razorpayOrderId &&
+        payment.razorpayPaymentId === razorpayPaymentId;
+      if (!isOwner && !isAdmin && !hasProof) {
+        return res.status(403).json({ error: "Not allowed" });
+      }
+
+      const { generateInvoicePdf } = await import(
+        "../../services/invoice.service"
+      );
+      const pdf = generateInvoicePdf({
+        invoiceNumber: `INV-${payment.id.slice(-8).toUpperCase()}`,
+        userName: payment.user.name,
+        userEmail: payment.user.email,
+        packageName:
+          payment.package?.name ?? payment.course?.title ?? "Course Package",
+        amount: payment.amount,
+        discountAmount: payment.discountAmount,
+        date: payment.createdAt,
+        paymentStatus:
+          payment.status === "PAID" ||
+          payment.status === "PENDING" ||
+          payment.status === "REFUNDED"
+            ? payment.status
+            : undefined,
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="invoice-${payment.id.slice(-8)}.pdf"`,
+      );
+      return res.send(pdf);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

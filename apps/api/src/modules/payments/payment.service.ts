@@ -21,6 +21,16 @@ export function getRazorpayInstance() {
   });
 }
 
+// A PENDING payment with no verification after this long is treated as
+// abandoned (modal dismissed, tab closed). It no longer blocks a fresh
+// order, and is retired to FAILED so the old Razorpay order can never
+// verify later (verifyPayment only accepts PENDING rows).
+export const STALE_PENDING_MS = 30 * 60 * 1000;
+
+export function stalePendingBefore(now = Date.now()): Date {
+  return new Date(now - STALE_PENDING_MS);
+}
+
 export async function createRazorpayOrder(
   amount: number,
   currency = "INR",
@@ -161,6 +171,9 @@ export const paymentService = {
 
     if (!targetUserId) return;
 
+    // Only a recent PENDING (user may still have the Razorpay modal open)
+    // or any PAID row blocks a new order. Stale PENDING rows are abandoned
+    // and handled (retired) in createOrder instead of 409ing forever.
     const [existingEnrollment, existingPayment] = await Promise.all([
       prisma.packageEnrollment.findFirst({
         where: { packageId, userId: targetUserId, status: "APPROVED" },
@@ -169,7 +182,10 @@ export const paymentService = {
         where: {
           packageId,
           userId: targetUserId,
-          status: { in: ["PENDING", "PAID"] },
+          OR: [
+            { status: "PAID" },
+            { status: "PENDING", createdAt: { gt: stalePendingBefore() } },
+          ],
         },
       }),
     ]);
@@ -188,6 +204,18 @@ export const paymentService = {
 
   async createOrder(userId: string, packageId: string, couponCode?: string) {
     await this.checkNotEnrolled(packageId, userId);
+
+    // Retire abandoned PENDING rows so their Razorpay orders can never
+    // verify late and confuse a fresh payment for the same package.
+    await prisma.payment.updateMany({
+      where: {
+        packageId,
+        userId,
+        status: "PENDING",
+        createdAt: { lte: stalePendingBefore() },
+      },
+      data: { status: "FAILED" },
+    });
 
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
