@@ -319,6 +319,7 @@ export default function SectionRenderer({ section, className }) {
       }
 
       const workingTime = section.working_time || section.business_hours || '';
+      const workingTimeSaturday = section.working_time_saturday || section.saturday_hours || '';
 
       return (
         <Reveal className="py-12 sm:py-16 max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
@@ -350,29 +351,54 @@ export default function SectionRenderer({ section, className }) {
                 </div>
               </div>
             ))}
-            {emailItems.map((em, idx) => (
-              <div key={idx} className="flex flex-col text-left">
+            {emailItems.length > 0 && (
+              <div className="flex flex-col text-left">
                 <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">
-                  {em.heading?.trim() || 'Email'}
+                  EMAIL
                 </h5>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
-                    <FiMail className="w-5 h-5 text-brand-orange" />
-                  </div>
-                  <a href={`mailto:${em.email}`} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">
-                    {em.email}
-                  </a>
+                <div className="space-y-2">
+                  {emailItems.map((em, idx) => (
+                    <div key={idx} className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiMail className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <a
+                        href={`mailto:${em.email}`}
+                        className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors"
+                      >
+                        {em.email}
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-            {workingTime && (
+            )}
+            {(workingTime || workingTimeSaturday) && (
               <div className="flex flex-col text-left">
-                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">Working Time</h5>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
-                    <FiClock className="w-5 h-5 text-brand-orange" />
-                  </div>
-                  <span className="text-slate-600 text-sm sm:text-base font-normal">{workingTime}</span>
+                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">
+                  WORKING TIME
+                </h5>
+                <div className="space-y-2">
+                  {workingTime && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiClock className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <span className="text-slate-600 text-sm sm:text-base font-normal">
+                        {workingTime}
+                      </span>
+                    </div>
+                  )}
+                  {workingTimeSaturday && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiClock className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <span className="text-slate-600 text-sm sm:text-base font-normal">
+                        {workingTimeSaturday}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -105,8 +105,8 @@ export default function ContactSection({ section }) {
     emailItems = [{ heading: c.email_heading || '', email: c.email }];
   }
 
-  // Working time: renamed from business_hours
   const workingTime = c.working_time || c.business_hours || '';
+  const workingTimeSaturday = c.working_time_saturday || c.saturday_hours || '';
 
   const successMessage = c.success_message || 'Thank you! Your message has been received. Our team will contact you soon.';
 
@@ -214,24 +214,58 @@ export default function ContactSection({ section }) {
                   textColor={textColor}
                 />
               ))}
-              {emailItems.map((em, idx) => (
-                <ContactDetailItem
-                  key={`email-${idx}`}
-                  icon={FiMail}
-                  heading={em.heading?.trim() || 'Email'}
-                  value={em.email}
-                  href={em.email ? `mailto:${em.email}` : undefined}
-                  onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
-                  textColor={textColor}
-                />
-              ))}
-              {workingTime && (
-                <ContactDetailItem
-                  icon={FiClock}
-                  heading="Working Time"
-                  value={workingTime}
-                  textColor={textColor}
-                />
+              {emailItems.length > 0 && (
+                <div className="flex flex-col text-left">
+                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+                    EMAIL
+                  </h5>
+                  <div className="space-y-2 mt-0.5">
+                    {emailItems.map((em, idx) => (
+                      <div key={`email-${idx}`} className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                          <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                        </div>
+                        <a
+                          href={em.email ? `mailto:${em.email}` : undefined}
+                          onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
+                          className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words"
+                          style={{ color: hexToRgba(textColor, 0.95) }}
+                        >
+                          {em.email}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(workingTime || workingTimeSaturday) && (
+                <div className="flex flex-col text-left">
+                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+                    WORKING TIME
+                  </h5>
+                  <div className="space-y-2 mt-0.5">
+                    {workingTime && (
+                      <div className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                        </div>
+                        <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
+                          {workingTime}
+                        </span>
+                      </div>
+                    )}
+                    {workingTimeSaturday && (
+                      <div className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                        </div>
+                        <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
+                          {workingTimeSaturday}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

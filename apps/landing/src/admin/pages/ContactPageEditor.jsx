@@ -70,6 +70,7 @@ const DEFAULT_CONTACT_CONTENT = {
   emails: [{ heading: '', email: '' }],
   email: '',
   working_time: '',
+  working_time_saturday: '',
   business_hours: '',
   gradient_start: '#0B2D6B',
   gradient_end: '#1E56C7',
@@ -167,6 +168,7 @@ const queryClient = useQueryClient();
               phone_software_heading: cData.phone_software_heading || cData.phone_2_heading || 'Software Enquiry',
               emails,
               working_time: cData.working_time || cData.business_hours || '',
+              working_time_saturday: cData.working_time_saturday || cData.saturday_hours || '',
               business_hours: cData.working_time || cData.business_hours || '',
             });
           } else {
@@ -186,6 +188,7 @@ const queryClient = useQueryClient();
                 email: contactInfoSec.email || prev.email,
                 emails: contactInfoSec.email ? [{ heading: '', email: contactInfoSec.email }] : [{ heading: '', email: '' }],
                 working_time: contactInfoSec.working_time || contactInfoSec.business_hours || prev.working_time,
+                working_time_saturday: contactInfoSec.working_time_saturday || contactInfoSec.saturday_hours || prev.working_time_saturday || '',
                 business_hours: contactInfoSec.working_time || contactInfoSec.business_hours || prev.business_hours,
               }));
             }
@@ -222,6 +225,7 @@ const queryClient = useQueryClient();
     const phoneSoft = (contactContent.phone_software || '').trim();
     const combinedPhone = [phoneComp, phoneSoft].filter(Boolean).join(' / ');
     const workingTimeVal = (contactContent.working_time || contactContent.business_hours || '').trim();
+    const workingTimeSatVal = (contactContent.working_time_saturday || '').trim();
 
     const contentToSave = {
       ...contactContent,
@@ -233,6 +237,7 @@ const queryClient = useQueryClient();
       emails: cleanedEmails.length > 0 ? cleanedEmails : (primaryEmail ? [{ heading: '', email: primaryEmail }] : []),
       email: primaryEmail,
       working_time: workingTimeVal,
+      working_time_saturday: workingTimeSatVal,
       business_hours: workingTimeVal,
     };
 
@@ -479,25 +484,9 @@ const queryClient = useQueryClient();
                   </div>
                   <div className="space-y-2.5">
                     {(contactContent.emails || []).map((item, idx) => (
-                      <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                        <div className="flex-1 w-full">
-                          <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                            Heading / Label <span className="text-neutral-400 font-normal">(Optional — defaults to &quot;Email&quot;)</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={item.heading || ''}
-                            onChange={(e) => {
-                              const updated = [...(contactContent.emails || [])];
-                              updated[idx] = { ...updated[idx], heading: e.target.value };
-                              updateContent('emails', updated);
-                            }}
-                            className={inputCls}
-                            placeholder="Email (or e.g. Software Support)"
-                          />
-                        </div>
-                        <div className="flex-1 w-full">
-                          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email Address</label>
+                      <div key={idx} className="flex gap-3 items-center p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="flex-1">
+                          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email Address #{idx + 1}</label>
                           <div className="relative">
                             <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                             <input
@@ -519,7 +508,7 @@ const queryClient = useQueryClient();
                             const updated = (contactContent.emails || []).filter((_, i) => i !== idx);
                             updateContent('emails', updated.length > 0 ? updated : [{ heading: '', email: '' }]);
                           }}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 cursor-pointer self-end sm:self-auto sm:mb-0.5"
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 cursor-pointer self-end mb-0.5"
                           title="Remove Email"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -530,20 +519,37 @@ const queryClient = useQueryClient();
                 </div>
 
                 {/* Working Time */}
-                <div className="pt-2">
-                  <label className={labelCls}>Working Time</label>
-                  <div className="relative">
-                    <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                    <input
-                      type="text"
-                      value={contactContent.working_time || contactContent.business_hours || ''}
-                      onChange={(e) => {
-                        updateContent('working_time', e.target.value);
-                        updateContent('business_hours', e.target.value);
-                      }}
-                      className={`${inputCls} pl-9`}
-                      placeholder="Mon-Fri: 9AM-6PM"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className={labelCls}>Weekday Working Time (Mon - Fri)</label>
+                    <div className="relative">
+                      <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                      <input
+                        type="text"
+                        value={contactContent.working_time || contactContent.business_hours || ''}
+                        onChange={(e) => {
+                          updateContent('working_time', e.target.value);
+                          updateContent('business_hours', e.target.value);
+                        }}
+                        className={`${inputCls} pl-9`}
+                        placeholder="Mon-Fri: 9:00 AM - 6:00 PM"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Saturday Working Time</label>
+                    <div className="relative">
+                      <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                      <input
+                        type="text"
+                        value={contactContent.working_time_saturday || ''}
+                        onChange={(e) => {
+                          updateContent('working_time_saturday', e.target.value);
+                        }}
+                        className={`${inputCls} pl-9`}
+                        placeholder="Sat: 9:00 AM - 1:00 PM"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
