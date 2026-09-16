@@ -28,16 +28,9 @@ export function PackageCard({ pkg, bannerSize = "lg" }: PackageCardProps) {
           {firstThumb ? (
             <img src={firstThumb} alt={pkg.name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-white/15 text-4xl sm:text-5xl font-bold">{pkg.name?.charAt(0) || "P"}</span>
+            <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-ink" />
           )}
         </div>
-        <span
-          className={`absolute top-3 left-3 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs backdrop-blur-xs ${
-            isInternship ? "bg-emerald-600/90" : "bg-purple-600/90"
-          }`}
-        >
-          {isInternship ? "Internship" : "Package"}
-        </span>
       </div>
 
       <div className="p-6 flex flex-col flex-1">

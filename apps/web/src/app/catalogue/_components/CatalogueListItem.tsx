@@ -53,27 +53,8 @@ export function CatalogueListItem({ item }: CatalogueListItemProps) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <span className="text-white/20 text-3xl sm:text-4xl font-extrabold">
-            {item.title?.charAt(0) || "M"}
-          </span>
+          <div className="w-full h-full bg-gradient-to-br from-primary to-[#0f172a]" />
         )}
-
-        {/* Badge Overlay on Image */}
-        <div className="absolute top-2 left-2 flex gap-1">
-          {isPackage ? (
-            <span
-              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md text-white shadow-xs ${
-                isInternship ? "bg-emerald-600" : "bg-purple-600"
-              }`}
-            >
-              {isInternship ? "Internship" : "Package"}
-            </span>
-          ) : (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-600 text-white shadow-xs">
-              Course
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Main Details */}
