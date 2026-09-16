@@ -59,10 +59,10 @@ export default function ServicesSection({ section }) {
               <img
                 src={leftImageUrl}
                 alt={leftHeading}
-                className="w-full h-auto rounded-2xl shrink-0"
+                className="w-full md:w-[90%] h-auto object-contain rounded-2xl shrink-0"
               />
             ) : (
-              <div className="w-full h-52 sm:h-60 md:h-56 lg:h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange shrink-0" />
+              <div className="w-full md:w-[90%] h-52 sm:h-60 md:h-56 lg:h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange shrink-0" />
             )}
             <h3 className="font-bold text-lg sm:text-xl mt-4 sm:mt-5 text-dark-navy text-center sm:text-left leading-snug line-clamp-2">{leftHeading}</h3>
             {leftDescription && (
@@ -76,12 +76,12 @@ export default function ServicesSection({ section }) {
             )}
           </Reveal>
 
-          <Reveal variant="left" className="flex flex-col justify-center space-y-1">
+          <Reveal variant="left" className="flex flex-col justify-start space-y-1">
             {servicesList.map((service, i) => {
               const Icon = ICON_MAP[service.icon_name] || FiBriefcase;
               return (
                 <div key={i}>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 py-3.5 sm:py-4">
+                  <div className={`flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 ${i === 0 ? 'pt-3.5 md:pt-0 pb-3.5 sm:pb-4' : 'py-3.5 sm:py-4'}`}>
                     <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-brand-orange/10 flex items-center justify-center shrink-0 mt-0.5">
                       <Icon className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-brand-orange" />
                     </div>
