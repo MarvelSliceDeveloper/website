@@ -86,16 +86,6 @@ export default function JobDetail() {
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  useEffect(() => {
-    if (status?.type === 'success') {
-      const timer = setTimeout(() => {
-        setShowForm(false);
-        setStatus(null);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
-
   // Quick Career Enquiry Form State (career_contact_submissions)
   const [enquiryForm, setEnquiryForm] = useState({
     full_name: '',
@@ -332,11 +322,6 @@ export default function JobDetail() {
     setErrors({});
     setAgreeTerms(false);
     setSubmitting(false);
-
-    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    redirectTimerRef.current = setTimeout(() => {
-      navigate('/', { replace: true });
-    }, 2000);
   }
 
   if (isLoading) {
@@ -378,16 +363,16 @@ export default function JobDetail() {
     <div className="bg-white min-h-screen">
       
       {/* HERO / TOP JOB HEADER BANNER: Heading & Description in 1 section */}
-      <section className="bg-white py-10 sm:py-14">
+      <section className="bg-white py-5 sm:py-7">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-left">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-navy tracking-tight leading-tight mt-1 text-left">
               {job.title}
             </h1>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-2 mb-4" />
 
             {job.description && (
-              <div className="space-y-4 pt-2">
+              <div className="space-y-3 pt-1">
                 {job.description.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
                   <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-8">
                     {p.replace(/\r?\n+/g, ' ').trim()}
@@ -401,14 +386,14 @@ export default function JobDetail() {
 
       {/* 1. KEY REQUIREMENTS */}
       {job.key_requirements && (
-        <section className="bg-white py-6 sm:py-10">
+        <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
                 Key Requirements
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
+              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-3.5" />
+              <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.key_requirements)}
               </ul>
             </Reveal>
@@ -418,14 +403,14 @@ export default function JobDetail() {
 
       {/* 2. RESPONSIBILITIES */}
       {job.responsibilities && (
-        <section className="bg-white py-6 sm:py-10">
+        <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
                 Responsibilities
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
+              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-3.5" />
+              <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.responsibilities)}
               </ul>
             </Reveal>
@@ -434,17 +419,17 @@ export default function JobDetail() {
       )}
 
       {/* 3. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
-      <section className="bg-white py-6 sm:py-12 pb-16 sm:pb-24">
+      <section className="bg-white py-2 sm:py-4 pb-8 sm:pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
               Position Summary
             </h2>
-            <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
+            <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2 mb-4" />
 
             <div className="pl-0 sm:pl-6">
               {(job.title || empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications || job.skills) && (
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-8">
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-5">
                   <table className="w-full text-left text-[13px] sm:text-sm border-collapse">
                     <tbody className="divide-y divide-slate-200">
                       {job.title && (
@@ -586,20 +571,34 @@ export default function JobDetail() {
               )}
 
             {status?.type === 'success' ? (
-              <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xs">
-                  <FiCheck className="w-8 h-8 stroke-[2.5]" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
-                  Application Received!
-                </h3>
-                <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto leading-relaxed">
-                  We have received your application. Our team will reach out to you shortly.
-                </p>
-                <div className="mt-6 flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>Redirecting to home page...</span>
-                </div>
+              <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center justify-center text-center max-w-sm sm:max-w-md mx-auto"
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                    <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                    Submission Successful!
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 max-w-sm sm:max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                    Thank you for your submission. We have received your application information and will process it shortly. You will receive a confirmation update within the next few minutes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(false);
+                      setStatus(null);
+                      navigate('/');
+                    }}
+                    className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                  >
+                    OK
+                  </button>
+                </motion.div>
               </div>
             ) : (
               <form ref={formRef} onSubmit={handleSubmit} noValidate>

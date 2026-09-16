@@ -118,7 +118,7 @@ export default function UpcomingClassesSection({ section }) {
     if (showSuccess) {
       const timer = setTimeout(() => {
         closeModal();
-      }, 1000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
@@ -325,11 +325,23 @@ export default function UpcomingClassesSection({ section }) {
 
               <div className="overflow-y-auto rounded-3xl flex-1">
                 {showSuccess ? (
-                  <div className="p-6 text-center">
-                    <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FiCheck className="w-8 h-8 text-emerald-600" />
+                  <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                      <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                      Registration Successful!
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                      Thank you for registering. We have reserved your seat and sent the class access details to your email.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
                   </div>
                 ) : (
                   <>

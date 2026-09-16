@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiUpload, FiSend, FiCheck, FiAlertCircle, FiX } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit, trackDownload } from '../../lib/analytics';
 
@@ -46,6 +47,7 @@ function Field({ label, required, error, children }) {
 }
 
 export default function JobApplyModal({ job, onClose }) {
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const [form, setForm] = useState({
     full_name: '',
@@ -78,15 +80,6 @@ export default function JobApplyModal({ job, onClose }) {
       setAgreeTerms(false);
     }
   }, [job]);
-
-  useEffect(() => {
-    if (status?.type === 'success') {
-      const timer = setTimeout(() => {
-        closeModal();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
 
   if (!job) return null;
 
@@ -254,16 +247,32 @@ export default function JobApplyModal({ job, onClose }) {
           )}
 
         {status?.type === 'success' ? (
-          <div className="p-6 text-center">
+          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
+              className="flex flex-col items-center justify-center text-center max-w-sm sm:max-w-md mx-auto"
             >
-              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FiCheck className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                Submission Successful!
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 max-w-sm sm:max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                Thank you for your submission. We have received your application information and will process it shortly. You will receive a confirmation update within the next few minutes.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  closeModal();
+                  navigate('/');
+                }}
+                className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                OK
+              </button>
             </motion.div>
           </div>
         ) : (

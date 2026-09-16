@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FiMapPin, FiPhone, FiMail, FiClock, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiMapPin, FiPhone, FiMail, FiClock, FiCheckCircle, FiCheck, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit, trackPhoneClick, trackEmailClick } from '../../lib/analytics';
@@ -114,6 +114,15 @@ export default function ContactSection({ section }) {
   const [status, setStatus] = useState('idle');
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  useEffect(() => {
+    if (status === 'success') {
+      const timer = setTimeout(() => {
+        setStatus('idle');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
 
   function validate() {
     const errs = {};
@@ -240,15 +249,23 @@ export default function ContactSection({ section }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center py-8 sm:py-10 text-center"
+                className="flex flex-col items-center justify-center py-8 sm:py-10 text-center"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
-                  <FiCheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-green-500" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                  <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                 </div>
-                <h4 className="text-base sm:text-lg font-bold text-dark-navy mb-2">Thank You!</h4>
-                <p className="text-xs sm:text-sm text-slate-600 max-w-xs leading-relaxed">{successMessage}</p>
-                <button onClick={() => setStatus('idle')} className="mt-6 text-xs sm:text-sm font-semibold text-brand-blue hover:underline">
-                  Send Another Message
+                <h4 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                  Submission Successful!
+                </h4>
+                <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                  {successMessage || 'Thank you for contacting us. We have received your message and will reach out to you shortly.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStatus('idle')}
+                  className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  OK
                 </button>
               </motion.div>
             ) : (

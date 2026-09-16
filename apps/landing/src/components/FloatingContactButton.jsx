@@ -47,6 +47,18 @@ export default function FloatingContactButton() {
     };
   }, []);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (sent) {
+      const timer = setTimeout(() => {
+        setOpen(false);
+        setSent(false);
+        setAgreeTerms(false);
+        setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [sent]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
@@ -96,12 +108,6 @@ export default function FloatingContactButton() {
       }).catch(() => {});
       trackFormSubmit('floating_enquiry', { subject: form.subject });
       setSent(true);
-      setTimeout(() => {
-        setOpen(false);
-        setSent(false);
-        setAgreeTerms(false);
-        setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
-      }, 1000);
     } catch {
       setErrors({ form: 'Submission failed. Please try again.' });
     } finally {
@@ -270,11 +276,28 @@ export default function FloatingContactButton() {
               )}
 
             {sent ? (
-              <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <FiCheck className="w-8 h-8 text-emerald-600" />
+              <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                  <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                 </div>
-                <h4 className="text-lg font-bold text-slate-800">Success!</h4>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                  Submission Successful!
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                  Thank you for your enquiry. We have received your details and will get in touch with you shortly.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setSent(false);
+                    setAgreeTerms(false);
+                    setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
+                  }}
+                  className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  OK
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="p-6 sm:p-8">

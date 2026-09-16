@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
+import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiCheck, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
 import AnimatedNumber from '../ui/AnimatedNumber';
@@ -117,7 +117,7 @@ export default function IntroFormSection({ section }) {
     if (showSuccessModal) {
       const timer = setTimeout(() => {
         setShowSuccessModal(false);
-      }, 1000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [showSuccessModal]);
@@ -334,7 +334,7 @@ export default function IntroFormSection({ section }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => setShowSuccessModal(false)}
           >
             <motion.div
@@ -342,13 +342,25 @@ export default function IntroFormSection({ section }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="relative bg-white rounded-3xl shadow-2xl max-w-xs w-full p-6 text-center border border-slate-100"
+              className="relative bg-white rounded-3xl shadow-2xl max-w-sm sm:max-w-md w-full p-8 sm:p-10 text-center border border-slate-100 flex flex-col items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                <FiCheckCircle className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                Submission Successful!
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                Thank you for reaching out. We have received your information and our team will process it shortly.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                OK
+              </button>
             </motion.div>
           </motion.div>
         )}

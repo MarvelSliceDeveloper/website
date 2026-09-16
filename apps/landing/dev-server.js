@@ -178,15 +178,28 @@ function handleDeleteUpload(filename) {
   return { error: 'File not found' };
 }
 
-async function sendCallMeBotNotification({ formName, name, phone, email, course, role, details }) {
+async function sendWhatsAppNotification({ formName, name, phone, email, course, role, details }) {
   const metaToken = process.env.WHATSAPP_ACCESS_TOKEN || process.env.VITE_WHATSAPP_ACCESS_TOKEN;
   const metaPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.VITE_WHATSAPP_PHONE_NUMBER_ID;
   const adminPhone = process.env.WHATSAPP_RECIPIENT_PHONE || process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
 
-  if (!adminPhone && !metaToken) return;
+  if (!adminPhone || !metaToken || !metaPhoneId) {
+    console.warn('[WhatsApp Notification] Missing WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, or WHATSAPP_RECIPIENT_PHONE in .env');
+    return;
+  }
 
   const cleanPhone = String(adminPhone || '').replace(/[^\d]/g, '');
   const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  const cleanPhoneId = String(metaPhoneId || '').trim().replace(/[^\d]/g, '');
+
+  if (cleanPhoneId.length < 12 || cleanPhoneId.startsWith('1555')) {
+    console.error(
+      `\n⚠️  [WhatsApp Cloud API Setup Warning]: WHATSAPP_PHONE_NUMBER_ID is currently set to "${metaPhoneId}".\n` +
+      `   Meta Cloud API requires the 15-digit "Phone number ID" from your Meta App Dashboard (WhatsApp > API Setup), NOT the test phone number.\n` +
+      `   Please update WHATSAPP_PHONE_NUMBER_ID in apps/landing/.env with the 15-digit ID from Meta.\n`
+    );
+  }
+
   const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
   const message =
@@ -200,42 +213,30 @@ async function sendCallMeBotNotification({ formName, name, phone, email, course,
     (details ? `• *Details:* ${details}\n` : '') +
     `• *Time:* ${now}`;
 
-  // 1. Official Meta WhatsApp Cloud API
-  if (metaToken && metaPhoneId && targetPhone) {
-    try {
-      const metaUrl = `https://graph.facebook.com/v20.0/${metaPhoneId}/messages`;
-      const res = await fetch(metaUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${metaToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: targetPhone,
-          type: 'text',
-          text: { preview_url: false, body: message },
-        }),
-      });
-      const data = await res.json();
-      console.log(`[dev-server Official WhatsApp Cloud API] Status: ${res.status}`, data);
-      return;
-    } catch (err) {
-      console.error('[dev-server Official WhatsApp Cloud API Error]:', err.message);
+  try {
+    const metaUrl = `https://graph.facebook.com/v20.0/${cleanPhoneId}/messages`;
+    const res = await fetch(metaUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${metaToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: targetPhone,
+        type: 'text',
+        text: { preview_url: false, body: message },
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      console.log(`[Official WhatsApp Cloud API] Lead alert sent to ${targetPhone}. Message ID: ${data?.messages?.[0]?.id || 'OK'}`);
+    } else {
+      console.error(`[Official WhatsApp Cloud API Error]: Status ${res.status}`, data);
     }
-  }
-
-  // 2. CallMeBot Fallback
-  const apiKey = process.env.WHATSAPP_APIKEY || process.env.VITE_WHATSAPP_APIKEY;
-  if (targetPhone && apiKey) {
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(targetPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
-    try {
-      const res = await fetch(url);
-      console.log(`[dev-server WhatsApp Notification] Status: ${res.status}`);
-    } catch (err) {
-      console.error('[dev-server WhatsApp Error]:', err.message);
-    }
+  } catch (err) {
+    console.error('[Official WhatsApp Cloud API Error]:', err.message);
   }
 }
 
@@ -247,41 +248,30 @@ async function handleNotifyWhatsApp(body = {}) {
 
   const clean = String(phone || '').replace(/[^\d]/g, '');
   const finalPhone = clean.length === 10 ? `91${clean}` : clean;
+  const cleanPhoneId = String(finalPhoneId || '').trim().replace(/[^\d]/g, '');
 
-  if (finalToken && finalPhoneId && finalPhone && message) {
-    try {
-      const metaUrl = `https://graph.facebook.com/v20.0/${finalPhoneId}/messages`;
-      const resp = await fetch(metaUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${finalToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: finalPhone,
-          type: 'text',
-          text: { preview_url: false, body: message },
-        }),
-      });
-      const json = await resp.json();
-      return { success: resp.ok, data: json };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
+  if (!finalToken || !cleanPhoneId || !finalPhone || !message) {
+    return { success: false, error: 'Missing WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, phone recipient, or message' };
   }
 
-  const apiKey = body.apiKey || process.env.WHATSAPP_APIKEY || process.env.VITE_WHATSAPP_APIKEY;
-  if (!finalPhone || !apiKey || !message) {
-    return { success: false, error: 'Missing phone, apiKey or token' };
-  }
-
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(finalPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
   try {
-    const resp = await fetch(url);
-    const text = await resp.text();
-    return { success: resp.ok || resp.status === 200 || resp.status === 203, response: text };
+    const metaUrl = `https://graph.facebook.com/v20.0/${cleanPhoneId}/messages`;
+    const resp = await fetch(metaUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${finalToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: finalPhone,
+        type: 'text',
+        text: { preview_url: false, body: message },
+      }),
+    });
+    const json = await resp.json();
+    return { success: resp.ok, data: json };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -331,7 +321,7 @@ async function handleCareer(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Application from ${full_name}`, html }, 'Career - Admin Notification');
   await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Application Received — Marvel Slice', html: autoReplyHtml }, 'Career - User Confirmation');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Career Application',
     name: full_name,
     phone,
@@ -379,7 +369,7 @@ async function handleForm(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Demo Request from ${full_name}`, html }, 'Demo Class - Admin Notification');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Demo Request Received — Marvel Slice', html: autoReplyHtml }, 'Demo Class - User Confirmation');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Demo Class Booking (Home)',
     name: full_name,
     phone,
@@ -424,7 +414,7 @@ async function handleBrochure(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `Brochure Request from ${name}`, html }, 'Brochure - Admin Notification');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Brochure Request Received \u2014 Marvel Slice', html: autoReplyHtml }, 'Brochure - User Confirmation');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Brochure Download',
     name,
     phone,
@@ -469,7 +459,7 @@ async function handleCareerContact(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Career Contact Request from ${full_name}`, html }, 'Career Contact - Admin');
   await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Career Contact - User');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Career Contact',
     name: full_name,
     phone,
@@ -513,7 +503,7 @@ async function handleContact(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Contact Request from ${full_name}`, html }, 'Contact Form - Admin');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Contact Form - User');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Contact Form',
     name: full_name,
     phone,
@@ -560,7 +550,7 @@ async function handleBanking(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: adminEmail, subject: `New Banking Enquiry (${topicName}) from ${full_name}`, html }, 'Banking - Admin');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: email, subject: `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`, html: autoReplyHtml }, 'Banking - User');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Banking Enquiry',
     name: full_name,
     phone,
@@ -605,7 +595,7 @@ async function handleAbout(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Enquiry Request from ${full_name}`, html }, 'About - Admin');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'About - User');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'About Us Contact',
     name: full_name,
     phone,
@@ -649,7 +639,7 @@ async function handleEnquiry(body) {
 
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Course Enquiry for ${course_title || 'Course'} from ${full_name}`, html }, 'Enquiry - Admin');
   await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: `Enquiry Confirmation: ${course_title || 'Course'} — Marvel Slice`, html: autoReplyHtml }, 'Enquiry - User');
-  sendCallMeBotNotification({
+  sendWhatsAppNotification({
     formName: 'Course Enquiry',
     name: full_name,
     phone,
