@@ -166,8 +166,13 @@ export default function JobEditor() {
             </div>
           </div>
 
-          {/* Row 2: Minimum Experience | Location | Salary Range */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Row 2: Qualification | Minimum Experience | Location | Salary Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Qualification</label>
+              <input name="qualifications" value={jobForm.qualifications} onChange={handleChange} placeholder="e.g. B.E / B.Tech / MCA"
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Minimum Experience</label>
               <input name="experience" value={jobForm.experience} onChange={handleChange} placeholder="e.g. 4 years / 2-4 years"
@@ -215,17 +220,6 @@ export default function JobEditor() {
             <p className="text-[11px] text-neutral-500 mb-1.5">Enter each responsibility on a new line or with bullet points (•).</p>
             <textarea name="responsibilities" value={jobForm.responsibilities} onChange={handleChange} rows={5}
               placeholder="• Design of the overall architecture of the web application&#10;• Implementation of a robust set of services and APIs&#10;• Optimization of the application for maximum speed and scalability"
-              className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all resize-y font-mono text-xs leading-relaxed" />
-          </div>
-
-          {/* Row 6: Qualification & Experience */}
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">
-              Qualification &amp; Experience
-            </label>
-            <p className="text-[11px] text-neutral-500 mb-1.5">Enter each qualification/experience requirement on a new line or with bullet points (•).</p>
-            <textarea name="qualifications" value={jobForm.qualifications} onChange={handleChange} rows={5}
-              placeholder="• Graduates/Post Graduates in BCA/MCA with minimum 4 years of work experience&#10;• Ability to work on multiple projects in a fast-paced environment&#10;• Pleasant, personable demeanour"
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all resize-y font-mono text-xs leading-relaxed" />
           </div>
 

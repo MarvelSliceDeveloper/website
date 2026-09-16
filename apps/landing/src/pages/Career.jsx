@@ -699,6 +699,8 @@ export default function Career() {
         </div>
       )}
 
+      {/* Hidden for now: Headline, Subtitle, Description, Role Categories & CTA Banner */}
+      {/* 
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 text-center">
         {fc.headline && (
           <div>
@@ -773,20 +775,21 @@ export default function Career() {
       </Reveal>
 
       <CTABannerSection section={ctaSection} />
+      */}
 
       <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-          <div className="mb-6 sm:mb-8 text-center">
+          <div className="mb-6 sm:mb-8 text-left">
             {pageContent?.section2_heading && (
               <div>
                 <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy whitespace-pre-line">
                   {pageContent.section2_heading}
                 </h2>
-                <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
+                <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5 sm:mb-6" />
               </div>
             )}
             {pageContent?.section2_subheading && (
-              <p className="text-slate-600 text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
+              <p className="text-slate-600 text-xs sm:text-sm font-normal max-w-2xl leading-relaxed whitespace-pre-line">
                 {pageContent.section2_subheading}
               </p>
             )}
@@ -887,7 +890,7 @@ export default function Career() {
                             </div>
                             <Link
                               to={`/career/job/${item._type}/${item.id}`}
-                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-extrabold text-xs sm:text-sm py-2.5 px-5 sm:py-3 sm:px-6 rounded-full hover:bg-blue-700 shadow-sm hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
+                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-semibold text-xs sm:text-sm py-2.5 px-5 sm:py-3 sm:px-6 rounded-full hover:bg-blue-700 shadow-sm hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
                             >
                               <span>View Details</span>
                               <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:translate-x-0.5 transition-transform" />

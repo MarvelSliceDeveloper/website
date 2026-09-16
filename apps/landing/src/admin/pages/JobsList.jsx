@@ -80,7 +80,7 @@ export default function JobsList() {
     { header: 'Description / Overview', accessor: 'description' },
     { header: 'Key Requirements', accessor: 'key_requirements' },
     { header: 'Responsibilities', accessor: 'responsibilities' },
-    { header: 'Qualification & Experience', accessor: 'qualifications' },
+    { header: 'Qualification', accessor: 'qualifications' },
     { header: 'Status', accessor: 'is_active', exportValue: (row) => row.is_active ? 'Active' : 'Inactive' },
   ];
 

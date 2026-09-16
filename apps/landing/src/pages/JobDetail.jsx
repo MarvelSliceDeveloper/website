@@ -325,7 +325,7 @@ export default function JobDetail() {
 
   if (isLoading) {
     return (
-      <div className="bg-slate-50 min-h-screen py-12 sm:py-16">
+      <div className="bg-white min-h-screen py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="h-6 w-36 bg-slate-200 rounded animate-pulse" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -339,7 +339,7 @@ export default function JobDetail() {
 
   if (!job || error) {
     return (
-      <div className="bg-slate-50 min-h-screen py-20">
+      <div className="bg-white min-h-screen py-20">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="w-16 h-16 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center mx-auto mb-4 border border-orange-200/50">
             <FiBriefcase className="w-8 h-8" />
@@ -362,23 +362,13 @@ export default function JobDetail() {
     <div className="bg-white min-h-screen">
       
       {/* HERO / TOP JOB HEADER BANNER: Heading & Description in 1 section */}
-      <section className="bg-slate-50 border-b border-slate-200/80 py-10 sm:py-16">
+      <section className="bg-white py-10 sm:py-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-6">
-            <Link
-              to="/career"
-              className="group inline-flex items-center gap-2 text-slate-500 hover:text-brand-blue font-medium text-sm transition-all cursor-pointer"
-            >
-              <FiArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-              <span>Back to All Openings</span>
-            </Link>
-          </Reveal>
-
-          <Reveal className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-navy tracking-tight leading-tight mt-1 text-center">
+          <Reveal className="text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-navy tracking-tight leading-tight mt-1 text-left">
               {job.title}
             </h1>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
+            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6" />
 
             {job.description && (
               <div className="space-y-4 pt-2">
@@ -393,9 +383,9 @@ export default function JobDetail() {
         </div>
       </section>
 
-      {/* 1. KEY REQUIREMENTS (White Section Band) */}
+      {/* 1. KEY REQUIREMENTS */}
       {job.key_requirements && (
-        <section className="bg-white py-10 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-white py-6 sm:py-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
@@ -410,9 +400,9 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 2. RESPONSIBILITIES (Grey Section Band) */}
+      {/* 2. RESPONSIBILITIES */}
       {job.responsibilities && (
-        <section className="bg-slate-50 py-10 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-white py-6 sm:py-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
@@ -427,25 +417,8 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 3. QUALIFICATION & EXPERIENCE (White Section Band) */}
-      {job.qualifications && (
-        <section className="bg-white py-10 sm:py-16 border-b border-slate-200/80">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
-                Qualification &amp; Experience
-              </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
-                {renderBulletList(job.qualifications)}
-              </ul>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {/* 4. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
-      <section className="bg-slate-50 py-10 sm:py-16">
+      {/* 3. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
+      <section className="bg-white py-6 sm:py-12 pb-16 sm:pb-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
@@ -454,7 +427,7 @@ export default function JobDetail() {
             <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
 
             <div className="pl-0 sm:pl-6">
-              {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration) && (
+              {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications) && (
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-8">
                   <table className="w-full text-left text-[13px] sm:text-sm border-collapse">
                     <tbody className="divide-y divide-slate-200">
@@ -475,6 +448,16 @@ export default function JobDetail() {
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
                             {job.division || job.department}
+                          </td>
+                        </tr>
+                      )}
+                      {job.qualifications && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Qualification
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {job.qualifications.replace(/^[•\-\*]\s*/gm, '').replace(/\n+/g, ', ')}
                           </td>
                         </tr>
                       )}

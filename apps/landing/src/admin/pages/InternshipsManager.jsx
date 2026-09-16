@@ -200,7 +200,7 @@ export default function InternshipsManager() {
     { header: 'Description / Overview', accessor: 'description' },
     { header: 'Key Requirements', accessor: 'key_requirements' },
     { header: 'Responsibilities', accessor: 'responsibilities' },
-    { header: 'Qualification & Experience', accessor: 'qualifications' },
+    { header: 'Qualification', accessor: 'qualifications' },
     { header: 'Status', accessor: 'is_active', exportValue: (row) => row.is_active ? 'Active' : 'Inactive' },
   ];
 
@@ -274,7 +274,11 @@ export default function InternshipsManager() {
                     </select>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Qualification</label>
+                    <input name="qualifications" value={form.qualifications} onChange={handleChange} placeholder="e.g. B.E / B.Tech / MCA" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Duration *</label>
                     <input name="duration" value={form.duration} onChange={handleChange} placeholder="e.g. 3 months" required className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
@@ -306,11 +310,6 @@ export default function InternshipsManager() {
                   <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Responsibilities</label>
                   <textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={4}
                     placeholder="• Assist the development team in building features&#10;• Write clean code&#10;• Participate in code reviews" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Qualification &amp; Experience</label>
-                  <textarea name="qualifications" value={form.qualifications} onChange={handleChange} rows={4}
-                    placeholder="• Pursuing/Completed Bachelor's in CS or IT&#10;• Good communication skills" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>

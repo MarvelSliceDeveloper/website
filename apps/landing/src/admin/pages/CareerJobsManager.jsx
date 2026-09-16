@@ -211,7 +211,11 @@ const [jobs, setJobs] = useState([]);
                     </select>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Qualification</label>
+                    <input name="qualifications" value={jobForm.qualifications} onChange={handleJobChange} placeholder="e.g. B.E / B.Tech / MCA" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Minimum Experience</label>
                     <input name="experience" value={jobForm.experience} onChange={handleJobChange} placeholder="e.g. 4 years" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
@@ -239,11 +243,6 @@ const [jobs, setJobs] = useState([]);
                   <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Responsibilities</label>
                   <textarea name="responsibilities" value={jobForm.responsibilities} onChange={handleJobChange} rows={4}
                     placeholder="• Design of the overall architecture of the web application&#10;• Implementation of a robust set of services and APIs&#10;• Optimization of the application for maximum speed and scalability" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Qualification &amp; Experience</label>
-                  <textarea name="qualifications" value={jobForm.qualifications} onChange={handleJobChange} rows={4}
-                    placeholder="• Graduates/Post Graduates in BCA/MCA with minimum 4 years of work experience&#10;• Ability to work on multiple projects in a fast-paced environment&#10;• Pleasant, personable demeanour" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>
