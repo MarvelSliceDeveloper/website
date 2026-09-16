@@ -21,7 +21,7 @@ export default function JobEditor() {
   const defaultJobForm = {
     title: '', division: '', role_category_id: '', location: '', type: 'Full-time',
     experience: '', salary: '', apply_url: '', description: '',
-    key_requirements: '', responsibilities: '', qualifications: '',
+    key_requirements: '', responsibilities: '', qualifications: '', skills: '',
     is_active: true, sort_order: 0,
   };
   const [jobForm, setJobForm] = useState(defaultJobForm);
@@ -49,6 +49,7 @@ export default function JobEditor() {
             key_requirements: data.key_requirements || '',
             responsibilities: data.responsibilities || '',
             qualifications: data.qualifications || '',
+            skills: data.skills || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
             sort_order: data.sort_order || 0
           });
@@ -87,6 +88,7 @@ export default function JobEditor() {
       key_requirements: jobForm.key_requirements?.trim() || null,
       responsibilities: jobForm.responsibilities?.trim() || null,
       qualifications: jobForm.qualifications?.trim() || null,
+      skills: jobForm.skills?.trim() || null,
       apply_url: jobForm.apply_url?.trim() || null,
       is_active: jobForm.is_active,
       sort_order: jobForm.sort_order,
@@ -135,7 +137,7 @@ export default function JobEditor() {
       <form onSubmit={handleSave}>
         <div className="bg-white border border-gray-300 rounded-xl p-6 space-y-5" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
 
-          {/* Row 1: Position / Title | Division | Category | Type */}
+          {/* Row 1: Position / Title | Department | Category | Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Position / Title <span className="text-destructive-500">*</span></label>
@@ -143,7 +145,7 @@ export default function JobEditor() {
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" required />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Division / Department</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Department</label>
               <input name="division" value={jobForm.division} onChange={handleChange} placeholder="e.g. Marketing / Engineering"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
@@ -166,15 +168,20 @@ export default function JobEditor() {
             </div>
           </div>
 
-          {/* Row 2: Qualification | Minimum Experience | Location | Salary Range */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Row 2: Qualification | Skills | Experience | Location */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Qualification</label>
               <input name="qualifications" value={jobForm.qualifications} onChange={handleChange} placeholder="e.g. B.E / B.Tech / MCA"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Minimum Experience</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Skills</label>
+              <input name="skills" value={jobForm.skills} onChange={handleChange} placeholder="e.g. React, Node.js, TypeScript, SQL"
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Experience</label>
               <input name="experience" value={jobForm.experience} onChange={handleChange} placeholder="e.g. 4 years / 2-4 years"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
@@ -183,6 +190,10 @@ export default function JobEditor() {
               <input name="location" value={jobForm.location} onChange={handleChange} placeholder="e.g. New York, NY / Remote" required
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
+          </div>
+
+          {/* Row 3: Salary Range */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Salary Range</label>
               <input name="salary" value={jobForm.salary} onChange={handleChange} placeholder="e.g. ₹6L–₹10L"

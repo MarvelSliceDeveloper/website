@@ -1083,7 +1083,11 @@ alter table job_openings add column if not exists division text;
 alter table job_openings add column if not exists key_requirements text;
 alter table job_openings add column if not exists responsibilities text;
 alter table job_openings add column if not exists qualifications text;
+alter table job_openings add column if not exists skills text;
 alter table job_openings add column if not exists apply_url text;
+
+-- Add skills and structured fields to internships if table exists
+alter table if exists internships add column if not exists skills text;
 
 -- 29. Career page content table (hero, section headings, form config)
 create table if not exists career_page_content (

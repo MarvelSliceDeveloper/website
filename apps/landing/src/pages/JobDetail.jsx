@@ -427,27 +427,37 @@ export default function JobDetail() {
             <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
 
             <div className="pl-0 sm:pl-6">
-              {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications) && (
+              {(job.title || empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications || job.skills) && (
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-8">
                   <table className="w-full text-left text-[13px] sm:text-sm border-collapse">
                     <tbody className="divide-y divide-slate-200">
-                      {empType && (
+                      {job.title && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
                           <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70 w-5/12 sm:w-1/3">
-                            Type
+                            Position / Role
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {empType}
+                            {job.title}
                           </td>
                         </tr>
                       )}
                       {(job.division || job.department) && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
                           <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
-                            Division / Department
+                            Department
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
                             {job.division || job.department}
+                          </td>
+                        </tr>
+                      )}
+                      {empType && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Employment Type
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {empType}
                           </td>
                         </tr>
                       )}
@@ -461,6 +471,26 @@ export default function JobDetail() {
                           </td>
                         </tr>
                       )}
+                      {job.skills && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Skills
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {job.skills.replace(/^[•\-\*]\s*/gm, '').replace(/\n+/g, ', ')}
+                          </td>
+                        </tr>
+                      )}
+                      {expVal && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                            Experience
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {expVal}
+                          </td>
+                        </tr>
+                      )}
                       {job.duration && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
                           <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
@@ -468,16 +498,6 @@ export default function JobDetail() {
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
                             {job.duration}
-                          </td>
-                        </tr>
-                      )}
-                      {expVal && (
-                        <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
-                            Experience Required
-                          </td>
-                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {expVal}
                           </td>
                         </tr>
                       )}
@@ -497,7 +517,7 @@ export default function JobDetail() {
                             {isIntern ? 'Stipend' : 'Salary Range'}
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {salaryVal.startsWith('₹') ? salaryVal : `₹${salaryVal}`}
+                            {salaryVal.startsWith('₹') || salaryVal.startsWith('$') ? salaryVal : `₹${salaryVal}`}
                           </td>
                         </tr>
                       )}

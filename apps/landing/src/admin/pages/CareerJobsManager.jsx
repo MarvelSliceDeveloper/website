@@ -22,7 +22,7 @@ const [jobs, setJobs] = useState([]);
   const defaultJobForm = {
     title: '', division: '', role_category_id: '', location: '', type: 'Full-time',
     experience: '', salary: '', apply_url: '', description: '',
-    key_requirements: '', responsibilities: '', qualifications: '',
+    key_requirements: '', responsibilities: '', qualifications: '', skills: '',
     is_active: true, sort_order: 0,
   };
   const [jobForm, setJobForm] = useState(defaultJobForm);
@@ -51,6 +51,7 @@ const [jobs, setJobs] = useState([]);
         key_requirements: job.key_requirements || '',
         responsibilities: job.responsibilities || '',
         qualifications: job.qualifications || '',
+        skills: job.skills || '',
       });
     } else {
       setEditingJob(null);
@@ -87,6 +88,7 @@ const [jobs, setJobs] = useState([]);
       key_requirements: jobForm.key_requirements?.trim() || null,
       responsibilities: jobForm.responsibilities?.trim() || null,
       qualifications: jobForm.qualifications?.trim() || null,
+      skills: jobForm.skills?.trim() || null,
       apply_url: jobForm.apply_url?.trim() || null,
       is_active: jobForm.is_active,
       sort_order: jobForm.sort_order,
@@ -190,7 +192,7 @@ const [jobs, setJobs] = useState([]);
                     <input name="title" value={jobForm.title} onChange={handleJobChange} placeholder="e.g. Full Stack Developer" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Division / Department</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Department</label>
                     <input name="division" value={jobForm.division} onChange={handleJobChange} placeholder="e.g. Marketing" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
                 </div>
@@ -211,11 +213,19 @@ const [jobs, setJobs] = useState([]);
                     </select>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Row 2: Qualification | Skills */}
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Qualification</label>
-                    <input name="qualifications" value={jobForm.qualifications} onChange={handleJobChange} placeholder="e.g. B.E / B.Tech / MCA" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    <input name="qualifications" value={jobForm.qualifications} onChange={handleJobChange} placeholder="e.g. B.E / B.Tech / MCA / Any Graduate" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Skills</label>
+                    <input name="skills" value={jobForm.skills} onChange={handleJobChange} placeholder="e.g. React, Node.js, TypeScript, SQL" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                </div>
+                {/* Row 3: Experience | Location | Salary Range */}
+                <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Minimum Experience</label>
                     <input name="experience" value={jobForm.experience} onChange={handleJobChange} placeholder="e.g. 4 years" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
