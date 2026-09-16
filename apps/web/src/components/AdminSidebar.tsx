@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import {
   IconBook,
-  IconBrandWindows,
   IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
@@ -14,7 +13,6 @@ import {
   IconPackage,
   IconUsers,
   IconUsersGroup,
-  IconVideo,
   IconCalendar,
   IconChevronDown,
   IconSettings,
@@ -502,11 +500,6 @@ export default function AdminSidebar({
               ],
             },
             {
-              label: "Microsoft",
-              href: "/admin/microsoft",
-              icon: IconBrandWindows,
-            },
-            {
               label: "Health",
               href: "/admin/health",
               icon: IconServer as React.ComponentType<{
@@ -587,20 +580,6 @@ export default function AdminSidebar({
               children: [
                 { label: "View Batches", href: "/admin/batches" },
                 { label: "Add Batch", href: "/admin/batches/new" },
-              ],
-            },
-            {
-              label: "Sessions",
-              href: "/admin/sessions",
-              icon: IconVideo,
-              children: [
-                { label: "View Sessions", href: "/admin/sessions" },
-                { label: "Schedule Session", href: "/admin/sessions/new" },
-                {
-                  label: "Upcoming",
-                  href: "/admin/sessions?status=UPCOMING",
-                },
-                { label: "Past", href: "/admin/sessions?status=PAST" },
               ],
             },
             {

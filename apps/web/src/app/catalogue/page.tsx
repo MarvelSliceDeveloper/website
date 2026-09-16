@@ -24,7 +24,6 @@ import {
   IconSpeakerphone,
   IconBook,
 } from "@tabler/icons-react";
-import { CourseCard } from "./_components/CourseCard";
 import { PackageCard } from "./_components/PackageCard";
 import { CatalogueListItem, type UnifiedCatalogueItem } from "./_components/CatalogueListItem";
 import CourseSkeleton from "./_components/CourseSkeleton";
@@ -67,24 +66,7 @@ export default function CataloguePage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
 
-  // Fetch single published catalog courses
-  const coursesQuery = useApiQuery<{
-    courses: any[];
-    total: number;
-    categories?: { id: string; name: string; slug: string; description?: string; courseCount: number }[];
-  }>(
-    ["catalogue", "courses", category, search, page],
-    "/api/courses/catalogue",
-    {
-      ...(category ? { category } : {}),
-      ...(search.trim() ? { search: search.trim() } : {}),
-      page: String(page),
-      limit: String(PER_PAGE),
-    },
-    { staleTime: 0 },
-  );
-
-  // Fetch active packages
+  // Fetch active packages (package-only catalogue — single-course selling removed)
   const packagesQuery = useApiQuery<{ packages: any[] }>(
     ["catalogue", "packages"],
     "/api/packages/public",
@@ -105,26 +87,7 @@ export default function CataloguePage() {
     { staleTime: 0 },
   );
 
-  const rawCourses = coursesQuery.data?.courses || [];
   const rawPackages = packagesQuery.data?.packages || [];
-
-  // Unified items
-  const courseItems: (UnifiedCatalogueItem & { raw: any })[] = useMemo(() => {
-    return rawCourses.map((c: any) => ({
-      id: c.id,
-      type: "course" as const,
-      title: c.title,
-      slug: c.slug,
-      description: c.description,
-      thumbnailUrl: c.thumbnailUrl || null,
-      coverImageUrl: c.coverImageUrl || null,
-      duration: c.duration || null,
-      category: c.categoryRelation?.name || null,
-      price: c.price != null ? c.price : null,
-      modulesCount: c._count?.modules ?? 0,
-      raw: c,
-    }));
-  }, [rawCourses]);
 
   const packageItems: (UnifiedCatalogueItem & { raw: any })[] = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -206,17 +169,15 @@ export default function CataloguePage() {
     }));
   }, [categoriesQuery.data?.categories, packageCountByCategory]);
 
-  const totalCourses = coursesQuery.data?.total || 0;
-  const allCoursesTotal =
-    (categoriesQuery.data?.total ?? totalCourses) + rawPackages.length;
+  const allCoursesTotal = rawPackages.length;
   const totalPackages = packageItems.length;
 
-  // Active items for display: combine packages and single courses
+  // Package-only catalogue — single-course selling removed
   const displayedItems = useMemo(() => {
-    return [...packageItems, ...courseItems];
-  }, [courseItems, packageItems]);
+    return packageItems;
+  }, [packageItems]);
 
-  const totalDisplayedItems = totalCourses + totalPackages;
+  const totalDisplayedItems = totalPackages;
 
   const lastPage = Math.max(1, Math.ceil(totalDisplayedItems / PER_PAGE));
 
@@ -233,7 +194,7 @@ export default function CataloguePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const isLoading = coursesQuery.isPending || packagesQuery.isPending;
+  const isLoading = packagesQuery.isPending;
 
   // Pagination array builder
   const paginationPages = useMemo(() => {
@@ -515,13 +476,9 @@ export default function CataloguePage() {
               {/* Grid or List (Single) View */}
               {viewMode === "grid" ? (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayedItems.map((item) =>
-                    item.type === "package" ? (
-                      <PackageCard key={`pkg-${item.id}`} pkg={item.raw} bannerSize="lg" />
-                    ) : (
-                      <CourseCard key={`course-${item.id}`} course={item.raw} bannerSize="lg" />
-                    )
-                  )}
+                  {displayedItems.map((item) => (
+                    <PackageCard key={`pkg-${item.id}`} pkg={item.raw} bannerSize="lg" />
+                  ))}
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
