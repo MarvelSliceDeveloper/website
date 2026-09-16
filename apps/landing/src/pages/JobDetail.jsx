@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
@@ -59,7 +59,15 @@ function renderBulletList(content) {
 
 export default function JobDetail() {
   const { type, id } = useParams();
+  const navigate = useNavigate();
   const formRef = useRef(null);
+  const redirectTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   // Full Application Modal State (career_submissions)
   const [showForm, setShowForm] = useState(false);
@@ -308,7 +316,10 @@ export default function JobDetail() {
 
     trackFormSubmit('career');
     if (file_url) trackDownload('career_resume');
-    setStatus({ type: 'success', message: 'Application submitted successfully! We will get back to you soon.' });
+    setStatus({
+      type: 'success',
+      message: 'We have received your application. Our team will reach out to you shortly.'
+    });
     setForm({
       full_name: '',
       email: '',
@@ -321,6 +332,11 @@ export default function JobDetail() {
     setErrors({});
     setAgreeTerms(false);
     setSubmitting(false);
+
+    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    redirectTimerRef.current = setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 2000);
   }
 
   if (isLoading) {
@@ -373,8 +389,8 @@ export default function JobDetail() {
             {job.description && (
               <div className="space-y-4 pt-2">
                 {job.description.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
-                    {p.trim()}
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-8">
+                    {p.replace(/\r?\n+/g, ' ').trim()}
                   </p>
                 ))}
               </div>
@@ -543,7 +559,10 @@ export default function JobDetail() {
 
       {/* Application Form Modal (Submits to career_submissions with Resume upload) */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => {
+          if (status?.type === 'success') return;
+          setShowForm(false);
+        }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -567,11 +586,20 @@ export default function JobDetail() {
               )}
 
             {status?.type === 'success' ? (
-              <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <FiCheck className="w-8 h-8 text-emerald-600" />
+              <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xs">
+                  <FiCheck className="w-8 h-8 stroke-[2.5]" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
+                  Application Received!
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto leading-relaxed">
+                  We have received your application. Our team will reach out to you shortly.
+                </p>
+                <div className="mt-6 flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Redirecting to home page...</span>
+                </div>
               </div>
             ) : (
               <form ref={formRef} onSubmit={handleSubmit} noValidate>
