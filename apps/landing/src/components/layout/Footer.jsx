@@ -26,7 +26,7 @@ function NavColumn({ parentLabel, defaultChildren }) {
     ];
     return (
       <div className="text-center sm:text-left shrink-0">
-        <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">
+        <h4 className="text-[15px] sm:text-base font-medium uppercase tracking-wider mb-3 text-white whitespace-nowrap">
           {formatFooterLabel(parentLabel)}
         </h4>
         <ul className="space-y-2 text-center sm:text-left">
@@ -46,7 +46,7 @@ function NavColumn({ parentLabel, defaultChildren }) {
   if (items.length === 0) return null;
   return (
     <div className="text-center sm:text-left shrink-0">
-      <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">
+      <h4 className="text-[15px] sm:text-base font-medium uppercase tracking-wider mb-3 text-white whitespace-nowrap">
         {formatFooterLabel(parentLabel)}
       </h4>
       <ul className="space-y-2 text-center sm:text-left">
@@ -114,7 +114,7 @@ export default function Footer() {
                     const label = i === 0 ? 'Competitive Exam Enquiry' : i === 1 ? 'Software Enquiry' : 'Enquiry';
                     return (
                       <div key={i} className="flex flex-col items-center sm:items-start text-center sm:text-left">
-                        <h5 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm mb-1">
+                        <h5 className="font-medium text-white uppercase tracking-wider text-xs sm:text-sm mb-1">
                           {label}
                         </h5>
                         <div className="inline-flex items-center gap-2 mt-0.5">
@@ -122,7 +122,7 @@ export default function Footer() {
                           <a
                             href={cleanTelHref(num)}
                             onClick={() => trackPhoneClick(num, 'footer')}
-                            className="text-brand-orange font-semibold hover:underline transition-colors text-sm sm:text-base inline-block"
+                            className="text-brand-orange font-normal hover:underline transition-colors text-sm sm:text-base inline-block"
                           >
                             {num}
                           </a>
@@ -151,7 +151,7 @@ export default function Footer() {
           <div className="w-full flex-1 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:justify-between gap-y-8 sm:gap-y-10 gap-x-6 sm:gap-x-12 lg:gap-x-6 items-start">
             {/* Quick Links Column */}
             <div className="text-center sm:text-left shrink-0">
-              <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">Quick Links</h4>
+              <h4 className="text-[15px] sm:text-base font-medium uppercase tracking-wider mb-3 text-white whitespace-nowrap">Quick Links</h4>
               <ul className="space-y-2 text-center sm:text-left">
                 {linkItems.map((item, i) => (
                   <li key={i}>
@@ -171,7 +171,7 @@ export default function Footer() {
             {/* Working Hours & Social Links Column */}
             {(hours.weekday || hours.saturday) && (
               <div className="text-center sm:text-left flex flex-col items-center sm:items-start shrink-0">
-                <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 text-white whitespace-nowrap">Working Hours</h4>
+                <h4 className="text-[15px] sm:text-base font-medium uppercase tracking-wider mb-3 text-white whitespace-nowrap">Working Hours</h4>
                 <ul className="space-y-3 text-sm sm:text-base text-gray-200 text-center sm:text-left flex flex-col items-center sm:items-start">
                   {hours.weekday && (
                     <li className="text-center sm:text-left">
@@ -192,7 +192,7 @@ export default function Footer() {
                     </li>
                   )}
                 </ul>
-                <h4 className="text-[15px] sm:text-base uppercase tracking-wider mb-3 mt-6 text-white whitespace-nowrap">Social Links</h4>
+                <h4 className="text-[15px] sm:text-base font-medium uppercase tracking-wider mb-3 mt-6 text-white whitespace-nowrap">Social Links</h4>
                 <div className="flex flex-wrap items-center gap-2.5 mt-3 justify-center sm:justify-start">
                   <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaYoutube className="w-4 h-4 text-[#FF0000]" /></a>
                   <a href={social.linkedin || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('LinkedIn', social.linkedin)} aria-label="LinkedIn" className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white border border-white shadow-xs shrink-0 aspect-square transition-all duration-300 hover:scale-110 hover:shadow-md hover:-translate-y-0.5"><FaLinkedinIn className="w-4 h-4 text-[#0A66C2]" /></a>
