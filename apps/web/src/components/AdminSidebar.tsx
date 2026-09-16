@@ -498,7 +498,6 @@ export default function AdminSidebar({
               children: [
                 { label: "Cache", href: "/admin/cache" },
                 { label: "Email Templates", href: "/admin/email-templates" },
-                { label: "Branding", href: "/admin/branding" },
                 { label: "i18n", href: "/admin/i18n" },
               ],
             },
