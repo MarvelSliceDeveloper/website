@@ -352,9 +352,9 @@ export default function SectionRenderer({ section, className }) {
             ))}
             {emailItems.map((em, idx) => (
               <div key={idx} className="flex flex-col text-left">
-                {em.heading && (
-                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">{em.heading}</h5>
-                )}
+                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">
+                  {em.heading?.trim() || 'Email'}
+                </h5>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
                     <FiMail className="w-5 h-5 text-brand-orange" />

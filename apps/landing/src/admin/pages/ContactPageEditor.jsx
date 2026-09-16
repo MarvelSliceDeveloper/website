@@ -482,7 +482,7 @@ const queryClient = useQueryClient();
                       <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end p-3 bg-slate-50 border border-slate-200 rounded-xl">
                         <div className="flex-1 w-full">
                           <label className="block text-[11px] font-medium text-neutral-600 mb-1">
-                            Heading / Label <span className="text-neutral-400 font-normal">(Optional — e.g. Software Support, General Enquiry)</span>
+                            Heading / Label <span className="text-neutral-400 font-normal">(Optional — defaults to &quot;Email&quot;)</span>
                           </label>
                           <input
                             type="text"
@@ -493,7 +493,7 @@ const queryClient = useQueryClient();
                               updateContent('emails', updated);
                             }}
                             className={inputCls}
-                            placeholder="e.g. Software Support"
+                            placeholder="Email (or e.g. Software Support)"
                           />
                         </div>
                         <div className="flex-1 w-full">

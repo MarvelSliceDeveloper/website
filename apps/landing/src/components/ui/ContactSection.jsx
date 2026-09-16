@@ -209,7 +209,7 @@ export default function ContactSection({ section }) {
                 <ContactDetailItem
                   key={`email-${idx}`}
                   icon={FiMail}
-                  heading={em.heading || null}
+                  heading={em.heading?.trim() || 'Email'}
                   value={em.email}
                   href={em.email ? `mailto:${em.email}` : undefined}
                   onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
