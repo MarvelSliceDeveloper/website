@@ -31,20 +31,26 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function ContactDetailItem({ icon: Icon, label, value, href, textColor, onClick }) {
+function ContactDetailItem({ icon: Icon, heading, value, href, textColor, onClick, alignTop = false }) {
   const content = href ? (
-    <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
+    <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</a>
   ) : (
-    <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
+    <span className="text-xs sm:text-sm leading-relaxed block break-words whitespace-pre-line" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</span>
   );
   return (
-    <div className="flex flex-row items-start text-left gap-2.5 sm:gap-3">
-      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" style={{ color: textColor }} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: hexToRgba(textColor, 0.65) }}>{label}</p>
-        {content}
+    <div className="flex flex-col text-left">
+      {heading && (
+        <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+          {heading}
+        </h5>
+      )}
+      <div className={`inline-flex ${alignTop ? 'items-start' : 'items-center'} gap-2 sm:gap-2.5 mt-0.5`}>
+        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 ${alignTop ? 'mt-0.5' : ''}`}>
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+        </div>
+        <div className="min-w-0 flex-1">
+          {content}
+        </div>
       </div>
     </div>
   );
@@ -60,9 +66,47 @@ export default function ContactSection({ section }) {
   const leftHeading = c.left_heading || section?.heading || 'Get in Touch';
   const leftSubtitle = c.left_subtitle || 'We\'d love to hear from you. Reach out to us and we\'ll get back to you as soon as possible.';
   const address = c.address || '';
-  const displayPhone = c.display_phone || c.phone || '';
-  const companyEmail = c.email || '';
-  const businessHours = c.business_hours || '';
+  
+  // Phone numbers: Competitive Exam Enquiry & Software Enquiry
+  const phoneItems = [];
+  const phoneComp = c.phone_competitive || c.phone_1;
+  const phoneSoft = c.phone_software || c.phone_2;
+
+  if (phoneComp) {
+    phoneItems.push({
+      heading: c.phone_competitive_heading || c.phone_1_heading || 'Competitive Exam Enquiry',
+      phone: phoneComp,
+    });
+  }
+  if (phoneSoft) {
+    phoneItems.push({
+      heading: c.phone_software_heading || c.phone_2_heading || 'Software Enquiry',
+      phone: phoneSoft,
+    });
+  }
+  // Fallback for legacy display_phone or phone strings
+  if (phoneItems.length === 0 && (c.display_phone || c.phone)) {
+    const rawPhones = extractPhoneNumbers(c.display_phone || c.phone);
+    rawPhones.forEach((ph, idx) => {
+      phoneItems.push({
+        heading: idx === 0 ? 'Competitive Exam Enquiry' : idx === 1 ? 'Software Enquiry' : 'Enquiry',
+        phone: ph,
+      });
+    });
+  }
+
+  // Email addresses: multiple emails with optional heading
+  let emailItems = [];
+  if (Array.isArray(c.emails) && c.emails.length > 0) {
+    emailItems = c.emails
+      .filter(e => e && (e.email || e.heading))
+      .map(e => ({ heading: e.heading || '', email: e.email || '' }));
+  } else if (c.email) {
+    emailItems = [{ heading: c.email_heading || '', email: c.email }];
+  }
+
+  // Working time: renamed from business_hours
+  const workingTime = c.working_time || c.business_hours || '';
 
   const successMessage = c.success_message || 'Thank you! Your message has been received. Our team will contact you soon.';
 
@@ -140,13 +184,46 @@ export default function ContactSection({ section }) {
               </h2>
               <p className="text-xs sm:text-sm leading-relaxed max-w-xs sm:max-w-md mx-auto lg:mx-0" style={{ color: subheadingColor }}>{leftSubtitle}</p>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3.5 sm:gap-5 text-left w-full mx-auto lg:mx-0">
-              {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} textColor={textColor} />}
-              {extractPhoneNumbers(displayPhone).map((ph, idx) => (
-                <ContactDetailItem key={idx} icon={FiPhone} label={idx === 0 ? "Phone" : "Alt Phone"} value={ph} href={cleanTelHref(ph)} onClick={() => trackPhoneClick(ph, 'contact_section')} textColor={textColor} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 text-left w-full mx-auto lg:mx-0">
+              {address && (
+                <ContactDetailItem
+                  icon={FiMapPin}
+                  heading="Address"
+                  value={address}
+                  textColor={textColor}
+                  alignTop
+                />
+              )}
+              {phoneItems.map((ph, idx) => (
+                <ContactDetailItem
+                  key={`phone-${idx}`}
+                  icon={FiPhone}
+                  heading={ph.heading}
+                  value={ph.phone}
+                  href={cleanTelHref(ph.phone)}
+                  onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
+                  textColor={textColor}
+                />
               ))}
-              {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} onClick={() => trackEmailClick(companyEmail, 'contact_section')} textColor={textColor} />}
-              {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} textColor={textColor} />}
+              {emailItems.map((em, idx) => (
+                <ContactDetailItem
+                  key={`email-${idx}`}
+                  icon={FiMail}
+                  heading={em.heading || null}
+                  value={em.email}
+                  href={em.email ? `mailto:${em.email}` : undefined}
+                  onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
+                  textColor={textColor}
+                />
+              ))}
+              {workingTime && (
+                <ContactDetailItem
+                  icon={FiClock}
+                  heading="Working Time"
+                  value={workingTime}
+                  textColor={textColor}
+                />
+              )}
             </div>
           </div>
         </div>

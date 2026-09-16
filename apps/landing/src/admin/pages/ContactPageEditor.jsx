@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
 import { uploadFile } from '../../lib/uploadHelper';
+import { formatPhoneNumber, extractPhoneNumbers } from '../../lib/phoneUtils';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
-import { FiSave, FiAlertCircle, FiTrash2, FiUpload, FiArrowLeft, FiHome, FiBriefcase, FiMessageSquare, FiSettings, FiMapPin, FiHelpCircle } from 'react-icons/fi';
+import { FiTrash2, FiUpload, FiHome, FiBriefcase, FiMessageSquare, FiSettings, FiMapPin, FiHelpCircle, FiPhone, FiMail, FiPlus, FiClock } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import SectionSelect from '../components/ui/SectionSelect';
-import SectionAccordion from '../components/ui/SectionAccordion';
 import { RepeatableItemList } from '../components/ui/RepeatableItemList';
 import { RepeatableItemCard } from '../components/ui/RepeatableItemCard';
 
@@ -62,9 +61,15 @@ const DEFAULT_CONTACT_CONTENT = {
   left_heading_line_2: '',
   left_subtitle: "We'd love to hear from you. Reach out to us and we'll get back to you as soon as possible.",
   address: '',
+  phone_competitive: '',
+  phone_competitive_heading: 'Competitive Exam Enquiry',
+  phone_software: '',
+  phone_software_heading: 'Software Enquiry',
   display_phone: '',
   tel_link: '',
+  emails: [{ heading: '', email: '' }],
   email: '',
+  working_time: '',
   business_hours: '',
   gradient_start: '#0B2D6B',
   gradient_end: '#1E56C7',
@@ -82,7 +87,7 @@ export default function ContactPageEditor() {
   const [activeTab, setActiveTab] = useState('hero-section');
 const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
-  const [navItem, setNavItem] = useState(null);
+  const [_navItem, setNavItem] = useState(null);
   const [navItemId, setNavItemId] = useState(null);
   const [pageId, setPageId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -95,7 +100,7 @@ const queryClient = useQueryClient();
   const [contactContent, setContactContent] = useState(DEFAULT_CONTACT_CONTENT);
   const [formConfig, setFormConfig] = useState({});
   const [faqs, setFaqs] = useState([]);
-  const { dirty, reset } = useDirty([hero, contactContent, formConfig, faqs], loading);
+  const { reset } = useDirty([hero, contactContent, formConfig, faqs], loading);
 
   function updateContent(field, value) {
     setContactContent((prev) => ({ ...prev, [field]: value }));
@@ -138,17 +143,50 @@ const queryClient = useQueryClient();
 
           const contactFormSec = secs.find(s => s.section_type === 'contact_form');
           if (contactFormSec) {
-            setContactContent({ ...DEFAULT_CONTACT_CONTENT, ...contactFormSec.content });
+            const cData = contactFormSec.content || {};
+            let emails = Array.isArray(cData.emails) && cData.emails.length > 0
+              ? cData.emails.map(e => ({ heading: e?.heading || '', email: e?.email || '' }))
+              : cData.email
+                ? [{ heading: cData.email_heading || '', email: cData.email }]
+                : [{ heading: '', email: '' }];
+
+            let phoneComp = cData.phone_competitive || cData.phone_1 || '';
+            let phoneSoft = cData.phone_software || cData.phone_2 || '';
+            if (!phoneComp && !phoneSoft && (cData.display_phone || cData.phone)) {
+              const raw = extractPhoneNumbers(cData.display_phone || cData.phone);
+              phoneComp = raw[0] || '';
+              phoneSoft = raw[1] || '';
+            }
+
+            setContactContent({
+              ...DEFAULT_CONTACT_CONTENT,
+              ...cData,
+              phone_competitive: phoneComp,
+              phone_competitive_heading: cData.phone_competitive_heading || cData.phone_1_heading || 'Competitive Exam Enquiry',
+              phone_software: phoneSoft,
+              phone_software_heading: cData.phone_software_heading || cData.phone_2_heading || 'Software Enquiry',
+              emails,
+              working_time: cData.working_time || cData.business_hours || '',
+              business_hours: cData.working_time || cData.business_hours || '',
+            });
           } else {
             const contactInfoSec = secs.find(s => s.section_type === 'contact_info');
             if (contactInfoSec) {
+              const raw = extractPhoneNumbers(contactInfoSec.phone || '');
               setContactContent((prev) => ({
                 ...prev,
                 left_heading: contactInfoSec.heading || prev.left_heading,
                 address: contactInfoSec.address || prev.address,
+                phone_competitive: raw[0] || '',
+                phone_competitive_heading: 'Competitive Exam Enquiry',
+                phone_software: raw[1] || '',
+                phone_software_heading: 'Software Enquiry',
                 display_phone: contactInfoSec.phone || prev.display_phone,
                 tel_link: contactInfoSec.phone || prev.tel_link,
                 email: contactInfoSec.email || prev.email,
+                emails: contactInfoSec.email ? [{ heading: '', email: contactInfoSec.email }] : [{ heading: '', email: '' }],
+                working_time: contactInfoSec.working_time || contactInfoSec.business_hours || prev.working_time,
+                business_hours: contactInfoSec.working_time || contactInfoSec.business_hours || prev.business_hours,
               }));
             }
           }
@@ -176,8 +214,30 @@ const queryClient = useQueryClient();
     setSaving(true);
     setSaveError('');
 
+    const cleanedEmails = (contactContent.emails || [])
+      .map(e => ({ heading: (e?.heading || '').trim(), email: (e?.email || '').trim() }))
+      .filter(e => e.email || e.heading);
+    const primaryEmail = cleanedEmails.find(e => e.email)?.email || contactContent.email || '';
+    const phoneComp = (contactContent.phone_competitive || '').trim();
+    const phoneSoft = (contactContent.phone_software || '').trim();
+    const combinedPhone = [phoneComp, phoneSoft].filter(Boolean).join(' / ');
+    const workingTimeVal = (contactContent.working_time || contactContent.business_hours || '').trim();
+
+    const contentToSave = {
+      ...contactContent,
+      phone_competitive: phoneComp,
+      phone_competitive_heading: (contactContent.phone_competitive_heading || '').trim() || 'Competitive Exam Enquiry',
+      phone_software: phoneSoft,
+      phone_software_heading: (contactContent.phone_software_heading || '').trim() || 'Software Enquiry',
+      display_phone: combinedPhone || contactContent.display_phone || '',
+      emails: cleanedEmails.length > 0 ? cleanedEmails : (primaryEmail ? [{ heading: '', email: primaryEmail }] : []),
+      email: primaryEmail,
+      working_time: workingTimeVal,
+      business_hours: workingTimeVal,
+    };
+
     const sections = [
-      { section_type: 'contact_form', content: contactContent },
+      { section_type: 'contact_form', content: contentToSave },
       faqs.length > 0 ? { section_type: 'faq_list', heading: 'Frequently Asked Questions', items: faqs } : null,
       contactContent.map_embed_url ? { section_type: 'map_embed', content: contactContent.map_embed_url } : null,
     ].filter(Boolean);
@@ -233,7 +293,6 @@ const queryClient = useQueryClient();
     { id: 'map-embed', title: 'Map', icon: FiMapPin },
     { id: 'faqs', title: 'FAQs', icon: FiHelpCircle },
   ];
-  const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
 
   return (
     <PageShell backTo="/admin"
@@ -334,24 +393,157 @@ const queryClient = useQueryClient();
                   <label className={labelCls}>Address</label>
                   <textarea value={contactContent.address} onChange={(e) => updateContent('address', e.target.value)} rows={2} className={inputCls} placeholder="Full street address" />
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Display Phone</label>
-                    <input type="text" value={contactContent.display_phone} onChange={(e) => updateContent('display_phone', e.target.value)} className={inputCls} placeholder="+1 (555) 019-2834" />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Tel Link Phone</label>
-                    <input type="tel" value={contactContent.tel_link} onChange={(e) => updateContent('tel_link', e.target.value)} className={inputCls} placeholder="15550192834" />
+                {/* Phone Numbers */}
+                <div className="space-y-3 pt-2">
+                  <label className={labelCls}>Phone Numbers</label>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                      <div className="flex items-center gap-2 font-semibold text-xs text-slate-800 uppercase tracking-wider">
+                        <FiPhone className="w-3.5 h-3.5 text-brand-orange" />
+                        Phone 1 — Competitive Exam Enquiry
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-neutral-600 mb-1">Heading / Label</label>
+                        <input
+                          type="text"
+                          value={contactContent.phone_competitive_heading ?? 'Competitive Exam Enquiry'}
+                          onChange={(e) => updateContent('phone_competitive_heading', e.target.value)}
+                          className={inputCls}
+                          placeholder="Competitive Exam Enquiry"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-neutral-600 mb-1">Phone Number</label>
+                        <div className="relative">
+                          <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                          <input
+                            type="text"
+                            value={contactContent.phone_competitive || ''}
+                            onChange={(e) => updateContent('phone_competitive', e.target.value)}
+                            onBlur={() => updateContent('phone_competitive', formatPhoneNumber(contactContent.phone_competitive))}
+                            className={`${inputCls} pl-9`}
+                            placeholder="+91 63809 57390"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                      <div className="flex items-center gap-2 font-semibold text-xs text-slate-800 uppercase tracking-wider">
+                        <FiPhone className="w-3.5 h-3.5 text-brand-orange" />
+                        Phone 2 — Software Enquiry
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-neutral-600 mb-1">Heading / Label</label>
+                        <input
+                          type="text"
+                          value={contactContent.phone_software_heading ?? 'Software Enquiry'}
+                          onChange={(e) => updateContent('phone_software_heading', e.target.value)}
+                          className={inputCls}
+                          placeholder="Software Enquiry"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-neutral-600 mb-1">Phone Number</label>
+                        <div className="relative">
+                          <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                          <input
+                            type="text"
+                            value={contactContent.phone_software || ''}
+                            onChange={(e) => updateContent('phone_software', e.target.value)}
+                            onBlur={() => updateContent('phone_software', formatPhoneNumber(contactContent.phone_software))}
+                            className={`${inputCls} pl-9`}
+                            placeholder="+91 80882 18609"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Company Email</label>
-                    <input type="email" value={contactContent.email} onChange={(e) => updateContent('email', e.target.value)} className={inputCls} placeholder="contact@marvelslice.com" />
+
+                {/* Company Emails */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <label className={labelCls}>Company Emails</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = Array.isArray(contactContent.emails) ? contactContent.emails : [];
+                        updateContent('emails', [...cur, { heading: '', email: '' }]);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-admin-600 hover:bg-admin-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <FiPlus className="w-3.5 h-3.5" />
+                      Add Email
+                    </button>
                   </div>
-                  <div>
-                    <label className={labelCls}>Business Hours</label>
-                    <input type="text" value={contactContent.business_hours} onChange={(e) => updateContent('business_hours', e.target.value)} className={inputCls} placeholder="Mon-Fri: 9AM-6PM" />
+                  <div className="space-y-2.5">
+                    {(contactContent.emails || []).map((item, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="flex-1 w-full">
+                          <label className="block text-[11px] font-medium text-neutral-600 mb-1">
+                            Heading / Label <span className="text-neutral-400 font-normal">(Optional — e.g. Software Support, General Enquiry)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={item.heading || ''}
+                            onChange={(e) => {
+                              const updated = [...(contactContent.emails || [])];
+                              updated[idx] = { ...updated[idx], heading: e.target.value };
+                              updateContent('emails', updated);
+                            }}
+                            className={inputCls}
+                            placeholder="e.g. Software Support"
+                          />
+                        </div>
+                        <div className="flex-1 w-full">
+                          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Email Address</label>
+                          <div className="relative">
+                            <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                            <input
+                              type="email"
+                              value={item.email || ''}
+                              onChange={(e) => {
+                                const updated = [...(contactContent.emails || [])];
+                                updated[idx] = { ...updated[idx], email: e.target.value };
+                                updateContent('emails', updated);
+                              }}
+                              className={`${inputCls} pl-9`}
+                              placeholder="contact@marvelslice.com"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (contactContent.emails || []).filter((_, i) => i !== idx);
+                            updateContent('emails', updated.length > 0 ? updated : [{ heading: '', email: '' }]);
+                          }}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 cursor-pointer self-end sm:self-auto sm:mb-0.5"
+                          title="Remove Email"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Working Time */}
+                <div className="pt-2">
+                  <label className={labelCls}>Working Time</label>
+                  <div className="relative">
+                    <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <input
+                      type="text"
+                      value={contactContent.working_time || contactContent.business_hours || ''}
+                      onChange={(e) => {
+                        updateContent('working_time', e.target.value);
+                        updateContent('business_hours', e.target.value);
+                      }}
+                      className={`${inputCls} pl-9`}
+                      placeholder="Mon-Fri: 9AM-6PM"
+                    />
                   </div>
                 </div>
               </div>
