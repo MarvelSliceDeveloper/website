@@ -9,7 +9,7 @@ function TestimonialCard({ item }) {
   const count = Math.min(5, Math.max(1, parseInt(item.rating, 10) || 5));
 
   return (
-    <div className="group relative w-full h-full min-h-[320px] sm:min-h-[420px] md:min-h-[460px] flex flex-col justify-center overflow-hidden rounded-3xl border border-blue-100/90 bg-white p-4 sm:p-10 md:p-12 shadow-[0_12px_36px_rgba(30,86,199,0.08)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(30,86,199,0.14)]">
+    <div className="group relative w-full h-full min-h-[320px] sm:min-h-[420px] md:min-h-[460px] flex flex-col justify-center overflow-hidden rounded-3xl border border-blue-100/90 bg-white p-4 sm:p-10 md:p-12 shadow-[0_12px_36px_rgba(30,86,199,0.08)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(30,86,199,0.14)] home-testimonial-card">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 items-stretch h-full w-full relative z-10">
         {/* LEFT HALF (~ 5 cols): Image on top -> Below: Name, Position, Star Rating */}
         <div className="md:col-span-5 lg:col-span-4 flex flex-col items-center text-center justify-center border-b md:border-b-0 md:border-r border-blue-100/80 pb-5 md:pb-0 md:pr-8 h-full">
@@ -168,7 +168,7 @@ export default function TestimonialsSection({ section }) {
   const activeIndex = pos % n;
 
   return (
-    <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50 border-t border-gray-100">
+    <section className="relative overflow-hidden pt-8 pb-16 bg-neutral-50 border-t border-gray-100 home-testimonial-section">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-64 w-[720px] max-w-full -translate-x-1/2 rounded-full bg-brand-blue/[0.04] blur-3xl" />
         <div className="absolute bottom-0 left-1/4 h-48 w-96 max-w-full rounded-full bg-brand-orange/[0.06] blur-3xl" />

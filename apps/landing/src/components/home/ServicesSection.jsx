@@ -53,8 +53,8 @@ export default function ServicesSection({ section }) {
           </Reveal>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-          <Reveal variant="right" className="flex flex-col h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch home-services-grid">
+          <Reveal variant="right" className="flex flex-col h-full home-services-left">
             {leftImageUrl ? (
               <img
                 src={leftImageUrl}
@@ -76,7 +76,7 @@ export default function ServicesSection({ section }) {
             )}
           </Reveal>
 
-          <Reveal variant="left" className="flex flex-col justify-start space-y-1">
+          <Reveal variant="left" className="flex flex-col justify-start space-y-1 home-services-list">
             {servicesList.map((service, i) => {
               const Icon = ICON_MAP[service.icon_name] || FiBriefcase;
               return (
