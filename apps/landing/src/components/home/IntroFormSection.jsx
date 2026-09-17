@@ -93,7 +93,7 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
-  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo';
+  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || '';
   const rawMobileSize = content.form_title_size_mobile || '30px';
   const rawTabletSize = content.form_title_size_tablet || '26px';
   const rawPcSize = content.form_title_size_pc || '26px';
@@ -197,24 +197,26 @@ export default function IntroFormSection({ section }) {
           <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-6 lg:mt-2 intro-form-right-col">
             <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0 intro-form-container">
               <div className="w-full intro-form-box">
-                <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
-                  <style>{`
-                    .intro-form-title {
-                      font-size: ${mobileSize} !important;
-                    }
-                    @media (min-width: 640px) {
+                {formTitle && (
+                  <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
+                    <style>{`
                       .intro-form-title {
-                        font-size: ${tabletSize} !important;
+                        font-size: ${mobileSize} !important;
                       }
-                    }
-                    @media (min-width: 1024px) {
-                      .intro-form-title {
-                        font-size: ${pcSize} !important;
+                      @media (min-width: 640px) {
+                        .intro-form-title {
+                          font-size: ${tabletSize} !important;
+                        }
                       }
-                    }
-                  `}</style>
-                  {formTitle}
-                </p>
+                      @media (min-width: 1024px) {
+                        .intro-form-title {
+                          font-size: ${pcSize} !important;
+                        }
+                      }
+                    `}</style>
+                    {formTitle}
+                  </p>
+                )}
                 <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
                   <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
                     <div

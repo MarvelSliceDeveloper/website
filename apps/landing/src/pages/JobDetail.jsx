@@ -38,7 +38,7 @@ function renderBulletList(content) {
   if (Array.isArray(content)) {
     return content.map((item, idx) => (
       <li key={idx} className="flex items-start gap-3 text-slate-600 text-sm sm:text-base font-normal leading-relaxed">
-        <span className="w-2 h-2 rounded-full bg-brand-blue shrink-0 mt-2" />
+        <span className="w-2 h-2 rounded-full bg-[#554949] shrink-0 mt-2" />
         <span className="flex-1">{typeof item === 'string' ? item : item.text || item.title}</span>
       </li>
     ));
@@ -51,7 +51,7 @@ function renderBulletList(content) {
 
   return lines.map((line, idx) => (
     <li key={idx} className="flex items-start gap-3 text-slate-600 text-sm sm:text-base font-normal leading-relaxed">
-      <span className="w-2 h-2 rounded-full bg-brand-blue shrink-0 mt-2" />
+      <span className="w-2 h-2 rounded-full bg-[#554949] shrink-0 mt-2" />
       <span className="flex-1">{line}</span>
     </li>
   ));
@@ -366,10 +366,9 @@ export default function JobDetail() {
       <section className="bg-white py-5 sm:py-7">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-left">
-            <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-bold text-dark-navy tracking-tight leading-tight mt-1 text-left">
-              {job.title}
+            <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-bold text-[#554949] tracking-tight leading-tight mt-1 mb-4 text-left">
+              {job.title?.toLowerCase().includes('position') ? job.title : `${job.title} Position`}
             </h1>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-2 mb-4" />
 
             {job.description && (
               <div className="space-y-3 pt-1">
@@ -389,10 +388,9 @@ export default function JobDetail() {
         <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-3.5">
                 Key Requirements
               </h2>
-              <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-3.5" />
               <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.key_requirements)}
               </ul>
@@ -406,10 +404,9 @@ export default function JobDetail() {
         <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-3.5">
                 Responsibilities
               </h2>
-              <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-3.5" />
               <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.responsibilities)}
               </ul>
@@ -422,10 +419,9 @@ export default function JobDetail() {
       <section className="bg-white py-2 sm:py-4 pb-8 sm:pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-brand-orange tracking-tight leading-tight">
+            <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-4">
               Position Summary
             </h2>
-            <div className="w-14 h-[3px] bg-brand-blue rounded-full mt-2 mb-4" />
 
             <div className="pl-0 sm:pl-6">
               {(job.title || empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications || job.skills) && (
@@ -434,7 +430,7 @@ export default function JobDetail() {
                     <tbody className="divide-y divide-slate-200">
                       {job.title && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70 w-5/12 sm:w-1/3">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70 w-5/12 sm:w-1/3">
                             Position / Role
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -444,7 +440,7 @@ export default function JobDetail() {
                       )}
                       {(job.division || job.department) && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Department
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -454,7 +450,7 @@ export default function JobDetail() {
                       )}
                       {empType && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Employment Type
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -464,7 +460,7 @@ export default function JobDetail() {
                       )}
                       {job.qualifications && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Qualification
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -474,7 +470,7 @@ export default function JobDetail() {
                       )}
                       {job.skills && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Skills
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -484,7 +480,7 @@ export default function JobDetail() {
                       )}
                       {expVal && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Experience
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -494,7 +490,7 @@ export default function JobDetail() {
                       )}
                       {job.duration && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Duration
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -504,7 +500,7 @@ export default function JobDetail() {
                       )}
                       {locVal && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Location
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -514,7 +510,7 @@ export default function JobDetail() {
                       )}
                       {salaryVal && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             {isIntern ? 'Stipend' : 'Salary Range'}
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
