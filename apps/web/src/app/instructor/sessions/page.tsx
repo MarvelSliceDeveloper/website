@@ -511,15 +511,7 @@ function SessionCard({
               <span className="text-[10px] uppercase font-bold bg-accent/15 text-accent px-1.5 py-0.5 rounded">
                 {session.createdFrom}
               </span>
-              {session.recording ? (
-                <span className="text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded flex items-center gap-1">
-                  <IconCheck size={10} /> Sync Complete
-                </span>
-              ) : !upcoming ? (
-                <span className="text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded">
-                  Pending Sync
-                </span>
-              ) : null}
+              {/* Sync badges hidden — live sessions stay, code kept */}
             </div>
           </div>
         </div>
@@ -561,16 +553,7 @@ function SessionCard({
           <IconUsers size={14} /> Attendance
         </button>
 
-        {!upcoming && !session.recording && onSyncRecording && (
-          <button
-            onClick={() => onSyncRecording(session.id)}
-            disabled={syncing}
-            className="btn-secondary text-xs flex-1 justify-center py-1.5 px-3 flex items-center gap-1"
-          >
-            <IconRefresh size={14} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "Syncing..." : "Sync Teams"}
-          </button>
-        )}
+        {/* Sync Teams hidden — live sessions stay, code kept */}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import {
   IconPackage,
   IconUsers,
   IconUsersGroup,
+  IconVideo,
   IconCalendar,
   IconChevronDown,
   IconSettings,
@@ -580,6 +581,20 @@ export default function AdminSidebar({
               children: [
                 { label: "View Batches", href: "/admin/batches" },
                 { label: "Add Batch", href: "/admin/batches/new" },
+              ],
+            },
+            {
+              label: "Sessions",
+              href: "/admin/sessions",
+              icon: IconVideo,
+              children: [
+                { label: "View Sessions", href: "/admin/sessions" },
+                { label: "Schedule Session", href: "/admin/sessions/new" },
+                {
+                  label: "Upcoming",
+                  href: "/admin/sessions?status=UPCOMING",
+                },
+                { label: "Past", href: "/admin/sessions?status=PAST" },
               ],
             },
             {

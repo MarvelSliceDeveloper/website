@@ -7,6 +7,7 @@ import {
   IconLayoutDashboard,
   IconMail,
   IconUsers,
+  IconVideo,
   IconMessageCircle,
   IconChevronDown,
   IconHelp,
@@ -46,6 +47,16 @@ const teachingItems: NavItem[] = [
     href: "/instructor/courses",
     icon: IconBook,
     children: [{ label: "View Courses", href: "/instructor/courses" }],
+  },
+  {
+    label: "My Sessions",
+    href: "/instructor/sessions",
+    icon: IconVideo,
+    children: [
+      { label: "View Sessions", href: "/instructor/sessions" },
+      { label: "Upcoming", href: "/instructor/sessions?status=UPCOMING" },
+      { label: "Past", href: "/instructor/sessions?status=PAST" },
+    ],
   },
   {
     label: "Assignments",

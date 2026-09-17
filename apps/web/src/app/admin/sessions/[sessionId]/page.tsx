@@ -594,17 +594,7 @@ export default function SessionDetailPage() {
                   <p className="text-xs text-muted-foreground text-center px-4">
                     No recording available
                   </p>
-                  <button
-                    onClick={handleSync}
-                    disabled={syncMutation.isPending}
-                    className="btn-secondary text-xs flex items-center gap-1.5"
-                  >
-                    <IconRefresh
-                      size={14}
-                      className={syncMutation.isPending ? "animate-spin" : ""}
-                    />
-                    {syncMutation.isPending ? "Syncing..." : "Sync Recording"}
-                  </button>
+                  {/* Recording sync hidden — live sessions stay, code kept */}
                 </div>
               )}
             </div>
@@ -624,17 +614,7 @@ export default function SessionDetailPage() {
               <IconVideo size={14} />{" "}
               {isUpcoming ? "Join Session" : "Open Meeting Link"}
             </a>
-            <button
-              onClick={handleSync}
-              disabled={syncMutation.isPending || !!session.recording}
-              className="btn-secondary w-full text-xs flex items-center justify-center gap-1.5 disabled:opacity-40"
-            >
-              <IconRefresh
-                size={14}
-                className={syncMutation.isPending ? "animate-spin" : ""}
-              />
-              {syncMutation.isPending ? "Syncing..." : "Sync Recording"}
-            </button>
+            {/* Recording sync hidden — live sessions stay, code kept */}
             <Link
               href="/admin/sessions"
               className="btn-secondary w-full text-xs flex items-center justify-center gap-1.5"

@@ -375,18 +375,7 @@ function SessionCard({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {/* Sync Recording (past sessions without recording) */}
-        {!upcoming && !session.recording && onSync && (
-          <button
-            onClick={() => onSync(session.id)}
-            disabled={syncing}
-            className="btn-secondary text-xs px-2.5 py-1.5 flex items-center gap-1"
-            title="Sync recording from Teams"
-          >
-            <IconRefresh size={14} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "Syncing" : "Sync"}
-          </button>
-        )}
+        {/* Sync Recording hidden — live sessions stay, code kept */}
 
         {/* Edit */}
         <button
