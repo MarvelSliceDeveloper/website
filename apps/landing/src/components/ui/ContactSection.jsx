@@ -31,7 +31,7 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function ContactDetailItem({ icon: Icon, heading, value, href, textColor, onClick, alignTop = false }) {
+function ContactDetailItem({ icon: Icon, heading, value, href, textColor, onClick, alignTop = false, iconColor = '#FFA500' }) {
   const content = href ? (
     <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</a>
   ) : (
@@ -45,8 +45,11 @@ function ContactDetailItem({ icon: Icon, heading, value, href, textColor, onClic
         </h5>
       )}
       <div className={`inline-flex ${alignTop ? 'items-start' : 'items-center'} gap-2 sm:gap-2.5 mt-0.5`}>
-        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 ${alignTop ? 'mt-0.5' : ''}`}>
-          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+        <div
+          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${alignTop ? 'mt-0.5' : ''}`}
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+        >
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: iconColor }} />
         </div>
         <div className="min-w-0 flex-1">
           {content}
@@ -62,6 +65,7 @@ export default function ContactSection({ section }) {
   const headingColor = c.heading_color || '#ffffff';
   const subheadingColor = c.subheading_color || '#ffffff';
   const textColor = c.text_color || '#ffffff';
+  const iconColor = c.icon_color || '#FFA500';
 
   const leftHeading = c.left_heading || section?.heading || 'Get in Touch';
   const leftSubtitle = c.left_subtitle || 'We\'d love to hear from you. Reach out to us and we\'ll get back to you as soon as possible.';
@@ -178,10 +182,10 @@ export default function ContactSection({ section }) {
 
   return (
     <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0 lg:min-h-[520px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0">
         {/* Left: Get in Touch */}
         <div
-          className="relative p-6 sm:p-10 flex flex-col justify-center text-center lg:text-left h-auto min-h-0"
+          className="relative p-5 sm:p-7 lg:p-8 flex flex-col justify-center text-center lg:text-left h-auto min-h-0"
           style={{ background: `linear-gradient(135deg, ${c.gradient_start || '#0B2D6B'}, ${c.gradient_end || '#1E56C7'})` }}
         >
           <FloatingCircles />
@@ -200,6 +204,7 @@ export default function ContactSection({ section }) {
                   heading="Address"
                   value={address}
                   textColor={textColor}
+                  iconColor={iconColor}
                   alignTop
                 />
               )}
@@ -217,6 +222,7 @@ export default function ContactSection({ section }) {
                       href={cleanTelHref(ph.phone)}
                       onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
                       textColor={textColor}
+                      iconColor={iconColor}
                     />
                   ))}
                 </div>
@@ -230,8 +236,11 @@ export default function ContactSection({ section }) {
                     <div className="space-y-2 mt-0.5">
                       {emailItems.map((em, idx) => (
                         <div key={`email-${idx}`} className="flex items-center gap-2 sm:gap-2.5">
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                            <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                          <div
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                          >
+                            <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: iconColor }} />
                           </div>
                           <a
                             href={em.email ? `mailto:${em.email}` : undefined}
@@ -256,8 +265,11 @@ export default function ContactSection({ section }) {
                   <div className="space-y-2 mt-0.5">
                     {workingTime && (
                       <div className="flex items-center gap-2 sm:gap-2.5">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                        <div
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                        >
+                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: iconColor }} />
                         </div>
                         <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
                           {workingTime}
@@ -266,8 +278,11 @@ export default function ContactSection({ section }) {
                     )}
                     {workingTimeSaturday && (
                       <div className="flex items-center gap-2 sm:gap-2.5">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                        <div
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                        >
+                          <FiClock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: iconColor }} />
                         </div>
                         <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
                           {workingTimeSaturday}
@@ -282,7 +297,7 @@ export default function ContactSection({ section }) {
         </div>
 
         {/* Right: Send us a Message Form */}
-        <div className="bg-white p-6 sm:p-10 flex flex-col justify-center border-t border-gray-200 lg:border-t-0">
+        <div className="bg-white p-5 sm:p-7 lg:p-8 flex flex-col justify-center border-t border-gray-200 lg:border-t-0">
           <h3 className="text-xl sm:text-2xl font-bold text-dark-navy mb-1 text-center lg:text-left">Send us a Message</h3>
           <p className="text-xs sm:text-sm text-slate-500 mb-6 text-center lg:text-left leading-relaxed">Fill out the form below and we'll get back to you shortly.</p>
 
@@ -371,7 +386,7 @@ export default function ContactSection({ section }) {
                     value={form.message}
                     required
                     onChange={(e) => handleChange('message', e.target.value)}
-                    rows={4}
+                    rows={3}
                     placeholder="Write your message here..."
                     className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-xl text-xs sm:text-sm text-slate-800 outline-none transition-colors resize-none ${
                       errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue'

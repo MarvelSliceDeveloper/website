@@ -84,7 +84,7 @@ export default function Contact() {
       )}
 
       {(data.heading || data.subheading) && (
-        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 sm:pt-6 sm:pb-3 text-center">
           {data.heading && <HeroHeading data={data} />}
           {data.subheading && (
             <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line max-w-2xl mx-auto">
@@ -95,7 +95,7 @@ export default function Contact() {
       )}
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
-        <Reveal key={i} variant="up" className={`py-10 sm:py-14 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+        <Reveal key={i} variant="up" className={`py-4 sm:py-6 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
           {section.type === 'map_embed' ? (
             <SectionRenderer section={section} />
           ) : (
