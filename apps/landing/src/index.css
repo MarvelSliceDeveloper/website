@@ -712,6 +712,114 @@ body.sidebar-open [class*="chat-widget"] {
   }
 }
 
+/* ==========================================================================
+   Media Query for 801px to 1023px viewport range (Tablet Landscape View)
+   Upcoming Classes: 100% full-width left-aligned, Recent Jobs stacked below
+   ========================================================================== */
+@media screen and (min-width: 801px) and (max-width: 1023px) {
+
+  /* Reduce font size of Pill Buttons by 2px in 801px to 1023px view */
+  .intro-pills-box span,
+  .intro-pills-box div[class*="rounded-xl"] span,
+  .home-intro-btn,
+  a.home-intro-btn {
+    font-size: 12px !important;
+  }
+
+  /* Upcoming Classes & Recent Job Openings: Recent Jobs stacked below Upcoming Classes */
+  .ipad-pro-header-job-link {
+    display: none !important;
+  }
+
+  /* Upcoming Classes Section Header: Left-aligned 100% width in 801-1023px view */
+  .ipad-pro-header-grid {
+    text-align: left !important;
+    width: 100% !important;
+  }
+
+  .ipad-pro-header-title {
+    width: 100% !important;
+    max-width: 680px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: left !important;
+  }
+
+  .ipad-pro-header-title h2,
+  .ipad-pro-header-title p {
+    text-align: left !important;
+    margin-left: 0 !important;
+  }
+
+  .ipad-pro-header-title .bg-brand-orange {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+
+  .ipad-pro-classes-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    width: 100% !important;
+  }
+
+  .ipad-pro-classes-col {
+    grid-column: span 1 / span 1 !important;
+    width: 100% !important;
+    max-width: 680px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .ipad-pro-job-image-col {
+    grid-column: span 1 / span 1 !important;
+    width: 100% !important;
+    margin-top: 2.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .ipad-pro-job-link-mobile {
+    display: flex !important;
+    justify-content: center !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .ipad-pro-job-link-mobile h3 {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+  }
+
+  .ipad-pro-job-image-wrapper {
+    width: 80% !important;
+    max-width: 80% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: block !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+  }
+
+  .ipad-pro-job-image-wrapper img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    object-fit: contain !important;
+  }
+
+  /* Our Services Section: Increase image height in 801-1023px view */
+  .home-services-left img,
+  .home-services-left div[class*="rounded-2xl"] {
+    min-height: 350px !important;
+    height: 360px !important;
+    max-height: 420px !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
+}
+
 
 
 

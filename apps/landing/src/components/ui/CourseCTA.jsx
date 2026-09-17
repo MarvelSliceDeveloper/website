@@ -129,7 +129,7 @@ export default function CourseCTA({
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: 0.2, ease: "easeOut" }}
-            className="flex items-center justify-start lg:justify-end w-full"
+            className="flex items-center justify-end w-full"
           >
             {finalButtonText && (
               <Button
