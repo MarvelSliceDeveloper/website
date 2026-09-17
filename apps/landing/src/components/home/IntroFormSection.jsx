@@ -93,7 +93,7 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
-  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo Now!';
+  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo';
   const rawMobileSize = content.form_title_size_mobile || '30px';
   const rawTabletSize = content.form_title_size_tablet || '26px';
   const rawPcSize = content.form_title_size_pc || '26px';
