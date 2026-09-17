@@ -81,10 +81,10 @@ export function FormModal({
     >
       <div
         ref={dialogRef}
-        className={`flex max-h-[90vh] w-full ${sizeMap[size]} flex-col rounded-2xl border border-border bg-card shadow-2xl`}
+        className={`flex max-h-[90vh] w-full ${sizeMap[size]} flex-col rounded-lg border border-border bg-card shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3.5 rounded-t-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3.5 rounded-t-lg">
           <h3 className="text-base font-bold text-foreground">{title}</h3>
           <button
             onClick={onClose}

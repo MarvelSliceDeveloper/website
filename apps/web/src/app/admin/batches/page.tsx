@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
-import { IconUsersGroup } from "@tabler/icons-react";
+import { IconUsersGroup, IconPlus } from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FilterTabs } from "@/components/shared/FilterTabs";
@@ -16,9 +16,10 @@ import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
-import PaginationBar from "@/components/student/PaginationBar";
 
 type Batch = {
   id: string;
@@ -43,12 +44,6 @@ type PaginatedResponse<T> = {
   total: number;
   page: number;
   limit: number;
-};
-
-const statusStyles: Record<string, string> = {
-  UPCOMING: "bg-accent/15 text-accent border-accent/25",
-  ACTIVE: "bg-success/15 text-success border-success/25",
-  COMPLETED: "bg-muted/15 text-muted border-muted/25",
 };
 
 const PAGE_SIZE = 10;
@@ -120,11 +115,11 @@ function BatchesPageContent() {
         <div className="min-w-0">
           <Link
             href={`/admin/batches/${batch.id}`}
-            className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
+            className="text-sm font-bold text-foreground hover:text-primary transition-colors truncate block"
           >
             {batch.name}
           </Link>
-          <p className="text-xs text-muted truncate">
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
             {batch.course?.title ?? batch.package?.name ?? "All Courses"}
           </p>
         </div>
@@ -134,18 +129,26 @@ function BatchesPageContent() {
       key: "status",
       label: "Status",
       render: (_, batch) => (
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status]}`}
+        <Badge
+          variant={
+            batch.status === "ACTIVE"
+              ? "success"
+              : batch.status === "UPCOMING"
+                ? "info"
+                : "secondary"
+          }
+          size="sm"
+          dot
         >
           {batch.status}
-        </span>
+        </Badge>
       ),
     },
     {
       key: "students",
       label: "Students",
       render: (_, batch) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm font-semibold text-foreground">
           {batch._count.enrollments + batch._count.packageEnrollmentCourses}
           {batch.maxStudents ? ` / ${batch.maxStudents}` : ""}
         </span>
@@ -155,7 +158,7 @@ function BatchesPageContent() {
       key: "sessions",
       label: "Sessions",
       render: (_, batch) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm font-semibold text-foreground">
           {batch._count.sessions}
         </span>
       ),
@@ -164,7 +167,7 @@ function BatchesPageContent() {
       key: "dates",
       label: "Dates",
       render: (_, batch) => (
-        <span className="text-xs text-muted">
+        <span className="text-xs text-muted-foreground">
           {new Date(batch.startDate).toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
@@ -183,18 +186,19 @@ function BatchesPageContent() {
       label: "Actions",
       render: (_, batch) => (
         <div className="flex items-center justify-center gap-2">
-          <Link
-            href={`/admin/batches/${batch.id}`}
-            className="btn-secondary text-xs px-3 py-1.5"
-          >
-            Manage
+          <Link href={`/admin/batches/${batch.id}`}>
+            <Button variant="secondary" size="sm">
+              Manage
+            </Button>
           </Link>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => handleDelete(batch.id, batch.name)}
-            className="btn-danger text-xs px-3 py-1.5"
+            disabled={deleteMutation.isPending && deleteMutation.variables === batch.id}
           >
             Delete
-          </button>
+          </Button>
         </div>
       ),
     },
@@ -208,8 +212,10 @@ function BatchesPageContent() {
         description={`${total} batch${total !== 1 ? "es" : ""}`}
         breadcrumbs={[{ label: "Batches", href: "/admin/batches" }]}
         action={
-          <Link href="/admin/batches/new" className="btn-primary">
-            + Add Batch
+          <Link href="/admin/batches/new">
+            <Button leftIcon={<IconPlus size={16} />}>
+              Add Batch
+            </Button>
           </Link>
         }
       />
@@ -251,22 +257,23 @@ function BatchesPageContent() {
           title="No batches yet"
           description="Create your first batch to start enrolling students."
           action={
-            <Link href="/admin/batches/new" className="btn-primary inline-flex">
-              + Add Batch
+            <Link href="/admin/batches/new" className="mt-4 inline-flex">
+              <Button leftIcon={<IconPlus size={16} />}>Add Batch</Button>
             </Link>
           }
         />
       ) : (
-        <>
-          <DataTable columns={columns} data={batches} />
-          <PaginationBar
-            page={page}
-            pageSize={PAGE_SIZE}
-            totalItems={total}
-            onPageChange={setPage}
-          />
-        </>
+        <DataTable
+          columns={columns}
+          data={batches}
+          loading={loading}
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalItems={total}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );
 }
+

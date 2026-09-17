@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1e2230;
+  --background: #faf8f5;
+  --foreground: #111827;
   --card: #ffffff;
   --card-hover: #f9fafb;
-  --border: #e1e4ea;
-  --border-hover: #d1d5db;
+  --border: #e8e2d8;
+  --border-hover: #d5cdbf;
   --primary: #2551d9;
   --primary-hover: #1b40d9;
 
@@ -20,34 +20,56 @@
   --brand-indigo-tint: #eef2ff;
   --brand-amber: #f59e0b;
   --brand-amber-tint: #fffbeb;
-  --ink: #1e2230;
-  --slate: #5b6272;
-  --mist: #eef0f3;
-  --hairline: #e1e4ea;
+  --ink: #111827;
+  --slate: #4b5563;
+  --mist: #f4efe6;
+  --hairline: #e8e2d8;
   --paper: #ffffff;
 
-  --success: #1e9e63;
-  --success-text: #178055;
-  --success-tint: #e7f7ef;
-  --danger: #d63a3a;
-  --danger-tint: #fbeaea;
+  --success: #10b981;
+  --success-text: #059669;
+  --success-tint: #ecfdf5;
+  --danger: #ef4444;
+  --danger-tint: #fef2f2;
   --warning: #f59e0b;
   --muted: #6b7280;
-  --muted-foreground: #5b6272;
-  --text-secondary: #8a8fa3;
-  --radius: 14px;
+  --muted-foreground: #4b5563;
+  --text-secondary: #6b7280;
+  --radius: 12px;
   --admin-header-height: 64px;
+}
+
+/* Scoped theme tokens for Admin and Instructor portals */
+[data-section="admin"],
+[data-section="instructor"] {
+  --background: #f4f5f8;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-hover: #fcfdfe;
+  --border: #e2e5eb;
+  --border-hover: #cbd2dc;
+  --mist: #eef1f6;
+  --hairline: #e2e5eb;
+  --paper: #ffffff;
+  --radius: 8px;
+}
+
+[data-section="admin"] .bg-background,
+[data-section="instructor"] .bg-background,
+[data-section="admin"] main,
+[data-section="instructor"] main {
+  background-color: #f4f5f8;
 }
 
 /* stylelint-disable at-rule-no-unknown */
 
 [data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #1e2230;
+  --background: #faf8f5;
+  --foreground: #111827;
   --card: #ffffff;
   --card-hover: #f9fafb;
-  --border: #e1e4ea;
-  --border-hover: #d1d5db;
+  --border: #e8e2d8;
+  --border-hover: #d5cdbf;
   --primary: #2551d9;
   --primary-hover: #1b40d9;
 
@@ -61,21 +83,21 @@
   --brand-indigo-tint: #eef2ff;
   --brand-amber: #f59e0b;
   --brand-amber-tint: #fffbeb;
-  --ink: #1e2230;
-  --slate: #5b6272;
-  --mist: #eef0f3;
-  --hairline: #e1e4ea;
+  --ink: #111827;
+  --slate: #4b5563;
+  --mist: #f4efe6;
+  --hairline: #e8e2d8;
   --paper: #ffffff;
 
-  --success: #1e9e63;
-  --success-text: #178055;
-  --success-tint: #e7f7ef;
-  --danger: #d63a3a;
-  --danger-tint: #fbeaea;
+  --success: #10b981;
+  --success-text: #059669;
+  --success-tint: #ecfdf5;
+  --danger: #ef4444;
+  --danger-tint: #fef2f2;
   --warning: #f59e0b;
   --muted: #6b7280;
-  --muted-foreground: #5b6272;
-  --text-secondary: #8a8fa3;
+  --muted-foreground: #4b5563;
+  --text-secondary: #6b7280;
 }
 
 @theme {
@@ -172,17 +194,20 @@ button {
 
 .glass-card {
   background: #ffffff;
-  backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
   transition:
     border-color 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .glass-card:hover {
   border-color: var(--border-hover);
-  background: #f9fafb;
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="light"] .glass-card {
@@ -191,7 +216,7 @@ button {
 }
 
 [data-theme="light"] .glass-card:hover {
-  background: #f9fafb;
+  background: #ffffff;
   border-color: var(--border-hover);
 }
 
@@ -199,13 +224,14 @@ button {
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: var(--radius);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 .btn-primary {
   background: var(--primary);
   color: #fff;
   padding: 0.62rem 1rem;
-  border-radius: 0.72rem;
+  border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.875rem;
   border: 1px solid transparent;
@@ -243,7 +269,7 @@ button {
   background: var(--card);
   color: var(--foreground);
   padding: 0.62rem 1rem;
-  border-radius: 0.72rem;
+  border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.875rem;
   border: 1px solid var(--border);

@@ -263,12 +263,12 @@ export default function InstructorDashboardPage() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-20 rounded-2xl" />
+                <Skeleton key={i} className="h-20 rounded-lg" />
               ))}
             </div>
           ) : upcomingSessions.length === 0 ? (
             <Card className="p-10 text-center flex flex-col items-center justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground mb-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/20 text-muted-foreground mb-3">
                 <IconCalendar size={28} stroke={1.5} />
               </div>
               <p className="text-sm font-semibold text-foreground">
@@ -287,7 +287,7 @@ export default function InstructorDashboardPage() {
                   className="p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                       <IconVideo size={20} stroke={1.8} />
                     </div>
                     <div className="min-w-0">
@@ -334,12 +334,12 @@ export default function InstructorDashboardPage() {
             {submissionsLoading ? (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
-                  <Skeleton key={i} className="h-28 rounded-2xl" />
+                  <Skeleton key={i} className="h-28 rounded-lg" />
                 ))}
               </div>
             ) : submissions.length === 0 ? (
               <Card className="p-10 text-center flex flex-col items-center justify-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10 text-success mb-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10 text-success mb-3">
                   <IconClipboardList size={28} stroke={1.5} />
                 </div>
                 <p className="text-sm font-semibold text-foreground">

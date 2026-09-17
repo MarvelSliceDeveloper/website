@@ -225,7 +225,7 @@ function SuperAdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Greeting Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6 shadow-xs">
         <div
           className={`absolute inset-x-0 top-0 h-1 ${
             saStats.healthStatus === "ok"
@@ -234,7 +234,7 @@ function SuperAdminDashboard() {
           }`}
         />
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-danger to-danger/80 text-xl font-black text-white shadow-md shadow-danger/20">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-danger to-danger/80 text-xl font-black text-white shadow-md shadow-danger/20">
             SA
           </div>
           <div className="min-w-0 flex-1">
@@ -895,10 +895,10 @@ export default function AdminDashboardPage() {
   if (meQuery.isPending) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-32 rounded-2xl w-full" />
+        <Skeleton className="h-32 rounded-lg w-full" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-2xl" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
       </div>

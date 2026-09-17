@@ -51,7 +51,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             aria-invalid={Boolean(error)}
             className={cn(
-              "w-full rounded-xl border border-border bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted transition-all duration-150",
+              "w-full rounded-lg border border-border bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted transition-all duration-150",
               "focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/15",
               "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/10",
               leftIcon && "pl-10",

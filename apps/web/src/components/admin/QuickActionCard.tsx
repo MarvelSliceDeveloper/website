@@ -26,60 +26,44 @@ const variantStyles: Record<
   QuickActionVariant,
   {
     border: string;
-    bg: string;
-    text: string;
     iconBg: string;
     iconText: string;
   }
 > = {
   blue: {
-    border: "border-blue-500/30 hover:border-blue-500/50",
-    bg: "bg-gradient-to-br from-blue-500/15 via-blue-500/6 to-transparent",
-    text: "text-blue-500",
-    iconBg: "bg-blue-500/20",
-    iconText: "text-blue-500",
+    border: "border-border hover:border-primary/40",
+    iconBg: "bg-primary/10",
+    iconText: "text-primary",
   },
   green: {
-    border: "border-green-500/30 hover:border-green-500/50",
-    bg: "bg-gradient-to-br from-green-500/15 via-green-500/6 to-transparent",
-    text: "text-green-500",
-    iconBg: "bg-green-500/20",
-    iconText: "text-green-500",
+    border: "border-border hover:border-emerald-500/40",
+    iconBg: "bg-emerald-500/10",
+    iconText: "text-emerald-600",
   },
   orange: {
-    border: "border-orange-500/30 hover:border-orange-500/50",
-    bg: "bg-gradient-to-br from-orange-500/15 via-orange-500/6 to-transparent",
-    text: "text-orange-500",
-    iconBg: "bg-orange-500/20",
-    iconText: "text-orange-500",
+    border: "border-border hover:border-amber-500/40",
+    iconBg: "bg-amber-500/10",
+    iconText: "text-amber-600",
   },
   red: {
-    border: "border-red-500/30 hover:border-red-500/50",
-    bg: "bg-gradient-to-br from-red-500/15 via-red-500/6 to-transparent",
-    text: "text-red-500",
-    iconBg: "bg-red-500/20",
-    iconText: "text-red-500",
+    border: "border-border hover:border-rose-500/40",
+    iconBg: "bg-rose-500/10",
+    iconText: "text-rose-600",
   },
   purple: {
-    border: "border-purple-500/30 hover:border-purple-500/50",
-    bg: "bg-gradient-to-br from-purple-500/15 via-purple-500/6 to-transparent",
-    text: "text-purple-500",
-    iconBg: "bg-purple-500/20",
-    iconText: "text-purple-500",
+    border: "border-border hover:border-indigo-500/40",
+    iconBg: "bg-indigo-500/10",
+    iconText: "text-indigo-600",
   },
   teal: {
-    border: "border-teal-500/30 hover:border-teal-500/50",
-    bg: "bg-gradient-to-br from-teal-500/15 via-teal-500/6 to-transparent",
-    text: "text-teal-500",
-    iconBg: "bg-teal-500/20",
-    iconText: "text-teal-500",
+    border: "border-border hover:border-teal-500/40",
+    iconBg: "bg-teal-500/10",
+    iconText: "text-teal-600",
   },
   amber: {
-    border: "border-amber-500/30 hover:border-amber-500/50",
-    bg: "bg-gradient-to-br from-amber-500/15 via-amber-500/6 to-transparent",
-    text: "text-amber-500",
-    iconBg: "bg-amber-500/20",
-    iconText: "text-amber-500",
+    border: "border-border hover:border-amber-500/40",
+    iconBg: "bg-amber-500/10",
+    iconText: "text-amber-600",
   },
 };
 
@@ -95,12 +79,12 @@ export default function QuickActionCard({
   return (
     <Link
       href={href}
-      className={`group relative block rounded-2xl border p-5 transition-all duration-300 hover:scale-[1.03] hover:shadow-xl ${style.border} ${style.bg} bg-card`}
+      className={`group relative block rounded-lg border bg-card p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.04),0_1px_2px_-1px_rgba(0,0,0,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.07),0_8px_10px_-6px_rgba(0,0,0,0.04)] ${style.border}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex shrink-0 items-center justify-center rounded-xl bg-card p-2 ring-1 ring-border">
+        <div className="flex shrink-0 items-center justify-center rounded-md bg-card p-2 ring-1 ring-border">
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${style.iconBg} ${style.iconText}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-md ${style.iconBg} ${style.iconText}`}
           >
             <Icon size={22} stroke={1.8} />
           </div>

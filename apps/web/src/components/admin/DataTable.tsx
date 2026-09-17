@@ -163,7 +163,7 @@ export default function DataTable<T>({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+      <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
         <div className="overflow-x-auto min-w-[600px]">
           <table className="w-full">
             {renderTableHeader()}
@@ -191,7 +191,7 @@ export default function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+      <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
         <div className="px-4 py-12 text-center text-sm text-muted-foreground">
           {emptyState ?? "No records found"}
         </div>
@@ -200,7 +200,7 @@ export default function DataTable<T>({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+    <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">

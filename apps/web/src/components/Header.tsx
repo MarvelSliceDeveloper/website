@@ -135,7 +135,7 @@ export default function Header({
               onToggleCollapse?.();
             }
           }}
-          className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/15 transition-colors rounded-xl cursor-pointer"
+          className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg cursor-pointer"
           title={mobileNavOpen ? "Close menu" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label="Toggle navigation"
         >
@@ -186,7 +186,7 @@ export default function Header({
                 setNotifOpen((open) => !open);
                 if (!notifOpen) loadNotifications();
               }}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
               aria-label="Notifications"
             >
               <IconBell size={17} stroke={1.8} />
@@ -198,7 +198,7 @@ export default function Header({
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl">
+              <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border border-border bg-card shadow-2xl">
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                   <p className="text-sm font-semibold text-foreground">
                     Notifications
@@ -275,7 +275,7 @@ export default function Header({
 
           <button
             onClick={() => router.push(settingsHref)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
             aria-label="Settings"
           >
             <IconSettings size={17} stroke={1.8} />
@@ -283,7 +283,7 @@ export default function Header({
 
           <button
             onClick={handleSignOut}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
             aria-label="Sign out"
           >
             <IconLogout size={17} stroke={1.8} />

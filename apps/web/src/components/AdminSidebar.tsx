@@ -416,17 +416,13 @@ export default function AdminSidebar({
         },
         {
           label: "Assignments",
-          href: "/admin/assignments",
+          href: "/admin/assignments/review",
           icon: IconClipboardCheck,
           children: [
-            { label: "All Assignments", href: "/admin/assignments" },
+            { label: "All Assignments", href: "/admin/assignments/review" },
             {
               label: "Review Submissions",
               href: "/admin/assignments/review",
-            },
-            {
-              label: "Assignment Templates",
-              href: "/admin/assignment-templates",
             },
           ],
         },
