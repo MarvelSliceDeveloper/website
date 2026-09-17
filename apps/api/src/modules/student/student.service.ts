@@ -127,6 +127,7 @@ export const studentService = {
       const assignments = await prisma.assignment.findMany({
         where: {
           batchId: { in: uniqueBatchIds },
+          deletedAt: null,
         },
         take: 50,
         include: {
@@ -210,6 +211,7 @@ export const studentService = {
       const courseAssignments = await prisma.assignment.findMany({
         where: {
           moduleId: { in: moduleIds },
+          deletedAt: null,
         },
         take: 50,
         select: {

@@ -250,7 +250,10 @@ export const moduleService = {
           include: { questions: true },
           orderBy: { order: "asc" },
         },
-        assignments: { orderBy: { dueDate: "asc" } },
+        assignments: {
+          where: { deletedAt: null },
+          orderBy: { dueDate: "asc" },
+        },
       },
     });
   },

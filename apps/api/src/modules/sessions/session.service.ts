@@ -198,7 +198,8 @@ export const sessionService = {
     page?: number;
     limit?: number;
   }) {
-    const where: any = {};
+    // Soft-deleted sessions live in trash (superadmin only) — never list them
+    const where: any = { deletedAt: null };
 
     if (filters.studentId) {
       // Find batches where student is enrolled (both individual and package enrollments)
@@ -288,9 +289,11 @@ export const sessionService = {
         { scheduledEndAt: { lt: new Date(now.getTime() - bufferMs) } },
       ];
     } else if (filters.status === "cancelled") {
+      // Cancelled = ended (instructor cancel). Admin-deleted rows are excluded
+      // by the base deletedAt filter and live in trash instead.
       where.OR = [
         ...(Array.isArray(where.OR) ? where.OR : []),
-        { endedAt: { not: null }, deletedAt: { not: null } },
+        { endedAt: { not: null } },
       ];
     }
 

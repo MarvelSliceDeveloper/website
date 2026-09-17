@@ -251,6 +251,7 @@ export const courseService = {
               include: { questions: true },
             },
             assignments: {
+              where: { deletedAt: null },
               orderBy: { dueDate: "asc" },
             },
             practicals: {
@@ -625,7 +626,10 @@ export const courseService = {
           include: {
             lessons: { orderBy: { order: "asc" } },
             quizzes: { include: { questions: true } },
-            assignments: { orderBy: { dueDate: "asc" } },
+            assignments: {
+              where: { deletedAt: null },
+              orderBy: { dueDate: "asc" },
+            },
             practicals: { orderBy: { order: "asc" } },
           },
         },
