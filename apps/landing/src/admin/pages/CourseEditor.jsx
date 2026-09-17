@@ -534,6 +534,8 @@ export default function CourseEditor() {
         cta_text: course.cta_text,
         cta_link: course.pay_now_url || course.cta_link || null,
         cta_left: course.cta_left || 'Talk to Advisor',
+        cta_left_action: course.cta_left_action || 'choice_popup',
+        pay_now_url: course.pay_now_url || course.cta_link || null,
         cta_right: (!course.cta_right || course.cta_right === 'Download Brochure' || course.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : course.cta_right,
         cta_phone: course.cta_phone,
         cta_background_image: course.cta_background_image,

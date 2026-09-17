@@ -713,32 +713,54 @@ export default function Courses() {
             className="w-[280px] shrink-0 hidden lg:flex lg:flex-col bg-[#f8fafc] border-r border-slate-200 overflow-y-auto sticky top-0"
             aria-label="Course categories"
           >
-            {/* Top Category Header (Clickable to show All Courses) */}
+            {/* Top Category Header (Non-clickable static header) */}
             <div className="px-0 pt-0">
               <div className="flex overflow-hidden">
-                {parents.map((p) => {
-                  const isAllActive = !explicitCategoryParam && parentParam === p.slug;
-                  return (
-                    <button
-                      key={p.slug}
-                      type="button"
-                      onClick={(e) => handleExploreAll(e)}
-                      className={`flex-1 py-3 px-3 text-sm font-bold text-center text-white shadow-sm cursor-pointer transition-all active:scale-[0.99] select-none ${
-                        isAllActive
-                          ? "bg-[#d97706] font-extrabold ring-2 ring-amber-400/50"
-                          : "bg-[#f59e0b] hover:bg-[#d97706]"
-                      }`}
-                      title="Click to view all courses"
-                    >
-                      {p.displayLabel}
-                    </button>
-                  );
-                })}
+                {parents.map((p) => (
+                  <div
+                    key={p.slug}
+                    className="w-full py-3.5 px-3 text-sm font-extrabold text-center text-white bg-[#f59e0b] select-none"
+                  >
+                    {p.displayLabel}
+                  </div>
+                ))}
               </div>
             </div>
             {/* Category tree container */}
             <nav className="p-3 overflow-y-auto flex-1">
               <div className="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-xs space-y-1">
+                {/* All Courses Option */}
+                <button
+                  type="button"
+                  onClick={(e) => handleExploreAll(e)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ease-out cursor-pointer flex items-center justify-between gap-2 border ${
+                    !explicitCategoryParam
+                      ? "bg-blue-50/80 border-blue-200 text-blue-700 font-semibold shadow-2xs"
+                      : "border-transparent text-gray-700 hover:bg-slate-50 hover:text-gray-900"
+                  }`}
+                  aria-label={`All (${courses?.length || 0} courses)`}
+                >
+                  <span className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                      <FiBookOpen
+                        className={`w-4 h-4 ${!explicitCategoryParam ? "text-blue-600" : "text-gray-400"}`}
+                      />
+                    </span>
+                    <span className="truncate min-w-0 max-w-full font-medium text-xs sm:text-sm">
+                      All
+                    </span>
+                  </span>
+                  <span
+                    className={`text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full ${
+                      !explicitCategoryParam
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {courses?.length || 0}
+                  </span>
+                </button>
+
                 {currentTree.map(sidebarNode)}
               </div>
             </nav>

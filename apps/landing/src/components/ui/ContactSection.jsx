@@ -193,7 +193,7 @@ export default function ContactSection({ section }) {
               </h2>
               <p className="text-xs sm:text-sm leading-relaxed max-w-xs sm:max-w-md mx-auto lg:mx-0" style={{ color: subheadingColor }}>{leftSubtitle}</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 text-left w-full mx-auto lg:mx-0">
+            <div className="space-y-4 sm:space-y-5 text-left w-full mx-auto lg:mx-0">
               {address && (
                 <ContactDetailItem
                   icon={FiMapPin}
@@ -203,41 +203,51 @@ export default function ContactSection({ section }) {
                   alignTop
                 />
               )}
-              {phoneItems.map((ph, idx) => (
-                <ContactDetailItem
-                  key={`phone-${idx}`}
-                  icon={FiPhone}
-                  heading={ph.heading}
-                  value={ph.phone}
-                  href={cleanTelHref(ph.phone)}
-                  onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
-                  textColor={textColor}
-                />
-              ))}
-              {emailItems.length > 0 && (
-                <div className="flex flex-col text-left">
-                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
-                    EMAIL
-                  </h5>
-                  <div className="space-y-2 mt-0.5">
-                    {emailItems.map((em, idx) => (
-                      <div key={`email-${idx}`} className="flex items-center gap-2 sm:gap-2.5">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-                          <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
-                        </div>
-                        <a
-                          href={em.email ? `mailto:${em.email}` : undefined}
-                          onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
-                          className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words"
-                          style={{ color: hexToRgba(textColor, 0.95) }}
-                        >
-                          {em.email}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
+
+              {/* Contact Numbers & Email Section placed side-by-side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-start">
+                {/* Left: Contact Numbers */}
+                <div className="space-y-4">
+                  {phoneItems.map((ph, idx) => (
+                    <ContactDetailItem
+                      key={`phone-${idx}`}
+                      icon={FiPhone}
+                      heading={ph.heading}
+                      value={ph.phone}
+                      href={cleanTelHref(ph.phone)}
+                      onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
+                      textColor={textColor}
+                    />
+                  ))}
                 </div>
-              )}
+
+                {/* Right: Email Section */}
+                {emailItems.length > 0 && (
+                  <div className="flex flex-col text-left">
+                    <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+                      EMAIL
+                    </h5>
+                    <div className="space-y-2 mt-0.5">
+                      {emailItems.map((em, idx) => (
+                        <div key={`email-${idx}`} className="flex items-center gap-2 sm:gap-2.5">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                            <FiMail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: textColor }} />
+                          </div>
+                          <a
+                            href={em.email ? `mailto:${em.email}` : undefined}
+                            onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
+                            className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words"
+                            style={{ color: hexToRgba(textColor, 0.95) }}
+                          >
+                            {em.email}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {(workingTime || workingTimeSaturday) && (
                 <div className="flex flex-col text-left">
                   <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>

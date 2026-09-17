@@ -449,11 +449,15 @@ export default function CourseDetail() {
     const action = course?.cta_left_action || 'choice_popup';
     const payUrl = course?.pay_now_url || course?.cta_link;
 
-    if (action === 'pay_now' && payUrl) {
-      if (payUrl.startsWith('http://') || payUrl.startsWith('https://')) {
-        window.open(payUrl, '_blank', 'noopener,noreferrer');
+    if (action === 'pay_now') {
+      if (payUrl && payUrl.trim()) {
+        let formattedUrl = payUrl.trim();
+        if (!/^https?:\/\//i.test(formattedUrl)) {
+          formattedUrl = `https://${formattedUrl}`;
+        }
+        window.open(formattedUrl, '_blank', 'noopener,noreferrer');
       } else {
-        window.location.href = payUrl;
+        openEnquiryModal(course?.cta_left || 'Talk to Advisor');
       }
     } else if (action === 'enquiry') {
       openEnquiryModal(course?.cta_left || 'Talk to Advisor');

@@ -374,6 +374,8 @@ export default function CourseWizard() {
         video_thumbnail_url: null,
         video_url: c.video_url || null,
         cta_left: c.cta_left || 'Talk to Advisor',
+        cta_left_action: c.cta_left_action || 'choice_popup',
+        pay_now_url: c.pay_now_url || c.cta_link || null,
         cta_right: (!c.cta_right || c.cta_right === 'Download Brochure' || c.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : c.cta_right,
         cta_heading: c.cta_heading,
         cta_description: c.cta_description,
