@@ -584,19 +584,19 @@ export default function English() {
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
                   <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
                       <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
                       Submission Successful!
                     </h3>
                     <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
-                      Thank you for your enquiry. Our English language specialists will get in touch with you shortly.
+                      Thank you for your enquiry. Our English exam specialists will get in touch with you shortly.
                     </p>
                     <button
                       type="button"
                       onClick={closeApplyModal}
-                      className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                      className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
                     >
                       OK
                     </button>

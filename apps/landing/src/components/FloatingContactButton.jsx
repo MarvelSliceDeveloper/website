@@ -277,7 +277,7 @@ export default function FloatingContactButton() {
 
             {sent ? (
               <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
                   <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
@@ -294,7 +294,7 @@ export default function FloatingContactButton() {
                     setAgreeTerms(false);
                     setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
                   }}
-                  className="bg-brand-blue hover:bg-blue-700 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                  className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
                 >
                   OK
                 </button>
