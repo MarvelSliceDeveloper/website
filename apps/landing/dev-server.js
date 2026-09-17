@@ -221,7 +221,7 @@ async function handleCareer(body) {
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">Thank You for Your Application</h1></div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have received your application for the position you applied for at <strong>Marvel Slice</strong>.</p>
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have received your application for the position of <strong>${position || 'the role'}</strong> at <strong>Marvel Slice</strong>.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your profile and reach out to you shortly.</p>
       <div style="margin:24px 0;padding:16px 20px;background:#F5F6F8;border-radius:8px;font-size:13px;color:#5F6B7A;"><p style="margin:0 0 4px;">If you have any questions, feel free to reply to this email.</p></div>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
@@ -404,7 +404,7 @@ async function handleContact(body) {
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for reaching out to <strong>Marvel Slice</strong>. We have received your message.</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your inquiry and get back to you within 24 hours.</p>
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your enquiry and get back to you within 24 hours.</p>
       <div style="margin:24px 0;padding:16px 20px;background:#F5F6F8;border-radius:8px;font-size:13px;color:#5F6B7A;"><p style="margin:0 0 4px;">If you have any urgent questions, feel free to call us directly.</p></div>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
     </div>
@@ -452,7 +452,7 @@ async function handleBanking(body) {
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your enquiry regarding <strong>${topicName}</strong> at <strong>Marvel Slice</strong>.</p>
-      <div style="margin:24px 0;padding:16px 20px;background:#F0F6FF;border-radius:8px;font-size:13px;color:#0B2A6F;"><p style="margin:0 0 4px;font-weight:700;">What happens next?</p><p style="margin:0;">Our specialized banking exam advisors will review your details and reach out to you shortly.</p></div>
+      <div style="margin:24px 0;padding:16px 20px;background:#F0F6FF;border-radius:8px;font-size:13px;color:#0B2A6F;"><p style="margin:0 0 4px;font-weight:700;">What happens next?</p><p style="margin:0;">Our specialized banking exam advisors will review your details and reach out to you at <strong>${phone || email}</strong> shortly with exam preparation strategies, syllabus guides, and batch details.</p></div>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Competitive Exam Team</p>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>

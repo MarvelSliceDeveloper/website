@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have successfully received your submission via <strong>"${button_clicked || 'Apply Now'}"</strong>.</p>
         <div style="margin:24px 0;padding:16px 20px;background:#F5F6F8;border-radius:8px;font-size:13px;color:#5F6B7A;">
           <p style="margin:0 0 4px;font-weight:600;color:#1B2333;">What happens next?</p>
-          <p style="margin:0;">Our senior course advisor will review your profile and contact you on <strong>${phone || email}</strong> shortly with complete curriculum details and fee structures.</p>
+          <p style="margin:0;">Our senior course advisor will review your profile and contact you at <strong>${phone || email}</strong> shortly with complete curriculum details and fee structures.</p>
         </div>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Learning Team</p>
       </div>
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
       <div style="padding:24px 32px;">
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for reaching out to <strong>Marvel Slice</strong>. We have received your message.</p>
-        <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your inquiry and get back to you within 24 hours.</p>
+        <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your enquiry and get back to you within 24 hours.</p>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
       </div>
       <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">

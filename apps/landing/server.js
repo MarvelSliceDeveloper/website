@@ -156,8 +156,8 @@ async function handleApiRequest(req, res, body) {
     </div>`;
 
     try {
-      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Inquiry from ${clientName}`, html: adminHtml });
-      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Inquiry Received — Marvel Slice', html: autoReplyHtml });
+      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Enquiry from ${clientName}`, html: adminHtml });
+      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Enquiry Received — Marvel Slice', html: autoReplyHtml });
     } catch (err) {
       console.error('[server.js] Error sending contact email:', err.message);
     }
