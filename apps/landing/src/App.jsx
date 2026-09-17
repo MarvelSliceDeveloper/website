@@ -7,6 +7,7 @@ import BankingHeader from './components/layout/BankingHeader';
 import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import FloatingContactButton from './components/FloatingContactButton';
+import LandingLoader from './components/ui/LandingLoader';
 import { trackPageView, initAnalytics } from './lib/analytics';
 import { getEnv } from './lib/env';
 import Home from './pages/Home';
@@ -182,6 +183,7 @@ function PublicLayout() {
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-full relative">
+      <LandingLoader />
       <ScrollToTop />
       <PageTracker />
       <div className="fixed top-0 left-0 right-0 z-50 w-full">
