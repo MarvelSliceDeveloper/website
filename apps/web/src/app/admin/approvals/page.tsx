@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { FormModal } from "@/components/admin/FormModal";
 import {
   IconCheck,
   IconChalkboardTeacher,
@@ -18,7 +19,6 @@ import {
   IconSchool,
   IconShield,
   IconUserCheck,
-  IconX,
 } from "@tabler/icons-react";
 
 type PendingUser = {
@@ -276,34 +276,83 @@ export default function ApprovalsPage() {
 
       {/* ── Review Modal ── */}
       {reviewUser && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 py-10 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-6xl animate-in fade-in slide-in-from-bottom-6 zoom-in-95 duration-300">
-            <div className="rounded-2xl bg-card border border-border/60 shadow-2xl overflow-hidden">
-              {/* Modal header */}
-              <div className="flex items-center justify-between border-b border-border bg-muted/10 px-8 py-5">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                    <IconChalkboardTeacher size={24} />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">
-                      Review Instructor Application
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {reviewUser.name} &middot; {reviewUser.email}
-                    </p>
-                  </div>
+        <FormModal
+          open
+          onClose={closeReview}
+          title={`Review Instructor Application — ${reviewUser.name}`}
+          size="xl"
+          footer={
+            showRejectInput ? (
+              <div className="flex w-full flex-col gap-3">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-foreground">
+                    Rejection Reason <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-danger focus:ring-4 focus:ring-danger/20 transition-all"
+                    placeholder="Explain why the application is being rejected..."
+                    autoFocus
+                  />
                 </div>
-                <button
-                  onClick={closeReview}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-                >
-                  <IconX size={20} />
-                </button>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowRejectInput(false);
+                      setRejectionReason("");
+                    }}
+                    className="btn-secondary text-sm px-5 py-2.5"
+                    disabled={actionLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    disabled={actionLoading || !rejectionReason.trim()}
+                    className="inline-flex items-center gap-2 rounded-xl bg-danger px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-danger/25 hover:bg-danger/90 transition-all disabled:opacity-50"
+                  >
+                    {actionLoading ? "Rejecting..." : "Confirm Rejection"}
+                  </button>
+                </div>
               </div>
-
-              {/* Modal body */}
-              <div className="max-h-[65vh] overflow-y-auto p-8">
+            ) : (
+              <div className="flex w-full items-center justify-between">
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  Review all details before making a decision
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowRejectInput(true)}
+                    disabled={actionLoading || reviewLoading}
+                    className="inline-flex items-center gap-2 rounded-xl border-2 border-danger/30 px-5 py-2.5 text-sm font-semibold text-danger hover:bg-danger/10 transition-all disabled:opacity-50"
+                  >
+                    <IconCircleX size={18} />
+                    Reject
+                  </button>
+                  <button
+                    onClick={handleApprove}
+                    disabled={actionLoading || reviewLoading}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <IconCheck size={18} />
+                        Approve
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )
+          }
+        >
                 {reviewLoading ? (
                   <div className="flex items-center justify-center py-20">
                     <div className="flex flex-col items-center gap-3">
@@ -489,83 +538,7 @@ export default function ApprovalsPage() {
                     </p>
                   </div>
                 )}
-              </div>
-
-              {/* Modal footer — actions */}
-              <div className="border-t border-border bg-muted/10 px-8 py-5">
-                {showRejectInput ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-medium text-foreground">
-                        Rejection Reason <span className="text-danger">*</span>
-                      </label>
-                      <textarea
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        rows={3}
-                        className="w-full rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-danger focus:ring-4 focus:ring-danger/20 transition-all"
-                        placeholder="Explain why the application is being rejected..."
-                        autoFocus
-                      />
-                    </div>
-                    <div className="flex gap-3 justify-end">
-                      <button
-                        onClick={() => {
-                          setShowRejectInput(false);
-                          setRejectionReason("");
-                        }}
-                        className="btn-secondary text-sm px-5 py-2.5"
-                        disabled={actionLoading}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleReject}
-                        disabled={actionLoading || !rejectionReason.trim()}
-                        className="inline-flex items-center gap-2 rounded-xl bg-danger px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-danger/25 hover:bg-danger/90 transition-all disabled:opacity-50"
-                      >
-                        {actionLoading ? "Rejecting..." : "Confirm Rejection"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground hidden sm:block">
-                      Review all details before making a decision
-                    </p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setShowRejectInput(true)}
-                        disabled={actionLoading || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-xl border-2 border-danger/30 px-5 py-2.5 text-sm font-semibold text-danger hover:bg-danger/10 transition-all disabled:opacity-50"
-                      >
-                        <IconCircleX size={18} />
-                        Reject
-                      </button>
-                      <button
-                        onClick={handleApprove}
-                        disabled={actionLoading || reviewLoading}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50"
-                      >
-                        {actionLoading ? (
-                          <>
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            Approving...
-                          </>
-                        ) : (
-                          <>
-                            <IconCheck size={18} />
-                            Approve
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        </FormModal>
       )}
     </div>
   );

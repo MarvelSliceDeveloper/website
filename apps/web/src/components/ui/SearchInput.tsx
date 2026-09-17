@@ -60,19 +60,20 @@ export function SearchInput({
     <div className={`relative ${className}`}>
       <IconSearch
         size={16}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
       />
       <input
         type="text"
         value={internalValue}
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-border bg-background px-10 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none transition-colors"
+        className="w-full rounded-lg border border-border bg-card pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted shadow-2xs transition-all duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-hover"
       />
       {internalValue && (
         <button
+          type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md"
           aria-label="Clear search"
         >
           <IconX size={14} />
@@ -81,3 +82,4 @@ export function SearchInput({
     </div>
   );
 }
+

@@ -21,6 +21,16 @@ export function getRazorpayInstance() {
   });
 }
 
+// A PENDING payment with no verification after this long is treated as
+// abandoned (modal dismissed, tab closed). It no longer blocks a fresh
+// order, and is retired to FAILED so the old Razorpay order can never
+// verify later (verifyPayment only accepts PENDING rows).
+export const STALE_PENDING_MS = 30 * 60 * 1000;
+
+export function stalePendingBefore(now = Date.now()): Date {
+  return new Date(now - STALE_PENDING_MS);
+}
+
 export async function createRazorpayOrder(
   amount: number,
   currency = "INR",
@@ -74,6 +84,34 @@ export function generateDummyPassword(): string {
 export function normalizePhone(phone?: string): string | undefined {
   const digits = phone?.replace(/\D/g, "");
   return digits ? digits : undefined;
+}
+
+// Row shape for the admin payments list. `package` is nullable because
+// course-only purchases link via `courseId` instead of `packageId`.
+export type AdminPaymentRow = {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  razorpayPaymentId: string | null;
+  createdAt: Date;
+  user: { name: string; email: string };
+  package: { name: string } | null;
+  course: { title: string } | null;
+};
+
+export function toAdminPaymentItem(p: AdminPaymentRow) {
+  return {
+    id: p.id,
+    studentName: p.user.name,
+    studentEmail: p.user.email,
+    packageName: p.package?.name ?? p.course?.title ?? "Course Package",
+    amount: p.amount,
+    currency: p.currency,
+    status: p.status,
+    razorpayPaymentId: p.razorpayPaymentId,
+    createdAt: p.createdAt,
+  };
 }
 
 export const paymentService = {
@@ -161,6 +199,9 @@ export const paymentService = {
 
     if (!targetUserId) return;
 
+    // Only a recent PENDING (user may still have the Razorpay modal open)
+    // or any PAID row blocks a new order. Stale PENDING rows are abandoned
+    // and handled (retired) in createOrder instead of 409ing forever.
     const [existingEnrollment, existingPayment] = await Promise.all([
       prisma.packageEnrollment.findFirst({
         where: { packageId, userId: targetUserId, status: "APPROVED" },
@@ -169,7 +210,10 @@ export const paymentService = {
         where: {
           packageId,
           userId: targetUserId,
-          status: { in: ["PENDING", "PAID"] },
+          OR: [
+            { status: "PAID" },
+            { status: "PENDING", createdAt: { gt: stalePendingBefore() } },
+          ],
         },
       }),
     ]);
@@ -188,6 +232,18 @@ export const paymentService = {
 
   async createOrder(userId: string, packageId: string, couponCode?: string) {
     await this.checkNotEnrolled(packageId, userId);
+
+    // Retire abandoned PENDING rows so their Razorpay orders can never
+    // verify late and confuse a fresh payment for the same package.
+    await prisma.payment.updateMany({
+      where: {
+        packageId,
+        userId,
+        status: "PENDING",
+        createdAt: { lte: stalePendingBefore() },
+      },
+      data: { status: "FAILED" },
+    });
 
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
@@ -573,23 +629,14 @@ export const paymentService = {
         include: {
           user: { select: { id: true, name: true, email: true } },
           package: { select: { id: true, name: true } },
+          course: { select: { id: true, title: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
       prisma.payment.count({ where }),
     ]);
 
-    const items = payments.map((p) => ({
-      id: p.id,
-      studentName: p.user.name,
-      studentEmail: p.user.email,
-      packageName: p.package!.name,
-      amount: p.amount,
-      currency: p.currency,
-      status: p.status,
-      razorpayPaymentId: p.razorpayPaymentId,
-      createdAt: p.createdAt,
-    }));
+    const items = payments.map(toAdminPaymentItem);
 
     return { items, total, page: currentPage, limit: currentLimit };
   },

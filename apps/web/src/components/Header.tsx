@@ -30,6 +30,8 @@ interface HeaderProps {
   userEmail?: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  mobileNavOpen?: boolean;
+  onToggleMobileNav?: () => void;
 }
 
 export default function Header({
@@ -38,6 +40,8 @@ export default function Header({
   userEmail = "",
   collapsed = false,
   onToggleCollapse,
+  mobileNavOpen = false,
+  onToggleMobileNav,
 }: HeaderProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -120,18 +124,26 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b-2 border-border bg-muted/40 shadow-sm">
-      <div className="mx-auto flex max-w-full items-center gap-4 px-4 h-14 md:px-6">
+    <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-md shadow-2xs">
+      <div className="mx-auto flex max-w-full items-center gap-3 md:gap-4 px-4 h-16 md:h-[68px] md:px-6">
         <button
-          onClick={onToggleCollapse}
-          className="flex h-8 w-8 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.innerWidth < 1024) {
+              onToggleMobileNav?.();
+            } else {
+              onToggleCollapse?.();
+            }
+          }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg cursor-pointer"
+          title={mobileNavOpen ? "Close menu" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label="Toggle navigation"
         >
-          <IconMenu2 size={18} stroke={1.8} />
+          <IconMenu2 size={20} stroke={1.8} />
         </button>
 
         <div
-          className="flex items-center gap-2 cursor-pointer select-none"
+          className="flex items-center gap-2.5 cursor-pointer select-none group"
           onClick={() => {
             const base = inboxHref.startsWith("/instructor")
               ? "/instructor/dashboard"
@@ -142,13 +154,14 @@ export default function Header({
           <Image
             src="/images/logo.svg"
             alt="Marvel Slice"
-            width={44}
-            height={44}
-            className="h-11 w-auto object-contain"
+            width={48}
+            height={48}
+            priority
+            className="h-11 md:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105 shrink-0"
           />
-          <span className="text-base font-extrabold tracking-tight text-foreground hidden sm:inline">
-            <span className="text-[#175cdd]">Marvel</span>
-            <span className="text-[#f59e0b] ml-0.5">Slice</span>
+          <span className="text-lg sm:text-xl font-black tracking-tight text-foreground hidden sm:flex items-center">
+            <span className="text-[#2551d9]">Marvel</span>
+            <span className="text-[#f59e0b] ml-1">Slice</span>
           </span>
         </div>
 
@@ -173,7 +186,7 @@ export default function Header({
                 setNotifOpen((open) => !open);
                 if (!notifOpen) loadNotifications();
               }}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
               aria-label="Notifications"
             >
               <IconBell size={17} stroke={1.8} />
@@ -185,7 +198,7 @@ export default function Header({
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl">
+              <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border border-border bg-card shadow-2xl">
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                   <p className="text-sm font-semibold text-foreground">
                     Notifications
@@ -262,7 +275,7 @@ export default function Header({
 
           <button
             onClick={() => router.push(settingsHref)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
             aria-label="Settings"
           >
             <IconSettings size={17} stroke={1.8} />
@@ -270,7 +283,7 @@ export default function Header({
 
           <button
             onClick={handleSignOut}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
             aria-label="Sign out"
           >
             <IconLogout size={17} stroke={1.8} />

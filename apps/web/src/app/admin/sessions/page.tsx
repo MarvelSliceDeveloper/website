@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
-  IconEdit,
-  IconTrash,
-  IconRefresh,
   IconCalendar,
-  IconMovie,
+  IconEdit,
+  IconPlus,
+  IconTrash,
+  IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -20,6 +20,13 @@ import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Input } from "@/components/ui/Input";
+import { FormField } from "@/components/ui/FormField";
+
 
 type Session = {
   id: string;
@@ -40,6 +47,8 @@ type SessionsResponse = {
   sessions?: Session[];
 };
 
+type Tab = "ALL" | "UPCOMING" | "PAST";
+
 export default function AdminSessionsPage() {
   usePageTitle("Sessions");
 
@@ -49,6 +58,11 @@ export default function AdminSessionsPage() {
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
   const confirmDelete = useConfirmDialog();
+
+  // Dashboard controls
+  const [tab, setTab] = useState<Tab>("ALL");
+  const [query, setQuery] = useState("");
+  const [batchFilter, setBatchFilter] = useState("all");
 
   const sessionsQuery = useApiQuery<SessionsResponse>(
     ["admin", "sessions"],
@@ -60,14 +74,61 @@ export default function AdminSessionsPage() {
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
 
-  const upcoming = sessions.filter((s) => {
-    const end = new Date(s.scheduledEndAt).getTime();
-    return !s.endedAt && end > now;
-  });
-  const past = sessions.filter((s) => {
-    const end = new Date(s.scheduledEndAt).getTime();
-    return s.endedAt || end <= now;
-  });
+  const { liveNow, upcoming, past } = useMemo(() => {
+    const live = sessions.filter((s) => {
+      const start = new Date(s.scheduledAt).getTime();
+      const end = new Date(s.scheduledEndAt).getTime();
+      return !s.endedAt && start <= now && end >= now;
+    });
+    const up = sessions
+      .filter((s) => {
+        const end = new Date(s.scheduledEndAt).getTime();
+        return !s.endedAt && end > now;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+      );
+    const pa = sessions
+      .filter((s) => {
+        const end = new Date(s.scheduledEndAt).getTime();
+        return s.endedAt || end <= now;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
+      );
+    return { liveNow: live, upcoming: up, past: pa };
+  }, [sessions, now]);
+
+  const upNext = upcoming[0] ?? null;
+  const todayCount = useMemo(() => {
+    const today = new Date(now).toDateString();
+    return sessions.filter(
+      (s) => new Date(s.scheduledAt).toDateString() === today,
+    ).length;
+  }, [sessions, now]);
+
+  const batchNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const s of sessions) names.add(s.batch?.name ?? "General");
+    return [...names].sort();
+  }, [sessions]);
+
+  const liveIds = useMemo(() => new Set(liveNow.map((s) => s.id)), [liveNow]);
+
+  const visible = useMemo(() => {
+    const base = tab === "UPCOMING" ? upcoming : tab === "PAST" ? past : [...upcoming, ...past];
+    const q = query.trim().toLowerCase();
+    return base.filter((s) => {
+      if (batchFilter !== "all" && (s.batch?.name ?? "General") !== batchFilter)
+        return false;
+      if (!q) return true;
+      const haystack =
+        `${s.batch?.course?.title ?? ""} ${s.batch?.name ?? ""} ${s.title ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [tab, upcoming, past, query, batchFilter]);
 
   const openEdit = (session: Session) => {
     setEditingSession(session);
@@ -138,15 +199,7 @@ export default function AdminSessionsPage() {
     deleteMutation.mutate(sessionId);
   };
 
-  const syncMutation = useMutation({
-    mutationFn: (sessionId: string) =>
-      api.post(`/api/recordings/${sessionId}/sync`),
-    onSuccess: () => {
-      toast.success("Recording synced successfully!");
-      void sessionsQuery.refetch();
-    },
-    onError: (err: unknown) => toast.error(getErrorMessage(err)),
-  });
+  const hasFilters = query.trim() !== "" || batchFilter !== "all";
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -155,8 +208,10 @@ export default function AdminSessionsPage() {
         description={`${sessions.length} total sessions`}
         breadcrumbs={[{ label: "Sessions", href: "/admin/sessions" }]}
         action={
-          <Link href="/admin/sessions/new" className="btn-primary">
-            + Schedule Session
+          <Link href="/admin/sessions/new">
+            <Button leftIcon={<IconPlus size={16} />}>
+              Schedule Session
+            </Button>
           </Link>
         }
       />
@@ -170,58 +225,157 @@ export default function AdminSessionsPage() {
           title="No sessions yet"
           description="Schedule a live session for a batch."
           action={
-            <Link
-              href="/admin/sessions/new"
-              className="btn-primary inline-flex"
-            >
-              + Schedule Session
+            <Link href="/admin/sessions/new" className="mt-4 inline-flex">
+              <Button leftIcon={<IconPlus size={16} />}>Schedule Session</Button>
             </Link>
           }
         />
       ) : (
-        <div className="space-y-6">
-          {/* Upcoming */}
-          {upcoming.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">
-                Upcoming ({upcoming.length})
-              </h2>
-              <div className="space-y-2">
-                {upcoming.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
+        <div className="space-y-5">
+          {/* Hero strip */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Card className="p-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  Live Now
+                </p>
+                {liveNow.length > 0 ? (
+                  <Badge variant="success" size="sm" dot>Live</Badge>
+                ) : (
+                  <Badge variant="secondary" size="sm">Idle</Badge>
+                )}
               </div>
-            </div>
-          )}
+              <p className="mt-2 text-2xl font-black text-foreground">
+                {liveNow.length}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                {liveNow.length > 0
+                  ? liveNow[0].batch?.course?.title ?? liveNow[0].batch?.name ?? "Session in progress"
+                  : "No session in progress"}
+              </p>
+            </Card>
 
-          {/* Past */}
-          {past.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">
-                Past ({past.length})
-              </h2>
-              <div className="space-y-2">
-                {past.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming={false}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                    onSync={(id) => syncMutation.mutate(id)}
-                    syncing={
-                      syncMutation.isPending &&
-                      syncMutation.variables === session.id
-                    }
-                  />
-                ))}
+            <Card className="p-4 shadow-xs">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Up Next
+              </p>
+              <p className="mt-2 text-2xl font-black text-foreground truncate">
+                {upNext
+                  ? new Date(upNext.scheduledAt).toLocaleString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                {upNext
+                  ? (upNext.batch?.course?.title ?? upNext.batch?.name ?? "Session")
+                  : "Nothing scheduled"}
+              </p>
+            </Card>
+
+            <Card className="p-4 shadow-xs">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Today
+              </p>
+              <p className="mt-2 text-2xl font-black text-foreground">
+                {todayCount}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {todayCount === 1 ? "session scheduled" : "sessions scheduled"}
+              </p>
+            </Card>
+          </div>
+
+          {/* Controls: tabs + search + batch filter */}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1 w-fit shadow-2xs">
+              {(
+                [
+                  { key: "ALL", label: `All (${sessions.length})` },
+                  { key: "UPCOMING", label: `Upcoming (${upcoming.length})` },
+                  { key: "PAST", label: `Past (${past.length})` },
+                ] as { key: Tab; label: string }[]
+              ).map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+                    tab === t.key
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="sm:w-64">
+                <SearchInput
+                  value={query}
+                  onChange={setQuery}
+                  placeholder="Search course or batch..."
+                />
               </div>
+              <select
+                value={batchFilter}
+                onChange={(e) => setBatchFilter(e.target.value)}
+                className="rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-2xs transition-all duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border-hover sm:w-48"
+                aria-label="Filter by batch"
+              >
+                <option value="all">All batches</option>
+                {batchNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Session list */}
+          {visible.length === 0 ? (
+            <Card className="p-12 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No sessions match your filters
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Try a different search term or batch.
+              </p>
+              {hasFilters && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setQuery("");
+                    setBatchFilter("all");
+                  }}
+                  className="mt-4"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {visible.map((session) => (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  live={liveIds.has(session.id)}
+                  upcoming={
+                    !session.endedAt &&
+                    new Date(session.scheduledEndAt).getTime() > now
+                  }
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -235,21 +389,22 @@ export default function AdminSessionsPage() {
         size="lg"
         footer={
           <>
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => setEditingSession(null)}
-              className="btn-secondary text-xs px-4"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               form="edit-session-form"
-              disabled={editMutation.isPending}
-              className="btn-primary text-xs px-4"
+              size="sm"
+              loading={editMutation.isPending}
             >
-              {editMutation.isPending ? "Saving..." : "Save Changes"}
-            </button>
+              Save Changes
+            </Button>
           </>
         }
       >
@@ -258,44 +413,35 @@ export default function AdminSessionsPage() {
           onSubmit={handleEditSubmit}
           className="space-y-4"
         >
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-              Session Title
-            </label>
-            <input
+          <FormField label="Session Title" required htmlFor="session-title">
+            <Input
+              id="session-title"
               type="text"
-              className="field"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               required
             />
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                Start
-              </label>
-              <input
+            <FormField label="Start" required htmlFor="session-start">
+              <Input
+                id="session-start"
                 type="datetime-local"
-                className="field"
                 value={editStart}
                 onChange={(e) => setEditStart(e.target.value)}
                 required
               />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                End
-              </label>
-              <input
+            </FormField>
+            <FormField label="End" required htmlFor="session-end">
+              <Input
+                id="session-end"
                 type="datetime-local"
-                className="field"
                 value={editEnd}
                 onChange={(e) => setEditEnd(e.target.value)}
                 required
               />
-            </div>
+            </FormField>
           </div>
         </form>
       </FormModal>
@@ -306,125 +452,133 @@ export default function AdminSessionsPage() {
 function SessionCard({
   session,
   upcoming,
+  live,
   onEdit,
   onDelete,
-  onSync,
-  syncing,
 }: {
   session: Session;
   upcoming: boolean;
+  live: boolean;
   onEdit: (s: Session) => void;
   onDelete: (id: string) => void;
-  onSync?: (id: string) => void;
-  syncing?: boolean;
 }) {
+  const start = new Date(session.scheduledAt);
+  const end = new Date(session.scheduledEndAt);
+  const durationMin = Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / 60000),
+  );
+
   return (
-    <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-      <div className="flex items-start gap-3">
+    <Card hoverable className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-start gap-3.5 min-w-0">
+        {/* Date block */}
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-            upcoming ? "bg-primary/20" : "bg-muted/10"
+          className={`flex w-14 shrink-0 flex-col items-center justify-center rounded-xl py-2.5 border ${
+            live
+              ? "bg-success/10 text-success border-success/20"
+              : "bg-primary/10 text-primary border-primary/20"
           }`}
         >
-          {upcoming ? <IconCalendar size={20} /> : <IconMovie size={20} />}
+          <span className="text-xl font-black leading-none">
+            {start.getDate()}
+          </span>
+          <span className="mt-1 text-[10px] font-bold uppercase tracking-wider">
+            {start.toLocaleString("en-IN", { month: "short" })}
+          </span>
+          <span className="text-[10px] opacity-75">
+            {start.toLocaleString("en-IN", { weekday: "short" })}
+          </span>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            {new Date(session.scheduledAt).toLocaleString("en-IN", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-foreground">
             {session.batch?.course
               ? `${session.batch.course.title} · ${session.batch.name}`
               : session.batch
-                ? `${session.batch.name}`
-                : "Standalone Session"}
+                ? session.batch.name
+                : (session.title ?? "Standalone Session")}
           </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <IconCalendar size={13} className="shrink-0 text-primary" />
+            {start.toLocaleString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            {" — "}
+            {end.toLocaleString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            <span className="text-muted-foreground/60">· {durationMin}m</span>
+          </p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {session.endedAt ? (
+              <Badge variant="danger" size="sm" dot>Cancelled</Badge>
+            ) : live ? (
+              <Badge variant="success" size="sm" dot>Live</Badge>
+            ) : upcoming ? (
+              <Badge variant="default" size="sm" dot>Upcoming</Badge>
+            ) : (
+              <Badge variant="secondary" size="sm">Completed</Badge>
+            )}
+
+            <Badge variant="outline" size="sm">
               {session.createdFrom}
-            </span>
-            {!upcoming && (
-              <span className="text-[10px] uppercase font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+            </Badge>
+
+            {!upcoming && !live && (
+              <Badge variant="secondary" size="sm">
+                <IconUsers size={11} className="mr-1 inline" />
                 {session._count?.attendance ?? 0} attended
                 {session.attendance?._avg?.durationSeconds
-                  ? ` · avg ${Math.round(
-                      session.attendance._avg.durationSeconds / 60,
-                    )}m`
+                  ? ` · avg ${Math.round(session.attendance._avg.durationSeconds / 60)}m`
                   : ""}
-              </span>
-            )}
-            {session.recording && (
-              <span className="text-[10px] uppercase font-medium bg-success/15 text-success px-1.5 py-0.5 rounded">
-                Recording
-              </span>
-            )}
-            {!upcoming && !session.recording && (
-              <span className="text-[10px] uppercase font-medium bg-warning/15 text-warning px-1.5 py-0.5 rounded">
-                No Recording
-              </span>
+              </Badge>
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Sync Recording (past sessions without recording) */}
-        {!upcoming && !session.recording && onSync && (
+      {/* Actions */}
+      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50 shrink-0">
+        <div className="flex items-center gap-1">
           <button
-            onClick={() => onSync(session.id)}
-            disabled={syncing}
-            className="btn-secondary text-xs px-2.5 py-1.5 flex items-center gap-1"
-            title="Sync recording from Teams"
+            type="button"
+            onClick={() => onEdit(session)}
+            className="p-1.5 rounded-xl border border-border hover:bg-card-hover text-muted-foreground hover:text-foreground transition-all duration-150 shadow-2xs hover:border-border-hover"
+            title="Edit session"
           >
-            <IconRefresh size={14} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "Syncing" : "Sync"}
+            <IconEdit size={15} />
           </button>
-        )}
-
-        {/* Edit */}
-        <button
-          onClick={() => onEdit(session)}
-          className="p-1.5 rounded-lg border border-border hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
-          title="Edit session"
-        >
-          <IconEdit size={15} />
-        </button>
-
-        {/* Delete / Cancel */}
-        <button
-          onClick={() => onDelete(session.id)}
-          className="btn-danger p-1.5"
-          title="Delete session"
-        >
-          <IconTrash size={15} />
-        </button>
-
-        {/* Join / View */}
-        {upcoming ? (
+          <button
+            type="button"
+            onClick={() => onDelete(session.id)}
+            className="p-1.5 rounded-xl border border-danger/30 hover:bg-danger/10 text-danger transition-all duration-150 shadow-2xs"
+            title="Delete session"
+          >
+            <IconTrash size={15} />
+          </button>
+        </div>
+        {upcoming || live ? (
           <a
             href={session.joinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-secondary text-xs shrink-0"
+            className="inline-flex items-center justify-center font-semibold transition-all duration-150 select-none cursor-pointer bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow active:scale-[0.99] h-8 px-3.5 text-xs rounded-lg gap-1.5 shrink-0"
           >
-            Join &rarr;
+            {live ? "Join Live →" : "Join →"}
           </a>
         ) : (
-          <Link
-            href={`/admin/sessions/${session.id}`}
-            className="btn-secondary text-xs shrink-0"
-          >
-            View Details
+          <Link href={`/admin/sessions/${session.id}`}>
+            <Button variant="secondary" size="sm">
+              View Details
+            </Button>
           </Link>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
+

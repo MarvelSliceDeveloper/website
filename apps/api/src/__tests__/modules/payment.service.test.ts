@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   verifySignature,
   generateDummyPassword,
+  toAdminPaymentItem,
 } from "../../modules/payments/payment.service";
 
 describe("verifySignature", () => {
@@ -68,5 +69,36 @@ describe("generateDummyPassword", () => {
     }
     // With 10-char passwords from ~50 chars, collisions are extremely unlikely
     expect(passwords.size).toBeGreaterThan(1);
+  });
+});
+
+describe("toAdminPaymentItem", () => {
+  const baseRow = {
+    id: "pay_1",
+    amount: 99900,
+    currency: "INR",
+    status: "PAID",
+    razorpayPaymentId: "pay_rz_1",
+    createdAt: new Date("2026-09-01T10:00:00Z"),
+    user: { name: "Test Student", email: "student@test.local" },
+  };
+
+  it("uses the package name when the payment has a package", () => {
+    const item = toAdminPaymentItem({
+      ...baseRow,
+      package: { name: "Full Stack Pack" },
+      course: null,
+    });
+    expect(item.packageName).toBe("Full Stack Pack");
+  });
+
+  it("falls back to the course title when package is null (course purchase)", () => {
+    // Reproduces production 500: "Cannot read properties of null (reading 'name')"
+    const item = toAdminPaymentItem({
+      ...baseRow,
+      package: null,
+      course: { title: "React Basics" },
+    });
+    expect(item.packageName).toBe("React Basics");
   });
 });

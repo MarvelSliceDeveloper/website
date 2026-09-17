@@ -14,6 +14,10 @@ import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { usePageTitle } from "@/lib/use-page-title";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { FormField } from "@/components/ui/FormField";
 import {
   IconSchool,
   IconUsers,
@@ -26,6 +30,7 @@ import {
   IconPhone,
   IconHome,
   IconCalendar,
+  IconPlus,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -356,37 +361,47 @@ export default function AdminUsersPage() {
       key: "sno",
       label: "S.No",
       render: (_, __, index) => (
-        <span className="text-sm text-muted-foreground">{index + 1}</span>
+        <span className="text-sm text-muted-foreground font-medium">{index + 1}</span>
       ),
     },
     {
       key: "name",
-      label: "User",
+      label: "Student",
       render: (_, user) => (
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/15 text-xs font-bold text-primary">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary border border-primary/20">
             {user.name.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-foreground">
-            {user.name}
-          </span>
+          <div>
+            <span className="text-sm font-semibold text-foreground block">
+              {user.name}
+            </span>
+            <span className="text-xs text-muted-foreground block">{user.email}</span>
+          </div>
         </div>
       ),
     },
     {
       key: "email",
       label: "Email",
+      render: (_, user) => (
+        <span className="text-sm text-muted-foreground">{user.email}</span>
+      ),
     },
     {
       key: "package",
-      label: "Package",
+      label: "Enrolled Packages",
       render: (_, user) => {
         const pkgs =
           user.packageEnrollments?.map((pe) => pe.package.name) ?? [];
         return pkgs.length > 0 ? (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-emerald-100 text-emerald-700">
-            {pkgs.join(", ")}
-          </span>
+          <div className="flex flex-wrap gap-1">
+            {pkgs.map((pkgName, i) => (
+              <Badge key={i} variant="success">
+                {pkgName}
+              </Badge>
+            ))}
+          </div>
         ) : (
           <span className="text-sm text-muted-foreground">—</span>
         );
@@ -396,24 +411,24 @@ export default function AdminUsersPage() {
       key: "id",
       label: "Actions",
       render: (_, user) => (
-        <div className="flex items-center justify-center gap-1">
+        <div className="flex items-center justify-center gap-1.5">
           <button
             onClick={() => openProfile(user)}
-            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-all shadow-2xs"
             title="View Student"
           >
             <IconEye size={16} />
           </button>
           <button
             onClick={() => openEditModal(user)}
-            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-all shadow-2xs"
             title="Edit Student"
           >
             <IconEdit size={16} />
           </button>
           <button
             onClick={() => setDeleteUserId(user.id)}
-            className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
+            className="rounded-lg border border-danger/30 bg-card p-2 text-danger hover:bg-danger/10 transition-all shadow-2xs"
             title="Delete Student"
           >
             <IconTrash size={16} />
@@ -430,32 +445,34 @@ export default function AdminUsersPage() {
         description={`${totalStudents} registered students`}
         breadcrumbs={[{ label: "Students", href: "/admin/users" }]}
         action={
-          <button
+          <Button
+            variant="primary"
             onClick={() => setShowModal(true)}
-            className="btn-primary text-sm shadow-md"
+            leftIcon={<IconPlus size={18} />}
           >
-            + Add Student
-          </button>
+            Add Student
+          </Button>
         }
       />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handleDownloadCsv}
           disabled={filtered.length === 0}
-          className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
+          leftIcon={<IconDownload size={16} />}
           title="Download filtered students as CSV"
         >
-          <IconDownload size={16} />
           Download CSV
-        </button>
+        </Button>
 
-        <div className="max-w-sm">
+        <div className="w-full sm:w-72">
           <SearchInput
             placeholder="Search by name or email..."
             value={search}
-            onChange={(value) => {
-              setSearch(value);
+            onChange={(val) => {
+              setSearch(val);
               setPage(1);
             }}
           />
@@ -488,29 +505,22 @@ export default function AdminUsersPage() {
         title="Add New Student"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
               type="button"
               onClick={() => setShowModal(false)}
-              className="btn-secondary text-sm"
               disabled={createUserMutation.isPending}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
               form="create-user-form"
-              className="btn-primary text-sm flex items-center gap-1.5"
-              disabled={createUserMutation.isPending}
+              isLoading={createUserMutation.isPending}
             >
-              {createUserMutation.isPending ? (
-                <>
-                  <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
-                  Adding...
-                </>
-              ) : (
-                "Add Student"
-              )}
-            </button>
+              Add Student
+            </Button>
           </>
         }
       >
@@ -519,53 +529,38 @@ export default function AdminUsersPage() {
           onSubmit={handleCreateUser}
           className="space-y-4"
         >
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Full Name
-            </label>
-            <input
+          <FormField label="Full Name" required>
+            <Input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. John Doe"
-              className="field"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Email Address
-            </label>
-            <input
+          <FormField label="Email Address" required>
+            <Input
               type="email"
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="e.g. johndoe@lms.local"
-              className="field"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Password
-            </label>
-            <input
+          <FormField label="Password" required>
+            <Input
               type="password"
               required
               minLength={6}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="At least 6 characters"
-              className="field"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Package <span className="text-danger">*</span>
-            </label>
+          <FormField label="Package" required>
             <Select
               value={form.packageId || ""}
               onValueChange={(value) =>
@@ -576,7 +571,7 @@ export default function AdminUsersPage() {
                 })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full h-10 px-3.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs">
                 <SelectValue placeholder="Select a package..." />
               </SelectTrigger>
               <SelectContent>
@@ -587,18 +582,15 @@ export default function AdminUsersPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
           {form.packageId && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                Batch <span className="text-danger">*</span>
-              </label>
+            <FormField label="Batch" required>
               <Select
                 value={form.batchId || ""}
                 onValueChange={(value) => setForm({ ...form, batchId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10 px-3.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs">
                   <SelectValue placeholder="Select a batch..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -617,7 +609,7 @@ export default function AdminUsersPage() {
                   No batches in this package yet — create one first
                 </p>
               )}
-            </div>
+            </FormField>
           )}
         </form>
       </FormModal>
@@ -629,29 +621,22 @@ export default function AdminUsersPage() {
         title="Edit Student"
         footer={
           <>
-            <button
+            <Button
+              variant="secondary"
               type="button"
               onClick={() => setEditUser(null)}
-              className="btn-secondary text-sm"
               disabled={editUserMutation.isPending}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
               form="edit-user-form"
-              className="btn-primary text-sm flex items-center gap-1.5"
-              disabled={editUserMutation.isPending}
+              isLoading={editUserMutation.isPending}
             >
-              {editUserMutation.isPending ? (
-                <>
-                  <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </button>
+              Save Changes
+            </Button>
           </>
         }
       >
@@ -660,40 +645,29 @@ export default function AdminUsersPage() {
           onSubmit={handleEditUser}
           className="space-y-4"
         >
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Full Name
-            </label>
-            <input
+          <FormField label="Full Name" required>
+            <Input
               type="text"
               value={editForm.name}
               onChange={(e) =>
                 setEditForm({ ...editForm, name: e.target.value })
               }
               placeholder="e.g. John Doe"
-              className="field"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Email Address
-            </label>
-            <input
+          <FormField label="Email Address" required>
+            <Input
               type="email"
               value={editForm.email}
               onChange={(e) =>
                 setEditForm({ ...editForm, email: e.target.value })
               }
               placeholder="e.g. johndoe@lms.local"
-              className="field"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted">
-              Package
-            </label>
+          <FormField label="Package">
             <Select
               value={editForm.packageId || ""}
               onValueChange={(value) =>
@@ -704,7 +678,7 @@ export default function AdminUsersPage() {
                 })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full h-10 px-3.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs">
                 <SelectValue placeholder="Select a package..." />
               </SelectTrigger>
               <SelectContent>
@@ -715,20 +689,17 @@ export default function AdminUsersPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
           {editForm.packageId && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                Batch
-              </label>
+            <FormField label="Batch">
               <Select
                 value={editForm.batchId || ""}
                 onValueChange={(value) =>
                   setEditForm({ ...editForm, batchId: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10 px-3.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs">
                   <SelectValue placeholder="Select a batch..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -747,7 +718,7 @@ export default function AdminUsersPage() {
                   No batches in this package yet
                 </p>
               )}
-            </div>
+            </FormField>
           )}
         </form>
       </FormModal>

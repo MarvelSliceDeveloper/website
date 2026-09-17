@@ -385,6 +385,7 @@ export async function getCourseDetail(userId: string, courseId: string) {
             include: { questions: true },
           },
           assignments: {
+            where: { deletedAt: null },
             orderBy: { dueDate: "asc" },
           },
           practicals: {
@@ -617,6 +618,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
             orderBy: { order: "asc" },
           },
           assignments: {
+            where: { deletedAt: null },
             select: {
               id: true,
               title: true,

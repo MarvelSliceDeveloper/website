@@ -35,12 +35,9 @@ export function CourseCard({
           {img ? (
             <img src={img} alt={course.title} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-white/15 text-4xl sm:text-5xl font-bold">{course.title?.charAt(0)}</span>
+            <div className="w-full h-full bg-gradient-to-br from-primary to-ink" />
           )}
         </div>
-        <span className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs">
-          Course
-        </span>
       </div>
       <div className="p-6 flex flex-col flex-1">
         <h3 className="font-bold text-ink text-lg group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
@@ -67,7 +64,7 @@ export function CourseCard({
         </div>
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-sm mt-auto">
           <span className="text-xs text-muted-foreground">{course._count?.modules ?? 0} modules</span>
-          <span className="text-sm font-semibold text-primary">View Course →</span>
+          <span className="text-sm font-semibold text-primary">Buy Now →</span>
         </div>
       </div>
     </Link>

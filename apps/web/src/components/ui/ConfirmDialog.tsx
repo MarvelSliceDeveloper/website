@@ -63,7 +63,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
           onKeyDown={handleKeyDown}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
+            className="w-full max-w-md rounded-lg border border-border bg-card shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 px-5 pt-5">

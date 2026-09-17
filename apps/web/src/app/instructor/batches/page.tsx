@@ -7,10 +7,14 @@ import {
   IconUserCheck,
   IconVideo,
   IconClock,
+  IconUsers,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type CourseSummary = { id: string; title: string };
 
@@ -38,8 +42,10 @@ export default function InstructorBatchesPage() {
   return (
     <Suspense
       fallback={
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading batches...</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-56 rounded-2xl" />
+          ))}
         </div>
       }
     >
@@ -72,131 +78,145 @@ function BatchesPageContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
         title="My Batches"
         breadcrumbs={[{ label: "Batches", href: "/instructor/batches" }]}
         role="Instructor"
-        description="Monitor enrollment stats and scheduling progress across your assigned student batches."
+        description="Monitor enrollment stats and scheduling progress across your assigned student cohorts."
       />
 
       {loading ? (
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading cohorts...</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-56 rounded-lg" />
+          ))}
         </div>
       ) : filteredBatches.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">👥</div>
-          <p className="text-lg font-semibold text-foreground">
+        <Card className="p-12 text-center flex flex-col items-center justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/20 text-muted-foreground mb-3 border border-border">
+            <IconUsers size={26} stroke={1.8} />
+          </div>
+          <p className="text-base font-bold text-foreground">
             No cohorts assigned
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Please ask your LMS Admin to enroll you into a batch cohort.
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+            Please ask your LMS Admin to assign you to a batch cohort.
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBatches.map((b) => (
-            <div
-              key={b.id}
-              className="glass-card p-5 space-y-4 border border-border/80 hover:border-violet-500/20 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                <div>
-                  <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                      new Date(b.endDate) < now
-                        ? "text-muted-foreground bg-muted/20"
-                        : new Date(b.startDate) > now
-                          ? "text-sky-400 bg-sky-500/10"
-                          : "text-violet-400 bg-violet-500/10"
-                    }`}
-                  >
-                    {new Date(b.endDate) < now
-                      ? "Completed"
-                      : new Date(b.startDate) > now
-                        ? "Upcoming"
-                        : "Active"}
-                  </span>
-                  <h3 className="font-bold text-foreground text-base mt-2 truncate">
-                    {b.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {getCoursesForBatch(b).length > 0 ? (
-                      getCoursesForBatch(b).map((c) => (
-                        <span
-                          key={c.id}
-                          className="inline-flex items-center rounded-full bg-brand-blue-tint/60 px-2 py-0.5 text-[10px] font-semibold text-brand-blue border border-brand-blue/15"
-                        >
-                          {c.title}
+          {filteredBatches.map((b) => {
+            const isCompleted = new Date(b.endDate) < now;
+            const isUpcoming = new Date(b.startDate) > now;
+            const statusVariant = isCompleted
+              ? ("secondary" as const)
+              : isUpcoming
+                ? ("info" as const)
+                : ("success" as const);
+            const statusLabel = isCompleted
+              ? "Completed"
+              : isUpcoming
+                ? "Upcoming"
+                : "Active";
+
+            return (
+              <Card
+                key={b.id}
+                hoverable
+                className="p-5 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Badge variant={statusVariant} size="sm" dot>
+                      {statusLabel}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-foreground text-base truncate">
+                      {b.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {getCoursesForBatch(b).length > 0 ? (
+                        getCoursesForBatch(b).map((c) => (
+                          <Badge
+                            key={c.id}
+                            variant="default"
+                            size="sm"
+                          >
+                            {c.title}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          No course assigned
                         </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        No course assigned
-                      </span>
-                    )}
+                      )}
+                    </div>
+                  </div>
+
+                  {b.description && (
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                      {b.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 py-3 border-y border-border text-center bg-muted/10 rounded-lg">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                      Students
+                    </p>
+                    <p className="text-sm font-bold text-foreground flex items-center justify-center gap-1">
+                      <IconUserCheck size={14} className="text-primary" />
+                      {b._count?.enrollments ?? 0}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                      Sessions
+                    </p>
+                    <p className="text-sm font-bold text-foreground flex items-center justify-center gap-1">
+                      <IconVideo size={14} className="text-success" />
+                      {b._count?.sessions ?? 0}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                      Limit
+                    </p>
+                    <p className="text-sm font-bold text-foreground flex items-center justify-center gap-1">
+                      <IconClock size={14} className="text-warning" />
+                      {b.maxStudents ?? "—"}
+                    </p>
                   </div>
                 </div>
 
-                {b.description && (
-                  <p className="text-xs text-muted leading-relaxed line-clamp-2">
-                    {b.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 py-3 border-y border-border/40 text-center">
-                <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase">
-                    Students
-                  </p>
-                  <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
-                    <IconUserCheck size={14} className="text-violet-400" />
-                    {b._count?.enrollments ?? 0}
-                  </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-between pt-1">
+                  <span className="flex items-center gap-1">
+                    <IconCalendar size={13} className="text-primary" />
+                    {new Date(b.startDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                  <span>→</span>
+                  <span className="flex items-center gap-1">
+                    <IconCalendar size={13} className="text-primary" />
+                    {new Date(b.endDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
                 </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase">
-                    Sessions
-                  </p>
-                  <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
-                    <IconVideo size={14} className="text-emerald-400" />
-                    {b._count?.sessions ?? 0}
-                  </p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase">
-                    Limit
-                  </p>
-                  <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
-                    <IconClock size={14} className="text-sky-400" />
-                    {b.maxStudents ?? "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1.5 justify-between">
-                <span className="flex items-center gap-1">
-                  <IconCalendar size={13} />
-                  Start:{" "}
-                  {new Date(b.startDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-                <span className="flex items-center gap-1">
-                  End:{" "}
-                  {new Date(b.endDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              </div>
-            </div>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+

@@ -1,24 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, DM_Sans } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import { Providers } from "./providers";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import "./globals.css";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
-// Sora: distinctive geometric display face for headings & UI chrome
-const sora = Sora({
+// Montserrat: single brand face for headings (--font-display) & body (--font-body)
+const montserratDisplay = Montserrat({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["600", "700", "800"],
   display: "swap",
   fallback: ["system-ui", "sans-serif"],
 });
 
-// DM Sans: humanist sans with great readability at body sizes
-const dmSans = DM_Sans({
+const montserratBody = Montserrat({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   fallback: ["system-ui", "sans-serif"],
 });
@@ -99,7 +98,7 @@ export default function RootLayout({
     <html
       lang="en"
       // font variables available as CSS custom properties everywhere
-      className={`${sora.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${montserratDisplay.variable} ${montserratBody.variable} h-full antialiased`}
       // prevents a hydration mismatch when browser extensions modify the DOM
       suppressHydrationWarning
     >

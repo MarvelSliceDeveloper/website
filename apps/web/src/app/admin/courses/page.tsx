@@ -14,6 +14,7 @@ import {
   IconPhoto,
   IconUpload,
   IconArchive,
+  IconPlus,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -23,6 +24,8 @@ import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
@@ -45,12 +48,6 @@ type CourseListResponse = {
 };
 
 type ChecklistItem = { item: string; passed: boolean };
-
-const statusStyles: Record<string, string> = {
-  DRAFT: "bg-warning/15 text-warning border-warning/25",
-  PUBLISHED: "bg-success/15 text-success border-success/25",
-  ARCHIVED: "bg-muted/15 text-muted border-muted/25",
-};
 
 export default function AdminCoursesPage() {
   usePageTitle("Courses");
@@ -174,30 +171,30 @@ function CoursesPageContent() {
       key: "title",
       label: "Course",
       render: (_, course) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-14 shrink-0 rounded-lg bg-primary/15 flex items-center justify-center overflow-hidden">
+        <div className="flex items-center gap-3.5">
+          <div className="h-11 w-16 shrink-0 rounded-xl bg-primary/10 border border-border flex items-center justify-center overflow-hidden">
             {course.thumbnailUrl ? (
               <Image
                 src={course.thumbnailUrl}
                 alt=""
-                width={56}
-                height={40}
+                width={64}
+                height={44}
                 className="h-full w-full object-cover"
                 unoptimized
               />
             ) : (
-              <IconBook size={20} stroke={1.5} className="text-muted" />
+              <IconBook size={20} stroke={1.5} className="text-primary" />
             )}
           </div>
           <div className="min-w-0">
             <Link
               href={`/admin/courses/${course.slug || course.id}`}
-              className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
+              className="text-sm font-bold text-foreground hover:text-primary transition-colors truncate block"
             >
               {course.title}
             </Link>
             {course.category && (
-              <p className="text-xs text-muted truncate">{course.category}</p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{course.category}</p>
             )}
           </div>
         </div>
@@ -207,18 +204,26 @@ function CoursesPageContent() {
       key: "status",
       label: "Status",
       render: (_, course) => (
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[course.status]}`}
+        <Badge
+          variant={
+            course.status === "PUBLISHED"
+              ? "success"
+              : course.status === "DRAFT"
+                ? "warning"
+                : "secondary"
+          }
+          size="sm"
+          dot
         >
           {course.status}
-        </span>
+        </Badge>
       ),
     },
     {
       key: "_count.modules",
       label: "Modules",
       render: (_, course) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm font-semibold text-foreground">
           {course._count.modules}
         </span>
       ),
@@ -227,7 +232,7 @@ function CoursesPageContent() {
       key: "_count.batches",
       label: "Batches",
       render: (_, course) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm font-semibold text-foreground">
           {course._count.batches}
         </span>
       ),
@@ -236,7 +241,7 @@ function CoursesPageContent() {
       key: "updatedAt",
       label: "Updated",
       render: (_, course) => (
-        <span className="text-xs text-muted">
+        <span className="text-xs text-muted-foreground">
           {new Date(course.updatedAt).toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
@@ -249,10 +254,10 @@ function CoursesPageContent() {
       key: "id",
       label: "Actions",
       render: (_, course) => (
-        <div className="flex items-center justify-center gap-1">
+        <div className="flex items-center justify-center gap-1.5">
           <Link
             href={`/admin/courses/${course.slug || course.id}`}
-            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-all duration-150 shadow-2xs hover:border-border-hover"
             title="Edit course"
           >
             <IconEdit size={16} />
@@ -260,7 +265,7 @@ function CoursesPageContent() {
           {course.status === "DRAFT" && (
             <button
               onClick={() => handlePublish(course.id)}
-              className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors"
+              className="rounded-xl border border-success/30 p-2 text-success hover:bg-success/10 transition-all duration-150 shadow-2xs"
               title="Publish course"
             >
               <IconUpload size={16} />
@@ -269,7 +274,7 @@ function CoursesPageContent() {
           {course.status === "PUBLISHED" && (
             <button
               onClick={() => handleUnpublish(course.id)}
-              className="rounded-md border border-warning/20 p-2 text-warning hover:bg-warning/10 transition-colors"
+              className="rounded-xl border border-warning/30 p-2 text-warning hover:bg-warning/10 transition-all duration-150 shadow-2xs"
               title="Unpublish course"
             >
               <IconPhoto size={16} />
@@ -282,12 +287,12 @@ function CoursesPageContent() {
                 deleteMutation.isPending &&
                 deleteMutation.variables === course.id
               }
-              className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+              className="rounded-xl border border-danger/30 p-2 text-danger hover:bg-danger/10 transition-all duration-150 disabled:opacity-50 shadow-2xs"
               title="Archive course"
             >
               {deleteMutation.isPending &&
               deleteMutation.variables === course.id ? (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-danger border-t-transparent inline-block" />
               ) : (
                 <IconArchive size={16} />
               )}
@@ -305,8 +310,10 @@ function CoursesPageContent() {
         description={`${total} course${total !== 1 ? "s" : ""} total`}
         breadcrumbs={[{ label: "Courses", href: "/admin/courses" }]}
         action={
-          <Link href="/admin/courses/new" className="btn-primary">
-            + Add Course
+          <Link href="/admin/courses/new">
+            <Button leftIcon={<IconPlus size={16} />}>
+              Add Course
+            </Button>
           </Link>
         }
       />
@@ -342,11 +349,8 @@ function CoursesPageContent() {
           title="No courses yet"
           description="Add your first course to get started."
           action={
-            <Link
-              href="/admin/courses/new"
-              className="btn-primary mt-4 inline-flex"
-            >
-              + Add Course
+            <Link href="/admin/courses/new" className="mt-4 inline-flex">
+              <Button leftIcon={<IconPlus size={16} />}>Add Course</Button>
             </Link>
           }
         />
@@ -364,3 +368,4 @@ function CoursesPageContent() {
     </div>
   );
 }
+

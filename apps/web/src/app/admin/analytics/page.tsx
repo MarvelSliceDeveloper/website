@@ -110,7 +110,7 @@ export default function AdminAnalyticsPage() {
       {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 1. Course Completion Rates */}
-        <div className="border border-border bg-card p-5 rounded-2xl shadow-xs">
+        <div className="border border-border bg-card p-5 rounded-lg shadow-xs">
           <div className="flex items-center gap-2 mb-4">
             <IconChartBar size={20} className="text-primary" />
             <div>
@@ -166,7 +166,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* 2. Active Student Retention */}
-        <div className="border border-border bg-card p-5 rounded-2xl shadow-xs">
+        <div className="border border-border bg-card p-5 rounded-lg shadow-xs">
           <div className="flex items-center gap-2 mb-4">
             <IconTrendingUp size={20} className="text-accent" />
             <div>
@@ -229,7 +229,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* 3. Video Lesson Retention & Drop-off Rates */}
-        <div className="border border-border bg-card p-5 rounded-2xl shadow-xs">
+        <div className="border border-border bg-card p-5 rounded-lg shadow-xs">
           <div className="flex items-center gap-2 mb-4">
             <IconVideo size={20} className="text-warning" />
             <div>
@@ -277,7 +277,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* 4. Quiz Score Averages */}
-        <div className="border border-border bg-card p-5 rounded-2xl shadow-xs">
+        <div className="border border-border bg-card p-5 rounded-lg shadow-xs">
           <div className="flex items-center gap-2 mb-4">
             <IconHelpCircle size={20} className="text-violet" />
             <div>

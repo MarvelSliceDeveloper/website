@@ -23,6 +23,11 @@ paymentRouter.post(
   requireAuth,
   paymentController.createConsentEnrollment,
 );
+paymentRouter.get(
+  "/:paymentId/invoice",
+  optionalAuth,
+  paymentController.downloadInvoice,
+);
 
 // ── Admin payment routes (mounted at /api/admin/payments) ──
 export const adminPaymentRouter = Router();

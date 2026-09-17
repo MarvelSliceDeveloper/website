@@ -1,57 +1,6 @@
 import Link from "next/link";
-import { PackageDetailClient } from "./_components/PackageDetailClient";
+import SinglePaymentPage from "./_components/SinglePaymentPage";
 import type { PackageDetail } from "@/lib/api-types";
-
-function courseToPackageDetail(course: any): PackageDetail {
-  const modules = course.modules || [];
-  let totalLessons = 0;
-  let totalQuizzes = 0;
-  let totalAssignments = 0;
-  let totalPracticals = 0;
-  for (const m of modules) {
-    totalLessons += m.lessons?.length ?? 0;
-    totalQuizzes += m.quizzes?.length ?? 0;
-    totalAssignments += m.assignments?.length ?? 0;
-    totalPracticals += m.practicals?.length ?? 0;
-  }
-  return {
-    id: course.id,
-    name: course.title,
-    slug: course.slug,
-    description: course.description ?? null,
-    price: course.price ?? null,
-    status: course.status ?? "PUBLISHED",
-    createdAt: course.createdAt ?? new Date().toISOString(),
-    updatedAt: course.updatedAt ?? new Date().toISOString(),
-    isInternship: false,
-    courses: [
-      {
-        course: {
-          id: course.id,
-          title: course.title,
-          slug: course.slug,
-          description: course.description ?? null,
-          thumbnailUrl: course.thumbnailUrl ?? null,
-          learningObjectives: course.learningObjectives ?? null,
-          modules: modules.map((m: any) => ({
-            id: m.id,
-            title: m.title,
-            order: m.order ?? 0,
-          })),
-        },
-      },
-    ],
-    batches: [],
-    _count: { enrollments: 0 },
-    totalLessons,
-    totalQuizzes,
-    totalAssignments,
-    totalPracticals,
-    // marker to indicate this package is derived from a single course
-    // used by PackageDetailClient to switch checkout to course flow
-    _derivedCourseId: course.id,
-  } as PackageDetail & { _derivedCourseId?: string };
-}
 
 function resolveApiBase(): string {
   // API_URL in production includes the "/api" suffix
@@ -78,29 +27,12 @@ async function getPackage(slug: string): Promise<PackageDetail | null> {
   }
 }
 
-async function getCatalogueCourse(slug: string): Promise<any | null> {
-  try {
-    const apiUrl = resolveApiBase();
-    const res = await fetch(`${apiUrl}/api/courses/catalogue/${slug}`, { next: { revalidate: 60 } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.course ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function PackageDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const course = await getCatalogueCourse(slug);
-  if (course) {
-    const derived = courseToPackageDetail(course);
-    return <PackageDetailClient pkg={derived} />;
-  }
   const pkg = await getPackage(slug);
 
   if (!pkg) {
@@ -111,7 +43,7 @@ export default async function PackageDetailPage({
             Not found
           </h1>
           <p className="text-muted-foreground mb-4">
-            The course or package you&apos;re looking for doesn&apos;t exist.
+            The package you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link href="/catalogue" className="text-sm text-primary hover:underline">
             &larr; Back to Catalogue
@@ -121,5 +53,5 @@ export default async function PackageDetailPage({
     );
   }
 
-  return <PackageDetailClient pkg={pkg} />;
+  return <SinglePaymentPage pkg={pkg} />;
 }
