@@ -7,6 +7,7 @@ import {
   IconChevronDown,
   IconFilter,
 } from "@tabler/icons-react";
+import { Button } from "@/components/ui/Button";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -100,16 +101,16 @@ export default function DataTable<T>({
 
   const renderTableHeader = () => (
     <thead>
-      <tr className="border-b-2 border-border text-left bg-slate-100/70">
+      <tr className="border-b border-border text-left bg-muted/15">
         {showSerialNumber && (
-          <th className="px-4 py-3 text-xs font-extrabold uppercase text-black w-12">
+          <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12">
             {serialNumberLabel}
           </th>
         )}
         {columns.map((col) => (
           <th
             key={col.key}
-            className={`px-4 py-3 text-xs font-extrabold uppercase text-black ${
+            className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
               col.sortable
                 ? "cursor-pointer select-none hover:text-primary transition-colors"
                 : ""
@@ -121,14 +122,14 @@ export default function DataTable<T>({
               {col.sortable &&
                 sortKey === col.key &&
                 (sortDir === "asc" ? (
-                  <IconChevronUp size={14} className="text-black" />
+                  <IconChevronUp size={14} className="text-primary" />
                 ) : (
-                  <IconChevronDown size={14} className="text-black" />
+                  <IconChevronDown size={14} className="text-primary" />
                 ))}
               {col.filterable && (
                 <IconFilter
                   size={13}
-                  className="text-black hover:text-primary cursor-pointer"
+                  className="text-muted-foreground hover:text-primary cursor-pointer"
                 />
               )}
             </span>
@@ -139,21 +140,19 @@ export default function DataTable<T>({
   );
 
   const renderTableBody = (rows: T[]) => (
-    <tbody>
+    <tbody className="divide-y divide-border/50">
       {rows.map((row, i) => (
         <tr
           key={i}
-          className={`${
-            i % 2 === 1 ? "bg-slate-50" : ""
-          } hover:bg-primary/[0.03] transition-colors border-b border-border/60 last:border-0`}
+          className="hover:bg-primary/[0.03] transition-colors"
         >
           {showSerialNumber && (
-            <td className="px-4 py-3 text-sm text-muted-foreground w-12">
+            <td className="px-4 py-3.5 text-sm text-muted-foreground w-12 font-medium">
               {serialOffset + i + 1}
             </td>
           )}
           {columns.map((col) => (
-            <td key={col.key} className="px-4 py-3 text-sm text-foreground">
+            <td key={col.key} className="px-4 py-3.5 text-sm text-foreground">
               {renderCell(row, col, i)}
             </td>
           ))}
@@ -164,21 +163,21 @@ export default function DataTable<T>({
 
   if (loading) {
     return (
-      <div className="rounded-xl border-2 border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <div className="overflow-x-auto min-w-[600px]">
           <table className="w-full">
             {renderTableHeader()}
-            <tbody>
+            <tbody className="divide-y divide-border/40">
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {showSerialNumber && (
-                    <td className="px-4 py-3">
-                      <div className="h-4 w-6 animate-pulse bg-border" />
+                    <td className="px-4 py-3.5">
+                      <div className="h-4 w-6 animate-pulse rounded bg-muted/20" />
                     </td>
                   )}
                   {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3">
-                      <div className="h-4 w-full max-w-32 animate-pulse bg-border" />
+                    <td key={col.key} className="px-4 py-3.5">
+                      <div className="h-4 w-full max-w-32 animate-pulse rounded bg-muted/20" />
                     </td>
                   ))}
                 </tr>
@@ -192,16 +191,16 @@ export default function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border-2 border-border bg-card overflow-hidden">
-        <div className="px-4 py-10 text-center text-sm text-muted">
-          {emptyState ?? "No data"}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+        <div className="px-4 py-12 text-center text-sm text-muted-foreground">
+          {emptyState ?? "No records found"}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border-2 border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">
@@ -213,13 +212,13 @@ export default function DataTable<T>({
       {/* Mobile Cards */}
       <div className="block md:hidden divide-y divide-border/50">
         {displayed.map((row, i) => (
-          <div key={i} className="p-3 space-y-1.5">
+          <div key={i} className="p-4 space-y-2">
             {showSerialNumber && (
               <div className="flex items-start justify-between gap-2 mb-1">
-                <span className="text-xs font-medium uppercase text-muted shrink-0">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
                   {serialNumberLabel}
                 </span>
-                <span className="text-sm text-foreground text-right">
+                <span className="text-sm font-medium text-foreground text-right">
                   {serialOffset + i + 1}
                 </span>
               </div>
@@ -229,7 +228,7 @@ export default function DataTable<T>({
                 key={col.key}
                 className="flex items-start justify-between gap-2"
               >
-                <span className="text-xs font-medium uppercase text-muted shrink-0 min-w-[80px]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 min-w-[80px]">
                   {col.label}
                 </span>
                 <span className="text-sm text-foreground text-right">
@@ -243,39 +242,44 @@ export default function DataTable<T>({
 
       {/* Pagination */}
       {total > pageSize && (
-        <div className="flex items-center justify-between border-t-2 border-border px-4 py-3">
-          <p className="text-xs text-muted">
-            Showing {startItem} to {endItem} of {total} entries
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 bg-muted/5">
+          <p className="text-xs font-medium text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{startItem}</span> to{" "}
+            <span className="font-semibold text-foreground">{endItem}</span> of{" "}
+            <span className="font-semibold text-foreground">{total}</span> entries
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() =>
                 isControlled
                   ? onPageChange(activePage - 1)
                   : setInternalPage((p) => Math.max(1, p - 1))
               }
               disabled={activePage <= 1}
-              className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
             >
               Previous
-            </button>
-            <span className="text-xs text-muted">
+            </Button>
+            <span className="text-xs font-medium text-muted-foreground px-1">
               Page {activePage} of {totalPages}
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() =>
                 isControlled
                   ? onPageChange(activePage + 1)
                   : setInternalPage((p) => Math.min(totalPages, p + 1))
               }
               disabled={activePage >= totalPages}
-              className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}
     </div>
   );
 }
+

@@ -86,6 +86,34 @@ export function normalizePhone(phone?: string): string | undefined {
   return digits ? digits : undefined;
 }
 
+// Row shape for the admin payments list. `package` is nullable because
+// course-only purchases link via `courseId` instead of `packageId`.
+export type AdminPaymentRow = {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  razorpayPaymentId: string | null;
+  createdAt: Date;
+  user: { name: string; email: string };
+  package: { name: string } | null;
+  course: { title: string } | null;
+};
+
+export function toAdminPaymentItem(p: AdminPaymentRow) {
+  return {
+    id: p.id,
+    studentName: p.user.name,
+    studentEmail: p.user.email,
+    packageName: p.package?.name ?? p.course?.title ?? "Course Package",
+    amount: p.amount,
+    currency: p.currency,
+    status: p.status,
+    razorpayPaymentId: p.razorpayPaymentId,
+    createdAt: p.createdAt,
+  };
+}
+
 export const paymentService = {
   async createGuestUser(name: string, email: string, phone?: string) {
     const normalizedEmail = email.trim().toLowerCase();
@@ -601,23 +629,14 @@ export const paymentService = {
         include: {
           user: { select: { id: true, name: true, email: true } },
           package: { select: { id: true, name: true } },
+          course: { select: { id: true, title: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
       prisma.payment.count({ where }),
     ]);
 
-    const items = payments.map((p) => ({
-      id: p.id,
-      studentName: p.user.name,
-      studentEmail: p.user.email,
-      packageName: p.package!.name,
-      amount: p.amount,
-      currency: p.currency,
-      status: p.status,
-      razorpayPaymentId: p.razorpayPaymentId,
-      createdAt: p.createdAt,
-    }));
+    const items = payments.map(toAdminPaymentItem);
 
     return { items, total, page: currentPage, limit: currentLimit };
   },

@@ -202,23 +202,24 @@ export default function StudentPortalShell({
           ref={headerRef}
           className="sticky top-0 z-40 border-b border-border bg-card"
         >
-          <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
+          <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3.5 md:px-6 md:py-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               {!hideLogo && (
                 <div
-                  className="flex items-center gap-2 cursor-pointer select-none group"
+                  className="flex items-center gap-2.5 cursor-pointer select-none group"
                   onClick={() => router.push("/student")}
                 >
                   <Image
                     src="/images/logo.svg"
                     alt="Marvel Slice"
-                    width={40}
-                    height={40}
-                    className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                    width={48}
+                    height={48}
+                    priority
+                    className="h-11 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
                   />
-                  <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">
-                    <span className="text-[#175cdd]">Marvel</span>
-                    <span className="text-[#f59e0b] ml-0.5">Slice</span>
+                  <span className="text-lg sm:text-xl font-black tracking-tight text-ink flex items-center">
+                    <span className="text-[#2551d9]">Marvel</span>
+                    <span className="text-[#f59e0b] ml-1">Slice</span>
                   </span>
                 </div>
               )}

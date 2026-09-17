@@ -45,7 +45,6 @@ test.describe("Admin Portal — Page Load", () => {
     { route: "/admin/packages", name: "Packages" },
     { route: "/admin/packages/new", name: "Package create" },
     { route: "/admin/packages/enrollments", name: "Package enrollments" },
-    { route: "/admin/quiz-templates", name: "Quiz templates" },
     { route: "/admin/assignment-templates", name: "Assignment templates" },
     { route: "/admin/email-templates", name: "Email templates" },
     { route: "/admin/branding", name: "Branding" },
@@ -348,29 +347,6 @@ test.describe("Admin Portal — Workflows", () => {
 
     const sessionId = sessions[0].id;
     await page.goto(`/admin/sessions/${sessionId}`);
-    await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
-  });
-
-  test("TC-ADM-D9: Quiz template detail page loads", async ({ page }) => {
-    const csrfToken = await getCsrfToken(page);
-    const quizTitle = `E2E Quiz Template ${Date.now()}`;
-
-    const createRes = await page.request.post(
-      `${API_BASE}/api/admin/quiz-templates`,
-      {
-        headers: { "x-csrf-token": csrfToken },
-        data: {
-          title: quizTitle,
-          description: "E2E test quiz template",
-        },
-      },
-    );
-    if (createRes.status() !== 201) return;
-
-    const quizData = await createRes.json();
-    const quizId = quizData.id || quizData.quizTemplate?.id;
-
-    await page.goto(`/admin/quiz-templates/${quizId}`);
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
   });
 

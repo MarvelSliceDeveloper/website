@@ -36,7 +36,6 @@ const SEGMENT_ENTITY: Record<string, string> = {
   announcements: "Announcement",
   certificates: "Certificate",
   "certificate-templates": "CertificateTemplate",
-  "quiz-templates": "QuizTemplate",
   "assignment-templates": "AssignmentTemplate",
   "static-pages": "StaticPage",
   "email-templates": "EmailTemplate",

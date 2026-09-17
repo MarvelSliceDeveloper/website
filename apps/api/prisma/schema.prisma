@@ -178,7 +178,6 @@ model Course {
   assignments              Assignment[]
   mentorshipTickets        MentorshipTicket[]
   notes                    Note[]
-  quizTemplates            CourseQuizTemplate[]
   assignmentTemplates      CourseAssignmentTemplate[]
   packageCourses           PackageCourse[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
@@ -934,36 +933,7 @@ model ConsentLog {
   createdAt DateTime @default(now())
 }
 
-// === QUIZ & ASSIGNMENT TEMPLATES ===
-
-model QuizTemplate {
-  id          String                 @id @default(cuid())
-  title       String
-  description String?
-  category    String?
-  questions   QuizTemplateQuestion[]
-  courses     CourseQuizTemplate[]
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-}
-
-model QuizTemplateQuestion {
-  id             String               @id @default(cuid())
-  quizTemplateId String
-  text           String
-  marks          Int                  @default(1)
-  orderIndex     Int                  @default(0)
-  options        QuizTemplateOption[]
-  quizTemplate   QuizTemplate         @relation(fields: [quizTemplateId], references: [id])
-}
-
-model QuizTemplateOption {
-  id         String               @id @default(cuid())
-  questionId String
-  optionText String
-  isCorrect  Boolean              @default(false)
-  question   QuizTemplateQuestion @relation(fields: [questionId], references: [id])
-}
+// === ASSIGNMENT TEMPLATES ===
 
 model AssignmentTemplate {
   id             String                     @id @default(cuid())
@@ -976,18 +946,6 @@ model AssignmentTemplate {
   courses        CourseAssignmentTemplate[]
   createdAt      DateTime                   @default(now())
   updatedAt      DateTime                   @updatedAt
-}
-
-model CourseQuizTemplate {
-  id             String       @id @default(cuid())
-  courseId       String
-  quizTemplateId String
-  dueDate        DateTime?
-  maxPoints      Int          @default(100)
-  course         Course       @relation(fields: [courseId], references: [id])
-  quizTemplate   QuizTemplate @relation(fields: [quizTemplateId], references: [id])
-
-  @@unique([courseId, quizTemplateId])
 }
 
 model CourseAssignmentTemplate {

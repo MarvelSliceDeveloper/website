@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
-  IconEdit,
-  IconTrash,
-  IconRefresh,
   IconCalendar,
-  IconMovie,
+  IconEdit,
+  IconSearch,
+  IconTrash,
+  IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -40,6 +40,8 @@ type SessionsResponse = {
   sessions?: Session[];
 };
 
+type Tab = "ALL" | "UPCOMING" | "PAST";
+
 export default function AdminSessionsPage() {
   usePageTitle("Sessions");
 
@@ -49,6 +51,11 @@ export default function AdminSessionsPage() {
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
   const confirmDelete = useConfirmDialog();
+
+  // Dashboard controls
+  const [tab, setTab] = useState<Tab>("ALL");
+  const [query, setQuery] = useState("");
+  const [batchFilter, setBatchFilter] = useState("all");
 
   const sessionsQuery = useApiQuery<SessionsResponse>(
     ["admin", "sessions"],
@@ -60,14 +67,61 @@ export default function AdminSessionsPage() {
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
 
-  const upcoming = sessions.filter((s) => {
-    const end = new Date(s.scheduledEndAt).getTime();
-    return !s.endedAt && end > now;
-  });
-  const past = sessions.filter((s) => {
-    const end = new Date(s.scheduledEndAt).getTime();
-    return s.endedAt || end <= now;
-  });
+  const { liveNow, upcoming, past } = useMemo(() => {
+    const live = sessions.filter((s) => {
+      const start = new Date(s.scheduledAt).getTime();
+      const end = new Date(s.scheduledEndAt).getTime();
+      return !s.endedAt && start <= now && end >= now;
+    });
+    const up = sessions
+      .filter((s) => {
+        const end = new Date(s.scheduledEndAt).getTime();
+        return !s.endedAt && end > now;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+      );
+    const pa = sessions
+      .filter((s) => {
+        const end = new Date(s.scheduledEndAt).getTime();
+        return s.endedAt || end <= now;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
+      );
+    return { liveNow: live, upcoming: up, past: pa };
+  }, [sessions, now]);
+
+  const upNext = upcoming[0] ?? null;
+  const todayCount = useMemo(() => {
+    const today = new Date(now).toDateString();
+    return sessions.filter(
+      (s) => new Date(s.scheduledAt).toDateString() === today,
+    ).length;
+  }, [sessions, now]);
+
+  const batchNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const s of sessions) names.add(s.batch?.name ?? "General");
+    return [...names].sort();
+  }, [sessions]);
+
+  const liveIds = useMemo(() => new Set(liveNow.map((s) => s.id)), [liveNow]);
+
+  const visible = useMemo(() => {
+    const base = tab === "UPCOMING" ? upcoming : tab === "PAST" ? past : [...upcoming, ...past];
+    const q = query.trim().toLowerCase();
+    return base.filter((s) => {
+      if (batchFilter !== "all" && (s.batch?.name ?? "General") !== batchFilter)
+        return false;
+      if (!q) return true;
+      const haystack =
+        `${s.batch?.course?.title ?? ""} ${s.batch?.name ?? ""} ${s.title ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [tab, upcoming, past, query, batchFilter]);
 
   const openEdit = (session: Session) => {
     setEditingSession(session);
@@ -138,15 +192,7 @@ export default function AdminSessionsPage() {
     deleteMutation.mutate(sessionId);
   };
 
-  const syncMutation = useMutation({
-    mutationFn: (sessionId: string) =>
-      api.post(`/api/recordings/${sessionId}/sync`),
-    onSuccess: () => {
-      toast.success("Recording synced successfully!");
-      void sessionsQuery.refetch();
-    },
-    onError: (err: unknown) => toast.error(getErrorMessage(err)),
-  });
+  const hasFilters = query.trim() !== "" || batchFilter !== "all";
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -179,49 +225,148 @@ export default function AdminSessionsPage() {
           }
         />
       ) : (
-        <div className="space-y-6">
-          {/* Upcoming */}
-          {upcoming.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">
-                Upcoming ({upcoming.length})
-              </h2>
-              <div className="space-y-2">
-                {upcoming.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
+        <div className="space-y-5">
+          {/* Hero strip */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="glass-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5">
+                <span
+                  className={`h-2 w-2 rounded-full ${liveNow.length > 0 ? "live-pulse bg-emerald-500" : "bg-muted-foreground/40"}`}
+                />
+                Live Now
+              </p>
+              <p className="mt-1.5 text-2xl font-bold text-foreground">
+                {liveNow.length}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {liveNow.length > 0
+                  ? liveNow[0].batch?.course?.title ?? liveNow[0].batch?.name ?? "Session in progress"
+                  : "No session in progress"}
+              </p>
             </div>
-          )}
+            <div className="glass-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Up Next
+              </p>
+              <p className="mt-1.5 text-2xl font-bold text-foreground">
+                {upNext
+                  ? new Date(upNext.scheduledAt).toLocaleString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {upNext
+                  ? (upNext.batch?.course?.title ?? upNext.batch?.name ?? "Session")
+                  : "Nothing scheduled"}
+              </p>
+            </div>
+            <div className="glass-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Today
+              </p>
+              <p className="mt-1.5 text-2xl font-bold text-foreground">
+                {todayCount}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {todayCount === 1 ? "session scheduled" : "sessions scheduled"}
+              </p>
+            </div>
+          </div>
 
-          {/* Past */}
-          {past.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted mb-3">
-                Past ({past.length})
-              </h2>
-              <div className="space-y-2">
-                {past.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming={false}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                    onSync={(id) => syncMutation.mutate(id)}
-                    syncing={
-                      syncMutation.isPending &&
-                      syncMutation.variables === session.id
-                    }
-                  />
-                ))}
+          {/* Controls: tabs + search + batch filter */}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+              {(
+                [
+                  { key: "ALL", label: `All (${sessions.length})` },
+                  { key: "UPCOMING", label: `Upcoming (${upcoming.length})` },
+                  { key: "PAST", label: `Past (${past.length})` },
+                ] as { key: Tab; label: string }[]
+              ).map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    tab === t.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative">
+                <IconSearch
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search course or batch..."
+                  className="field pl-9 sm:w-64"
+                />
               </div>
+              <select
+                value={batchFilter}
+                onChange={(e) => setBatchFilter(e.target.value)}
+                className="field sm:w-48"
+                aria-label="Filter by batch"
+              >
+                <option value="all">All batches</option>
+                {batchNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Session list */}
+          {visible.length === 0 ? (
+            <div className="glass-card p-12 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No sessions match your filters
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Try a different search term or batch.
+              </p>
+              {hasFilters && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    setBatchFilter("all");
+                  }}
+                  className="btn-secondary mt-4 text-xs"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {visible.map((session) => (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  live={liveIds.has(session.id)}
+                  upcoming={
+                    !session.endedAt &&
+                    new Date(session.scheduledEndAt).getTime() > now
+                  }
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -306,104 +451,122 @@ export default function AdminSessionsPage() {
 function SessionCard({
   session,
   upcoming,
+  live,
   onEdit,
   onDelete,
-  onSync,
-  syncing,
 }: {
   session: Session;
   upcoming: boolean;
+  live: boolean;
   onEdit: (s: Session) => void;
   onDelete: (id: string) => void;
-  onSync?: (id: string) => void;
-  syncing?: boolean;
 }) {
+  const start = new Date(session.scheduledAt);
+  const end = new Date(session.scheduledEndAt);
+  const durationMin = Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / 60000),
+  );
+
+  const status = session.endedAt
+    ? { label: "Cancelled", classes: "bg-danger/15 text-danger" }
+    : live
+      ? { label: "Live", classes: "bg-emerald-500/15 text-emerald-500" }
+      : upcoming
+        ? { label: "Upcoming", classes: "bg-primary/15 text-primary" }
+        : { label: "Completed", classes: "bg-muted/15 text-muted-foreground" };
+
   return (
-    <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-      <div className="flex items-start gap-3">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-            upcoming ? "bg-primary/20" : "bg-muted/10"
-          }`}
-        >
-          {upcoming ? <IconCalendar size={20} /> : <IconMovie size={20} />}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            {new Date(session.scheduledAt).toLocaleString("en-IN", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {session.batch?.course
-              ? `${session.batch.course.title} · ${session.batch.name}`
-              : session.batch
-                ? `${session.batch.name}`
-                : "Standalone Session"}
-          </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">
-              {session.createdFrom}
+    <div className="glass-card p-4 flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
+      {/* Date block */}
+      <div
+        className={`flex w-14 shrink-0 flex-col items-center justify-center self-start rounded-xl py-2 ${
+          live ? "bg-emerald-500/15" : "bg-primary/10"
+        }`}
+      >
+        <span className="text-xl font-bold leading-none text-foreground">
+          {start.getDate()}
+        </span>
+        <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {start.toLocaleString("en-IN", { month: "short" })}
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          {start.toLocaleString("en-IN", { weekday: "short" })}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground">
+          {session.batch?.course
+            ? `${session.batch.course.title} · ${session.batch.name}`
+            : session.batch
+              ? session.batch.name
+              : "Standalone Session"}
+        </p>
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <IconCalendar size={13} className="shrink-0" />
+          {start.toLocaleString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+          {" — "}
+          {end.toLocaleString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+          <span className="text-muted">· {durationMin}m</span>
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-1 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${status.classes}`}
+          >
+            {live && (
+              <span className="live-pulse h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            )}
+            {status.label}
+          </span>
+          <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">
+            {session.createdFrom}
+          </span>
+          {!upcoming && !live && (
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+              <IconUsers size={10} />
+              {session._count?.attendance ?? 0} attended
+              {session.attendance?._avg?.durationSeconds
+                ? ` · avg ${Math.round(session.attendance._avg.durationSeconds / 60)}m`
+                : ""}
             </span>
-            {!upcoming && (
-              <span className="text-[10px] uppercase font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                {session._count?.attendance ?? 0} attended
-                {session.attendance?._avg?.durationSeconds
-                  ? ` · avg ${Math.round(
-                      session.attendance._avg.durationSeconds / 60,
-                    )}m`
-                  : ""}
-              </span>
-            )}
-            {session.recording && (
-              <span className="text-[10px] uppercase font-medium bg-success/15 text-success px-1.5 py-0.5 rounded">
-                Recording
-              </span>
-            )}
-            {!upcoming && !session.recording && (
-              <span className="text-[10px] uppercase font-medium bg-warning/15 text-warning px-1.5 py-0.5 rounded">
-                No Recording
-              </span>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Sync Recording hidden — live sessions stay, code kept */}
-
-        {/* Edit */}
-        <button
-          onClick={() => onEdit(session)}
-          className="p-1.5 rounded-lg border border-border hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
-          title="Edit session"
-        >
-          <IconEdit size={15} />
-        </button>
-
-        {/* Delete / Cancel */}
-        <button
-          onClick={() => onDelete(session.id)}
-          className="btn-danger p-1.5"
-          title="Delete session"
-        >
-          <IconTrash size={15} />
-        </button>
-
-        {/* Join / View */}
-        {upcoming ? (
+      {/* Actions */}
+      <div className="flex shrink-0 flex-col items-end justify-between gap-2">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onEdit(session)}
+            className="p-1.5 rounded-lg border border-border hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
+            title="Edit session"
+          >
+            <IconEdit size={15} />
+          </button>
+          <button
+            onClick={() => onDelete(session.id)}
+            className="btn-danger p-1.5"
+            title="Delete session"
+          >
+            <IconTrash size={15} />
+          </button>
+        </div>
+        {upcoming || live ? (
           <a
             href={session.joinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-secondary text-xs shrink-0"
+            className="btn-primary text-xs shrink-0"
           >
-            Join &rarr;
+            {live ? "Join Live →" : "Join →"}
           </a>
         ) : (
           <Link

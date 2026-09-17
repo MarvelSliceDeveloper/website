@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconRefresh,
   IconCheck,
   IconX,
   IconArrowBackUp,
+  IconDownload,
+  IconLoader2,
 } from "@tabler/icons-react";
 
 type Payment = {
@@ -18,7 +22,7 @@ type Payment = {
   packageName: string;
   amount: number;
   currency: string;
-  status: "CREATED" | "CAPTURED" | "FAILED" | "REFUNDED";
+  status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   createdAt: string;
 };
 
@@ -34,8 +38,8 @@ const statusConfig: Record<
   string,
   { label: string; classes: string; icon: React.ReactNode }
 > = {
-  CAPTURED: {
-    label: "Successful",
+  PAID: {
+    label: "Paid",
     classes: "bg-success/15 text-success border-success/25",
     icon: <IconCheck size={10} />,
   },
@@ -49,7 +53,7 @@ const statusConfig: Record<
     classes: "bg-warning/15 text-warning border-warning/25",
     icon: <IconArrowBackUp size={10} />,
   },
-  CREATED: {
+  PENDING: {
     label: "Pending",
     classes: "bg-muted/15 text-muted-foreground border-muted/25",
     icon: null,
@@ -77,6 +81,34 @@ export default function AdminPaymentsPage() {
   const payments = paymentsQuery.data?.items ?? [];
   const stats = statsQuery.data;
   const loading = paymentsQuery.isPending || statsQuery.isPending;
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Downloads the invoice PDF for a payment (GET /api/payments/:id/invoice).
+  // The admin session cookie satisfies the backend's isAdmin check, so no
+  // ownership-proof query params are needed.
+  async function downloadInvoice(paymentId: string) {
+    if (downloadingId) return;
+    setDownloadingId(paymentId);
+    try {
+      const res = await fetch(`/api/payments/${paymentId}/invoice`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Couldn't download the invoice.");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${paymentId.slice(-8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -169,7 +201,8 @@ export default function AdminPaymentsPage() {
                   <th className="py-2.5 pr-3">Package</th>
                   <th className="py-2.5 pr-3 text-right">Amount</th>
                   <th className="py-2.5 pr-3">Status</th>
-                  <th className="py-2.5">Payment ID</th>
+                  <th className="py-2.5 pr-3">Payment ID</th>
+                  <th className="py-2.5 text-right">Invoice</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -208,8 +241,32 @@ export default function AdminPaymentsPage() {
                           {cfg?.label || payment.status}
                         </span>
                       </td>
-                      <td className="py-3 font-mono text-[10px] text-muted-foreground">
+                      <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
                         {payment.razorpayPaymentId || "—"}
+                      </td>
+                      <td className="py-3 text-right">
+                        {payment.status === "PAID" ? (
+                          <button
+                            onClick={() => void downloadInvoice(payment.id)}
+                            disabled={downloadingId === payment.id}
+                            className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
+                            title="Download invoice (PDF)"
+                          >
+                            {downloadingId === payment.id ? (
+                              <IconLoader2
+                                size={14}
+                                className="animate-spin"
+                              />
+                            ) : (
+                              <IconDownload size={14} />
+                            )}
+                            {downloadingId === payment.id
+                              ? "Preparing…"
+                              : "Download"}
+                          </button>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
                       </td>
                     </tr>
                   );

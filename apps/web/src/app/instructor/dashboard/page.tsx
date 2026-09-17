@@ -7,6 +7,11 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import StatCard from "@/components/admin/StatCard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
 import {
   IconVideo,
   IconUsers,
@@ -15,6 +20,7 @@ import {
   IconClock,
   IconClipboardList,
   IconExternalLink,
+  IconChevronRight,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 
@@ -65,13 +71,6 @@ type SubmissionRecord = {
   status: "PENDING" | "GRADED";
   submittedAt: string;
   student: { name: string; email: string };
-};
-
-const iconBg: Record<string, string> = {
-  violet: "bg-primary/15 text-primary",
-  emerald: "bg-success/15 text-success",
-  sky: "bg-accent/15 text-accent",
-  amber: "bg-warning/15 text-warning",
 };
 
 export default function InstructorDashboardPage() {
@@ -190,20 +189,20 @@ export default function InstructorDashboardPage() {
         action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Batches
               </p>
               <p className="text-lg font-bold text-primary">
-                {loading ? "\u2014" : stats.totalBatches}
+                {loading ? "—" : stats.totalBatches}
               </p>
             </div>
             <div className="h-8 w-px bg-border/60" />
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Students
               </p>
               <p className="text-lg font-bold text-success">
-                {loading ? "\u2014" : stats.totalStudents}
+                {loading ? "—" : stats.totalStudents}
               </p>
             </div>
           </div>
@@ -212,52 +211,37 @@ export default function InstructorDashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            label: "Assigned Batches",
-            value: stats.totalBatches,
-            icon: IconUsers,
-            color: "violet",
-          },
-          {
-            label: "Total Sessions",
-            value: stats.totalSessions,
-            icon: IconVideo,
-            color: "emerald",
-          },
-          {
-            label: "Active Students",
-            value: stats.totalStudents,
-            icon: IconBook,
-            color: "sky",
-          },
-          {
-            label: "Pending Submissions",
-            value: submissionsQuery.isPending
-              ? undefined
-              : stats.pendingAssignments,
-            icon: IconClipboardList,
-            color: "amber",
-          },
-        ].map((stat) => (
-          <div key={stat.label} className="border border-border bg-card p-5">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">
-                  {stat.label}
-                </p>
-                <p className="text-3xl font-bold text-foreground">
-                  {loading || stat.value === undefined ? "\u2014" : stat.value}
-                </p>{" "}
-              </div>
-              <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}
-              >
-                <stat.icon size={20} stroke={1.8} />
-              </div>
-            </div>
-          </div>
-        ))}
+        <StatCard
+          label="Assigned Batches"
+          value={stats.totalBatches}
+          icon={IconUsers}
+          variant="purple"
+          href="/instructor/batches"
+          loading={loading}
+        />
+        <StatCard
+          label="Total Sessions"
+          value={stats.totalSessions}
+          icon={IconVideo}
+          variant="green"
+          href="/instructor/sessions"
+          loading={loading}
+        />
+        <StatCard
+          label="Active Students"
+          value={stats.totalStudents}
+          icon={IconBook}
+          variant="blue"
+          loading={loading}
+        />
+        <StatCard
+          label="Pending Submissions"
+          value={submissionsQuery.isPending ? null : stats.pendingAssignments}
+          icon={IconClipboardList}
+          variant="orange"
+          href="/instructor/assignments"
+          loading={submissionsLoading}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -265,48 +249,49 @@ export default function InstructorDashboardPage() {
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2">
-              <IconCalendar size={15} stroke={1.8} /> Upcoming Schedule
+              <IconCalendar size={16} stroke={1.8} className="text-primary" /> Upcoming Schedule
             </h2>
             <Link
               href="/instructor/sessions"
-              className="text-xs text-primary hover:text-primary-hover font-medium transition-colors"
+              className="text-xs text-primary hover:text-primary-hover font-semibold transition-colors flex items-center gap-1"
             >
               View all sessions
-              <IconExternalLink size={12} className="inline ml-1" />
+              <IconChevronRight size={14} />
             </Link>
           </div>
 
           {loading ? (
-            <div className="border border-border bg-card p-8 text-center text-sm text-muted animate-pulse">
-              Loading schedule...
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 rounded-2xl" />
+              ))}
             </div>
           ) : upcomingSessions.length === 0 ? (
-            <div className="border border-border bg-card p-10 text-center">
-              <IconCalendar
-                size={36}
-                stroke={1.2}
-                className="mx-auto text-muted/40 mb-3"
-              />
-              <p className="text-sm font-medium text-foreground">
+            <Card className="p-10 text-center flex flex-col items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/20 text-muted-foreground mb-3">
+                <IconCalendar size={28} stroke={1.5} />
+              </div>
+              <p className="text-sm font-semibold text-foreground">
                 No upcoming sessions
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Your scheduled classes will appear here.
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                Your scheduled classes will appear here when configured.
               </p>
-            </div>
+            </Card>
           ) : (
             <div className="space-y-3">
               {upcomingSessions.map((session) => (
-                <div
+                <Card
                   key={session.id}
-                  className="border border-border bg-card p-4 flex items-center justify-between"
+                  hoverable
+                  className="p-4 flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                      <IconVideo size={18} stroke={1.8} />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <IconVideo size={20} stroke={1.8} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-sm font-bold text-foreground truncate">
                         {new Date(session.scheduledAt).toLocaleString("en-IN", {
                           weekday: "short",
                           day: "numeric",
@@ -328,12 +313,12 @@ export default function InstructorDashboardPage() {
                     href={session.joinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary text-xs px-3 py-1.5 shrink-0 ml-3"
+                    className="inline-flex items-center justify-center font-semibold transition-all duration-150 select-none cursor-pointer bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow active:scale-[0.99] h-8 px-3.5 text-xs rounded-lg gap-1.5 shrink-0 ml-3"
                   >
                     Start Class
                     <IconExternalLink size={13} stroke={2} />
                   </a>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -342,61 +327,64 @@ export default function InstructorDashboardPage() {
         {/* Assignments Pending Grading */}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2">
-            <IconClipboardList size={15} stroke={1.8} /> Needs Grading
+            <IconClipboardList size={16} stroke={1.8} className="text-warning" /> Needs Grading
           </h2>
 
           <div className="space-y-3">
             {submissionsLoading ? (
-              <div className="border border-border bg-card p-8 text-center text-sm text-muted animate-pulse">
-                Loading submissions...
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <Skeleton key={i} className="h-28 rounded-2xl" />
+                ))}
               </div>
             ) : submissions.length === 0 ? (
-              <div className="border border-border bg-card p-10 text-center">
-                <IconClipboardList
-                  size={36}
-                  stroke={1.2}
-                  className="mx-auto text-muted/40 mb-3"
-                />
-                <p className="text-sm font-medium text-foreground">
-                  All caught up
+              <Card className="p-10 text-center flex flex-col items-center justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10 text-success mb-3">
+                  <IconClipboardList size={28} stroke={1.5} />
+                </div>
+                <p className="text-sm font-semibold text-foreground">
+                  All caught up!
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  No submissions waiting for grading.
+                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                  No submissions currently waiting for grading.
                 </p>
-              </div>
+              </Card>
             ) : null}
             {submissions.map((sub) => (
-              <div
+              <Card
                 key={sub.id}
-                className="border border-border bg-card p-4 space-y-3"
+                hoverable
+                className="p-4 space-y-3"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-warning bg-warning/15 px-1.5 py-0.5 rounded">
+                    <Badge variant="warning" size="sm" dot>
                       Pending
-                    </span>
-                    <span className="text-[10px] text-muted flex items-center gap-1">
-                      <IconClock size={10} />
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <IconClock size={12} />
                       {new Date(sub.submittedAt).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
                       })}
                     </span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground mt-1.5 truncate">
+                  <p className="text-sm font-semibold text-foreground mt-2 truncate">
                     {sub.assignmentTitle}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    Submitted by: {sub.studentName}
+                    Submitted by: <span className="text-foreground font-medium">{sub.studentName}</span>
                   </p>
                 </div>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => router.push("/instructor/assignments")}
-                  className="btn-secondary w-full justify-center text-xs py-1.5"
+                  className="w-full text-xs"
                 >
                   Review & Grade
-                </button>
-              </div>
+                </Button>
+              </Card>
             ))}
           </div>
         </div>

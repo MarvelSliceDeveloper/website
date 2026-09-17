@@ -36,6 +36,7 @@
   --muted-foreground: #5b6272;
   --text-secondary: #8a8fa3;
   --radius: 14px;
+  --admin-header-height: 64px;
 }
 
 /* stylelint-disable at-rule-no-unknown */
@@ -511,15 +512,18 @@ button {
 }
 
 [data-theme="dark"] [data-section="admin"] .field {
-  background: #ffffff;
+  background: #1a1d29;
+  color: #f1f5f9;
+  border-color: #2e3547;
 }
 
 [data-theme="dark"] [data-section="admin"] .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.15);
 }
 
 [data-theme="dark"] [data-section="admin"] .panel {
-  background: #ffffff;
+  background: #141721;
+  border-color: #2e3547;
 }
 
 [data-section="admin"] .min-h-screen.bg-background {

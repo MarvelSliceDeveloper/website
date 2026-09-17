@@ -8,10 +8,15 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import QuickActionCard from "@/components/admin/QuickActionCard";
+import StatCard from "@/components/admin/StatCard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   IconBook,
   IconCalendar,
   IconChartPie,
+  IconChevronRight,
   IconEdit,
   IconHistory,
   IconKey,
@@ -127,7 +132,13 @@ function SuperAdminDashboard() {
     totalStudents,
   };
 
-  const saCards = [
+  const saCards: Array<{
+    label: string;
+    value: string | number;
+    icon: typeof IconServer;
+    href: string;
+    variant: "blue" | "green" | "orange" | "red" | "purple";
+  }> = [
     {
       label: "System Status",
       value: loading
@@ -137,36 +148,42 @@ function SuperAdminDashboard() {
           : "Degraded",
       icon: IconServer,
       href: "/health",
+      variant: saStats.healthStatus === "ok" ? "green" : "red",
     },
     {
       label: "Active API Keys",
       value: saStats.apiKeysActive,
       icon: IconKey,
       href: "/admin/settings/api-keys",
+      variant: "purple",
     },
     {
       label: "Activity Logs (30d)",
       value: saStats.totalLogs,
       icon: IconHistory,
       href: "/admin/logs",
+      variant: "blue",
     },
     {
       label: "Failed Logs (30d)",
       value: saStats.failedLogs,
       icon: IconLock,
       href: "/admin/logs",
+      variant: "red",
     },
     {
       label: "Pending Instructors",
       value: saStats.pendingInstructors,
       icon: IconUserCheck,
       href: "/admin/users?role=INSTRUCTOR",
+      variant: "orange",
     },
     {
       label: "Trash Items",
       value: saStats.trashCount,
       icon: IconTrash,
       href: "/admin/trash",
+      variant: "red",
     },
   ];
 
@@ -176,35 +193,39 @@ function SuperAdminDashboard() {
       value: saStats.totalSuperAdmins,
       icon: IconShield,
       textColor: "text-danger",
-      iconColor: "text-danger",
+      iconBg: "bg-danger/10 text-danger",
+      border: "hover:border-danger/40",
     },
     {
       label: "Admins",
       value: saStats.totalAdmins,
       icon: IconShield,
       textColor: "text-primary",
-      iconColor: "text-primary",
+      iconBg: "bg-primary/10 text-primary",
+      border: "hover:border-primary/40",
     },
     {
       label: "Instructors",
       value: saStats.totalInstructors,
       icon: IconUsers,
       textColor: "text-accent",
-      iconColor: "text-accent",
+      iconBg: "bg-accent/10 text-accent",
+      border: "hover:border-accent/40",
     },
     {
       label: "Students",
       value: saStats.totalStudents,
       icon: IconSchool,
       textColor: "text-success",
-      iconColor: "text-success",
+      iconBg: "bg-success/10 text-success",
+      border: "hover:border-success/40",
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Greeting Banner — top accent bar signals health at a glance */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6">
+      {/* Greeting Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
         <div
           className={`absolute inset-x-0 top-0 h-1 ${
             saStats.healthStatus === "ok"
@@ -213,23 +234,23 @@ function SuperAdminDashboard() {
           }`}
         />
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-danger to-danger/70 text-xl font-bold text-white shadow-sm">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-danger to-danger/80 text-xl font-black text-white shadow-md shadow-danger/20">
             SA
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-danger">
-              Super Admin
-            </p>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+            <div className="flex items-center gap-2">
+              <Badge variant="danger" size="sm" dot>Super Admin</Badge>
+            </div>
+            <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               System Dashboard
             </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
               System-wide health, security, and operations overview.
             </p>
           </div>
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Total Users
               </p>
               <p className="text-lg font-bold text-primary">
@@ -243,18 +264,20 @@ function SuperAdminDashboard() {
             </div>
             <div className="h-8 w-px bg-border/60" />
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 System
               </p>
-              <p
-                className={`text-lg font-bold ${saStats.healthStatus === "ok" ? "text-success" : "text-danger"}`}
+              <Badge
+                variant={saStats.healthStatus === "ok" ? "success" : "danger"}
+                size="md"
+                dot
               >
                 {loading
-                  ? "—"
+                  ? "Checking"
                   : saStats.healthStatus === "ok"
                     ? "Online"
                     : "Issues"}
-              </p>
+              </Badge>
             </div>
           </div>
         </div>
@@ -263,103 +286,102 @@ function SuperAdminDashboard() {
       {/* System Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {saCards.map((stat) => (
-          <Link
+          <StatCard
             key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
             href={stat.href}
-            className="border border-border bg-card p-5 hover:border-muted-foreground/30 transition-colors"
-          >
-            {loading ? (
-              <div className="space-y-3">
-                <div className="h-4 w-4 animate-pulse bg-border" />
-                <div className="h-3 w-24 animate-pulse bg-border" />
-                <div className="h-7 w-16 animate-pulse bg-border" />
-              </div>
-            ) : (
-              <>
-                <stat.icon
-                  size={22}
-                  stroke={1.5}
-                  className="text-muted-foreground mb-3"
-                />
-                <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground">
-                  {stat.value}
-                </p>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-1">
-                  {stat.label}
-                </p>
-              </>
-            )}
-          </Link>
+            variant={stat.variant}
+            loading={loading}
+          />
         ))}
       </div>
 
       {/* User Distribution */}
-      <div className="border border-border bg-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <IconUsers size={18} stroke={1.5} className="text-primary" />
-          <h3 className="text-base font-semibold text-foreground">
-            User Distribution
-          </h3>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {userCards.map((card) => (
-            <div
-              key={card.label}
-              className="border border-border bg-card p-5 text-center transition-colors hover:border-muted-foreground/30"
-            >
-              <card.icon
-                size={28}
-                className={`mx-auto mb-2 ${card.iconColor}`}
-              />
-              <p
-                className={`text-3xl font-extrabold tracking-tight ${card.textColor}`}
-              >
-                {loading ? "—" : card.value}
-              </p>
-              <p className="text-xs font-semibold text-muted-foreground mt-1.5 uppercase tracking-wider">
-                {card.label}
-              </p>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <IconUsers size={18} stroke={1.8} />
             </div>
-          ))}
-        </div>
-      </div>
+            <CardTitle className="text-base font-semibold">
+              User Distribution
+            </CardTitle>
+          </div>
+          <Link
+            href="/admin/users"
+            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+          >
+            Manage Users
+            <IconChevronRight size={14} />
+          </Link>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {userCards.map((card) => (
+              <Card
+                key={card.label}
+                hoverable
+                className={`p-4 text-center transition-all ${card.border}`}
+              >
+                <div
+                  className={`mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl ${card.iconBg}`}
+                >
+                  <card.icon size={20} stroke={1.8} />
+                </div>
+                <p
+                  className={`text-2xl font-extrabold tracking-tight ${card.textColor}`}
+                >
+                  {loading ? "—" : card.value}
+                </p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {card.label}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
-      <div className="border border-border bg-card p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <QuickActionCard
-            label="System Settings"
-            href="/admin/settings/system"
-            icon={IconSettings}
-            variant="red"
-            description="Configure platform settings"
-          />
-          <QuickActionCard
-            label="API Keys"
-            href="/admin/settings/api-keys"
-            icon={IconKey}
-            variant="amber"
-            description="Manage API credentials"
-          />
-          <QuickActionCard
-            label="Trash"
-            href="/admin/trash"
-            icon={IconTrash}
-            variant="amber"
-            description="Restore or delete items"
-          />
-          <QuickActionCard
-            label="Login History"
-            href="/admin/users/login-history"
-            icon={IconHistory}
-            variant="teal"
-            description="View recent login logs"
-          />
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <QuickActionCard
+              label="System Settings"
+              href="/admin/settings/system"
+              icon={IconSettings}
+              variant="red"
+              description="Configure platform settings"
+            />
+            <QuickActionCard
+              label="API Keys"
+              href="/admin/settings/api-keys"
+              icon={IconKey}
+              variant="amber"
+              description="Manage API credentials"
+            />
+            <QuickActionCard
+              label="Trash"
+              href="/admin/trash"
+              icon={IconTrash}
+              variant="amber"
+              description="Restore or delete items"
+            />
+            <QuickActionCard
+              label="Login History"
+              href="/admin/users/login-history"
+              icon={IconHistory}
+              variant="teal"
+              description="View recent login logs"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -491,11 +513,11 @@ function AdminDashboard() {
         action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Students
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Active Students
               </p>
               <p className="text-lg font-bold text-primary">
-                {loading ? "\u2014" : (stats.totalStudents ?? "\u2014")}
+                {loading ? "—" : (stats.totalStudents ?? "—")}
               </p>
             </div>
           </div>
@@ -505,342 +527,357 @@ function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsCards.map((stat) => (
-          <Link
+          <StatCard
             key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            variant={stat.variant}
             href={stat.href}
-            className="border border-border bg-card p-5 hover:border-muted-foreground/30 transition-colors"
-          >
-            {loading ? (
-              <div className="space-y-3">
-                <div className="h-4 w-4 animate-pulse bg-border" />
-                <div className="h-3 w-24 animate-pulse bg-border" />
-                <div className="h-7 w-16 animate-pulse bg-border" />
-              </div>
-            ) : (
-              <>
-                <stat.icon
-                  size={22}
-                  stroke={1.5}
-                  className="text-muted-foreground mb-3"
-                />
-                <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground">
-                  {stat.value === null ? "\u2014" : String(stat.value)}
-                </p>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-1">
-                  {stat.label}
-                </p>
-              </>
-            )}
-          </Link>
+            loading={loading}
+          />
         ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Students per Package */}
-        <div className="border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <IconPackage size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">
-              Students per Package
-            </h3>
-          </div>
-          {loading ? (
-            <ChartSkeleton height={280} />
-          ) : chartData?.studentsPerPackage?.length ? (
-            <Chart
-              options={{
-                chart: {
-                  type: "bar",
-                  toolbar: { show: false },
-                  fontFamily: "inherit",
-                },
-                colors: [COLORS.primary],
-                plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
-                xaxis: {
-                  categories: chartData.studentsPerPackage.map(
-                    (d) => d.packageName,
-                  ),
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
-                  },
-                },
-                yaxis: {
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
-                  },
-                },
-                grid: { borderColor: "var(--border)" },
-                tooltip: { theme: "light" },
-                dataLabels: { enabled: false },
-              }}
-              series={[
-                {
-                  name: "Students",
-                  data: chartData.studentsPerPackage.map((d) => d.count),
-                },
-              ]}
-              type="bar"
-              height={280}
-            />
-          ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              No data
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2.5 pb-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <IconPackage size={18} stroke={1.8} />
             </div>
-          )}
-        </div>
+            <CardTitle className="text-base font-semibold">
+              Students per Package
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            {loading ? (
+              <ChartSkeleton height={280} />
+            ) : chartData?.studentsPerPackage?.length ? (
+              <Chart
+                options={{
+                  chart: {
+                    type: "bar",
+                    toolbar: { show: false },
+                    fontFamily: "inherit",
+                  },
+                  colors: [COLORS.primary],
+                  plotOptions: { bar: { borderRadius: 6, columnWidth: "55%" } },
+                  xaxis: {
+                    categories: chartData.studentsPerPackage.map(
+                      (d) => d.packageName,
+                    ),
+                    labels: {
+                      style: { colors: "var(--muted)", fontSize: "11px" },
+                    },
+                  },
+                  yaxis: {
+                    labels: {
+                      style: { colors: "var(--muted)", fontSize: "11px" },
+                    },
+                  },
+                  grid: { borderColor: "var(--border)", strokeDashArray: 4 },
+                  tooltip: { theme: "light" },
+                  dataLabels: { enabled: false },
+                }}
+                series={[
+                  {
+                    name: "Students",
+                    data: chartData.studentsPerPackage.map((d) => d.count),
+                  },
+                ]}
+                type="bar"
+                height={280}
+              />
+            ) : (
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground">
+                No package data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Enrollment Growth Over Time */}
-        <div className="border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <IconTrendingUp size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">
-              Enrollment Growth
-            </h3>
-          </div>
-          {loading ? (
-            <ChartSkeleton height={280} />
-          ) : chartData?.enrollmentTrend?.length ? (
-            <Chart
-              options={{
-                chart: {
-                  type: "area",
-                  toolbar: { show: false },
-                  fontFamily: "inherit",
-                },
-                colors: [COLORS.accent],
-                fill: {
-                  type: "gradient",
-                  gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.3,
-                    opacityTo: 0,
-                  },
-                },
-                xaxis: {
-                  categories: chartData.enrollmentTrend.map((d) => d.month),
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
-                  },
-                },
-                yaxis: {
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
-                  },
-                },
-                grid: { borderColor: "var(--border)" },
-                tooltip: { theme: "light" },
-                dataLabels: { enabled: false },
-                stroke: { width: 2 },
-              }}
-              series={[
-                {
-                  name: "Enrolled",
-                  data: chartData.enrollmentTrend.map((d) => d.count),
-                },
-              ]}
-              type="area"
-              height={280}
-            />
-          ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              No data
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2.5 pb-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <IconTrendingUp size={18} stroke={1.8} />
             </div>
-          )}
-        </div>
+            <CardTitle className="text-base font-semibold">
+              Enrollment Growth
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            {loading ? (
+              <ChartSkeleton height={280} />
+            ) : chartData?.enrollmentTrend?.length ? (
+              <Chart
+                options={{
+                  chart: {
+                    type: "area",
+                    toolbar: { show: false },
+                    fontFamily: "inherit",
+                  },
+                  colors: [COLORS.accent],
+                  fill: {
+                    type: "gradient",
+                    gradient: {
+                      shadeIntensity: 1,
+                      opacityFrom: 0.35,
+                      opacityTo: 0.05,
+                    },
+                  },
+                  xaxis: {
+                    categories: chartData.enrollmentTrend.map((d) => d.month),
+                    labels: {
+                      style: { colors: "var(--muted)", fontSize: "11px" },
+                    },
+                  },
+                  yaxis: {
+                    labels: {
+                      style: { colors: "var(--muted)", fontSize: "11px" },
+                    },
+                  },
+                  grid: { borderColor: "var(--border)", strokeDashArray: 4 },
+                  tooltip: { theme: "light" },
+                  dataLabels: { enabled: false },
+                  stroke: { width: 2.5, curve: "smooth" },
+                }}
+                series={[
+                  {
+                    name: "Enrolled",
+                    data: chartData.enrollmentTrend.map((d) => d.count),
+                  },
+                ]}
+                type="area"
+                height={280}
+              />
+            ) : (
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground">
+                No trend data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Batch Status Distribution */}
-        <div className="border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <IconChartPie size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">
-              Batch Distribution
-            </h3>
-          </div>
-          {loading ? (
-            <ChartSkeleton height={280} />
-          ) : chartData?.batchDistribution?.length ? (
-            <Chart
-              options={{
-                chart: {
-                  type: "donut",
-                  toolbar: { show: false },
-                  fontFamily: "inherit",
-                },
-                colors: PIE_COLORS,
-                labels: chartData.batchDistribution.map((b) => b.status),
-                plotOptions: {
-                  pie: {
-                    donut: { size: "65%" },
-                  },
-                },
-                legend: {
-                  position: "bottom",
-                  fontSize: "12px",
-                  labels: { colors: "var(--muted-foreground)" },
-                },
-                tooltip: { theme: "light" },
-                dataLabels: { enabled: false },
-              }}
-              series={chartData.batchDistribution.map((b) => b.count)}
-              type="donut"
-              height={280}
-            />
-          ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              No data
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2.5 pb-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10 text-warning">
+              <IconChartPie size={18} stroke={1.8} />
             </div>
-          )}
-        </div>
+            <CardTitle className="text-base font-semibold">
+              Batch Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            {loading ? (
+              <ChartSkeleton height={280} />
+            ) : chartData?.batchDistribution?.length ? (
+              <Chart
+                options={{
+                  chart: {
+                    type: "donut",
+                    toolbar: { show: false },
+                    fontFamily: "inherit",
+                  },
+                  colors: PIE_COLORS,
+                  labels: chartData.batchDistribution.map((b) => b.status),
+                  plotOptions: {
+                    pie: {
+                      donut: { size: "65%" },
+                    },
+                  },
+                  legend: {
+                    position: "bottom",
+                    fontSize: "12px",
+                    labels: { colors: "var(--muted-foreground)" },
+                  },
+                  tooltip: { theme: "light" },
+                  dataLabels: { enabled: false },
+                }}
+                series={chartData.batchDistribution.map((b) => b.count)}
+                type="donut"
+                height={280}
+              />
+            ) : (
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground">
+                No batch data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* User Role Distribution */}
-        <div className="border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <IconUsersGroup size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">
-              User Roles
-            </h3>
-          </div>
-          {loading ? (
-            <ChartSkeleton height={280} />
-          ) : chartData?.userRoleDistribution?.length ? (
-            <Chart
-              options={{
-                chart: {
-                  type: "donut",
-                  toolbar: { show: false },
-                  fontFamily: "inherit",
-                },
-                colors: PIE_COLORS,
-                labels: chartData.userRoleDistribution.map((u) => u.role),
-                plotOptions: {
-                  pie: {
-                    donut: { size: "65%" },
-                  },
-                },
-                legend: {
-                  position: "bottom",
-                  fontSize: "12px",
-                  labels: { colors: "var(--muted-foreground)" },
-                },
-                tooltip: { theme: "light" },
-                dataLabels: { enabled: false },
-              }}
-              series={chartData.userRoleDistribution.map((u) => u.count)}
-              type="donut"
-              height={280}
-            />
-          ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              No data
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2.5 pb-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <IconUsersGroup size={18} stroke={1.8} />
             </div>
-          )}
-        </div>
+            <CardTitle className="text-base font-semibold">
+              User Roles
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            {loading ? (
+              <ChartSkeleton height={280} />
+            ) : chartData?.userRoleDistribution?.length ? (
+              <Chart
+                options={{
+                  chart: {
+                    type: "donut",
+                    toolbar: { show: false },
+                    fontFamily: "inherit",
+                  },
+                  colors: PIE_COLORS,
+                  labels: chartData.userRoleDistribution.map((u) => u.role),
+                  plotOptions: {
+                    pie: {
+                      donut: { size: "65%" },
+                    },
+                  },
+                  legend: {
+                    position: "bottom",
+                    fontSize: "12px",
+                    labels: { colors: "var(--muted-foreground)" },
+                  },
+                  tooltip: { theme: "light" },
+                  dataLabels: { enabled: false },
+                }}
+                series={chartData.userRoleDistribution.map((u) => u.count)}
+                type="donut"
+                height={280}
+              />
+            ) : (
+              <div className="h-64 flex items-center justify-center text-xs text-muted-foreground">
+                No role data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Enrollments */}
       {chartData?.recentEnrollments &&
         chartData.recentEnrollments.length > 0 && (
-          <div className="border border-border bg-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <IconHistory size={18} stroke={1.5} className="text-primary" />
-              <h3 className="text-base font-semibold text-foreground">
-                Recent Enrollments
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Student
-                    </th>
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Package
-                    </th>
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Status
-                    </th>
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Razorpay ID
-                    </th>
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Amount
-                    </th>
-                    <th className="pb-2 text-xs font-medium uppercase text-muted">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {chartData.recentEnrollments.map((e) => (
-                    <tr
-                      key={e.id}
-                      className="border-b border-border/50 last:border-0"
-                    >
-                      <td className="py-2.5">
-                        <p className="font-medium text-foreground">
-                          {e.userName}
-                        </p>
-                        <p className="text-xs text-muted">{e.userEmail}</p>
-                      </td>
-                      <td className="py-2.5 text-foreground">
-                        {e.packageName}
-                      </td>
-                      <td className="py-2.5">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            e.status === "APPROVED"
-                              ? "bg-success/15 text-success"
-                              : e.status === "PENDING"
-                                ? "bg-warning/15 text-warning"
-                                : "bg-danger/15 text-danger"
-                          }`}
-                        >
-                          {e.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 font-mono text-xs text-muted-foreground">
-                        {e.razorpayPaymentId ?? "—"}
-                      </td>
-                      <td className="py-2.5 text-foreground">
-                        {e.amount != null
-                          ? `₹${(e.amount / 100).toLocaleString("en-IN")}`
-                          : "—"}
-                      </td>
-                      <td className="py-2.5 text-muted-foreground">
-                        {new Date(e.appliedAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <IconHistory size={18} stroke={1.8} />
+                </div>
+                <CardTitle className="text-base font-semibold">
+                  Recent Enrollments
+                </CardTitle>
+              </div>
+              <Link
+                href="/admin/enrollments"
+                className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                View all
+                <IconChevronRight size={14} />
+              </Link>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/15 text-left">
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Student
+                      </th>
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Package
+                      </th>
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Razorpay ID
+                      </th>
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Amount
+                      </th>
+                      <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Date
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {chartData.recentEnrollments.map((e) => (
+                      <tr
+                        key={e.id}
+                        className="transition-colors hover:bg-muted/10"
+                      >
+                        <td className="px-5 py-3">
+                          <p className="font-semibold text-foreground">
+                            {e.userName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{e.userEmail}</p>
+                        </td>
+                        <td className="px-5 py-3 text-foreground font-medium">
+                          {e.packageName}
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge
+                            variant={
+                              e.status === "APPROVED"
+                                ? "success"
+                                : e.status === "PENDING"
+                                  ? "warning"
+                                  : "danger"
+                            }
+                            size="sm"
+                            dot
+                          >
+                            {e.status}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
+                          {e.razorpayPaymentId ?? "—"}
+                        </td>
+                        <td className="px-5 py-3 font-semibold text-foreground">
+                          {e.amount != null
+                            ? `₹${(e.amount / 100).toLocaleString("en-IN")}`
+                            : "—"}
+                        </td>
+                        <td className="px-5 py-3 text-xs text-muted-foreground">
+                          {new Date(e.appliedAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
       {/* Quick Actions */}
-      <div className="border border-border bg-card p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-          {quickActions.map((action) => (
-            <QuickActionCard
-              key={action.href}
-              label={action.label}
-              href={action.href}
-              icon={action.icon}
-              variant={action.variant}
-              description={action.description}
-            />
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+            {quickActions.map((action) => (
+              <QuickActionCard
+                key={action.href}
+                label={action.label}
+                href={action.href}
+                icon={action.icon}
+                variant={action.variant}
+                description={action.description}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -857,11 +894,11 @@ export default function AdminDashboardPage() {
 
   if (meQuery.isPending) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-32 rounded-lg bg-card-hover/60" />
+      <div className="space-y-6">
+        <Skeleton className="h-32 rounded-2xl w-full" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-lg bg-card-hover/60" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
       </div>
