@@ -4,11 +4,7 @@ import { getEnv } from './env';
  * Get WhatsApp notification credentials directly from environment variables
  */
 export function getWhatsAppConfig() {
-  const phone = (getEnv('VITE_WHATSAPP_PHONE', '') || '').trim();
-  const apiKey = (getEnv('VITE_WHATSAPP_APIKEY', '') || '').trim();
-  const enabled = Boolean(phone && apiKey);
-
-  return { phone, apiKey, enabled };
+  return { phone: '', apiKey: '', enabled: false };
 }
 
 /**

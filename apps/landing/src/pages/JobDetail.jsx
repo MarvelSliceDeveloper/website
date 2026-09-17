@@ -72,7 +72,8 @@ export default function JobDetail() {
   // Full Application Modal State (career_submissions)
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     position: '',
@@ -129,7 +130,8 @@ export default function JobDetail() {
         return;
       }
       setForm({
-        full_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
         position: job.title || '',
@@ -237,12 +239,12 @@ export default function JobDetail() {
 
   function validate() {
     const errs = {};
-    if (!form.full_name.trim()) errs.full_name = 'Full name is required';
+    if (!form.first_name.trim()) errs.first_name = 'First name is required';
+    if (!form.last_name.trim()) errs.last_name = 'Last name is required';
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Invalid email format';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
-    if (!form.position.trim()) errs.position = 'Position is required';
     if (!form.description.trim()) errs.description = 'Description is required';
     if (!agreeTerms) {
       errs.agree = 'Please agree to the terms and conditions';
@@ -282,10 +284,12 @@ export default function JobDetail() {
       }
     }
 
+    const full_name = `${form.first_name.trim()} ${form.last_name.trim()}`;
+
     const { error: insertError } = await supabase
       .from('career_submissions')
       .insert({
-        full_name: form.full_name,
+        full_name,
         email: form.email,
         phone: form.phone,
         department: form.position,
@@ -301,7 +305,7 @@ export default function JobDetail() {
     fetch('/api/submit-career', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, file_url }),
+      body: JSON.stringify({ ...form, full_name, file_url }),
     }).catch(() => {});
 
     trackFormSubmit('career');
@@ -311,7 +315,8 @@ export default function JobDetail() {
       message: 'We have received your application. Our team will reach out to you shortly.'
     });
     setForm({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       position: job?.title || '',
@@ -561,7 +566,7 @@ export default function JobDetail() {
               {status?.type !== 'success' && (
                 <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
                   <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
-                    {job.title}
+                    Position: {job.title}
                   </h3>
                 </div>
               )}
@@ -608,20 +613,21 @@ export default function JobDetail() {
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 p-4 sm:p-6 md:p-8">
-                  <Field label="Full Name" required error={errors.full_name}>
-                    <input name="full_name" value={form.full_name} onChange={handleChange}
-                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.full_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="John Doe" />
+                  <Field label="First Name" required error={errors.first_name}>
+                    <input name="first_name" value={form.first_name} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.first_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="John" />
                   </Field>
-                  <Field label="Email Address" required error={errors.email}>
-                    <input name="email" type="email" value={form.email} onChange={handleChange}
-                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.email ? 'border-red-300' : 'border-slate-200'}`} placeholder="john@example.com" />
+                  <Field label="Last Name" required error={errors.last_name}>
+                    <input name="last_name" value={form.last_name} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.last_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="Doe" />
                   </Field>
                   <Field label="Phone Number" required error={errors.phone}>
                     <input name="phone" type="tel" value={form.phone} onChange={handleChange}
                       className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.phone ? 'border-red-300' : 'border-slate-200'}`} placeholder="+1 234 567 890" />
                   </Field>
-                  <Field label="Position">
-                    <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
+                  <Field label="Email Address" required error={errors.email}>
+                    <input name="email" type="email" value={form.email} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.email ? 'border-red-300' : 'border-slate-200'}`} placeholder="john@example.com" />
                   </Field>
                   <div className="sm:col-span-2">
                     <Field label="Description" required error={errors.description}>

@@ -178,103 +178,13 @@ function handleDeleteUpload(filename) {
   return { error: 'File not found' };
 }
 
-async function sendWhatsAppNotification({ formName, name, phone, email, course, role, details }) {
-  const metaToken = process.env.WHATSAPP_ACCESS_TOKEN || process.env.VITE_WHATSAPP_ACCESS_TOKEN;
-  const metaPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.VITE_WHATSAPP_PHONE_NUMBER_ID;
-  const adminPhone = process.env.WHATSAPP_RECIPIENT_PHONE || process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
-
-  if (!adminPhone || !metaToken || !metaPhoneId) {
-    console.warn('[WhatsApp Notification] Missing WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, or WHATSAPP_RECIPIENT_PHONE in .env');
-    return;
-  }
-
-  const cleanPhone = String(adminPhone || '').replace(/[^\d]/g, '');
-  const targetPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-  const cleanPhoneId = String(metaPhoneId || '').trim().replace(/[^\d]/g, '');
-
-  if (cleanPhoneId.length < 12 || cleanPhoneId.startsWith('1555')) {
-    console.error(
-      `\n⚠️  [WhatsApp Cloud API Setup Warning]: WHATSAPP_PHONE_NUMBER_ID is currently set to "${metaPhoneId}".\n` +
-      `   Meta Cloud API requires the 15-digit "Phone number ID" from your Meta App Dashboard (WhatsApp > API Setup), NOT the test phone number.\n` +
-      `   Please update WHATSAPP_PHONE_NUMBER_ID in apps/landing/.env with the 15-digit ID from Meta.\n`
-    );
-  }
-
-  const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
-
-  const message =
-    `🔔 *New Lead Alert — Marvel Slice!*\n\n` +
-    `• *Form:* ${formName || 'Lead Form'}\n` +
-    `• *Name:* ${name || 'N/A'}\n` +
-    `• *Phone:* ${phone || 'N/A'}\n` +
-    `• *Email:* ${email || 'N/A'}\n` +
-    (course ? `• *Course:* ${course}\n` : '') +
-    (role ? `• *Profile / Role:* ${role}\n` : '') +
-    (details ? `• *Details:* ${details}\n` : '') +
-    `• *Time:* ${now}`;
-
-  try {
-    const metaUrl = `https://graph.facebook.com/v20.0/${cleanPhoneId}/messages`;
-    const res = await fetch(metaUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${metaToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: targetPhone,
-        type: 'text',
-        text: { preview_url: false, body: message },
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      console.log(`[Official WhatsApp Cloud API] Lead alert sent to ${targetPhone}. Message ID: ${data?.messages?.[0]?.id || 'OK'}`);
-    } else {
-      console.error(`[Official WhatsApp Cloud API Error]: Status ${res.status}`, data);
-    }
-  } catch (err) {
-    console.error('[Official WhatsApp Cloud API Error]:', err.message);
-  }
+async function sendWhatsAppNotification() {
+  // WhatsApp Cloud API disabled as requested — email notifications are active for user & admin
+  return;
 }
 
-async function handleNotifyWhatsApp(body = {}) {
-  const finalToken = body.token || process.env.WHATSAPP_ACCESS_TOKEN || process.env.VITE_WHATSAPP_ACCESS_TOKEN;
-  const finalPhoneId = body.phoneId || process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.VITE_WHATSAPP_PHONE_NUMBER_ID;
-  const phone = body.phone || process.env.WHATSAPP_RECIPIENT_PHONE || process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
-  const message = body.message;
-
-  const clean = String(phone || '').replace(/[^\d]/g, '');
-  const finalPhone = clean.length === 10 ? `91${clean}` : clean;
-  const cleanPhoneId = String(finalPhoneId || '').trim().replace(/[^\d]/g, '');
-
-  if (!finalToken || !cleanPhoneId || !finalPhone || !message) {
-    return { success: false, error: 'Missing WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, phone recipient, or message' };
-  }
-
-  try {
-    const metaUrl = `https://graph.facebook.com/v20.0/${cleanPhoneId}/messages`;
-    const resp = await fetch(metaUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${finalToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: finalPhone,
-        type: 'text',
-        text: { preview_url: false, body: message },
-      }),
-    });
-    const json = await resp.json();
-    return { success: resp.ok, data: json };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
+async function handleNotifyWhatsApp() {
+  return { success: false, reason: 'WhatsApp notifications turned off' };
 }
 
 function row(label, value) {
