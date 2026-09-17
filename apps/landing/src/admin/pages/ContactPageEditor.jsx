@@ -79,6 +79,10 @@ const DEFAULT_CONTACT_CONTENT = {
   subheading_color: '#ffffff',
   text_color: '#ffffff',
   show_shadow: true,
+  enable_bg_image: false,
+  left_bg_image: '',
+  image_opacity: 100,
+  image_blur: 4,
   success_message: 'Thank you! Your message has been received. Our team will contact you soon.',
   map_embed_url: '',
 };
@@ -628,6 +632,63 @@ const queryClient = useQueryClient();
                       </button>
                     </div>
                   </div>
+                </div>
+
+                {/* Left Side Background Image & Overlay Controls */}
+                <div className="pt-4 border-t border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-800">Left Card Background Image</h4>
+                      <p className="text-xs text-slate-500">Turn on to set a background image on the left contact card with an overlay showing the text/data over it.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateContent('enable_bg_image', !contactContent.enable_bg_image)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${contactContent.enable_bg_image ? 'bg-admin-600' : 'bg-admin-300'}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${contactContent.enable_bg_image ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  {contactContent.enable_bg_image && (
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                      <ImageUploader
+                        value={contactContent.left_bg_image || ''}
+                        onChange={(v) => updateContent('left_bg_image', v)}
+                        label="Background Image"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        <strong>Recommended Image Size:</strong> 800 × 1000 px or 1200 × 1500 px (Portrait 3:4 / 4:5 aspect ratio). High-res JPG, PNG, or WebP. Auto-scaled via <code className="text-admin-600 bg-slate-100 px-1 py-0.5 rounded">object-cover</code>.
+                      </p>
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className={labelCls}>Image Opacity / Transparency ({contactContent.image_opacity ?? 100}%)</label>
+                        </div>
+                        <input
+                          type="range"
+                          min="10"
+                          max="100"
+                          value={contactContent.image_opacity ?? 100}
+                          onChange={(e) => updateContent('image_opacity', Number(e.target.value))}
+                          className="w-full accent-admin-600 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className={labelCls}>Image Blur ({contactContent.image_blur ?? 4}px)</label>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="20"
+                          value={contactContent.image_blur ?? 4}
+                          onChange={(e) => updateContent('image_blur', Number(e.target.value))}
+                          className="w-full accent-admin-600 cursor-pointer"
+                        />
+                        <p className="text-[11px] text-slate-500 mt-1">Adjust blur and opacity for optimal background image aesthetic and contrast.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

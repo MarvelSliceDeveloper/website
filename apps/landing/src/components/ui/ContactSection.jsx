@@ -33,24 +33,24 @@ function hexToRgba(hex, alpha) {
 
 function ContactDetailItem({ icon: Icon, heading, value, href, textColor, onClick, alignTop = false, iconColor = '#1E56C7' }) {
   const content = href ? (
-    <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</a>
+    <a href={href} onClick={onClick} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words text-left" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</a>
   ) : (
-    <span className="text-xs sm:text-sm leading-relaxed block break-words whitespace-pre-line" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</span>
+    <span className="text-xs sm:text-sm leading-relaxed block break-words whitespace-pre-line text-left" style={{ color: hexToRgba(textColor, 0.95) }}>{value}</span>
   );
   return (
-    <div className="flex flex-col text-left">
+    <div className="flex flex-col text-left items-start w-full">
       {heading && (
-        <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+        <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1 text-left" style={{ color: hexToRgba(textColor, 0.75) }}>
           {heading}
         </h5>
       )}
-      <div className={`inline-flex ${alignTop ? 'items-start' : 'items-center'} gap-2 sm:gap-2.5 mt-0.5`}>
+      <div className={`flex ${alignTop ? 'items-start' : 'items-center'} justify-start gap-2.5 sm:gap-3 mt-0.5 w-full`}>
         <div
           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-md border border-white/40 ring-1 ring-black/5 ${alignTop ? 'mt-0.5' : ''}`}
         >
           <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 stroke-[2.75]" style={{ color: iconColor }} strokeWidth={2.75} />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 text-left">
           {content}
         </div>
       </div>
@@ -179,16 +179,37 @@ export default function ContactSection({ section }) {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
+  const [imgFailed, setImgFailed] = useState(false);
+  const hasValidBgImage = Boolean(c.enable_bg_image && c.left_bg_image && !imgFailed);
+
   return (
-    <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+    <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] max-w-[600px] lg:max-w-none mx-auto w-full">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0">
         {/* Left: Get in Touch */}
         <div
-          className="relative p-4 sm:p-6 lg:p-7 flex flex-col text-center lg:text-left h-auto min-h-0"
-          style={{ background: `linear-gradient(135deg, ${c.gradient_start || '#0B2D6B'}, ${c.gradient_end || '#1E56C7'})` }}
+          className="relative p-4 sm:p-6 lg:p-7 flex flex-col text-center lg:text-left h-auto min-h-0 overflow-hidden w-full items-center lg:items-stretch justify-center lg:justify-start"
+          style={
+            hasValidBgImage
+              ? { backgroundColor: c.gradient_start || '#0B2D6B' }
+              : { background: `linear-gradient(135deg, ${c.gradient_start || '#0B2D6B'}, ${c.gradient_end || '#1E56C7'})` }
+          }
         >
-          <FloatingCircles />
-          <div className="relative z-10 flex flex-col h-full space-y-5 sm:space-y-6 max-w-md mx-auto lg:max-w-none w-full">
+          {hasValidBgImage ? (
+            <img
+              src={c.left_bg_image}
+              alt="Contact Background"
+              onError={() => setImgFailed(true)}
+              className="absolute inset-0 w-full h-full object-cover object-center z-0 transition-all duration-300"
+              style={{
+                opacity: (c.image_opacity ?? 100) / 100,
+                filter: `blur(${c.image_blur ?? 4}px)`,
+                transform: 'scale(1.06)',
+              }}
+            />
+          ) : (
+            <FloatingCircles />
+          )}
+          <div className="relative z-10 flex flex-col h-full space-y-5 sm:space-y-6 max-w-[600px] mx-auto lg:max-w-none w-full">
             <div className="text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl font-bold mb-2.5" style={{ color: headingColor }}>
                 {leftHeading}
@@ -196,7 +217,7 @@ export default function ContactSection({ section }) {
               </h2>
               <p className="text-xs sm:text-sm leading-relaxed max-w-xs sm:max-w-md mx-auto lg:mx-0" style={{ color: subheadingColor }}>{leftSubtitle}</p>
             </div>
-            <div className="space-y-4 sm:space-y-5 text-left w-full mx-auto lg:mx-0 my-auto py-2">
+            <div className="space-y-4 sm:space-y-5 text-left w-full max-w-[280px] sm:max-w-none mx-auto lg:mx-0 my-auto py-2 flex flex-col items-start">
               {address && (
                 <ContactDetailItem
                   icon={FiMapPin}
@@ -208,33 +229,35 @@ export default function ContactSection({ section }) {
                 />
               )}
 
-              {/* Contact Numbers & Email Section placed side-by-side */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-start">
-                {/* Left: Contact Numbers */}
-                <div className="space-y-4">
-                  {phoneItems.map((ph, idx) => (
-                    <ContactDetailItem
-                      key={`phone-${idx}`}
-                      icon={FiPhone}
-                      heading={ph.heading}
-                      value={ph.phone}
-                      href={cleanTelHref(ph.phone)}
-                      onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
-                      textColor={textColor}
-                      iconColor={iconColor}
-                    />
-                  ))}
-                </div>
+              {/* Contact Numbers & Email Section: 1-column on mobile, 2-column on tablet & PC */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-start w-full">
+                {/* Left (Column 1): Contact Numbers */}
+                {phoneItems.length > 0 && (
+                  <div className="space-y-4 w-full flex flex-col items-start">
+                    {phoneItems.map((ph, idx) => (
+                      <ContactDetailItem
+                        key={`phone-${idx}`}
+                        icon={FiPhone}
+                        heading={ph.heading}
+                        value={ph.phone}
+                        href={cleanTelHref(ph.phone)}
+                        onClick={() => trackPhoneClick(ph.phone, 'contact_section')}
+                        textColor={textColor}
+                        iconColor={iconColor}
+                      />
+                    ))}
+                  </div>
+                )}
 
-                {/* Right: Email Section */}
+                {/* Right (Column 2): Email Section */}
                 {emailItems.length > 0 && (
-                  <div className="flex flex-col text-left">
-                    <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+                  <div className="flex flex-col text-left items-start w-full">
+                    <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1 text-left" style={{ color: hexToRgba(textColor, 0.75) }}>
                       EMAIL
                     </h5>
-                    <div className="space-y-2 mt-0.5">
+                    <div className="space-y-2.5 mt-0.5 flex flex-col items-start w-full">
                       {emailItems.map((em, idx) => (
-                        <div key={`email-${idx}`} className="flex items-center gap-2 sm:gap-2.5">
+                        <div key={`email-${idx}`} className="flex items-center justify-start gap-2.5 sm:gap-3 w-full">
                           <div
                             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-md border border-white/40 ring-1 ring-black/5"
                           >
@@ -243,7 +266,7 @@ export default function ContactSection({ section }) {
                           <a
                             href={em.email ? `mailto:${em.email}` : undefined}
                             onClick={() => em.email && trackEmailClick(em.email, 'contact_section')}
-                            className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words"
+                            className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words text-left min-w-0 flex-1"
                             style={{ color: hexToRgba(textColor, 0.95) }}
                           >
                             {em.email}
@@ -256,31 +279,31 @@ export default function ContactSection({ section }) {
               </div>
 
               {(workingTime || workingTimeSaturday) && (
-                <div className="flex flex-col text-left">
-                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1" style={{ color: hexToRgba(textColor, 0.75) }}>
+                <div className="flex flex-col text-left items-start w-full">
+                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs mb-1 text-left" style={{ color: hexToRgba(textColor, 0.75) }}>
                     WORKING TIME
                   </h5>
-                  <div className="space-y-2 mt-0.5">
+                  <div className="space-y-2 mt-0.5 flex flex-col items-start w-full">
                     {workingTime && (
-                      <div className="flex items-center gap-2 sm:gap-2.5">
+                      <div className="flex items-center justify-start gap-2.5 sm:gap-3 w-full">
                         <div
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-md border border-white/40 ring-1 ring-black/5"
                         >
                           <FiClock className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 stroke-[2.75]" style={{ color: iconColor }} strokeWidth={2.75} />
                         </div>
-                        <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
+                        <span className="text-xs sm:text-sm leading-relaxed block break-words text-left min-w-0 flex-1" style={{ color: hexToRgba(textColor, 0.95) }}>
                           {workingTime}
                         </span>
                       </div>
                     )}
                     {workingTimeSaturday && (
-                      <div className="flex items-center gap-2 sm:gap-2.5">
+                      <div className="flex items-center justify-start gap-2.5 sm:gap-3 w-full">
                         <div
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-md border border-white/40 ring-1 ring-black/5"
                         >
                           <FiClock className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 stroke-[2.75]" style={{ color: iconColor }} strokeWidth={2.75} />
                         </div>
-                        <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.95) }}>
+                        <span className="text-xs sm:text-sm leading-relaxed block break-words text-left min-w-0 flex-1" style={{ color: hexToRgba(textColor, 0.95) }}>
                           {workingTimeSaturday}
                         </span>
                       </div>
@@ -293,10 +316,10 @@ export default function ContactSection({ section }) {
         </div>
 
         {/* Right: Send us a Message Form */}
-        <div className="relative bg-white p-4 sm:p-6 lg:p-7 flex flex-col justify-start border-t border-gray-200 lg:border-t-0 overflow-hidden">
+        <div className="relative bg-white p-4 sm:p-6 lg:p-7 flex flex-col justify-center lg:justify-start items-center lg:items-stretch border-t border-gray-200 lg:border-t-0 overflow-hidden w-full">
           <form
             onSubmit={handleSubmit}
-            className="space-y-3.5"
+            className="space-y-3.5 w-full max-w-[600px] mx-auto lg:max-w-none lg:mx-0"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
