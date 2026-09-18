@@ -228,4 +228,3 @@ router.post(
 );
 
 export { router as aiRouter };
-

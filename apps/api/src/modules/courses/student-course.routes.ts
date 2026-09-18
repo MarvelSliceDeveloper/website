@@ -106,11 +106,9 @@ router.post(
       const { watchedSeconds, completed } = req.body ?? {};
 
       if (watchedSeconds === undefined && completed !== true) {
-        return res
-          .status(400)
-          .json({
-            error: "watchedSeconds is required (or pass completed: true)",
-          });
+        return res.status(400).json({
+          error: "watchedSeconds is required (or pass completed: true)",
+        });
       }
 
       const progress = await updateLessonProgress(

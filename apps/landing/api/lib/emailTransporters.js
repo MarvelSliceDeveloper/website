@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 /**
  * Creates a Nodemailer Transporter configured for Webuzo / Webizo Mail System or Custom SMTP.
@@ -13,10 +13,11 @@ function createSmtpTransporter(user, pass) {
     });
   }
 
-  const defaultHost = user && user.includes('@') ? `mail.${user.split('@')[1]}` : 'localhost';
+  const defaultHost =
+    user && user.includes("@") ? `mail.${user.split("@")[1]}` : "localhost";
   const host = process.env.SMTP_HOST || defaultHost;
-  const port = parseInt(process.env.SMTP_PORT || '465', 10);
-  const secure = process.env.SMTP_SECURE !== 'false';
+  const port = parseInt(process.env.SMTP_PORT || "465", 10);
+  const secure = process.env.SMTP_SECURE !== "false";
 
   return nodemailer.createTransport({
     host,
@@ -95,7 +96,7 @@ export async function sendMailWithLogging(transporter, mailOptions) {
     const info = await transporter.sendMail(mailOptions);
     return { success: true, info };
   } catch (err) {
-    console.error('Email send failed:', err.message);
+    console.error("Email send failed:", err.message);
     return { success: false, error: err };
   }
 }

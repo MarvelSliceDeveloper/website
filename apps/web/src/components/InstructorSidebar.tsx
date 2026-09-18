@@ -328,7 +328,7 @@ function NavGroup({
                       <ul className="space-y-0.5 bg-slate-500/[0.03] border-l border-border/60 ml-6">
                         {item.children!.map((child) => (
                           <ChildNavLink
-                            key={child.href}
+                            key={`${child.href}-${child.label}`}
                             child={child}
                             pathname={pathname}
                             unreadCounts={unreadCounts}

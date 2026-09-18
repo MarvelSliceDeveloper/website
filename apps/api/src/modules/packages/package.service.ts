@@ -273,7 +273,10 @@ export const packageService = {
     });
     if (!pkg) throw new AppError(404, "Package not found");
     if (pkg.status !== "ACTIVE") {
-      throw new AppError(400, "Only ACTIVE packages can be used for enrollment");
+      throw new AppError(
+        400,
+        "Only ACTIVE packages can be used for enrollment",
+      );
     }
 
     // Verify student exists
@@ -390,7 +393,10 @@ export const packageService = {
     const packageCourseIds = enrollment.package.courses.map((c) => c.courseId);
     for (const assignment of data.courseBatchAssignments) {
       if (!packageCourseIds.includes(assignment.courseId)) {
-        throw new AppError(400, `Course ${assignment.courseId} is not in this package`);
+        throw new AppError(
+          400,
+          `Course ${assignment.courseId} is not in this package`,
+        );
       }
       // Verify batch exists and belongs to the course
       const batch = await prisma.batch.findUnique({
@@ -404,7 +410,8 @@ export const packageService = {
           },
         },
       });
-      if (!batch) throw new AppError(404, `Batch ${assignment.batchId} not found`);
+      if (!batch)
+        throw new AppError(404, `Batch ${assignment.batchId} not found`);
       if (batch.courseId !== null && batch.courseId !== assignment.courseId) {
         throw new AppError(
           400,
@@ -651,17 +658,17 @@ export const packageService = {
           include: {
             courses: {
               include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                slug: true,
-                description: true,
-                thumbnailUrl: true,
-                categoryId: true,
-                categoryRelation: {
-                  select: { id: true, name: true, slug: true },
-                },
+                course: {
+                  select: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    description: true,
+                    thumbnailUrl: true,
+                    categoryId: true,
+                    categoryRelation: {
+                      select: { id: true, name: true, slug: true },
+                    },
                     modules: {
                       select: { id: true, title: true, order: true },
                     },

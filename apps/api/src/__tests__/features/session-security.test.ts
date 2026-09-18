@@ -67,7 +67,9 @@ describe("Session Security", () => {
     });
 
     it("invalidates previous sessions on new login (single active session)", async () => {
-      vi.mocked(prisma.adminSession.create).mockResolvedValueOnce({ id: "session-new" } as any);
+      vi.mocked(prisma.adminSession.create).mockResolvedValueOnce({
+        id: "session-new",
+      } as any);
       await authService.generateTokens({
         id: "u3",
         role: UserRole.STUDENT,

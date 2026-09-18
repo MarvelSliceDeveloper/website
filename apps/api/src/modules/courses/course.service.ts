@@ -181,32 +181,37 @@ export const courseService = {
     const courseIds = coursesRaw.map((c) => c.id);
     let batchesByCourse = new Map<string, number>();
     if (courseIds.length) {
-      const [packageCourses, directCounts, allPackageBatches] = await Promise.all([
-        prisma.packageCourse.findMany({
-          where: { courseId: { in: courseIds } },
-          select: { courseId: true, packageId: true },
-        }),
-        prisma.batch.groupBy({
-          by: ["courseId"],
-          where: { courseId: { in: courseIds } },
-          _count: { _all: true },
-        }),
-        prisma.batch.findMany({
-          where: { packageId: { not: null } },
-          select: { packageId: true },
-        }),
-      ]);
+      const [packageCourses, directCounts, allPackageBatches] =
+        await Promise.all([
+          prisma.packageCourse.findMany({
+            where: { courseId: { in: courseIds } },
+            select: { courseId: true, packageId: true },
+          }),
+          prisma.batch.groupBy({
+            by: ["courseId"],
+            where: { courseId: { in: courseIds } },
+            _count: { _all: true },
+          }),
+          prisma.batch.findMany({
+            where: { packageId: { not: null } },
+            select: { packageId: true },
+          }),
+        ]);
 
       const packageBatchCount = new Map<string, number>();
       for (const b of allPackageBatches) {
         if (b.packageId) {
-          packageBatchCount.set(b.packageId, (packageBatchCount.get(b.packageId) || 0) + 1);
+          packageBatchCount.set(
+            b.packageId,
+            (packageBatchCount.get(b.packageId) || 0) + 1,
+          );
         }
       }
 
       const packagesByCourse = new Map<string, Set<string>>();
       for (const pc of packageCourses) {
-        if (!packagesByCourse.has(pc.courseId)) packagesByCourse.set(pc.courseId, new Set());
+        if (!packagesByCourse.has(pc.courseId))
+          packagesByCourse.set(pc.courseId, new Set());
         packagesByCourse.get(pc.courseId)!.add(pc.packageId);
       }
 
@@ -554,7 +559,11 @@ export const courseService = {
     page?: number;
     limit?: number;
   }) {
-    const where: any = { isCatalog: true, status: "PUBLISHED", deletedAt: null };
+    const where: any = {
+      isCatalog: true,
+      status: "PUBLISHED",
+      deletedAt: null,
+    };
     if (filters.category) {
       where.categoryRelation = { slug: filters.category };
     }
@@ -591,7 +600,11 @@ export const courseService = {
           _count: {
             select: {
               courses: {
-                where: { isCatalog: true, status: "PUBLISHED", deletedAt: null },
+                where: {
+                  isCatalog: true,
+                  status: "PUBLISHED",
+                  deletedAt: null,
+                },
               },
             },
           },
@@ -601,7 +614,9 @@ export const courseService = {
     ]);
     const courses = coursesRaw.map((c: any) => ({
       ...c,
-      duration: c.durationMinutes ? `${Math.ceil(c.durationMinutes / 60)}h` : "—",
+      duration: c.durationMinutes
+        ? `${Math.ceil(c.durationMinutes / 60)}h`
+        : "—",
       priceDisplay: c.price != null ? c.price : null,
     }));
     const categories = categoriesRaw.map((cat: any) => ({
@@ -640,38 +655,101 @@ export const courseService = {
     let videoUrl: string | null = null;
     for (const m of course.modules) {
       const l = m.lessons.find((x: any) => x.videoUrl);
-      if (l) { videoUrl = l.videoUrl; break; }
+      if (l) {
+        videoUrl = l.videoUrl;
+        break;
+      }
     }
-    return { ...course, videoUrl, duration: (course as any).durationMinutes ? `${Math.ceil((course as any).durationMinutes / 60)}h` : "—" };
+    return {
+      ...course,
+      videoUrl,
+      duration: (course as any).durationMinutes
+        ? `${Math.ceil((course as any).durationMinutes / 60)}h`
+        : "—",
+    };
   },
 
-  async createCatalogueCheckout(courseId: string, body: { name: string; email: string; phone: string }) {
-    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+  async createCatalogueCheckout(
+    courseId: string,
+    body: { name: string; email: string; phone: string },
+  ) {
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        isCatalog: true,
+        status: "PUBLISHED",
+        deletedAt: null,
+      },
+    });
     if (!course) throw new AppError(404, "Course not found");
-    if (course.price == null) throw new AppError(400, "Enquiry only — no price set");
+    if (course.price == null)
+      throw new AppError(400, "Enquiry only — no price set");
     // In real flow, call Razorpay. For now create pending payment without orderId if Razorpay not configured.
     // We return order stub; verify will create payment.
     try {
-      const { createRazorpayOrder } = await import("../payments/payment.service");
-      const order = await createRazorpayOrder(course.price, "INR", `course_${courseId}_${Date.now()}`);
-      return { orderId: order.id, amount: course.price, currency: "INR", courseId, keyId: process.env.RAZORPAY_KEY_ID };
+      const { createRazorpayOrder } =
+        await import("../payments/payment.service");
+      const order = await createRazorpayOrder(
+        course.price,
+        "INR",
+        `course_${courseId}_${Date.now()}`,
+      );
+      return {
+        orderId: order.id,
+        amount: course.price,
+        currency: "INR",
+        courseId,
+        keyId: process.env.RAZORPAY_KEY_ID,
+      };
     } catch {
       // fallback stub for testing without keys
-      return { orderId: `stub_order_${Date.now()}`, amount: course.price, currency: "INR", courseId };
+      return {
+        orderId: `stub_order_${Date.now()}`,
+        amount: course.price,
+        currency: "INR",
+        courseId,
+      };
     }
   },
 
-  async verifyCataloguePayment(courseId: string, payload: { razorpayOrderId?: string; razorpayPaymentId: string; razorpaySignature?: string; name: string; email: string; phone: string }) {
-    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+  async verifyCataloguePayment(
+    courseId: string,
+    payload: {
+      razorpayOrderId?: string;
+      razorpayPaymentId: string;
+      razorpaySignature?: string;
+      name: string;
+      email: string;
+      phone: string;
+    },
+  ) {
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        isCatalog: true,
+        status: "PUBLISHED",
+        deletedAt: null,
+      },
+    });
     if (!course) throw new AppError(404, "Course not found");
     if (!course.price) throw new AppError(400, "Invalid course price");
     // Find or create guest user
-    let user = await prisma.user.findUnique({ where: { email: payload.email } });
+    let user = await prisma.user.findUnique({
+      where: { email: payload.email },
+    });
     if (!user) {
       const bcrypt = await import("bcryptjs");
       const dummy = Math.random().toString(36).slice(2, 10);
       const hash = await bcrypt.hash(dummy, 10);
-      user = await prisma.user.create({ data: { name: payload.name, email: payload.email, passwordHash: hash, role: "STUDENT", phone: payload.phone } });
+      user = await prisma.user.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          passwordHash: hash,
+          role: "STUDENT",
+          phone: payload.phone,
+        },
+      });
     }
     // verify signature if provided — skip strict check in stub mode
     const payment = await prisma.payment.create({
@@ -688,13 +766,30 @@ export const courseService = {
       },
     });
     const enrollment = await prisma.courseEnrollment.create({
-      data: { userId: user.id, courseId: course.id, paymentId: payment.id, status: "PENDING" },
+      data: {
+        userId: user.id,
+        courseId: course.id,
+        paymentId: payment.id,
+        status: "PENDING",
+      },
     });
-    return { payment, enrollment, user: { id: user.id, email: user.email, name: user.name } };
+    return {
+      payment,
+      enrollment,
+      user: { id: user.id, email: user.email, name: user.name },
+    };
   },
 
   async listCatalogueBatches(courseId: string) {
-    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null }, select: { id: true } });
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        isCatalog: true,
+        status: "PUBLISHED",
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
     if (!course) throw new AppError(404, "Course not found");
     const batches = await prisma.batch.findMany({
       where: { courseId, status: { in: ["UPCOMING", "ACTIVE"] } },
@@ -707,32 +802,77 @@ export const courseService = {
       startDate: b.startDate,
       endDate: b.endDate,
       status: b.status,
-      seatsAvailable: b.maxStudents ? b.maxStudents - b._count.enrollments : null,
+      seatsAvailable: b.maxStudents
+        ? b.maxStudents - b._count.enrollments
+        : null,
     }));
   },
 
-  async enrollCatalogueBatch(courseId: string, payload: { paymentId: string; batchId: string; name: string; email: string; phone: string }) {
-    const course = await prisma.course.findFirst({ where: { id: courseId, isCatalog: true, status: "PUBLISHED", deletedAt: null } });
+  async enrollCatalogueBatch(
+    courseId: string,
+    payload: {
+      paymentId: string;
+      batchId: string;
+      name: string;
+      email: string;
+      phone: string;
+    },
+  ) {
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        isCatalog: true,
+        status: "PUBLISHED",
+        deletedAt: null,
+      },
+    });
     if (!course) throw new AppError(404, "Course not found");
-    const payment = await prisma.payment.findUnique({ where: { id: payload.paymentId } });
+    const payment = await prisma.payment.findUnique({
+      where: { id: payload.paymentId },
+    });
     if (!payment || payment.status !== "PAID" || payment.courseId !== course.id)
       throw new AppError(400, "Payment not completed");
-    const batch = await prisma.batch.findUnique({ where: { id: payload.batchId } });
-    if (!batch || batch.courseId !== course.id || (batch.status !== "UPCOMING" && batch.status !== "ACTIVE"))
+    const batch = await prisma.batch.findUnique({
+      where: { id: payload.batchId },
+    });
+    if (
+      !batch ||
+      batch.courseId !== course.id ||
+      (batch.status !== "UPCOMING" && batch.status !== "ACTIVE")
+    )
       throw new AppError(400, "Batch not available for this course");
     // Same guest handling as verifyCataloguePayment (email kept as provided)
-    let user = await prisma.user.findUnique({ where: { email: payload.email } });
+    let user = await prisma.user.findUnique({
+      where: { email: payload.email },
+    });
     if (!user) {
       const bcrypt = await import("bcryptjs");
       const dummy = Math.random().toString(36).slice(2, 10);
       const hash = await bcrypt.hash(dummy, 10);
-      user = await prisma.user.create({ data: { name: payload.name, email: payload.email, passwordHash: hash, role: "STUDENT", phone: payload.phone } });
+      user = await prisma.user.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          passwordHash: hash,
+          role: "STUDENT",
+          phone: payload.phone,
+        },
+      });
     }
     const enrollment = await prisma.courseEnrollment.upsert({
       where: { paymentId: payment.id },
       update: { batchId: batch.id, status: "APPROVED", userId: user.id },
-      create: { userId: user.id, courseId: course.id, paymentId: payment.id, batchId: batch.id, status: "APPROVED" },
+      create: {
+        userId: user.id,
+        courseId: course.id,
+        paymentId: payment.id,
+        batchId: batch.id,
+        status: "APPROVED",
+      },
     });
-    return { enrollment, user: { id: user.id, email: user.email, name: user.name } };
+    return {
+      enrollment,
+      user: { id: user.id, email: user.email, name: user.name },
+    };
   },
 };

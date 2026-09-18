@@ -175,8 +175,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
   const grandTotal = netAmount + taxAmount;
 
   const rows: (
-    | string
-    | { content: string; styles?: Record<string, unknown> }
+    string | { content: string; styles?: Record<string, unknown> }
   )[][] = [
     [
       {

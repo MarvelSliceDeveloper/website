@@ -216,9 +216,8 @@ export const paymentController = {
         return res.status(403).json({ error: "Not allowed" });
       }
 
-      const { generateInvoicePdf } = await import(
-        "../../services/invoice.service"
-      );
+      const { generateInvoicePdf } =
+        await import("../../services/invoice.service");
       const pdf = generateInvoicePdf({
         invoiceNumber: `INV-${payment.id.slice(-8).toUpperCase()}`,
         userName: payment.user.name,

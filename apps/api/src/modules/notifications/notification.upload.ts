@@ -46,7 +46,6 @@ export function buildAttachmentUrl(req: Request, filename: string) {
   const host = req.get("host");
   const protocol = req.protocol;
   const webUrl =
-    process.env.WEB_URL ||
-    `${protocol}://${host || "localhost:3000"}`;
+    process.env.WEB_URL || `${protocol}://${host || "localhost:3000"}`;
   return `${webUrl.replace(/\/$/, "")}/uploads/notifications/${filename}`;
 }
