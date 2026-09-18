@@ -1,29 +1,38 @@
 # syntax=docker/dockerfile:1.6
 # Build context = repo root (monorepo). Use: docker build -f apps/api/Dockerfile .
-# Optimised: BuildKit cache mounts for pnpm store + pnpm deploy for minimal runner.
+# Optimised: turbo prune narrows the workspace to @lms/api + its deps only,
+# plus pnpm deploy for a minimal runner.
 
 FROM node:22-alpine AS base
 RUN apk add --no-cache dumb-init openssl \
- && corepack enable && corepack prepare pnpm@11.1.1 --activate
+ && corepack enable && corepack prepare pnpm@11.1.1 --activate \
+ && pnpm add -g turbo@2.10.11
 WORKDIR /app
 
-# ─── Dependencies (cached) ───
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
-COPY apps/api/package.json apps/api/package.json
-COPY apps/api/prisma ./apps/api/prisma
+# ─── Prune workspace to @lms/api (+ config, email-templates, types) ───
+# Invalidates only when manifests/lockfile change — never on source edits.
+FROM base AS pruner
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json apps/web/package.json
+COPY apps/api/package.json apps/api/package.json
 COPY apps/landing/package.json apps/landing/package.json
-COPY packages/ packages/
+COPY packages/config/package.json packages/config/package.json
+COPY packages/email-templates/package.json packages/email-templates/package.json
+COPY packages/types/package.json packages/types/package.json
+COPY packages/utils/package.json packages/utils/package.json
+RUN turbo prune @lms/api --docker
+
+# ─── Dependencies (cached, pruned) ───
+FROM base AS deps
+COPY --from=pruner /app/out/json/ ./
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 # pnpm store + fetch cache reuse across builds (speed + less download)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 
 # ─── Builder ───
 FROM deps AS builder
-COPY apps/api ./apps/api
-# Copy workspace package sources needed at build time (already in deps, but builder needs src)
-COPY packages ./packages
+COPY --from=pruner /app/out/full/ ./
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
@@ -75,4 +84,4 @@ RUN mkdir -p /app/apps/api/uploads /app/apps/uploads \
 
 WORKDIR /app/apps/api
 EXPOSE 4000
-ENTRYPOINT ["dumb-init", "./entrypoint.sh"]
+ENTRYPOINT ["dumb-init", "./apps/api/entrypoint.sh"]
