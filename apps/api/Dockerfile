@@ -29,6 +29,8 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 # ─── Builder ───
 FROM deps AS builder
 COPY --from=pruner /app/out/full/ ./
+# Root tsconfig is not part of the pruned workspace but app tsconfig extends it
+COPY tsconfig.json ./tsconfig.json
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
