@@ -82,4 +82,4 @@ RUN mkdir -p /app/apps/api/uploads /app/apps/uploads \
 
 WORKDIR /app/apps/api
 EXPOSE 4000
-ENTRYPOINT ["dumb-init", "./apps/api/entrypoint.sh"]
+ENTRYPOINT ["dumb-init", "./entrypoint.sh"]
