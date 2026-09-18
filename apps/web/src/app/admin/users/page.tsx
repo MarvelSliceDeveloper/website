@@ -517,7 +517,7 @@ export default function AdminUsersPage() {
               variant="primary"
               type="submit"
               form="create-user-form"
-              isLoading={createUserMutation.isPending}
+              loading={createUserMutation.isPending}
             >
               Add Student
             </Button>
@@ -633,7 +633,7 @@ export default function AdminUsersPage() {
               variant="primary"
               type="submit"
               form="edit-user-form"
-              isLoading={editUserMutation.isPending}
+              loading={editUserMutation.isPending}
             >
               Save Changes
             </Button>

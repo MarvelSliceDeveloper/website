@@ -374,7 +374,7 @@ function SessionsPageContent() {
                   type="submit"
                   variant="primary"
                   size="sm"
-                  isLoading={editMutation.isPending}
+                  loading={editMutation.isPending}
                 >
                   Update Session
                 </Button>
