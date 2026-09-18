@@ -20,7 +20,7 @@ export default function InternEditor() {
   const defaultForm = {
     title: '', division: '', role_category_id: null, location: '', type: 'Internship',
     duration: '', stipend: '', experience: '', apply_url: '', description: '',
-    key_requirements: '', responsibilities: '', qualifications: '',
+    key_requirements: '', responsibilities: '', qualifications: '', skills: '',
     is_active: true, sort_order: 0,
   };
   const [form, setForm] = useState(defaultForm);
@@ -49,6 +49,7 @@ export default function InternEditor() {
             key_requirements: data.key_requirements || '',
             responsibilities: data.responsibilities || '',
             qualifications: data.qualifications || '',
+            skills: data.skills || '',
             is_active: data.is_active !== undefined ? data.is_active : true,
             sort_order: data.sort_order || 0,
           });
@@ -89,6 +90,7 @@ export default function InternEditor() {
       key_requirements: form.key_requirements?.trim() || null,
       responsibilities: form.responsibilities?.trim() || null,
       qualifications: form.qualifications?.trim() || null,
+      skills: form.skills?.trim() || null,
       apply_url: form.apply_url?.trim() || null,
       is_active: form.is_active,
       sort_order: form.sort_order,
@@ -138,7 +140,7 @@ export default function InternEditor() {
       <form onSubmit={handleSave}>
         <div className="bg-white border border-gray-300 rounded-xl p-6 space-y-5" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
 
-          {/* Row 1: Title | Division | Category | Type */}
+          {/* Row 1: Title | Department | Category | Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Internship Title <span className="text-destructive-500">*</span></label>
@@ -146,7 +148,7 @@ export default function InternEditor() {
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" required />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Division / Department</label>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Department</label>
               <input name="division" value={form.division} onChange={handleChange} placeholder="e.g. Marketing / Engineering"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
@@ -170,8 +172,18 @@ export default function InternEditor() {
             </div>
           </div>
 
-          {/* Row 2: Duration | Minimum Experience | Stipend | Location */}
+          {/* Row 2: Qualification | Skills | Duration | Minimum Experience */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Qualification</label>
+              <input name="qualifications" value={form.qualifications} onChange={handleChange} placeholder="e.g. B.E / B.Tech / MCA"
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Skills</label>
+              <input name="skills" value={form.skills} onChange={handleChange} placeholder="e.g. React, Node.js, TypeScript, SQL"
+                className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Duration <span className="text-destructive-500">*</span></label>
               <input name="duration" value={form.duration} onChange={handleChange} placeholder="e.g. 3 months / 6 months" required
@@ -182,6 +194,10 @@ export default function InternEditor() {
               <input name="experience" value={form.experience} onChange={handleChange} placeholder="e.g. Freshers / 0-1 year"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
             </div>
+          </div>
+
+          {/* Row 3: Stipend | Location */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Stipend</label>
               <input name="stipend" value={form.stipend} onChange={handleChange} placeholder="e.g. ₹15,000/month"
@@ -224,17 +240,6 @@ export default function InternEditor() {
             <p className="text-[11px] text-neutral-500 mb-1.5">Enter each responsibility on a new line or with bullet points (•).</p>
             <textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={5}
               placeholder="• Assist the development team in building features&#10;• Write clean, maintainable code&#10;• Participate in code reviews and team meetings"
-              className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all resize-y font-mono text-xs leading-relaxed" />
-          </div>
-
-          {/* Row 6: Qualification & Experience */}
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">
-              Qualification &amp; Experience
-            </label>
-            <p className="text-[11px] text-neutral-500 mb-1.5">Enter each qualification/experience requirement on a new line or with bullet points (•).</p>
-            <textarea name="qualifications" value={form.qualifications} onChange={handleChange} rows={5}
-              placeholder="• Pursuing/Completed Bachelor's in CS, IT, or related fields&#10;• Strong communication skills&#10;• Available for full duration"
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all resize-y font-mono text-xs leading-relaxed" />
           </div>
 

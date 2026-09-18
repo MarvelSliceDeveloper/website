@@ -424,7 +424,7 @@ export default function Courses() {
       : firstNode.label.toLowerCase().replace(/\s+/g, "-");
   }, [currentTree]);
 
-  const desktopActiveCategory = explicitCategoryParam || defaultCategorySlug;
+  const desktopActiveCategory = explicitCategoryParam;
 
   const activeNavId = useMemo(() => {
     if (!desktopActiveCategory || !navItems) return null;
@@ -467,8 +467,9 @@ export default function Courses() {
     if (activeNavId) {
       const byId = courseMap[activeNavId];
       if (byId && byId.length > 0) return byId;
+      return [];
     }
-    return [];
+    return courses;
   }, [courses, courseMap, activeNavId]);
 
   const searchedCourses = useMemo(() => {
@@ -712,13 +713,13 @@ export default function Courses() {
             className="w-[280px] shrink-0 hidden lg:flex lg:flex-col bg-[#f8fafc] border-r border-slate-200 overflow-y-auto sticky top-0"
             aria-label="Course categories"
           >
-            {/* Top Category Header (Static) */}
+            {/* Top Category Header (Non-clickable static header) */}
             <div className="px-0 pt-0">
               <div className="flex overflow-hidden">
                 {parents.map((p) => (
                   <div
                     key={p.slug}
-                    className="flex-1 py-3 text-sm font-bold text-center bg-[#f59e0b] text-white shadow-sm select-none"
+                    className="w-full py-3.5 px-3 text-sm font-extrabold text-center text-white bg-[#f59e0b] select-none"
                   >
                     {p.displayLabel}
                   </div>
@@ -728,6 +729,38 @@ export default function Courses() {
             {/* Category tree container */}
             <nav className="p-3 overflow-y-auto flex-1">
               <div className="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-xs space-y-1">
+                {/* All Courses Option */}
+                <button
+                  type="button"
+                  onClick={(e) => handleExploreAll(e)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ease-out cursor-pointer flex items-center justify-between gap-2 border ${
+                    !explicitCategoryParam
+                      ? "bg-blue-50/80 border-blue-200 text-blue-700 font-semibold shadow-2xs"
+                      : "border-transparent text-gray-700 hover:bg-slate-50 hover:text-gray-900"
+                  }`}
+                  aria-label={`All (${courses?.length || 0} courses)`}
+                >
+                  <span className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                      <FiBookOpen
+                        className={`w-4 h-4 ${!explicitCategoryParam ? "text-blue-600" : "text-gray-400"}`}
+                      />
+                    </span>
+                    <span className="truncate min-w-0 max-w-full font-medium text-xs sm:text-sm">
+                      All
+                    </span>
+                  </span>
+                  <span
+                    className={`text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full ${
+                      !explicitCategoryParam
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {courses?.length || 0}
+                  </span>
+                </button>
+
                 {currentTree.map(sidebarNode)}
               </div>
             </nav>
@@ -858,7 +891,66 @@ export default function Courses() {
 
             {/* Desktop View */}
             <div className="hidden lg:block">
-              {searchedCourses.length === 0 ? (
+              {!explicitCategoryParam ? (
+                mobileCategorySections.length === 0 ? (
+                  <div className="min-h-[40vh] sm:min-h-[45vh] flex flex-col items-center justify-center text-center px-4 mx-auto max-w-md my-auto">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/70 mb-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      <span>Coming Soon</span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1.5 text-center">
+                      {search ? `No courses match "${search}"` : "No Courses Available"}
+                    </h3>
+
+                    <p className="text-slate-500 text-xs sm:text-sm leading-relaxed text-center">
+                      {search
+                        ? "No courses match your search criteria. Please try a different query."
+                        : "There are currently no courses listed. Please check back later."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-10">
+                    {mobileCategorySections.map((section) => {
+                      const Icon = CATEGORY_ICONS[section.label] || DEFAULT_ICON;
+                      return (
+                        <div key={section.id} className="space-y-4">
+                          <div className="flex items-center gap-2 pb-2.5 border-b border-slate-200">
+                            <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                              <Icon className="w-4 h-4" />
+                            </span>
+                            <h2 className="text-lg lg:text-xl font-bold text-[#1B365D]">
+                              {section.label}
+                            </h2>
+                            <span className="ml-auto text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                              {section.courses.length} {section.courses.length === 1 ? "course" : "courses"}
+                            </span>
+                          </div>
+                          {viewMode === "grid" ? (
+                            <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {section.courses.map((course) => (
+                                <StaggerItem key={course.id}>
+                                  <CourseCard
+                                    course={course}
+                                    bannerSize="lg"
+                                    showViewLink
+                                  />
+                                </StaggerItem>
+                              ))}
+                            </Stagger>
+                          ) : (
+                            <div className="space-y-3">
+                              {section.courses.map((course) => (
+                                <CourseListItem key={course.id} course={course} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
+              ) : searchedCourses.length === 0 ? (
                 <div className="min-h-[40vh] sm:min-h-[45vh] flex flex-col items-center justify-center text-center px-4 mx-auto max-w-md my-auto">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200/70 mb-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />

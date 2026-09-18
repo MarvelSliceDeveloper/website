@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
+import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiCheck, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
 import AnimatedNumber from '../ui/AnimatedNumber';
@@ -22,13 +22,13 @@ function CourseButtons() {
     <div className="flex flex-row gap-2 sm:gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-extrabold text-xs sm:text-sm lg:font-semibold lg:text-base hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Software Learning
       </Link>
       <Link
         to="/banking"
-        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+        className="home-intro-btn inline-flex items-center justify-center gap-1 flex-1 sm:flex-initial px-3.5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-extrabold text-xs sm:text-sm lg:font-semibold lg:text-base hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
       >
         Competitive Exam
       </Link>
@@ -93,7 +93,7 @@ export default function IntroFormSection({ section }) {
   const introText = content.intro_text || '';
   const stats = content.stats || [];
   const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
-  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || 'Book Your Free Demo Now!';
+  const formTitle = content.form_title || content.formTitle || section?.form_title || section?.formTitle || '';
   const rawMobileSize = content.form_title_size_mobile || '30px';
   const rawTabletSize = content.form_title_size_tablet || '26px';
   const rawPcSize = content.form_title_size_pc || '26px';
@@ -117,7 +117,7 @@ export default function IntroFormSection({ section }) {
     if (showSuccessModal) {
       const timer = setTimeout(() => {
         setShowSuccessModal(false);
-      }, 1000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [showSuccessModal]);
@@ -197,24 +197,26 @@ export default function IntroFormSection({ section }) {
           <Reveal variant="right" className="md:col-span-5 lg:col-span-5 xl:col-span-4 w-full flex flex-col items-center md:items-end mt-6 lg:mt-2 intro-form-right-col">
             <div className="w-full max-w-md md:max-w-none lg:max-w-sm flex flex-col items-center text-center mx-auto md:mx-0 intro-form-container">
               <div className="w-full intro-form-box">
-                <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
-                  <style>{`
-                    .intro-form-title {
-                      font-size: ${mobileSize} !important;
-                    }
-                    @media (min-width: 640px) {
+                {formTitle && (
+                  <p className="intro-form-title font-extrabold text-center mb-1 w-full leading-tight" style={{ color: '#ef4444' }}>
+                    <style>{`
                       .intro-form-title {
-                        font-size: ${tabletSize} !important;
+                        font-size: ${mobileSize} !important;
                       }
-                    }
-                    @media (min-width: 1024px) {
-                      .intro-form-title {
-                        font-size: ${pcSize} !important;
+                      @media (min-width: 640px) {
+                        .intro-form-title {
+                          font-size: ${tabletSize} !important;
+                        }
                       }
-                    }
-                  `}</style>
-                  {formTitle}
-                </p>
+                      @media (min-width: 1024px) {
+                        .intro-form-title {
+                          font-size: ${pcSize} !important;
+                        }
+                      }
+                    `}</style>
+                    {formTitle}
+                  </p>
+                )}
                 <div className="rounded-2xl overflow-hidden w-full mt-4 sm:mt-5" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
                   <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
                     <div
@@ -334,7 +336,7 @@ export default function IntroFormSection({ section }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => setShowSuccessModal(false)}
           >
             <motion.div
@@ -342,13 +344,25 @@ export default function IntroFormSection({ section }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
-              className="relative bg-white rounded-3xl shadow-2xl max-w-xs w-full p-6 text-center border border-slate-100"
+              className="relative bg-white rounded-3xl shadow-2xl max-w-sm sm:max-w-md w-full p-8 sm:p-10 text-center border border-slate-100 flex flex-col items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                <FiCheckCircle className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                Submission Successful!
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                Thank you for reaching out. We have received your information and our team will process it shortly.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                OK
+              </button>
             </motion.div>
           </motion.div>
         )}

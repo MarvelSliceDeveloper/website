@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiCheck, FiArrowRight, FiTarget, FiX, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
@@ -133,6 +133,15 @@ export default function Reasoning() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        closeApplyModal();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted]);
+
   function openApplyModal(type = 'general', topic = 'General Reasoning Coaching') {
     trackEnroll(topic, 'reasoning_exams');
     setEnquiryType(type);
@@ -140,14 +149,7 @@ export default function Reasoning() {
     setShowApplyModal(true);
   }
 
-  useEffect(() => {
-    if (isSubmitted) {
-      const timer = setTimeout(() => {
-        closeApplyModal();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSubmitted]);
+  // Modal close handler
 
   function closeApplyModal() {
     if (isSubmitting) return;
@@ -581,11 +583,23 @@ export default function Reasoning() {
 
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
-                  <div className="text-center py-6">
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FiCheckCircle className="w-8 h-8 text-emerald-600" />
+                  <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                      <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
-                    <h4 className="text-lg font-bold text-dark-navy">Success!</h4>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                      Submission Successful!
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                      Thank you for your enquiry. Our reasoning exam specialists will get in touch with you shortly.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={closeApplyModal}
+                      className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleApplySubmit} className="space-y-4">

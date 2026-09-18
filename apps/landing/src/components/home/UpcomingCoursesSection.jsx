@@ -14,7 +14,7 @@ function CourseCard({ course }) {
       to={`/courses/${course.slug}`}
       className="group block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full w-full max-w-sm mx-auto sm:mx-0"
     >
-      <div className="relative w-full h-44 bg-gradient-to-br from-brand-blue to-brand-orange">
+      <div className="relative w-full aspect-video bg-gradient-to-br from-brand-blue to-brand-orange overflow-hidden">
         {course.hero_image_url ? (
           <img src={course.hero_image_url} alt={course.title} className="w-full h-full object-cover" />
         ) : (

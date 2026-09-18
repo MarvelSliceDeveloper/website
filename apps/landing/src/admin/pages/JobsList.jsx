@@ -70,7 +70,7 @@ export default function JobsList() {
   const exportColumns = [
     { header: 'SL NO', accessor: 'slno', exportValue: (_, i) => i + 1 },
     { header: 'Job Title', accessor: 'title' },
-    { header: 'Division / Department', accessor: 'division', exportValue: (row) => row.division || row.department || '-' },
+    { header: 'Department', accessor: 'division', exportValue: (row) => row.division || row.department || '-' },
     { header: 'Category', accessor: 'role_categories', exportValue: (row) => row.role_categories?.name || 'Uncategorized' },
     { header: 'Location', accessor: 'location' },
     { header: 'Type', accessor: 'type' },
@@ -80,7 +80,8 @@ export default function JobsList() {
     { header: 'Description / Overview', accessor: 'description' },
     { header: 'Key Requirements', accessor: 'key_requirements' },
     { header: 'Responsibilities', accessor: 'responsibilities' },
-    { header: 'Qualification & Experience', accessor: 'qualifications' },
+    { header: 'Qualification', accessor: 'qualifications' },
+    { header: 'Skills', accessor: 'skills' },
     { header: 'Status', accessor: 'is_active', exportValue: (row) => row.is_active ? 'Active' : 'Inactive' },
   ];
 

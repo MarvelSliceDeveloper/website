@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { uploadFile as helperUploadFile } from '../lib/uploadHelper';
@@ -145,6 +145,7 @@ const TABS = [
 ];
 
 export default function Career() {
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const jobsRef = useRef(null);
   const [searchParams] = useSearchParams();
@@ -176,14 +177,6 @@ export default function Career() {
     setAgreeTerms(false);
   }
 
-  useEffect(() => {
-    if (status?.type === 'success') {
-      const timer = setTimeout(() => {
-        closeCareerForm();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
   const [tab, setTab] = useState('all');
   const [page, setPage] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -489,16 +482,32 @@ export default function Career() {
 
     if (status?.type === 'success') {
       return (
-        <div className="p-6 text-center">
+        <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
+            className="flex flex-col items-center justify-center text-center max-w-sm sm:max-w-md mx-auto"
           >
-            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FiCheck className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+              <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+              Submission Successful!
+            </h3>
+            <p className="text-sm sm:text-base text-slate-600 max-w-sm sm:max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+              Thank you for your submission. We have received your application information and will process it shortly. You will receive a confirmation update within the next few minutes.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                closeCareerForm();
+                navigate('/');
+              }}
+              className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              OK
+            </button>
           </motion.div>
         </div>
       );
@@ -699,6 +708,8 @@ export default function Career() {
         </div>
       )}
 
+      {/* Hidden for now: Headline, Subtitle, Description, Role Categories & CTA Banner */}
+      {/* 
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20 text-center">
         {fc.headline && (
           <div>
@@ -773,20 +784,21 @@ export default function Career() {
       </Reveal>
 
       <CTABannerSection section={ctaSection} />
+      */}
 
       <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-          <div className="mb-6 sm:mb-8 text-center">
+          <div className="mb-6 sm:mb-8 text-center flex flex-col items-center">
             {pageContent?.section2_heading && (
               <div>
-                <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy whitespace-pre-line">
+                <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-dark-navy whitespace-pre-line text-center">
                   {pageContent.section2_heading}
                 </h2>
-                <div className="w-16 h-[3px] bg-brand-orange rounded-full mx-auto mt-2.5 mb-5 sm:mb-6" />
+                <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5 sm:mb-6 mx-auto" />
               </div>
             )}
             {pageContent?.section2_subheading && (
-              <p className="text-slate-600 text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed whitespace-pre-line">
+              <p className="text-slate-600 text-xs sm:text-sm font-normal max-w-2xl leading-relaxed whitespace-pre-line text-center mx-auto">
                 {pageContent.section2_subheading}
               </p>
             )}
@@ -832,7 +844,7 @@ export default function Career() {
                     {pageItems.map((item) => {
                       const isIntern = item._type === 'intern';
                       const empType = item.type || item.department || (isIntern ? 'Internship' : 'Job');
-                      const expVal = item.experience || item.duration;
+                      const durationVal = isIntern ? item.duration : null;
                       const locVal = item.location;
 
                       return (
@@ -872,10 +884,10 @@ export default function Career() {
                           {/* METADATA & ACTION SECTION BELOW DIVIDER */}
                           <div className="pt-3 mt-3 sm:mt-4 border-t border-slate-100 flex items-center justify-between gap-2.5 w-full">
                             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1 text-xs text-slate-500 font-medium">
-                              {expVal && (
-                                <span className="flex items-center gap-1.5 shrink-0" title={expVal}>
+                              {durationVal && (
+                                <span className="flex items-center gap-1.5 shrink-0" title={durationVal}>
                                   <FiClock className="w-3.5 h-3.5 text-brand-orange shrink-0" />
-                                  <span>{expVal}</span>
+                                  <span>{durationVal}</span>
                                 </span>
                               )}
                               {locVal && (
@@ -887,7 +899,7 @@ export default function Career() {
                             </div>
                             <Link
                               to={`/career/job/${item._type}/${item.id}`}
-                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-extrabold text-xs sm:text-sm py-2.5 px-5 sm:py-3 sm:px-6 rounded-full hover:bg-blue-700 shadow-sm hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
+                              className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-brand-blue text-white font-semibold text-xs sm:text-sm py-2.5 px-5 sm:py-3 sm:px-6 rounded-full hover:bg-blue-700 shadow-sm hover:shadow-md hover:shadow-brand-blue/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
                             >
                               <span>View Details</span>
                               <FiArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:translate-x-0.5 transition-transform" />

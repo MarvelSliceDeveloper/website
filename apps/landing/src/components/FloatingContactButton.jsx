@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { FiPhone, FiX, FiSend, FiCheck } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiPhone, FiPhoneCall, FiX, FiSend, FiCheck, FiMessageCircle } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import { supabase } from '../lib/supabaseClient';
-import { trackFormSubmit, trackCtaClick } from '../lib/analytics';
+import { useSiteSettings } from '../hooks/useSupabase';
+import { extractPhoneNumbers, cleanTelHref, cleanWaHref } from '../lib/phoneUtils';
+import { trackFormSubmit, trackCtaClick, trackPhoneClick, trackSocialClick } from '../lib/analytics';
 
 const SUBJECT_OPTIONS = ['Course Enquiry', 'Intern Enquiry', 'Other Enquiry'];
 
@@ -24,8 +27,38 @@ function Field({ label, required, error, children }) {
 }
 
 export default function FloatingContactButton() {
+  const { data: settings } = useSiteSettings();
+  const phoneNumbers = extractPhoneNumbers(settings?.contact_phone || '+91 63809 57390');
+  const primaryPhone = phoneNumbers[0] || '+91 63809 57390';
+  const telLink = cleanTelHref(primaryPhone);
+  const waLink = cleanWaHref(primaryPhone, 'Hello, I have an enquiry regarding courses.');
+
   const [open, setOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  useEffect(() => {
+    const handleStatus = (e) => setIsChatOpen(!!e.detail?.open);
+    const handleOpen = () => setIsChatOpen(true);
+    window.addEventListener('chat-widget-status', handleStatus);
+    window.addEventListener('open-chat-widget', handleOpen);
+    return () => {
+      window.removeEventListener('chat-widget-status', handleStatus);
+      window.removeEventListener('open-chat-widget', handleOpen);
+    };
+  }, []);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (sent) {
+      const timer = setTimeout(() => {
+        setOpen(false);
+        setSent(false);
+        setAgreeTerms(false);
+        setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [sent]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
@@ -75,12 +108,6 @@ export default function FloatingContactButton() {
       }).catch(() => {});
       trackFormSubmit('floating_enquiry', { subject: form.subject });
       setSent(true);
-      setTimeout(() => {
-        setOpen(false);
-        setSent(false);
-        setAgreeTerms(false);
-        setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
-      }, 1000);
     } catch {
       setErrors({ form: 'Submission failed. Please try again.' });
     } finally {
@@ -102,10 +129,6 @@ export default function FloatingContactButton() {
           80% { transform: scale(0.92); }
           100% { opacity: 1; transform: scale(1); }
         }
-        @keyframes fcb-ping {
-          0% { transform: scale(1); opacity: 0.6; }
-          100% { transform: scale(1.9); opacity: 0; }
-        }
         @keyframes fcb-fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -114,11 +137,23 @@ export default function FloatingContactButton() {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .fcb-btn {
-          animation: fcb-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards;
+        @keyframes phone-ring {
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          12% { transform: rotate(-12deg) scale(1.12); }
+          24% { transform: rotate(12deg) scale(1.12); }
+          36% { transform: rotate(-8deg) scale(1.08); }
+          48% { transform: rotate(8deg) scale(1.08); }
+          60% { transform: rotate(0deg) scale(1); }
         }
-        .fcb-ring {
-          animation: fcb-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+        @keyframes wa-bounce {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          15% { transform: scale(1.16) rotate(-6deg); }
+          30% { transform: scale(1.08) rotate(6deg); }
+          45% { transform: scale(1.16) rotate(-3deg); }
+          60% { transform: scale(1.04) rotate(0deg); }
+        }
+        .fcb-btn {
+          animation: fcb-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .fcb-backdrop {
           animation: fcb-fade-in 0.2s ease-out both;
@@ -126,22 +161,89 @@ export default function FloatingContactButton() {
         .fcb-modal {
           animation: fcb-modal-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
+        .animate-phone-ring {
+          animation: phone-ring 2.8s ease-in-out infinite;
+        }
+        .animate-wa-bounce {
+          animation: wa-bounce 2.8s ease-in-out 0.9s infinite;
+        }
       `}</style>
 
-      <div className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-40">
-        <button
-          type="button"
-          onClick={() => {
-            trackCtaClick('Floating Quick Contact', 'floating_bubble');
-            setOpen(true);
-          }}
-          aria-label="Contact us"
-          className="fcb-btn relative flex h-14 w-14 items-center justify-center rounded-full bg-brand-blue text-white shadow-lg shadow-brand-blue/30 hover:bg-brand-blue/90 transition-colors cursor-pointer"
-        >
-          <span className="fcb-ring absolute inset-0 rounded-full border-2 border-brand-blue" aria-hidden="true" />
-          <FiPhone className="h-6 w-6" />
-        </button>
-      </div>
+      {/* Floating Action Buttons Stack (Vertically Centered on Right Side) */}
+      {!isChatOpen && (
+        <div className="fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-40 flex flex-col items-end gap-3 pointer-events-auto">
+
+          {/* 1. Chat Button (Smooth expandable pill with animated starburst icon) */}
+          <div className="relative flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget'))}
+              aria-label="Open Chat"
+              className="fcb-btn group/chat flex h-12 w-12 sm:h-13 sm:w-13 hover:w-28 sm:hover:w-30 items-center justify-start rounded-full bg-brand-green text-white font-bold shadow-lg hover:bg-brand-green/90 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <span className="relative w-5 h-5 sm:w-6 sm:h-6 text-white flex items-center justify-center">
+                  <FiMessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <svg className="absolute inset-0 w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    {[0, 1, 2].map((i) => (
+                      <circle
+                        key={i}
+                        cx={9 + i * 3}
+                        cy="12.5"
+                        r="1.4"
+                        fill="currentColor"
+                        style={{
+                          transformBox: 'fill-box',
+                          animation: `chat-dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                        }}
+                      />
+                    ))}
+                  </svg>
+                </span>
+              </div>
+              <span className="opacity-0 group-hover/chat:opacity-100 translate-x-2 group-hover/chat:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                Chat
+              </span>
+            </button>
+          </div>
+
+          {/* 2. Direct Call Button (Blue - smooth expandable pill) */}
+          <div className="relative flex items-center justify-end">
+            <a
+              href={telLink}
+              onClick={() => trackPhoneClick(primaryPhone, 'floating_call_btn')}
+              aria-label="Call Us"
+              className="fcb-btn group/call flex h-12 w-12 sm:h-13 sm:w-13 hover:w-30 sm:hover:w-32 items-center justify-start rounded-full bg-brand-blue text-white font-bold shadow-lg hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <FiPhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-phone-ring group-hover/call:scale-110" />
+              </div>
+              <span className="opacity-0 group-hover/call:opacity-100 translate-x-2 group-hover/call:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                Call Us
+              </span>
+            </a>
+          </div>
+
+          {/* 3. Direct WhatsApp Button (Green - smooth expandable pill) */}
+          <div className="relative flex items-center justify-end">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackSocialClick('WhatsApp', primaryPhone)}
+              aria-label="WhatsApp Us"
+              className="fcb-btn group/wa flex h-12 w-12 sm:h-13 sm:w-13 hover:w-32 sm:hover:w-36 items-center justify-start rounded-full bg-[#25D366] text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 ease-out cursor-pointer select-none overflow-hidden"
+            >
+              <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center shrink-0">
+                <FaWhatsapp className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-white animate-wa-bounce group-hover/wa:scale-110" />
+              </div>
+              <span className="opacity-0 group-hover/wa:opacity-100 translate-x-2 group-hover/wa:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap text-white font-extrabold tracking-wide text-sm sm:text-base pr-4 select-none">
+                WhatsApp
+              </span>
+            </a>
+          </div>
+        </div>
+      )}
 
       {open && (
         <div
@@ -174,11 +276,28 @@ export default function FloatingContactButton() {
               )}
 
             {sent ? (
-              <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <FiCheck className="w-8 h-8 text-emerald-600" />
+              <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                  <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                 </div>
-                <h4 className="text-lg font-bold text-slate-800">Success!</h4>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                  Submission Successful!
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                  Thank you for your enquiry. We have received your details and will get in touch with you shortly.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setSent(false);
+                    setAgreeTerms(false);
+                    setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
+                  }}
+                  className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  OK
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="p-6 sm:p-8">

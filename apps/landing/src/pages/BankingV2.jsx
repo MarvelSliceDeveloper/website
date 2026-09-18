@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown, FiChevronRight, FiMail, FiPhone } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import { FiCheckCircle, FiCheck, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown, FiChevronRight, FiMail, FiPhone } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { supabase } from '../lib/supabaseClient';
 import { useSiteSettings } from '../hooks/useSupabase';
-import { trackRegister, trackFormSubmit, trackEnroll, trackSocialClick } from '../lib/analytics';
+import { trackRegister, trackFormSubmit, trackEnroll } from '../lib/analytics';
 import BankingTestimonialsSection from '../components/banking/BankingTestimonialsSection';
 
 const FAQS = [
@@ -123,102 +121,9 @@ const EXAMS = [
   }
 ];
 
-const BANKING_MENU_DROPDOWNS = {
-  aptitude: {
-    label: 'Aptitude',
-    path: '/aptitude',
-    categories: [
-      {
-        id: 'di',
-        name: 'Data Interpretation',
-        items: ['Pie Chart & Line Graphs', 'Tabular DI & Caselets', 'Radar & Bar Graphs', 'Missing Data DI']
-      },
-      {
-        id: 'arithmetic',
-        name: 'Arithmetic',
-        items: ['Percentage & Profit Loss', 'Simple & Compound Interest', 'Time & Work / Pipes', 'Ratios & Mixtures']
-      },
-      {
-        id: 'speedMaths',
-        name: 'Speed Calculation',
-        items: ['Vedic Tricks & Squares', 'Simplification & Approximation', 'Quadratic Equations', 'Number Series (Missing & Wrong)']
-      }
-    ]
-  },
-  reasoning: {
-    label: 'Reasoning',
-    path: '/reasoning',
-    categories: [
-      {
-        id: 'puzzles',
-        name: 'Puzzles & Seating',
-        items: ['Floor & Flat Puzzles', 'Linear & Circular Arrangement', 'Box & Month Based Puzzles', 'Matrix & Schedule Puzzles']
-      },
-      {
-        id: 'logical',
-        name: 'Logical Reasoning',
-        items: ['Syllogisms (Only a Few)', 'Coded Inequalities', 'Blood Relations & Direction', 'Input-Output Machine']
-      }
-    ]
-  },
-  english: {
-    label: 'English',
-    path: '/english',
-    categories: [
-      {
-        id: 'grammar',
-        name: 'Grammar & Reading',
-        items: ['Reading Comprehension Passages', 'Error Spotting & Sentence Correction', 'Cloze Test & Fillers', 'Para Jumbles & Rearrangement']
-      },
-      {
-        id: 'vocab',
-        name: 'Vocabulary',
-        items: ['Editorial Vocabulary', 'Idioms & Phrases', 'One Word Substitution', 'Synonyms & Antonyms']
-      }
-    ]
-  },
-  bankingAwareness: {
-    label: 'Banking Awareness',
-    path: '/banking-awareness',
-    categories: [
-      {
-        id: 'financial',
-        name: 'Banking & Finance',
-        items: ['RBI & Monetary Policy', 'Types of Bank Accounts & Cheques', 'NPA, PCA & Insolvency Code', 'Inflation, Repo Rate & CRR/SLR']
-      },
-      {
-        id: 'markets',
-        name: 'Capital & Money Market',
-        items: ['SEBI & Stock Exchanges', 'Treasury Bills & Commercial Paper', 'Priority Sector Lending', 'Digital Banking & UPI/NEFT/RTGS']
-      }
-    ]
-  },
-  affairs: {
-    label: 'Affairs',
-    path: '/current-affairs',
-    items: [
-      { title: 'Current Affairs', path: '/current-affairs', desc: 'Daily National & International News' },
-      { title: "Today's Affairs", path: '/todays-affairs', desc: 'Real-time Daily News Updates' },
-      { title: 'Monthly Current Affairs Capsule', path: '/current-affairs', desc: 'Comprehensive Exam-focused Summary' },
-      { title: 'Banking & Economy News', path: '/current-affairs', desc: 'Financial Sector Weekly Updates' }
-    ]
-  },
-  mockExam: {
-    label: 'Mock Exam',
-    path: '/mock-exam',
-    items: [
-      { title: 'IBPS PO Prelims Full Mock', desc: '100 Questions Timed Simulation' },
-      { title: 'IBPS Clerk Speed Test', desc: 'Sectional Speed Booster Test' },
-      { title: 'RRB Officer Scale I Practice', desc: 'Prelims & Mains Model Test' },
-      { title: 'Specialist Officer Test Series', desc: 'Domain Knowledge Mocks' }
-    ]
-  }
-};
-
 export default function BankingV2() {
   const navigate = useNavigate();
   const { data: settings } = useSiteSettings();
-  const social = settings?.social_links || {};
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [enquiryType, setEnquiryType] = useState('general');
@@ -229,6 +134,15 @@ export default function BankingV2() {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        closeApplyModal();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
@@ -241,7 +155,6 @@ export default function BankingV2() {
     }
   };
 
-
   function openApplyModal(type = 'general', topic = 'General Banking Enquiry') {
     trackEnroll(topic, 'banking_exams');
     setEnquiryType(type);
@@ -249,14 +162,7 @@ export default function BankingV2() {
     setShowApplyModal(true);
   }
 
-  useEffect(() => {
-    if (isSubmitted) {
-      const timer = setTimeout(() => {
-        closeApplyModal();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSubmitted]);
+  // Modal close handler
 
   function closeApplyModal() {
     if (isSubmitting) return;
@@ -296,7 +202,7 @@ export default function BankingV2() {
 
     const { error } = await supabase.from('banking_enquiries').insert(payload);
     if (error) {
-      console.error('Banking enquiry DB error:', error);
+      console.error('Banking V2 enquiry DB error:', error);
     }
 
     try {
@@ -354,6 +260,7 @@ export default function BankingV2() {
   return (
     <div className="bg-white min-h-screen text-slate-800 relative">
       <div className="banking-career-content">
+        {/* 1. HERO SECTION (MATCHES BANKING HERO DESIGN AND TEXT) */}
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -506,9 +413,7 @@ export default function BankingV2() {
 
       {/* 3. EDITORIAL INFOGRAPHIC FULL-WIDTH CAREER CTA BANNER SECTION */}
       <section className="relative py-14 sm:py-18 lg:py-20 bg-gradient-to-r from-[#07193C] via-[#0B2A6F] to-[#1558D6] text-white overflow-hidden w-full border-y border-white/10 shadow-2xl">
-        {/* SVG HALF CIRCLE & CURVED CONCENTRIC LINE VECTOR PATTERN (BLUE & WHITE ONLY) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Top-Right Half Circle Arc Lines */}
           <svg className="absolute -top-24 -right-24 w-[480px] sm:w-[540px] h-[480px] sm:h-[540px] text-white/15" viewBox="0 0 500 500" fill="none">
             <circle cx="250" cy="250" r="230" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 6" />
             <circle cx="250" cy="250" r="180" stroke="currentColor" strokeWidth="2" />
@@ -516,7 +421,6 @@ export default function BankingV2() {
             <circle cx="250" cy="250" r="80" stroke="currentColor" strokeWidth="2" />
           </svg>
 
-          {/* Bottom-Left Half Circle Arc Lines */}
           <svg className="absolute -bottom-24 -left-24 w-[420px] sm:w-[480px] h-[420px] sm:h-[480px] text-white/15" viewBox="0 0 450 450" fill="none">
             <circle cx="225" cy="225" r="205" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 6" />
             <circle cx="225" cy="225" r="155" stroke="currentColor" strokeWidth="2" />
@@ -524,20 +428,17 @@ export default function BankingV2() {
             <circle cx="225" cy="225" r="55" stroke="currentColor" strokeWidth="2" />
           </svg>
 
-          {/* Subtle Horizontal Curved Wave Lines */}
           <svg className="absolute inset-0 w-full h-full text-white/5" viewBox="0 0 1200 400" preserveAspectRatio="none" fill="none">
             <path d="M 0 200 Q 300 100 600 200 T 1200 200" stroke="currentColor" strokeWidth="2" />
             <path d="M 0 240 Q 300 140 600 240 T 1200 240" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 5" />
           </svg>
         </div>
 
-        {/* SOFT BLUE & WHITE AMBIENT GLOW ORBS */}
         <div className="absolute -top-32 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 right-1/4 w-[400px] h-[400px] rounded-full bg-white/10 blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-12 gap-8 items-end">
-            {/* LEFT COLUMN: HEADING & EXPANDED CONTENT (~70% width) */}
             <Reveal variant="left" className="lg:col-span-8 space-y-4 text-left">
               <h2 className="text-2xl sm:text-3xl lg:text-[36px] font-extrabold text-brand-orange tracking-tight leading-tight">
                 Your Banking Career <br />
@@ -549,7 +450,6 @@ export default function BankingV2() {
               </p>
             </Reveal>
 
-            {/* RIGHT COLUMN: BUTTON ALIGNED TO BOTTOM RIGHT (~30% width) */}
             <Reveal variant="right" className="lg:col-span-4 flex lg:justify-end justify-start items-end pt-4 lg:pt-0">
               <button
                 type="button"
@@ -568,7 +468,6 @@ export default function BankingV2() {
       <section id="why-prepare-section" className="py-16 sm:py-24 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-            {/* Left Column: Heading & 4 Course Bullet Points */}
             <Reveal variant="left" className="lg:col-span-7 space-y-6">
               <div>
                 <h2 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight">
@@ -641,7 +540,6 @@ export default function BankingV2() {
               </ul>
             </Reveal>
 
-            {/* Right Column: Upcoming Image Positioned ~10% down & CLICKABLE */}
             <Reveal variant="right" className="lg:col-span-5 flex justify-center lg:justify-end self-center my-auto pt-8 lg:pt-10">
               {upcomingLink ? (
                 <a
@@ -752,11 +650,23 @@ export default function BankingV2() {
               {/* Modal Form Content */}
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
-                  <div className="text-center py-6">
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FiCheckCircle className="w-8 h-8 text-emerald-600" />
+                  <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                      <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
-                    <h4 className="text-lg font-bold text-dark-navy">Success!</h4>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                      Submission Successful!
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                      Thank you for your enquiry. Our banking exam specialists will get in touch with you shortly.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={closeApplyModal}
+                      className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleApplySubmit} className="space-y-4">

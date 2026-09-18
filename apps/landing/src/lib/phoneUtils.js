@@ -70,10 +70,26 @@ export function extractPhoneNumbers(phoneStr) {
  * Cleans phone number for href tel: protocol (e.g. "tel:+916380957390")
  */
 export function cleanTelHref(phone) {
-  if (!phone) return '#';
+  if (!phone) return 'tel:+916380957390';
   const digits = String(phone).replace(/\D/g, '');
   if (digits.length === 10) return `tel:+91${digits}`;
   if (digits.length === 12 && digits.startsWith('91')) return `tel:+${digits}`;
   if (digits.length === 11 && digits.startsWith('0')) return `tel:+91${digits.slice(1)}`;
   return `tel:+91${digits.slice(-10)}`;
+}
+
+/**
+ * Formats phone number for WhatsApp direct chat URL (e.g. "https://wa.me/916380957390?text=...")
+ */
+export function cleanWaHref(phone, text = 'Hello, I have an enquiry regarding courses.') {
+  const defaultPhone = '916380957390';
+  if (!phone) return `https://wa.me/${defaultPhone}?text=${encodeURIComponent(text)}`;
+  const digits = String(phone).replace(/\D/g, '');
+  let fullDigits = digits;
+  if (digits.length === 10) fullDigits = `91${digits}`;
+  else if (digits.length === 11 && digits.startsWith('0')) fullDigits = `91${digits.slice(1)}`;
+  else if (digits.length < 10) fullDigits = defaultPhone;
+  else if (!digits.startsWith('91') && digits.length === 10) fullDigits = `91${digits}`;
+
+  return `https://wa.me/${fullDigits}?text=${encodeURIComponent(text)}`;
 }

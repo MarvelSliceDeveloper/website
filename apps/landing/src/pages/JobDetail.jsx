@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
@@ -38,7 +38,7 @@ function renderBulletList(content) {
   if (Array.isArray(content)) {
     return content.map((item, idx) => (
       <li key={idx} className="flex items-start gap-3 text-slate-600 text-sm sm:text-base font-normal leading-relaxed">
-        <span className="w-2 h-2 rounded-full bg-brand-blue shrink-0 mt-2" />
+        <span className="w-2 h-2 rounded-full bg-[#554949] shrink-0 mt-2" />
         <span className="flex-1">{typeof item === 'string' ? item : item.text || item.title}</span>
       </li>
     ));
@@ -51,7 +51,7 @@ function renderBulletList(content) {
 
   return lines.map((line, idx) => (
     <li key={idx} className="flex items-start gap-3 text-slate-600 text-sm sm:text-base font-normal leading-relaxed">
-      <span className="w-2 h-2 rounded-full bg-brand-blue shrink-0 mt-2" />
+      <span className="w-2 h-2 rounded-full bg-[#554949] shrink-0 mt-2" />
       <span className="flex-1">{line}</span>
     </li>
   ));
@@ -59,12 +59,21 @@ function renderBulletList(content) {
 
 export default function JobDetail() {
   const { type, id } = useParams();
+  const navigate = useNavigate();
   const formRef = useRef(null);
+  const redirectTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   // Full Application Modal State (career_submissions)
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     position: '',
@@ -77,16 +86,6 @@ export default function JobDetail() {
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [agreeTerms, setAgreeTerms] = useState(false);
-
-  useEffect(() => {
-    if (status?.type === 'success') {
-      const timer = setTimeout(() => {
-        setShowForm(false);
-        setStatus(null);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
 
   // Quick Career Enquiry Form State (career_contact_submissions)
   const [enquiryForm, setEnquiryForm] = useState({
@@ -131,7 +130,8 @@ export default function JobDetail() {
         return;
       }
       setForm({
-        full_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
         position: job.title || '',
@@ -239,12 +239,12 @@ export default function JobDetail() {
 
   function validate() {
     const errs = {};
-    if (!form.full_name.trim()) errs.full_name = 'Full name is required';
+    if (!form.first_name.trim()) errs.first_name = 'First name is required';
+    if (!form.last_name.trim()) errs.last_name = 'Last name is required';
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Invalid email format';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,20}$/.test(form.phone)) errs.phone = 'Invalid phone number';
-    if (!form.position.trim()) errs.position = 'Position is required';
     if (!form.description.trim()) errs.description = 'Description is required';
     if (!agreeTerms) {
       errs.agree = 'Please agree to the terms and conditions';
@@ -284,10 +284,12 @@ export default function JobDetail() {
       }
     }
 
+    const full_name = `${form.first_name.trim()} ${form.last_name.trim()}`;
+
     const { error: insertError } = await supabase
       .from('career_submissions')
       .insert({
-        full_name: form.full_name,
+        full_name,
         email: form.email,
         phone: form.phone,
         department: form.position,
@@ -303,14 +305,18 @@ export default function JobDetail() {
     fetch('/api/submit-career', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, file_url }),
+      body: JSON.stringify({ ...form, full_name, file_url }),
     }).catch(() => {});
 
     trackFormSubmit('career');
     if (file_url) trackDownload('career_resume');
-    setStatus({ type: 'success', message: 'Application submitted successfully! We will get back to you soon.' });
+    setStatus({
+      type: 'success',
+      message: 'We have received your application. Our team will reach out to you shortly.'
+    });
     setForm({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       position: job?.title || '',
@@ -325,7 +331,7 @@ export default function JobDetail() {
 
   if (isLoading) {
     return (
-      <div className="bg-slate-50 min-h-screen py-12 sm:py-16">
+      <div className="bg-white min-h-screen py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="h-6 w-36 bg-slate-200 rounded animate-pulse" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -339,7 +345,7 @@ export default function JobDetail() {
 
   if (!job || error) {
     return (
-      <div className="bg-slate-50 min-h-screen py-20">
+      <div className="bg-white min-h-screen py-20">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="w-16 h-16 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center mx-auto mb-4 border border-orange-200/50">
             <FiBriefcase className="w-8 h-8" />
@@ -362,29 +368,18 @@ export default function JobDetail() {
     <div className="bg-white min-h-screen">
       
       {/* HERO / TOP JOB HEADER BANNER: Heading & Description in 1 section */}
-      <section className="bg-slate-50 border-b border-slate-200/80 py-10 sm:py-16">
+      <section className="bg-white py-5 sm:py-7">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-6">
-            <Link
-              to="/career"
-              className="group inline-flex items-center gap-2 text-slate-500 hover:text-brand-blue font-medium text-sm transition-all cursor-pointer"
-            >
-              <FiArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-              <span>Back to All Openings</span>
-            </Link>
-          </Reveal>
-
-          <Reveal className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-navy tracking-tight leading-tight mt-1 text-center">
-              {job.title}
+          <Reveal className="text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-[30px] font-bold text-[#554949] tracking-tight leading-tight mt-1 mb-4 text-left">
+              {job.title?.toLowerCase().includes('position') ? job.title : `${job.title} Position`}
             </h1>
-            <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-6 mx-auto" />
 
             {job.description && (
-              <div className="space-y-4 pt-2">
+              <div className="space-y-3 pt-1">
                 {job.description.split(/\n\s*\n/).filter(Boolean).map((p, i) => (
-                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
-                    {p.trim()}
+                  <p key={i} className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-8">
+                    {p.replace(/\r?\n+/g, ' ').trim()}
                   </p>
                 ))}
               </div>
@@ -393,16 +388,15 @@ export default function JobDetail() {
         </div>
       </section>
 
-      {/* 1. KEY REQUIREMENTS (White Section Band) */}
+      {/* 1. KEY REQUIREMENTS */}
       {job.key_requirements && (
-        <section className="bg-white py-10 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-3.5">
                 Key Requirements
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
+              <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.key_requirements)}
               </ul>
             </Reveal>
@@ -410,16 +404,15 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 2. RESPONSIBILITIES (Grey Section Band) */}
+      {/* 2. RESPONSIBILITIES */}
       {job.responsibilities && (
-        <section className="bg-slate-50 py-10 sm:py-16 border-b border-slate-200/80">
+        <section className="bg-white py-2 sm:py-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-3.5">
                 Responsibilities
               </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
+              <ul className="space-y-2 pl-2 sm:pl-6 lg:pl-8">
                 {renderBulletList(job.responsibilities)}
               </ul>
             </Reveal>
@@ -427,60 +420,82 @@ export default function JobDetail() {
         </section>
       )}
 
-      {/* 3. QUALIFICATION & EXPERIENCE (White Section Band) */}
-      {job.qualifications && (
-        <section className="bg-white py-10 sm:py-16 border-b border-slate-200/80">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Reveal>
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
-                Qualification &amp; Experience
-              </h2>
-              <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-5" />
-              <ul className="space-y-3 pl-2 sm:pl-6 lg:pl-8">
-                {renderBulletList(job.qualifications)}
-              </ul>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {/* 4. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
-      <section className="bg-slate-50 py-10 sm:py-16">
+      {/* 3. POSITION SUMMARY / JOB OVERVIEW TABLE & APPLY CTA */}
+      <section className="bg-white py-2 sm:py-4 pb-8 sm:pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy tracking-tight leading-tight">
+            <h2 className="font-bold text-2xl sm:text-3xl lg:text-[25px] text-[#554949] tracking-tight leading-tight mb-4">
               Position Summary
             </h2>
-            <div className="w-14 h-[3px] bg-brand-orange rounded-full mt-2.5 mb-6" />
 
             <div className="pl-0 sm:pl-6">
-              {(empType || expVal || locVal || salaryVal || job.division || job.department || job.duration) && (
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-8">
+              {(job.title || empType || expVal || locVal || salaryVal || job.division || job.department || job.duration || job.qualifications || job.skills) && (
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs w-full mb-5">
                   <table className="w-full text-left text-[13px] sm:text-sm border-collapse">
                     <tbody className="divide-y divide-slate-200">
-                      {empType && (
+                      {job.title && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70 w-5/12 sm:w-1/3">
-                            Type
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70 w-5/12 sm:w-1/3">
+                            Position / Role
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {empType}
+                            {job.title}
                           </td>
                         </tr>
                       )}
                       {(job.division || job.department) && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
-                            Division / Department
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
+                            Department
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
                             {job.division || job.department}
                           </td>
                         </tr>
                       )}
+                      {empType && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
+                            Employment Type
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {empType}
+                          </td>
+                        </tr>
+                      )}
+                      {job.qualifications && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
+                            Qualification
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {job.qualifications.replace(/^[•\-\*]\s*/gm, '').replace(/\n+/g, ', ')}
+                          </td>
+                        </tr>
+                      )}
+                      {job.skills && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
+                            Skills
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {job.skills.replace(/^[•\-\*]\s*/gm, '').replace(/\n+/g, ', ')}
+                          </td>
+                        </tr>
+                      )}
+                      {expVal && (
+                        <tr className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
+                            Experience
+                          </td>
+                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
+                            {expVal}
+                          </td>
+                        </tr>
+                      )}
                       {job.duration && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Duration
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -488,19 +503,9 @@ export default function JobDetail() {
                           </td>
                         </tr>
                       )}
-                      {expVal && (
-                        <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
-                            Experience Required
-                          </td>
-                          <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {expVal}
-                          </td>
-                        </tr>
-                      )}
                       {locVal && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             Location
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
@@ -510,11 +515,11 @@ export default function JobDetail() {
                       )}
                       {salaryVal && (
                         <tr className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-dark-navy bg-slate-50/70">
+                          <td className="py-2.5 px-3.5 sm:px-5 font-semibold text-[#554949] bg-slate-50/70">
                             {isIntern ? 'Stipend' : 'Salary Range'}
                           </td>
                           <td className="py-2.5 px-3.5 sm:px-5 font-normal text-slate-600">
-                            {salaryVal.startsWith('₹') ? salaryVal : `₹${salaryVal}`}
+                            {salaryVal.startsWith('₹') || salaryVal.startsWith('$') ? salaryVal : `₹${salaryVal}`}
                           </td>
                         </tr>
                       )}
@@ -540,7 +545,10 @@ export default function JobDetail() {
 
       {/* Application Form Modal (Submits to career_submissions with Resume upload) */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => {
+          if (status?.type === 'success') return;
+          setShowForm(false);
+        }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -558,17 +566,40 @@ export default function JobDetail() {
               {status?.type !== 'success' && (
                 <div className="bg-brand-blue px-5 py-4 sm:px-6 sm:py-4.5 text-white relative text-center flex flex-col items-center justify-center">
                   <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
-                    {job.title}
+                    Position: {job.title}
                   </h3>
                 </div>
               )}
 
             {status?.type === 'success' ? (
-              <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <FiCheck className="w-8 h-8 text-emerald-600" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+              <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center justify-center text-center max-w-sm sm:max-w-md mx-auto"
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                    <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                    Submission Successful!
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 max-w-sm sm:max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                    Thank you for your submission. We have received your application information and will process it shortly. You will receive a confirmation update within the next few minutes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(false);
+                      setStatus(null);
+                      navigate('/');
+                    }}
+                    className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                  >
+                    OK
+                  </button>
+                </motion.div>
               </div>
             ) : (
               <form ref={formRef} onSubmit={handleSubmit} noValidate>
@@ -582,20 +613,21 @@ export default function JobDetail() {
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 p-4 sm:p-6 md:p-8">
-                  <Field label="Full Name" required error={errors.full_name}>
-                    <input name="full_name" value={form.full_name} onChange={handleChange}
-                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.full_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="John Doe" />
+                  <Field label="First Name" required error={errors.first_name}>
+                    <input name="first_name" value={form.first_name} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.first_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="John" />
                   </Field>
-                  <Field label="Email Address" required error={errors.email}>
-                    <input name="email" type="email" value={form.email} onChange={handleChange}
-                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.email ? 'border-red-300' : 'border-slate-200'}`} placeholder="john@example.com" />
+                  <Field label="Last Name" required error={errors.last_name}>
+                    <input name="last_name" value={form.last_name} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.last_name ? 'border-red-300' : 'border-slate-200'}`} placeholder="Doe" />
                   </Field>
                   <Field label="Phone Number" required error={errors.phone}>
                     <input name="phone" type="tel" value={form.phone} onChange={handleChange}
                       className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.phone ? 'border-red-300' : 'border-slate-200'}`} placeholder="+1 234 567 890" />
                   </Field>
-                  <Field label="Position">
-                    <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
+                  <Field label="Email Address" required error={errors.email}>
+                    <input name="email" type="email" value={form.email} onChange={handleChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${errors.email ? 'border-red-300' : 'border-slate-200'}`} placeholder="john@example.com" />
                   </Field>
                   <div className="sm:col-span-2">
                     <Field label="Description" required error={errors.description}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Button from './Button';
 import ModularCTAButton from './ModularCTAButton';
 
 export { ModularCTAButton };
@@ -73,10 +74,10 @@ export default function CourseCTA({
   // Purely DB-Driven Content (No hardcoded fallback text or background)
   const finalHeading = ctaHeading || cta_heading || course?.cta_heading || course?.ctaHeading || '';
   const finalDescription = ctaDescription || cta_description || course?.cta_description || course?.ctaDescription || '';
-  const finalButtonText = buttonText || cta_text || course?.cta_text || course?.cta_left || '';
+  const finalButtonText = buttonText || cta_text || course?.cta_text || 'Apply Now';
   const finalBackground = background || ctaBackground || cta_background_image || course?.cta_background_image || course?.ctaBackground || course?.background_image || null;
 
-  const finalHref = href || course?.cta_link || undefined;
+  const finalHref = (onClick || onCtaClick) ? undefined : (href || course?.cta_link || undefined);
   const handleButtonClick = onClick || (onCtaClick ? () => onCtaClick(finalButtonText) : undefined);
 
   return (
@@ -92,7 +93,8 @@ export default function CourseCTA({
             {finalHeading && (
               <motion.h2
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut" }}
                 className="text-white font-extrabold tracking-tight leading-[1.1] max-w-[800px] text-left"
                 style={{
@@ -107,7 +109,8 @@ export default function CourseCTA({
             {finalDescription && (
               <motion.p
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: 0.1 }}
                 className="text-white/90 font-normal leading-relaxed max-w-[620px] text-left"
                 style={{
@@ -120,17 +123,27 @@ export default function CourseCTA({
             )}
           </div>
 
-          {/* Right Column (Modular CTA Button) */}
-          <div className="flex items-center justify-end w-full">
+          {/* Right Column (Button styled exactly like intro button) */}
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: 0.2, ease: "easeOut" }}
+            className="flex items-center justify-end w-full"
+          >
             {finalButtonText && (
-              <ModularCTAButton
-                text={finalButtonText}
+              <Button
+                variant="primary"
+                shape="pill"
+                size="lg"
                 href={finalHref}
                 onClick={handleButtonClick}
-                ariaLabel={finalHeading ? `Apply for ${finalHeading}` : finalButtonText}
-              />
+                className="!font-semibold text-xs sm:text-[18px] lg:text-[18px] px-6 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
+              >
+                {finalButtonText}
+              </Button>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

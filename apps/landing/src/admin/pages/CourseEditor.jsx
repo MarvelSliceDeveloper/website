@@ -233,8 +233,8 @@ export default function CourseEditor() {
     cta_description: '',
     cta_text: '',
     cta_link: '',
-    cta_left: 'Talk to Advisor/Pay Now',
-    cta_right: 'Download Brochure',
+    cta_left: 'Talk to Advisor',
+    cta_right: 'Brochure Enquiry',
     cta_left_action: 'choice_popup',
     pay_now_url: '',
     cta_phone: '',
@@ -280,8 +280,8 @@ export default function CourseEditor() {
           setCourse((p) => ({
             ...p,
             ...courseRes.data,
-            cta_left: courseRes.data.cta_left || 'Talk to Advisor/Pay Now',
-            cta_right: courseRes.data.cta_right || 'Download Brochure',
+            cta_left: courseRes.data.cta_left || 'Talk to Advisor',
+            cta_right: (!courseRes.data.cta_right || courseRes.data.cta_right === 'Download Brochure' || courseRes.data.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : courseRes.data.cta_right,
             cta_left_action: courseRes.data.cta_left_action || 'choice_popup',
             pay_now_url: courseRes.data.pay_now_url || courseRes.data.cta_link || '',
             cta_link: courseRes.data.cta_link || courseRes.data.pay_now_url || '',
@@ -534,7 +534,9 @@ export default function CourseEditor() {
         cta_text: course.cta_text,
         cta_link: course.pay_now_url || course.cta_link || null,
         cta_left: course.cta_left || 'Talk to Advisor',
-        cta_right: course.cta_right || 'Download Brochure',
+        cta_left_action: course.cta_left_action || 'choice_popup',
+        pay_now_url: course.pay_now_url || course.cta_link || null,
+        cta_right: (!course.cta_right || course.cta_right === 'Download Brochure' || course.cta_right === 'Talk to Agent Broucher Enquiry') ? 'Brochure Enquiry' : course.cta_right,
         cta_phone: course.cta_phone,
         cta_background_image: course.cta_background_image,
         is_published: course.is_published,
@@ -713,21 +715,13 @@ export default function CourseEditor() {
                   <label className="block text-sm font-semibold text-black">
                     Description
                   </label>
-                  <span className={`text-xs font-semibold ${
-                    (course.description || "").length >= 300 || ((course.description || "").trim().split(/\s+/).filter(Boolean).length >= 35)
-                      ? "text-amber-600 font-bold"
-                      : "text-neutral-400"
-                  }`}>
-                    {(course.description || "").trim().split(/\s+/).filter(Boolean).length}/35 words | {(course.description || "").length}/300 chars
-                  </span>
                 </div>
                 <textarea
                   value={course.description || ""}
-                  onChange={(e) => update("description", limitDescriptionText(e.target.value))}
-                  maxLength={300}
+                  onChange={(e) => update("description", e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                  placeholder="Detailed course description (max 35 words / 300 characters)..."
+                  placeholder="Detailed course description..."
                 />
               </div>
               <div className="border-t border-admin-200 pt-4 mt-4">
@@ -758,15 +752,15 @@ export default function CourseEditor() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Left Button Text / Label</label>
-                      <input value={course.cta_left || 'Talk to Advisor/Pay Now'} onChange={(e) => update('cta_left', e.target.value)}
+                      <input value={course.cta_left || 'Talk to Advisor'} onChange={(e) => update('cta_left', e.target.value)}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="Talk to Advisor/Pay Now" />
+                        placeholder="Talk to Advisor" />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Right Button Label</label>
-                      <input value={course.cta_right || ''} onChange={(e) => update('cta_right', e.target.value)}
+                      <input value={course.cta_right || 'Brochure Enquiry'} onChange={(e) => update('cta_right', e.target.value)}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="Download Brochure" />
+                        placeholder="Brochure Enquiry" />
                     </div>
                   </div>
 
@@ -1015,10 +1009,14 @@ export default function CourseEditor() {
                         To ensure tabs look even on the course page, aim for consistent content density across overview & syllabus tabs:
                       </p>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2.5 text-xs font-medium">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-2.5 text-xs font-medium">
                       <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${isUnbalanced ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                         <span><strong>Q&A Items:</strong> 2 – 4 per tab</span>
+                      </div>
+                      <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span><strong>Curriculum Q&A:</strong> 5 sentences</span>
                       </div>
                       <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -1315,7 +1313,11 @@ export default function CourseEditor() {
                                 <div>
                                   <div className="flex items-center justify-between mb-1.5">
                                     <label className="block text-xs font-medium text-neutral-600">Feature Bullets / Answers (one per line)</label>
-                                    <span className="text-[10px] text-neutral-400 font-medium">1 bullet point per line</span>
+                                    <span className="text-[10px] text-neutral-400 font-medium">
+                                      {t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum'
+                                        ? '5 sentences required for Curriculum'
+                                        : '1 bullet point per line'}
+                                    </span>
                                   </div>
                                   <textarea
                                     value={(qa.answers || []).join("\n")}
@@ -1326,9 +1328,13 @@ export default function CourseEditor() {
                                       n[i] = { ...n[i], content: { ...n[i].content, qa: qaArr } };
                                       update("tabs", n);
                                     }}
-                                    rows={3}
+                                    rows={t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum' ? 5 : 3}
                                     className="w-full px-3 py-2 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 font-sans"
-                                    placeholder="Enter bullet point 1&#10;Enter bullet point 2&#10;Enter bullet point 3"
+                                    placeholder={
+                                      t.label?.toLowerCase() === 'curriculum' || t.title?.toLowerCase() === 'curriculum'
+                                        ? "Sentence 1: Theoretical foundation and core concepts&#10;Sentence 2: Practical implementation workflow&#10;Sentence 3: Tools, frameworks, and architecture&#10;Sentence 4: Industry standards and optimization&#10;Sentence 5: Hands-on lab exercise or capstone deliverable"
+                                        : "Enter bullet point 1&#10;Enter bullet point 2&#10;Enter bullet point 3"
+                                    }
                                   />
                                 </div>
                               </div>

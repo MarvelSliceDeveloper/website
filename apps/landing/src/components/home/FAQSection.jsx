@@ -13,7 +13,7 @@ export default function FAQSection({ section }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="pt-8 pb-16 bg-white">
+    <section className="pt-8 pb-16 bg-white home-faq-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">

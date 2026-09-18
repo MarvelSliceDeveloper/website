@@ -326,6 +326,17 @@ export default function ServiceDetail() {
   const [enquiryDone, setEnquiryDone] = useState(false);
   const [enquiryError, setEnquiryError] = useState('');
 
+  useEffect(() => {
+    if (enquiryDone) {
+      const timer = setTimeout(() => {
+        setEnquiryOpen(false);
+        setEnquiryDone(false);
+        setEnquiryForm({ name: '', email: '', phone: '', message: '' });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [enquiryDone]);
+
   const relatedServices = related?.slice(0, 4) || [];
 
   if (isLoading) {
@@ -925,17 +936,22 @@ export default function ServiceDetail() {
                 </h2>
               </div>
             {enquiryDone ? (
-              <div className="p-8 text-center">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                  <FiCheck className="w-7 h-7 text-emerald-600" />
+              <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                  <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Thank You!</h3>
-                <p className="text-sm text-gray-500">We have received your enquiry. Our team will get in touch with you shortly.</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                  Submission Successful!
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                  Thank you for your enquiry. We have received your message and our team will get in touch with you shortly.
+                </p>
                 <button
+                  type="button"
                   onClick={() => setEnquiryOpen(false)}
-                  className="mt-6 px-6 py-2.5 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:bg-brand-orange/90 transition-colors cursor-pointer"
+                  className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
                 >
-                  Done
+                  OK
                 </button>
               </div>
             ) : (

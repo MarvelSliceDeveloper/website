@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       </div>
       <div style="padding: 24px 32px;">
         <p style="font-size: 15px; color: #1B2333; line-height: 1.7;">Hi ${full_name},</p>
-        <p style="font-size: 15px; color: #1B2333; line-height: 1.7;">We have received your application for the position you applied for at <strong>Marvel Slice</strong>.</p>
+        <p style="font-size: 15px; color: #1B2333; line-height: 1.7;">We have received your application for the position of <strong>${position || 'the role'}</strong> at <strong>Marvel Slice</strong>.</p>
         <p style="font-size: 15px; color: #1B2333; line-height: 1.7;">Our team will review your profile and reach out to you shortly.</p>
         <div style="margin: 24px 0; padding: 16px 20px; background: #F5F6F8; border-radius: 8px; font-size: 13px; color: #5F6B7A;">
           <p style="margin: 0 0 4px;">If you have any questions, feel free to reply to this email.</p>

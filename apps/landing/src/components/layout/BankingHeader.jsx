@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiMenu, FiDollarSign, FiBarChart2, FiCpu, FiBook, FiShield, FiClock, FiCheckSquare, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
-import { FaInstagram, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiDollarSign, FiBook, FiUser, FiAward, FiLayers, FiHelpCircle, FiCheckSquare } from 'react-icons/fi';
+import { FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { trackSocialClick } from '../../lib/analytics';
@@ -91,10 +91,10 @@ const BANKING_MENU_DROPDOWNS = {
     label: 'Mock Exam',
     path: '/mock-exam',
     items: [
-      { title: 'IBPS PO Prelims Full Mock', desc: '100 Questions Timed Simulation' },
-      { title: 'IBPS Clerk Speed Test', desc: 'Sectional Speed Booster Test' },
-      { title: 'RRB Officer Scale I Practice', desc: 'Prelims & Mains Model Test' },
-      { title: 'Specialist Officer Test Series', desc: 'Domain Knowledge Mocks' }
+      { title: 'IBPS PO Prelims Full Mock', path: '/mock-exam', desc: '100 Questions Timed Simulation' },
+      { title: 'IBPS Clerk Speed Test', path: '/mock-exam', desc: 'Sectional Speed Booster Test' },
+      { title: 'RRB Officer Scale I Practice', path: '/mock-exam', desc: 'Prelims & Mains Model Test' },
+      { title: 'Specialist Officer Test Series', path: '/mock-exam', desc: 'Domain Knowledge Mocks' }
     ]
   }
 };
@@ -107,9 +107,8 @@ export default function BankingHeader({ onOpenLoginModal }) {
   const social = settings?.social_links || {};
 
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState('light');
+  const [expandedMobileMenu, setExpandedMobileMenu] = useState(null);
   const dropdownRef = useRef(null);
 
   const searchQuery = searchParams.get('q') || '';
@@ -153,13 +152,18 @@ export default function BankingHeader({ onOpenLoginModal }) {
     };
   }, [mobileMenuOpen]);
 
-  const isAboutActive = pathname === '/banking' || pathname === '/bankingv2';
-  const isAptitudeActive = pathname === '/aptitude';
-  const isReasoningActive = pathname === '/reasoning';
-  const isEnglishActive = pathname === '/english';
-  const isBankingAwarenessActive = pathname === '/banking-awareness';
-  const isAffairsActive = pathname === '/current-affairs' || pathname === '/todays-affairs';
-  const isMockExamActive = pathname === '/mock-exam';
+  const isV2Context = pathname.startsWith('/bankingv2');
+  const basePrefix = isV2Context ? '/bankingv2' : '/banking';
+
+  const isBankingActive = pathname === '/banking' || pathname === '/bankingv2';
+  const isAptitudeActive = pathname.includes('/aptitude');
+  const isReasoningActive = pathname.includes('/reasoning');
+  const isEnglishActive = pathname.includes('/english');
+  const isBankingAwarenessActive = pathname.includes('/banking-awareness');
+  const isAffairsActive = pathname.includes('/current-affairs') || pathname.includes('/todays-affairs') || pathname.includes('/affairs');
+  const isMockExamActive = pathname.includes('/mock-exam');
+
+  const showV2Menus = isV2Context || isAptitudeActive || isReasoningActive || isEnglishActive || isBankingAwarenessActive || isAffairsActive || isMockExamActive;
 
   return (
     <header className="w-full bg-white border-b border-gray-100 shadow-xs relative z-50">
@@ -206,18 +210,6 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 aria-label="LinkedIn"
               >
                 <FaLinkedinIn className="w-3.5 h-3.5 text-[#0A66C2]" />
-              </a>
-            )}
-            {social.instagram && (
-              <a
-                href={social.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackSocialClick('instagram', 'banking_header')}
-                className="w-6 h-6 rounded-full bg-white border border-white shadow-xs flex items-center justify-center transition-transform hover:scale-110"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="w-3.5 h-3.5 text-[#E4405F]" />
               </a>
             )}
           </div>
@@ -283,7 +275,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
             </button>
           </div>
 
-          {/* Mobile Hamburger Menu Button - Animated 3 lines morphing to X with spring animation */}
+          {/* Mobile Hamburger Menu Button */}
           <motion.button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -303,19 +295,95 @@ export default function BankingHeader({ onOpenLoginModal }) {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <nav
             role="menubar"
-            className="flex items-center justify-start gap-1 sm:gap-2.5 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
+            className="flex items-center justify-start gap-1 sm:gap-2 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap text-xs sm:text-sm font-semibold"
           >
             {/* 1. Banking Pill */}
             <Link
               to="/banking"
               className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
-                isAboutActive
+                isBankingActive
                   ? 'bg-brand-blue text-white font-extrabold shadow-xs'
                   : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
               }`}
             >
               Banking
             </Link>
+
+            {showV2Menus && (
+              <>
+                {/* 3. Aptitude Link */}
+                <Link
+                  to={`${basePrefix}/aptitude`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isAptitudeActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  Aptitude
+                </Link>
+
+                {/* 4. Reasoning Link */}
+                <Link
+                  to={`${basePrefix}/reasoning`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isReasoningActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  Reasoning
+                </Link>
+
+                {/* 5. English Link */}
+                <Link
+                  to={`${basePrefix}/english`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isEnglishActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  English
+                </Link>
+
+                {/* 6. Banking Awareness Link */}
+                <Link
+                  to={`${basePrefix}/banking-awareness`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isBankingAwarenessActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  Banking Awareness
+                </Link>
+
+                {/* 7. Affairs Link */}
+                <Link
+                  to={`${basePrefix}/current-affairs`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isAffairsActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  Affairs
+                </Link>
+
+                {/* 8. Mock Exam Link */}
+                <Link
+                  to={`${basePrefix}/mock-exam`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-md transition-all ${
+                    isMockExamActive
+                      ? 'bg-brand-blue text-white font-extrabold shadow-xs'
+                      : 'text-slate-700 hover:text-brand-blue hover:bg-blue-100/70 font-semibold'
+                  }`}
+                >
+                  Mock Exam
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </div>
@@ -324,72 +392,122 @@ export default function BankingHeader({ onOpenLoginModal }) {
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            {/* Backdrop Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.35 }}
               className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[99] sm:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Modern 80% Slide-Over Drawer Panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 right-0 z-[100] w-[80vw] sm:hidden bg-slate-50 shadow-2xl flex flex-col rounded-none overflow-hidden overflow-x-hidden border-l border-slate-200/80 will-change-transform transform-gpu"
+              className="fixed inset-y-0 right-0 z-[100] w-[85vw] max-w-sm sm:hidden bg-slate-50 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200"
             >
-              {/* Header - White Header */}
-              <div className="relative z-10 flex items-center justify-between px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200/80 shrink-0 bg-white min-h-[64px] shadow-[0_3px_14px_rgba(148,163,184,0.4)]">
+              <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0 bg-white min-h-[60px]">
                 <Link
                   to="/"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 min-w-0"
+                  className="flex items-center gap-2.5"
                 >
                   {settings?.logo_url && (
                     <img
                       src={settings.logo_url}
                       alt="Marvel Slice Logo"
-                      className="h-14 sm:h-16 w-auto object-contain shrink-0"
+                      className="h-10 w-auto object-contain shrink-0"
                     />
                   )}
-                  <span className="text-[clamp(20px,4.5vw,24px)] font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] shrink-0">
+                  <span className="text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                     Marvel <span className="text-brand-orange">Slice</span>
                   </span>
                 </Link>
-
-                {/* Reserved space for z-[101] animated toggle button */}
-                <div className="w-8 h-8 shrink-0" />
               </div>
 
-              {/* Navigation Items - Grey Body */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 space-y-1 bg-slate-50">
+              {/* Navigation Items in Mobile Drawer */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-slate-50">
                 <Link
                   to="/banking"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[clamp(13px,3.6vw,15px)] font-semibold transition-all ${
-                    isAboutActive
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isBankingActive
                       ? 'bg-blue-50 text-brand-blue font-bold shadow-2xs'
-                      : 'text-slate-700 hover:bg-blue-50/60 hover:text-brand-blue'
+                      : 'text-slate-700 hover:bg-blue-50/60'
                   }`}
                 >
-                  <FiDollarSign className={`w-4.5 h-4.5 shrink-0 ${isAboutActive ? 'text-brand-blue' : 'text-slate-400'}`} />
+                  <FiDollarSign className="w-4.5 h-4.5 text-brand-blue" />
                   <span>Banking</span>
                 </Link>
+
+
+
+                {showV2Menus && Object.entries(BANKING_MENU_DROPDOWNS).map(([key, menu]) => {
+                  const isExpanded = expandedMobileMenu === key;
+                  return (
+                    <div key={key} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMobileMenu(isExpanded ? null : key)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-blue-50/60 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <FiBook className="w-4.5 h-4.5 text-slate-400" />
+                          <span>{menu.label}</span>
+                        </div>
+                        <FiChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isExpanded && (
+                        <div className="pl-9 pr-3 py-1 space-y-1.5 border-l-2 border-slate-200 ml-5">
+                          {menu.categories ? (
+                            menu.categories.map((cat) => (
+                              <div key={cat.id} className="space-y-1">
+                                <p className="text-[11px] font-bold text-brand-blue uppercase">{cat.name}</p>
+                                <ul className="space-y-1 pl-2 text-xs text-slate-600">
+                                  {cat.items.map((item, idx) => (
+                                    <li key={idx}>
+                                      <Link
+                                        to={menu.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="block py-1 hover:text-brand-orange"
+                                      >
+                                        {item}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))
+                          ) : (
+                            menu.items.map((item, idx) => (
+                              <Link
+                                key={idx}
+                                to={item.path || menu.path}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block py-1 text-xs text-slate-700 hover:text-brand-orange font-medium"
+                              >
+                                {item.title}
+                              </Link>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Drawer Footer - Left-Aligned Log In Brand Button with Slightly Darker Shadow */}
-              <div className="relative z-10 p-4 border-t border-slate-200/80 bg-white shrink-0 flex justify-start shadow-[0_-3px_14px_rgba(148,163,184,0.4)]">
+              <div className="p-4 border-t border-slate-200 bg-white shrink-0 flex justify-start">
                 <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     if (onOpenLoginModal) onOpenLoginModal('general', 'Log In');
                   }}
-                  className="py-2 px-4 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all inline-flex items-center gap-2 cursor-pointer"
+                  className="py-2 px-4 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs rounded-xl inline-flex items-center gap-2 cursor-pointer"
                 >
                   <FiUser className="w-4 h-4 text-white" />
                   <span>Log In</span>
