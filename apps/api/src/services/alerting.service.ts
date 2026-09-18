@@ -1,10 +1,7 @@
 import { prisma } from "../utils/prisma";
 
 type AlertEvent =
-  | "health.failed"
-  | "health.recovered"
-  | "backup.failed"
-  | "backup.completed";
+  "health.failed" | "health.recovered" | "backup.failed" | "backup.completed";
 
 export const alertingService = {
   async fire(event: AlertEvent, payload: Record<string, unknown>) {

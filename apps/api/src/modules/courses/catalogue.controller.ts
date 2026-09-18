@@ -30,8 +30,12 @@ export const catalogueController = {
   async checkout(req: Request, res: Response) {
     try {
       const { name, email, phone } = req.body;
-      if (!name || !email || !phone) return res.status(400).json({ error: "name, email, phone required" });
-      const result = await courseService.createCatalogueCheckout(req.params.id, { name, email, phone });
+      if (!name || !email || !phone)
+        return res.status(400).json({ error: "name, email, phone required" });
+      const result = await courseService.createCatalogueCheckout(
+        req.params.id,
+        { name, email, phone },
+      );
       return res.json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -40,7 +44,10 @@ export const catalogueController = {
   },
   async verify(req: Request, res: Response) {
     try {
-      const result = await courseService.verifyCataloguePayment(req.params.id, req.body);
+      const result = await courseService.verifyCataloguePayment(
+        req.params.id,
+        req.body,
+      );
       return res.json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -60,8 +67,16 @@ export const catalogueController = {
     try {
       const { paymentId, batchId, name, email, phone } = req.body;
       if (!paymentId || !batchId || !name || !email || !phone)
-        return res.status(400).json({ error: "paymentId, batchId, name, email, phone required" });
-      const result = await courseService.enrollCatalogueBatch(req.params.id, { paymentId, batchId, name, email, phone });
+        return res
+          .status(400)
+          .json({ error: "paymentId, batchId, name, email, phone required" });
+      const result = await courseService.enrollCatalogueBatch(req.params.id, {
+        paymentId,
+        batchId,
+        name,
+        email,
+        phone,
+      });
       return res.json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

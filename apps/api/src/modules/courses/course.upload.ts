@@ -44,8 +44,7 @@ export function buildCourseThumbnailUrl(req: Request, filename: string) {
   // Behind 1-2 reverse proxies (host Apache -> Docker nginx -> api) the
   // original proto is in X-Forwarded-Proto (may be "https, http" chain).
   const forwardedProto = (req.headers["x-forwarded-proto"] as string) || "";
-  const proto =
-    forwardedProto.split(",")[0]?.trim() || req.protocol || "https";
+  const proto = forwardedProto.split(",")[0]?.trim() || req.protocol || "https";
   const host = req.get("host") || "lms.marvelslice.com";
   return `${proto}://${host.replace(/\/$/, "")}/uploads/courses/${filename}`;
 }

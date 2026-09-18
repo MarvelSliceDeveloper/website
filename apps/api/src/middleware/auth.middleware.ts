@@ -164,8 +164,7 @@ export const requireAuth = async (
     // Token issued before this feature (no sessionId) is allowed through for grace period
     {
       const tokenPayload = jwt.decode(token) as
-        | (jwt.JwtPayload & { sessionId?: string })
-        | null;
+        (jwt.JwtPayload & { sessionId?: string }) | null;
       if (tokenPayload?.sessionId) {
         try {
           const session = await prisma.adminSession.findUnique({

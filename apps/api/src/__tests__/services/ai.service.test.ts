@@ -378,9 +378,9 @@ describe("ai.service", () => {
     });
 
     it("rejects unsupported providers", async () => {
-      await expect(
-        saveActiveProvider("openai" as "gemini"),
-      ).rejects.toThrow(AppError);
+      await expect(saveActiveProvider("openai" as "gemini")).rejects.toThrow(
+        AppError,
+      );
     });
 
     it("stores an OpenRouter key encrypted using its own setting key", async () => {
@@ -454,9 +454,12 @@ describe("ai.service", () => {
           ? { description: "A concise lesson description for the quiz topic." }
           : { unexpected: "shape" };
       mockFetch.mockResolvedValue(
-        new Response(JSON.stringify({
-          choices: [{ message: { content: JSON.stringify(payload) } }],
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(payload) } }],
+          }),
+          { status: 200 },
+        ),
       );
     }
 

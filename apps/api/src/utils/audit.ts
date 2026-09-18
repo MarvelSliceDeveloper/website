@@ -107,8 +107,7 @@ export async function logAudit(opts: {
         entityType: opts.entityType,
         entityId: opts.entityId ?? null,
         details: (opts.details ?? undefined) as
-          | Prisma.InputJsonValue
-          | undefined,
+          Prisma.InputJsonValue | undefined,
         ipAddress: opts.ipAddress ?? null,
         userAgent: opts.userAgent ?? null,
       },
@@ -150,8 +149,7 @@ export function auditMiddleware(
     try {
       // req.user is set by requireAuth which runs inside each router
       const user = (req as unknown as Record<string, unknown>).user as
-        | { userId?: string; role?: string }
-        | undefined;
+        { userId?: string; role?: string } | undefined;
       if (!user?.userId) return;
 
       const entityType = resolveEntityType(originalPath);

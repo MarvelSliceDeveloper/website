@@ -1,12 +1,16 @@
-import http from 'node:http';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fetchAndStoreCurrentAffairs } from './src/lib/rssService.js';
-import { getGeneralTransporter, getCareerTransporter, sendMailWithLogging } from './api/lib/emailTransporters.js';
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fetchAndStoreCurrentAffairs } from "./src/lib/rssService.js";
+import {
+  getGeneralTransporter,
+  getCareerTransporter,
+  sendMailWithLogging,
+} from "./api/lib/emailTransporters.js";
 
 const PORT = process.env.DEV_API_PORT || 3001;
 
-const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+const UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
@@ -15,26 +19,31 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 // `${webUrl}/uploads/...`). Set LANDING_PUBLIC_URL=https://marvelslice.com
 // in prod so emailed/admin links work outside the browser. Empty in dev →
 // keeps the relative path (vite proxies /api, page serves same-origin).
-const PUBLIC_BASE_URL = (process.env.LANDING_PUBLIC_URL || '').replace(/\/$/, '');
+const PUBLIC_BASE_URL = (process.env.LANDING_PUBLIC_URL || "").replace(
+  /\/$/,
+  "",
+);
 
 function getMimeType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const mimeTypes = {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
-    '.pdf': 'application/pdf',
-    '.doc': 'application/msword',
-    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.xls': 'application/vnd.ms-excel',
-    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    '.txt': 'text/plain',
-    '.csv': 'text/csv',
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx":
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xls": "application/vnd.ms-excel",
+    ".xlsx":
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".txt": "text/plain",
+    ".csv": "text/csv",
   };
-  return mimeTypes[ext] || 'application/octet-stream';
+  return mimeTypes[ext] || "application/octet-stream";
 }
 
 function parseMultipartData(buffer, boundary) {
@@ -56,20 +65,22 @@ function parseMultipartData(buffer, boundary) {
   const result = { files: [], fields: {} };
 
   for (const part of parts) {
-    const headerEndIndex = part.indexOf('\r\n\r\n');
+    const headerEndIndex = part.indexOf("\r\n\r\n");
     if (headerEndIndex === -1) continue;
 
-    const headerStr = part.slice(0, headerEndIndex).toString('utf8');
+    const headerStr = part.slice(0, headerEndIndex).toString("utf8");
     const bodyBuffer = part.slice(headerEndIndex + 4);
 
     const nameMatch = headerStr.match(/name="([^"]+)"/);
     const filenameMatch = headerStr.match(/filename="([^"]+)"/);
 
     if (filenameMatch) {
-      const fieldName = nameMatch ? nameMatch[1] : 'file';
+      const fieldName = nameMatch ? nameMatch[1] : "file";
       const filename = filenameMatch[1];
       const contentTypeMatch = headerStr.match(/Content-Type:\s*([^\r\n]+)/i);
-      const contentType = contentTypeMatch ? contentTypeMatch[1] : 'application/octet-stream';
+      const contentType = contentTypeMatch
+        ? contentTypeMatch[1]
+        : "application/octet-stream";
 
       result.files.push({
         fieldName,
@@ -78,7 +89,7 @@ function parseMultipartData(buffer, boundary) {
         data: bodyBuffer,
       });
     } else if (nameMatch) {
-      result.fields[nameMatch[1]] = bodyBuffer.toString('utf8').trim();
+      result.fields[nameMatch[1]] = bodyBuffer.toString("utf8").trim();
     }
   }
 
@@ -86,10 +97,10 @@ function parseMultipartData(buffer, boundary) {
 }
 
 async function handleFileUpload(req) {
-  const contentType = req.headers['content-type'] || '';
+  const contentType = req.headers["content-type"] || "";
   const match = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
   if (!match) {
-    return { error: 'Invalid content-type, expected multipart/form-data' };
+    return { error: "Invalid content-type, expected multipart/form-data" };
   }
   const boundary = match[1] || match[2];
 
@@ -98,29 +109,45 @@ async function handleFileUpload(req) {
   const MAX_SIZE = 10 * 1024 * 1024; // 10MB limit
 
   await new Promise((resolve, reject) => {
-    req.on('data', (chunk) => {
+    req.on("data", (chunk) => {
       totalSize += chunk.length;
       if (totalSize > MAX_SIZE) {
-        reject(new Error('File size exceeds 10MB limit'));
+        reject(new Error("File size exceeds 10MB limit"));
       }
       chunks.push(chunk);
     });
-    req.on('end', resolve);
-    req.on('error', reject);
+    req.on("end", resolve);
+    req.on("error", reject);
   });
 
   const buffer = Buffer.concat(chunks);
   const parsed = parseMultipartData(buffer, boundary);
   if (!parsed.files || parsed.files.length === 0) {
-    return { error: 'No file uploaded' };
+    return { error: "No file uploaded" };
   }
 
   const file = parsed.files[0];
   const ext = path.extname(file.filename).toLowerCase();
-  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv'];
-  
+  const allowedExts = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".svg",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".txt",
+    ".csv",
+  ];
+
   if (!allowedExts.includes(ext)) {
-    return { error: `File extension ${ext} is not allowed. Allowed formats: JPG, PNG, WEBP, PDF, DOC, DOCX` };
+    return {
+      error: `File extension ${ext} is not allowed. Allowed formats: JPG, PNG, WEBP, PDF, DOC, DOCX`,
+    };
   }
 
   const safeFilename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
@@ -195,15 +222,22 @@ function row(label, value) {
 }
 
 async function handleCareer(body) {
-  const { full_name, email, phone, position, category, description, file_url } = body;
+  const { full_name, email, phone, position, category, description, file_url } =
+    body;
   if (!full_name || !email || !phone) return { success: true };
-  
+
   const mailConfig = getCareerTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
-  const fileLink = file_url ? `<a href="${file_url}" style="color: #1E56C7;">View Document</a>` : 'No file uploaded';
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
+  const fileLink = file_url
+    ? `<a href="${file_url}" style="color: #1E56C7;">View Document</a>`
+    : "No file uploaded";
 
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
@@ -212,7 +246,7 @@ async function handleCareer(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone)}${row('Position', position || '—')}${row('Category', category || '—')}${row('Description', (description || '—').replace(/\n/g, '<br>'))}${row('Document', fileLink)}
+        ${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone)}${row("Position", position || "—")}${row("Category", category || "—")}${row("Description", (description || "—").replace(/\n/g, "<br>"))}${row("Document", fileLink)}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Career Page</div>
@@ -229,27 +263,42 @@ async function handleCareer(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Application from ${full_name}`, html }, 'Career - Admin Notification');
-  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Application Received — Marvel Slice', html: autoReplyHtml }, 'Career - User Confirmation');
-  sendWhatsAppNotification({
-    formName: 'Career Application',
-    name: full_name,
-    phone,
-    email,
-    details: [position, category, description].filter(Boolean).join(' | '),
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Careers" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Application from ${full_name}`,
+      html,
+    },
+    "Career - Admin Notification",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Careers" <${smtpUser}>`,
+      to: email,
+      subject: "Application Received — Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "Career - User Confirmation",
+  );
   return { success: true };
 }
 
 async function handleForm(body) {
   const { full_name, role, email, phone } = body;
   if (!full_name || !email || !phone) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#74a916,#5a8710);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Demo Request</h1>
@@ -257,10 +306,10 @@ async function handleForm(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}
-        ${role ? row('Role / Profile', role) : ''}
-        ${row('Email', email)}
-        ${row('Phone', phone)}
+        ${row("Full Name", full_name)}
+        ${role ? row("Role / Profile", role) : ""}
+        ${row("Email", email)}
+        ${row("Phone", phone)}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Home Page</div>
@@ -270,34 +319,49 @@ async function handleForm(body) {
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for reaching out to <strong>Marvel Slice</strong>. We have received your demo request.</p>
-      ${role ? `<p style="font-size:14px;color:#2e4e04;line-height:1.6;background:#f2f9e6;padding:12px 16px;border-radius:8px;margin:16px 0;">Selected Profile: <strong>${role}</strong></p>` : ''}
+      ${role ? `<p style="font-size:14px;color:#2e4e04;line-height:1.6;background:#f2f9e6;padding:12px 16px;border-radius:8px;margin:16px 0;">Selected Profile: <strong>${role}</strong></p>` : ""}
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will contact you shortly to schedule your free demo class.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Demo Request from ${full_name}`, html }, 'Demo Class - Admin Notification');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Demo Request Received — Marvel Slice', html: autoReplyHtml }, 'Demo Class - User Confirmation');
-  sendWhatsAppNotification({
-    formName: 'Demo Class Booking (Home)',
-    name: full_name,
-    phone,
-    email,
-    role,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Demo Request from ${full_name}`,
+      html,
+    },
+    "Demo Class - Admin Notification",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: email,
+      subject: "Demo Request Received — Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "Demo Class - User Confirmation",
+  );
   return { success: true };
 }
 
 async function handleBrochure(body) {
   const { name, email, phone, course_title } = body;
   if (!name || !email) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Brochure Download Request</h1>
@@ -305,7 +369,7 @@ async function handleBrochure(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Name', name)}${row('Email', email)}${row('Phone', phone || '\u2014')}${row('Course', course_title || '\u2014')}
+        ${row("Name", name)}${row("Email", email)}${row("Phone", phone || "\u2014")}${row("Course", course_title || "\u2014")}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice \u2014 Course Page</div>
@@ -314,7 +378,7 @@ async function handleBrochure(body) {
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">Brochure Request Received</h1></div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${name},</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your interest in <strong>${course_title || 'our course'}</strong> at Marvel Slice.</p>
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your interest in <strong>${course_title || "our course"}</strong> at Marvel Slice.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have received your brochure request. Please find the brochure attached to this email.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">If you have any questions, feel free to reply to this email or contact us directly.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
@@ -322,27 +386,42 @@ async function handleBrochure(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `Brochure Request from ${name}`, html }, 'Brochure - Admin Notification');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Brochure Request Received \u2014 Marvel Slice', html: autoReplyHtml }, 'Brochure - User Confirmation');
-  sendWhatsAppNotification({
-    formName: 'Brochure Download',
-    name,
-    phone,
-    email,
-    course: course_title,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `Brochure Request from ${name}`,
+      html,
+    },
+    "Brochure - Admin Notification",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: email,
+      subject: "Brochure Request Received \u2014 Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "Brochure - User Confirmation",
+  );
   return { success: true };
 }
 
 async function handleCareerContact(body) {
   const { full_name, email, phone } = body;
   if (!full_name || !email) return { success: true };
-  
+
   const mailConfig = getCareerTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Career Contact Request</h1>
@@ -350,7 +429,7 @@ async function handleCareerContact(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '—')}
+        ${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone || "—")}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Career Page</div>
@@ -367,26 +446,42 @@ async function handleCareerContact(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: adminEmail, subject: `New Career Contact Request from ${full_name}`, html }, 'Career Contact - Admin');
-  await sendMailWithLogging(transporter, { from: `"Marvel Careers" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Career Contact - User');
-  sendWhatsAppNotification({
-    formName: 'Career Contact',
-    name: full_name,
-    phone,
-    email,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Careers" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Career Contact Request from ${full_name}`,
+      html,
+    },
+    "Career Contact - Admin",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Careers" <${smtpUser}>`,
+      to: email,
+      subject: "Thank You for Contacting Us — Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "Career Contact - User",
+  );
   return { success: true };
 }
 
 async function handleContact(body) {
   const { full_name, email, phone, message } = body;
   if (!full_name || !email) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Contact Request</h1>
@@ -394,7 +489,7 @@ async function handleContact(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '\u2014')}${row('Message', (message || '\u2014').replace(/\n/g, '<br>'))}
+        ${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone || "\u2014")}${row("Message", (message || "\u2014").replace(/\n/g, "<br>"))}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Contact Page</div>
@@ -411,29 +506,46 @@ async function handleContact(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Contact Request from ${full_name}`, html }, 'Contact Form - Admin');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'Contact Form - User');
-  sendWhatsAppNotification({
-    formName: 'Contact Form',
-    name: full_name,
-    phone,
-    email,
-    details: message,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Contact Request from ${full_name}`,
+      html,
+    },
+    "Contact Form - Admin",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: email,
+      subject: "Thank You for Contacting Us — Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "Contact Form - User",
+  );
   return { success: true };
 }
 
 async function handleBanking(body) {
-  const { full_name, email, phone, enquiry_type, topic_title, button_clicked } = body;
+  const { full_name, email, phone, enquiry_type, topic_title, button_clicked } =
+    body;
   if (!full_name || !email) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
-  const topicName = topic_title || 'General Banking Enquiry';
-  const enquiryCategory = enquiry_type === 'topic' ? 'Topic-Specific Enquiry' : 'General Banking CTA';
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
+  const topicName = topic_title || "General Banking Enquiry";
+  const enquiryCategory =
+    enquiry_type === "topic" ? "Topic-Specific Enquiry" : "General Banking CTA";
 
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2A6F,#1558D6);padding:24px 32px;">
@@ -442,7 +554,7 @@ async function handleBanking(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '\u2014')}${row('Enquiry Type', enquiryCategory)}${row('Exam / Topic', topicName)}${row('Button Action', button_clicked || 'Enquire Now')}
+        ${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone || "\u2014")}${row("Enquiry Type", enquiryCategory)}${row("Exam / Topic", topicName)}${row("Button Action", button_clicked || "Enquire Now")}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice Banking Careers</div>
@@ -458,28 +570,42 @@ async function handleBanking(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: adminEmail, subject: `New Banking Enquiry (${topicName}) from ${full_name}`, html }, 'Banking - Admin');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice Banking" <${smtpUser}>`, to: email, subject: `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`, html: autoReplyHtml }, 'Banking - User');
-  sendWhatsAppNotification({
-    formName: 'Banking Enquiry',
-    name: full_name,
-    phone,
-    email,
-    course: topicName,
-    details: `Type: ${enquiryCategory} | Action: ${button_clicked || 'Enquire Now'}`,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice Banking" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Banking Enquiry (${topicName}) from ${full_name}`,
+      html,
+    },
+    "Banking - Admin",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice Banking" <${smtpUser}>`,
+      to: email,
+      subject: `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`,
+      html: autoReplyHtml,
+    },
+    "Banking - User",
+  );
   return { success: true };
 }
 
 async function handleAbout(body) {
   const { full_name, email, phone, subject, message } = body;
   if (!full_name || !email) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Enquiry Request</h1>
@@ -487,7 +613,7 @@ async function handleAbout(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '\u2014')}${row('Subject', subject || '\u2014')}${row('Message', (message || '\u2014').replace(/\n/g, '<br>'))}
+        ${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone || "\u2014")}${row("Subject", subject || "\u2014")}${row("Message", (message || "\u2014").replace(/\n/g, "<br>"))}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — About Page</div>
@@ -503,27 +629,42 @@ async function handleAbout(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Enquiry Request from ${full_name}`, html }, 'About - Admin');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Thank You for Contacting Us — Marvel Slice', html: autoReplyHtml }, 'About - User');
-  sendWhatsAppNotification({
-    formName: 'About Us Contact',
-    name: full_name,
-    phone,
-    email,
-    details: `${subject ? `Subject: ${subject}\n` : ''}${message || ''}`,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Enquiry Request from ${full_name}`,
+      html,
+    },
+    "About - Admin",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: email,
+      subject: "Thank You for Contacting Us — Marvel Slice",
+      html: autoReplyHtml,
+    },
+    "About - User",
+  );
   return { success: true };
 }
 
 async function handleEnquiry(body) {
   const { full_name, email, phone, course_title, button_clicked } = body;
   if (!full_name || !email) return { success: true };
-  
+
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+  const ts = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
   const html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">New Course Enquiry</h1>
@@ -531,7 +672,7 @@ async function handleEnquiry(body) {
     </div>
     <div style="padding:24px 32px;">
       <table style="width:100%;border-collapse:collapse;">
-        ${row('Course Title', course_title || 'General Course')}${row('Button Action', button_clicked || 'Apply Now')}${row('Full Name', full_name)}${row('Email', email)}${row('Phone', phone || '\u2014')}
+        ${row("Course Title", course_title || "General Course")}${row("Button Action", button_clicked || "Apply Now")}${row("Full Name", full_name)}${row("Email", email)}${row("Phone", phone || "\u2014")}
       </table>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice — Course Enquiry</div>
@@ -540,36 +681,54 @@ async function handleEnquiry(body) {
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;"><h1 style="color:#fff;margin:0;font-size:22px;">We Received Your Enquiry!</h1></div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your interest in <strong>${course_title || 'our courses'}</strong> at <strong>Marvel Slice</strong>.</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have successfully received your submission via <strong>"${button_clicked || 'Apply Now'}"</strong>.</p>
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your interest in <strong>${course_title || "our courses"}</strong> at <strong>Marvel Slice</strong>.</p>
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have successfully received your submission via <strong>"${button_clicked || "Apply Now"}"</strong>.</p>
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Learning Team</p>
     </div>
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Course Enquiry for ${course_title || 'Course'} from ${full_name}`, html }, 'Enquiry - Admin');
-  await sendMailWithLogging(transporter, { from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: `Enquiry Confirmation: ${course_title || 'Course'} — Marvel Slice`, html: autoReplyHtml }, 'Enquiry - User');
-  sendWhatsAppNotification({
-    formName: 'Course Enquiry',
-    name: full_name,
-    phone,
-    email,
-    course: course_title,
-    details: `Action: ${button_clicked || 'Apply Now'}`,
-  }).catch(() => {});
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: adminEmail,
+      subject: `New Course Enquiry for ${course_title || "Course"} from ${full_name}`,
+      html,
+    },
+    "Enquiry - Admin",
+  );
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: email,
+      subject: `Enquiry Confirmation: ${course_title || "Course"} — Marvel Slice`,
+      html: autoReplyHtml,
+    },
+    "Enquiry - User",
+  );
   return { success: true };
 }
 
 async function handleAdminReply(body) {
   const { to_email, to_name, subject, message, type, attachment } = body || {};
-  if (!to_email || !subject || !message) return { success: false, error: 'Missing required fields' };
+  if (!to_email || !subject || !message)
+    return { success: false, error: "Missing required fields" };
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(String(to_email).trim())) return { success: false, error: 'Invalid email' };
+  if (!emailRegex.test(String(to_email).trim()))
+    return { success: false, error: "Invalid email" };
 
-  const cleanSubject = String(subject).replace(/[\r\n]/g, ' ').trim();
-  const cleanToEmail = String(to_email).replace(/[\r\n]/g, '').trim();
-  const cleanToName = String(to_name || 'User').replace(/[\r\n]/g, ' ').trim();
+  const cleanSubject = String(subject)
+    .replace(/[\r\n]/g, " ")
+    .trim();
+  const cleanToEmail = String(to_email)
+    .replace(/[\r\n]/g, "")
+    .trim();
+  const cleanToName = String(to_name || "User")
+    .replace(/[\r\n]/g, " ")
+    .trim();
 
   const mailConfig = getGeneralTransporter();
   if (!mailConfig) return { success: true };
@@ -581,18 +740,18 @@ async function handleAdminReply(body) {
     </div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${cleanToName},</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;white-space:pre-wrap;">${String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;white-space:pre-wrap;">${String(message).replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`;
 
-  if (type === 'brochure' && attachment?.courseTitle) {
+  if (type === "brochure" && attachment?.courseTitle) {
     html += `<div style="margin:24px 0;padding:20px;background:#F5F6F8;border-radius:8px;border-left:4px solid #1E56C7;">
       <p style="margin:0 0 6px;font-size:13px;color:#5F6B7A;font-weight:600;">COURSE BROCHURE</p>
-      <p style="margin:0;font-size:15px;color:#1B2333;font-weight:600;">${String(attachment.courseTitle).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+      <p style="margin:0;font-size:15px;color:#1B2333;font-weight:600;">${String(attachment.courseTitle).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
       <p style="margin:8px 0 0;font-size:13px;color:#5F6B7A;">Please find the course brochure attached or visit our website for more details.</p>
     </div>`;
-  } else if (type === 'brochure' && attachment?.url) {
+  } else if (type === "brochure" && attachment?.url) {
     html += `<div style="margin:24px 0;padding:20px;background:#F5F6F8;border-radius:8px;border-left:4px solid #1E56C7;">
       <p style="margin:0 0 6px;font-size:13px;color:#5F6B7A;font-weight:600;">ATTACHED DOCUMENT</p>
-      <a href="${String(attachment.url).replace(/["']/g, '')}" style="display:inline-block;padding:10px 20px;background:#1E56C7;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;">Download Brochure</a>
+      <a href="${String(attachment.url).replace(/["']/g, "")}" style="display:inline-block;padding:10px 20px;background:#1E56C7;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;">Download Brochure</a>
     </div>`;
   }
 
@@ -601,105 +760,117 @@ async function handleAdminReply(body) {
     <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">Marvel Slice</div>
   </div>`;
 
-  await sendMailWithLogging(transporter, {
-    from: `"Marvel Slice" <${smtpUser}>`,
-    to: cleanToEmail,
-    subject: cleanSubject,
-    html,
-  }, 'Admin Reply');
+  await sendMailWithLogging(
+    transporter,
+    {
+      from: `"Marvel Slice" <${smtpUser}>`,
+      to: cleanToEmail,
+      subject: cleanSubject,
+      html,
+    },
+    "Admin Reply",
+  );
 
   return { success: true };
 }
 
 const server = http.createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
     return;
   }
 
   // Serve uploads statically
-  if (req.method === 'GET' && req.url?.startsWith('/uploads/')) {
-    const filename = path.basename(req.url.split('?')[0]);
+  if (req.method === "GET" && req.url?.startsWith("/uploads/")) {
+    const filename = path.basename(req.url.split("?")[0]);
     const filePath = path.join(UPLOADS_DIR, filename);
 
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       const mime = getMimeType(filePath);
       const fileStream = fs.createReadStream(filePath);
       res.writeHead(200, {
-        'Content-Type': mime,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'Access-Control-Allow-Origin': '*',
+        "Content-Type": mime,
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*",
       });
       fileStream.pipe(res);
       return;
     } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'File not found' }));
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "File not found" }));
       return;
     }
   }
 
   // Handle file uploads
-  if (req.method === 'POST' && req.url?.startsWith('/api/upload')) {
+  if (req.method === "POST" && req.url?.startsWith("/api/upload")) {
     try {
       const result = await handleFileUpload(req);
       const statusCode = result.error ? 400 : 200;
-      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.writeHead(statusCode, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     } catch (err) {
-      console.error('[dev-server] Upload Error:', err);
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message || 'Upload failed' }));
+      console.error("[dev-server] Upload Error:", err);
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message || "Upload failed" }));
     }
     return;
   }
 
-  // List uploads in server storage
-  if (req.method === 'GET' && req.url === '/api/uploads') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: true, files: handleListUploads() }));
+  if (req.method !== "POST" || !req.url?.startsWith("/api/")) {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found" }));
     return;
   }
 
-  if (req.method !== 'POST' || !req.url?.startsWith('/api/')) {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found' }));
-    return;
-  }
-
-  let body = '';
-  req.on('data', (chunk) => { body += chunk; });
-  req.on('end', async () => {
+  let body = "";
+  req.on("data", (chunk) => {
+    body += chunk;
+  });
+  req.on("end", async () => {
     try {
       let parsed = {};
       if (body && body.trim()) {
-        try { parsed = JSON.parse(body); } catch {}
+        try {
+          parsed = JSON.parse(body);
+        } catch {}
       }
       let result;
-      if (req.url === '/api/submit-career') result = await handleCareer(parsed);
-      else if (req.url === '/api/submit-form') result = await handleForm(parsed);
-      else if (req.url === '/api/submit-brochure') result = await handleBrochure(parsed);
-      else if (req.url === '/api/submit-contact') result = await handleContact(parsed);
-      else if (req.url === '/api/submit-banking') result = await handleBanking(parsed);
-      else if (req.url === '/api/submit-career-contact') result = await handleCareerContact(parsed);
-      else if (req.url === '/api/submit-about') result = await handleAbout(parsed);
-      else if (req.url === '/api/submit-enquiry') result = await handleEnquiry(parsed);
-      else if (req.url === '/api/notify-whatsapp') result = await handleNotifyWhatsApp(parsed);
-      else if (req.url === '/api/admin-reply') result = await handleAdminReply(parsed);
-      else if (req.url === '/api/delete-upload') result = handleDeleteUpload(parsed.filename);
-      else if (req.url === '/api/fetch-current-affairs') result = await fetchAndStoreCurrentAffairs();
-      else { res.writeHead(404); res.end(JSON.stringify({ error: 'Not found' })); return; }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      if (req.url === "/api/submit-career") result = await handleCareer(parsed);
+      else if (req.url === "/api/submit-form")
+        result = await handleForm(parsed);
+      else if (req.url === "/api/submit-brochure")
+        result = await handleBrochure(parsed);
+      else if (req.url === "/api/submit-contact")
+        result = await handleContact(parsed);
+      else if (req.url === "/api/submit-banking")
+        result = await handleBanking(parsed);
+      else if (req.url === "/api/submit-career-contact")
+        result = await handleCareerContact(parsed);
+      else if (req.url === "/api/submit-about")
+        result = await handleAbout(parsed);
+      else if (req.url === "/api/submit-enquiry")
+        result = await handleEnquiry(parsed);
+      else if (req.url === "/api/admin-reply")
+        result = await handleAdminReply(parsed);
+      else if (req.url === "/api/fetch-current-affairs")
+        result = await fetchAndStoreCurrentAffairs();
+      else {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: "Not found" }));
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     } catch (err) {
-      console.error('[dev-server] Error:', err);
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Bad request' }));
+      console.error("[dev-server] Error:", err);
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Bad request" }));
     }
   });
 });
@@ -707,10 +878,14 @@ const server = http.createServer(async (req, res) => {
 // Automated 3-hour Current Affairs RSS Sync
 const THREE_HOURS = 3 * 60 * 60 * 1000;
 setTimeout(() => {
-  fetchAndStoreCurrentAffairs().catch((e) => console.error('[dev-server] Initial RSS fetch error:', e));
+  fetchAndStoreCurrentAffairs().catch((e) =>
+    console.error("[dev-server] Initial RSS fetch error:", e),
+  );
 }, 5000);
 setInterval(() => {
-  fetchAndStoreCurrentAffairs().catch((e) => console.error('[dev-server] Scheduled RSS fetch error:', e));
+  fetchAndStoreCurrentAffairs().catch((e) =>
+    console.error("[dev-server] Scheduled RSS fetch error:", e),
+  );
 }, THREE_HOURS);
 
 server.listen(PORT, () => {

@@ -102,7 +102,13 @@ export const dashboardController = {
       // ── Wave 2: Queries that need IDs from Wave 1 ──
       const pkgIds = studentsPerPackage.map((s) => s.packageId);
       const courseIds1 = studentsPerCourse.map((s) => s.courseId);
-      const revPkgIds = [...new Set(paidPayments.map((p) => p.packageId).filter((id): id is string => Boolean(id)))];
+      const revPkgIds = [
+        ...new Set(
+          paidPayments
+            .map((p) => p.packageId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ];
 
       const [pkgs, courses1, revPkgs] = await Promise.all([
         prisma.coursePackage.findMany({

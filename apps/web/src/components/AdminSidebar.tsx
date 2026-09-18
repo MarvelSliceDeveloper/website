@@ -268,7 +268,7 @@ function NavGroup({
                       <ul className="space-y-0.5 bg-slate-500/[0.03] border-l border-border/60 ml-6">
                         {item.children!.map((child) => (
                           <ChildNavLink
-                            key={child.href}
+                            key={`${child.href}-${child.label}`}
                             child={child}
                             pathname={pathname}
                             unreadCounts={unreadCounts}
@@ -378,9 +378,12 @@ export default function AdminSidebar({
           children: [
             { label: "All Courses", href: "/admin/courses" },
             { label: "Create Course", href: "/admin/courses/new" },
-            { label: "Categories", href: "/admin/categories" },
-            { label: "Tags", href: "/admin/tags" },
-            { label: "Static Pages", href: "/admin/static-pages" },
+            ...(isSuperAdmin
+              ? [
+                  { label: "Categories", href: "/admin/categories" },
+                  { label: "Tags", href: "/admin/tags" },
+                ]
+              : []),
           ],
         },
         {
@@ -418,13 +421,6 @@ export default function AdminSidebar({
           label: "Assignments",
           href: "/admin/assignments/review",
           icon: IconClipboardCheck,
-          children: [
-            { label: "All Assignments", href: "/admin/assignments/review" },
-            {
-              label: "Review Submissions",
-              href: "/admin/assignments/review",
-            },
-          ],
         },
         {
           label: "Calendar",
@@ -554,11 +550,15 @@ export default function AdminSidebar({
             { label: "Approvals", href: "/admin/approvals" },
           ],
         },
-        {
-          label: "Coupons & Discounts",
-          href: "/admin/coupons",
-          icon: IconClipboardCheck,
-        },
+        ...(isSuperAdmin
+          ? [
+              {
+                label: "Coupons & Discounts",
+                href: "/admin/coupons",
+                icon: IconClipboardCheck,
+              },
+            ]
+          : []),
         {
           label: "Referrals",
           href: "/admin/referrals",

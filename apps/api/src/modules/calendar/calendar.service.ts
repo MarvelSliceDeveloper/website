@@ -185,7 +185,11 @@ export async function getEventsForUser(
   // Attach a `type` hint so the student calendar can color mentorship correctly
   return events.map((e) => ({
     ...e,
-    type: e.session?.mentorshipTicketId ? "mentorship" : e.session ? "live" : "upcoming",
+    type: e.session?.mentorshipTicketId
+      ? "mentorship"
+      : e.session
+        ? "live"
+        : "upcoming",
   })) as typeof events & { type: string }[];
 }
 

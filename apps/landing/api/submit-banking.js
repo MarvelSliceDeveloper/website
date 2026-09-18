@@ -1,14 +1,15 @@
-import { getGeneralTransporter } from './lib/emailTransporters.js';
+import { getGeneralTransporter } from "./lib/emailTransporters.js";
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { full_name, email, phone, enquiry_type, topic_title, button_clicked } = req.body;
+  const { full_name, email, phone, enquiry_type, topic_title, button_clicked } =
+    req.body;
 
   if (!full_name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
+    return res.status(400).json({ error: "Name and email are required" });
   }
 
   const mailConfig = getGeneralTransporter();
@@ -18,14 +19,15 @@ export default async function handler(req, res) {
 
   const { transporter, user: smtpUser, adminEmail } = mailConfig;
 
-  const submittedAt = new Date().toLocaleString('en-US', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata',
+  const submittedAt = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
   });
 
-  const topicName = topic_title || 'General Banking Enquiry';
-  const enquiryCategory = enquiry_type === 'topic' ? 'Topic-Specific Enquiry' : 'General Banking CTA';
+  const topicName = topic_title || "General Banking Enquiry";
+  const enquiryCategory =
+    enquiry_type === "topic" ? "Topic-Specific Enquiry" : "General Banking CTA";
 
   const adminSubject = `New Banking Enquiry (${topicName}) from ${full_name}`;
   const userSubject = `Banking Enquiry Confirmation: ${topicName} — Marvel Slice`;
@@ -38,12 +40,12 @@ export default async function handler(req, res) {
       </div>
       <div style="padding:24px 32px;">
         <table style="width:100%;border-collapse:collapse;">
-          ${row('Full Name', full_name)}
-          ${row('Email', email)}
-          ${row('Phone', phone || '—')}
-          ${row('Enquiry Type', enquiryCategory)}
-          ${row('Exam / Topic', topicName)}
-          ${row('Button Action', button_clicked || 'Enquire Now')}
+          ${row("Full Name", full_name)}
+          ${row("Email", email)}
+          ${row("Phone", phone || "—")}
+          ${row("Enquiry Type", enquiryCategory)}
+          ${row("Exam / Topic", topicName)}
+          ${row("Button Action", button_clicked || "Enquire Now")}
         </table>
       </div>
       <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">
@@ -84,7 +86,7 @@ export default async function handler(req, res) {
       html: userAutoReplyHtml,
     });
   } catch (emailError) {
-    console.error('Banking email send failed:', emailError);
+    console.error("Banking email send failed:", emailError);
   }
 
   return res.status(200).json({ success: true });

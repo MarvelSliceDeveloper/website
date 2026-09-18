@@ -1,36 +1,49 @@
-import { getGeneralTransporter, getCareerTransporter } from './lib/emailTransporters.js';
+import {
+  getGeneralTransporter,
+  getCareerTransporter,
+} from "./lib/emailTransporters.js";
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { to_email, to_name, subject, message, type, attachment } = req.body || {};
+  const { to_email, to_name, subject, message, type, attachment } =
+    req.body || {};
 
   if (!to_email || !subject || !message) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(to_email.trim())) {
-    return res.status(400).json({ error: 'Invalid recipient email address' });
+    return res.status(400).json({ error: "Invalid recipient email address" });
   }
 
   // Prevent Header/CRLF Injection in subject and email addresses
-  const cleanSubject = String(subject).replace(/[\r\n]/g, ' ').trim();
-  const cleanToEmail = String(to_email).replace(/[\r\n]/g, '').trim();
-  const cleanToName = String(to_name || 'User').replace(/[\r\n]/g, ' ').trim();
+  const cleanSubject = String(subject)
+    .replace(/[\r\n]/g, " ")
+    .trim();
+  const cleanToEmail = String(to_email)
+    .replace(/[\r\n]/g, "")
+    .trim();
+  const cleanToName = String(to_name || "User")
+    .replace(/[\r\n]/g, " ")
+    .trim();
 
-  const isCareerType = type === 'career' || type === 'jobs' || type === 'internship';
-  const mailConfig = isCareerType ? (getCareerTransporter() || getGeneralTransporter()) : getGeneralTransporter();
+  const isCareerType =
+    type === "career" || type === "jobs" || type === "internship";
+  const mailConfig = isCareerType
+    ? getCareerTransporter() || getGeneralTransporter()
+    : getGeneralTransporter();
 
   if (!mailConfig) {
     return res.status(200).json({ success: true });
   }
 
   const { transporter, user: smtpUser } = mailConfig;
-  const senderName = isCareerType ? 'Marvel Careers' : 'Marvel Slice';
+  const senderName = isCareerType ? "Marvel Careers" : "Marvel Slice";
 
   let html = `<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
@@ -38,18 +51,18 @@ export default async function handler(req, res) {
     </div>
     <div style="padding:24px 32px;">
       <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${cleanToName},</p>
-      <p style="font-size:15px;color:#1B2333;line-height:1.7;">${String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</p>`;
+      <p style="font-size:15px;color:#1B2333;line-height:1.7;">${String(message).replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`;
 
-  if (type === 'brochure' && attachment?.courseTitle) {
+  if (type === "brochure" && attachment?.courseTitle) {
     html += `<div style="margin:24px 0;padding:20px;background:#F5F6F8;border-radius:8px;border-left:4px solid #1E56C7;">
       <p style="margin:0 0 6px;font-size:13px;color:#5F6B7A;font-weight:600;">COURSE BROCHURE</p>
-      <p style="margin:0;font-size:15px;color:#1B2333;font-weight:600;">${String(attachment.courseTitle).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+      <p style="margin:0;font-size:15px;color:#1B2333;font-weight:600;">${String(attachment.courseTitle).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
       <p style="margin:8px 0 0;font-size:13px;color:#5F6B7A;">Please visit our website for more details.</p>
     </div>`;
-  } else if (type === 'brochure' && attachment?.url) {
+  } else if (type === "brochure" && attachment?.url) {
     html += `<div style="margin:24px 0;padding:20px;background:#F5F6F8;border-radius:8px;border-left:4px solid #1E56C7;">
       <p style="margin:0 0 6px;font-size:13px;color:#5F6B7A;font-weight:600;">ATTACHED DOCUMENT</p>
-      <a href="${String(attachment.url).replace(/["']/g, '')}" style="display:inline-block;padding:10px 20px;background:#1E56C7;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;">Download Brochure</a>
+      <a href="${String(attachment.url).replace(/["']/g, "")}" style="display:inline-block;padding:10px 20px;background:#1E56C7;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;">Download Brochure</a>
     </div>`;
   }
 
@@ -66,7 +79,7 @@ export default async function handler(req, res) {
       html,
     });
   } catch (emailError) {
-    console.error('Admin reply email failed:', emailError);
+    console.error("Admin reply email failed:", emailError);
   }
 
   return res.status(200).json({ success: true });

@@ -12,7 +12,8 @@ process.env.NODE_ENV = "test";
 // "must provide a nonempty URL" before the real tests even start.
 // Real secrets (Brevo, etc.) are intentionally NOT stubbed — tests that
 // need them should mock the service, not the env var.
-process.env.DATABASE_URL ??= "postgresql://lms_test:test@localhost:5432/lms_test";
+process.env.DATABASE_URL ??=
+  "postgresql://lms_test:test@localhost:5432/lms_test";
 process.env.REDIS_URL ??= "redis://localhost:6379";
 process.env.JWT_SECRET ??= "test-jwt-secret-must-be-32-chars-long!!";
 process.env.CSRF_SECRET ??= "test-csrf-secret-must-be-32-chars!!";

@@ -54,8 +54,7 @@ export const profileController = {
         }
 
         const files = req.files as
-          | { [fieldname: string]: Express.Multer.File[] }
-          | undefined;
+          { [fieldname: string]: Express.Multer.File[] } | undefined;
         const updateData: Record<string, string> = {};
 
         if (files?.[PHOTO_FIELD]?.length) {

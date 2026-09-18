@@ -72,7 +72,6 @@ const SUPER_ADMIN_ONLY_ENDPOINTS = ["/api/admin/ai/status"];
 const ADMIN_DETAIL_ENDPOINTS: string[] = [
   "/api/admin/courses/no-such-id",
   "/api/admin/packages/no-such-id",
-  "/api/admin/assignment-templates/no-such-id",
   "/api/admin/certificates/no-such-id",
   "/api/admin/certificate-templates/no-such-id",
   "/api/admin/static-pages/no-such-id",

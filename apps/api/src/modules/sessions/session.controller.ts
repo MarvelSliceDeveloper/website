@@ -38,11 +38,7 @@ export const sessionController = {
         batchId: batchId as string | undefined,
         courseId: courseId as string | undefined,
         status: status as
-          | "scheduled"
-          | "live"
-          | "completed"
-          | "cancelled"
-          | undefined,
+          "scheduled" | "live" | "completed" | "cancelled" | undefined,
         instructorId:
           req.user.role === "INSTRUCTOR" ? req.user.userId : undefined,
         studentId: req.user.role === "STUDENT" ? req.user.userId : undefined,

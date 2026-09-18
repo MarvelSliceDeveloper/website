@@ -433,7 +433,9 @@ export async function saveProviderApiKey(
   );
 }
 
-export async function deleteProviderApiKey(provider: AIProvider): Promise<void> {
+export async function deleteProviderApiKey(
+  provider: AIProvider,
+): Promise<void> {
   await prisma.systemSetting.deleteMany({
     where: { key: PROVIDER_KEY_SETTING[provider] },
   });
@@ -762,7 +764,10 @@ export async function healthCheck(): Promise<AIHealthResult> {
   const provider = await getActiveProvider();
   const apiKey = await getProviderApiKey(provider);
   if (!isAIConfiguredSync(apiKey)) {
-    return { ok: false, error: `No ${PROVIDER_LABEL[provider]} API key configured` };
+    return {
+      ok: false,
+      error: `No ${PROVIDER_LABEL[provider]} API key configured`,
+    };
   }
   const model = await getProviderModel(provider);
   const startedAt = Date.now();

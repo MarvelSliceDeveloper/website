@@ -138,9 +138,7 @@ export const authController = {
           (req.headers.authorization?.split(" ")[1] as string | undefined) ||
           (req as any).cookies?.accessToken;
         if (token) {
-          const decoded = jwt.decode(token) as
-            | { sessionId?: string }
-            | null;
+          const decoded = jwt.decode(token) as { sessionId?: string } | null;
           if (decoded?.sessionId) {
             await prisma.adminSession.update({
               where: { id: decoded.sessionId },

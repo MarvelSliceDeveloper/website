@@ -123,8 +123,7 @@ export function buildLessonResourceUrl(
   const host = req.get("host");
   const protocol = req.protocol;
   const webUrl =
-    process.env.WEB_URL ||
-    `${protocol}://${host || "localhost:3000"}`;
+    process.env.WEB_URL || `${protocol}://${host || "localhost:3000"}`;
   return `${webUrl.replace(/\/$/, "")}/uploads/modules/${courseId}/lessons/${lessonId}/${filename}`;
 }
 
@@ -160,7 +159,6 @@ export function buildCertificationPdfUrl(
   const host = req.get("host");
   const protocol = req.protocol;
   const webUrl =
-    process.env.WEB_URL ||
-    `${protocol}://${host || "localhost:3000"}`;
+    process.env.WEB_URL || `${protocol}://${host || "localhost:3000"}`;
   return `${webUrl.replace(/\/$/, "")}/uploads/courses/${courseId}/certification/pdfs/${filename}`;
 }

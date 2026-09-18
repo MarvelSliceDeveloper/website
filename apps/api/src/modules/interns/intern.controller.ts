@@ -14,12 +14,10 @@ export const internController = {
     try {
       const program = await internService.getInternshipProgram();
       if (!program) {
-        return res
-          .status(200)
-          .json({
-            program: null,
-            message: "Internship applications are closed.",
-          });
+        return res.status(200).json({
+          program: null,
+          message: "Internship applications are closed.",
+        });
       }
       return res.status(200).json({ program });
     } catch (err: unknown) {
@@ -62,11 +60,9 @@ export const internController = {
           .json({ error: "designation must be WORKING or STUDYING" });
       }
       if (!fieldId || typeof fieldId !== "string") {
-        return res
-          .status(400)
-          .json({
-            error: "fieldId is required — each intern selects one field",
-          });
+        return res.status(400).json({
+          error: "fieldId is required — each intern selects one field",
+        });
       }
 
       const result = await internService.createInternOrder({
