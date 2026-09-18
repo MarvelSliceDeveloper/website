@@ -50,7 +50,7 @@ export default function CourseCard({
       onMouseEnter={handlePrefetch}
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group h-full flex flex-col"
     >
-      <div className={`${bannerH} bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center shrink-0 overflow-hidden`}>
+      <div className="w-full aspect-video bg-gradient-to-br from-brand-blue to-dark-navy flex items-center justify-center shrink-0 overflow-hidden">
         <div className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none">
           {renderBanner()}
         </div>
@@ -59,7 +59,7 @@ export default function CourseCard({
         <h3 className={`font-bold text-dark-navy ${titleSize} group-hover:text-brand-orange transition-colors`}>
           {course.title}
         </h3>
-        <p className="text-sm sm:text-sm text-slate-600 leading-relaxed text-justify [text-align-last:left] indent-4 sm:indent-6 whitespace-pre-line mt-2 line-clamp-2 flex-1">{course.description}</p>
+        <p className="text-sm text-slate-600 leading-relaxed text-left whitespace-pre-line mt-2 line-clamp-2 flex-1">{course.description}</p>
         <div className="flex flex-wrap gap-2 mt-3 mb-3">
           {course.duration && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">

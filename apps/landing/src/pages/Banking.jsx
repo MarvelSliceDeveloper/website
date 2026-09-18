@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiTarget, FiX, FiLoader } from 'react-icons/fi';
+import { FiCheckCircle, FiCheck, FiArrowRight, FiTarget, FiX, FiLoader, FiSearch, FiChevronDown, FiChevronRight, FiMail, FiPhone } from 'react-icons/fi';
+import { FaFacebookF, FaLinkedinIn, FaYoutube } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { supabase } from '../lib/supabaseClient';
-import { trackRegister, trackFormSubmit, trackEnroll } from '../lib/analytics';
+import { useSiteSettings } from '../hooks/useSupabase';
+import { trackRegister, trackFormSubmit, trackEnroll, trackSocialClick } from '../lib/analytics';
 import BankingTestimonialsSection from '../components/banking/BankingTestimonialsSection';
 
 const FAQS = [
@@ -122,6 +125,8 @@ const EXAMS = [
 
 export default function Banking() {
   const navigate = useNavigate();
+  const { data: settings } = useSiteSettings();
+  const social = settings?.social_links || {};
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [enquiryType, setEnquiryType] = useState('general');
@@ -133,6 +138,26 @@ export default function Banking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        closeApplyModal();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  const setSearchQuery = (val) => {
+    if (val) {
+      setSearchParams({ q: val }, { replace: true });
+    } else {
+      searchParams.delete('q');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
   function openApplyModal(type = 'general', topic = 'General Banking Enquiry') {
     trackEnroll(topic, 'banking_exams');
     setEnquiryType(type);
@@ -140,14 +165,7 @@ export default function Banking() {
     setShowApplyModal(true);
   }
 
-  useEffect(() => {
-    if (isSubmitted) {
-      const timer = setTimeout(() => {
-        closeApplyModal();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSubmitted]);
+  // Modal close handler
 
   function closeApplyModal() {
     if (isSubmitting) return;
@@ -234,17 +252,16 @@ export default function Banking() {
   const upcomingImage = upcomingSectionData?.image_url || '/images/banking/b.png';
   const upcomingLink = upcomingSectionData?.image_link || '';
 
-  function handleBackNavigation(e) {
-    if (e) e.preventDefault();
-    if (window.history.length > 2) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
-  }
+  const filteredExams = EXAMS.filter((exam) =>
+    searchQuery.trim() === ''
+      ? true
+      : exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.paragraphs.some((p) => p.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
-    <div className="bg-white min-h-screen text-slate-800">
+    <div className="bg-white min-h-screen text-slate-800 relative">
       <div className="banking-career-content">
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -282,113 +299,123 @@ export default function Banking() {
         {/* 2. BANKING CAREER CARDS SECTION */}
         <section id="banking-cards" className="py-12 sm:py-16 lg:py-20 bg-slate-50/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
-            {EXAMS.map((exam) => (
-              <Reveal key={exam.id} variant="up">
-                <motion.div
-                  whileHover={{ y: -6 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                  id={exam.id}
-                  className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-9 shadow-sm hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
+            {filteredExams.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-8">
+                <p className="text-slate-500 font-medium">No banking exams found matching "{searchQuery}".</p>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-3 px-4 py-1.5 bg-brand-blue text-white text-xs font-bold rounded-lg cursor-pointer"
                 >
-                  <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
-                    {/* LEFT — Image (~35% width / lg:col-span-4) */}
-                    <div className="lg:col-span-4 shrink-0 flex">
-                      <div className="relative w-full h-auto lg:h-full rounded-2xl overflow-hidden shadow-xs border border-slate-100">
-                        <img
-                          src={exam.image}
-                          alt={exam.imageAlt}
-                          className="w-full h-auto block sm:h-full sm:object-cover group-hover:scale-[1.05] transition-transform duration-700 ease-out"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-dark-navy/40 via-transparent to-transparent opacity-40" />
-                      </div>
-                    </div>
-
-                    {/* MIDDLE — Main Information (lg:col-span-5) */}
-                    <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
-                      <div className="space-y-3">
-                        {/* Number Badge & Category Pill */}
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-lg bg-brand-blue text-white flex items-center justify-center font-extrabold text-sm font-mono shadow-md shadow-brand-blue/20 shrink-0">
-                            {exam.number}
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase border ${exam.badgeStyle}`}>
-                            {exam.badge}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h2 className="text-xl sm:text-2xl font-bold text-dark-navy leading-tight group-hover:text-brand-blue transition-colors">
-                            {exam.title}
-                          </h2>
-                          <h3 className="text-xs sm:text-sm font-semibold text-brand-orange mt-0.5">
-                            {exam.subtitle}
-                          </h3>
-                        </div>
-
-                        {/* Existing Paragraphs */}
-                        <div className="space-y-2 text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
-                          {exam.paragraphs.map((p, idx) => (
-                            <p key={idx}>{p}</p>
-                          ))}
+                  Clear Search
+                </button>
+              </div>
+            ) : (
+              filteredExams.map((exam) => (
+                <Reveal key={exam.id} variant="up">
+                  <motion.div
+                    whileHover={{ y: -6 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    id={exam.id}
+                    className="bg-white border border-[#E5ECF5] hover:border-brand-orange/40 rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-9 shadow-xs hover:shadow-2xl hover:shadow-brand-blue/10 transition-all duration-300 group min-h-[380px] flex flex-col justify-center"
+                  >
+                    <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full">
+                      {/* LEFT — Image (~35% width / lg:col-span-4) */}
+                      <div className="lg:col-span-4 shrink-0 flex">
+                        <div className="relative w-full h-auto lg:h-full rounded-2xl overflow-hidden shadow-xs border border-slate-100">
+                          <img
+                            src={exam.image}
+                            alt={exam.imageAlt}
+                            className="w-full h-auto block sm:h-full sm:object-cover group-hover:scale-[1.05] transition-transform duration-700 ease-out"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-dark-navy/40 via-transparent to-transparent opacity-40" />
                         </div>
                       </div>
-                    </div>
 
-                    {/* RIGHT — Supporting Information (lg:col-span-3) */}
-                    <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-[#E5ECF5] pt-5 lg:pt-0 lg:pl-6 space-y-5 flex flex-col justify-between">
-                      <div className="space-y-4">
-                        {/* What Makes It Different */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2 text-xs font-bold text-brand-blue uppercase tracking-wider">
-                            <div className="w-5.5 h-5.5 rounded-md bg-blue-50 flex items-center justify-center text-brand-blue shrink-0">
-                              <FiTarget className="w-3.5 h-3.5" />
-                            </div>
-                            <span>What Makes It Different?</span>
+                      {/* MIDDLE — Main Information (lg:col-span-5) */}
+                      <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+                        <div className="space-y-3">
+                          {/* Number Badge & Category Pill */}
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-brand-blue text-white flex items-center justify-center font-extrabold text-sm font-mono shadow-md shadow-brand-blue/20 shrink-0">
+                              {exam.number}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider uppercase border ${exam.badgeStyle}`}>
+                              {exam.badge}
+                            </span>
                           </div>
-                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
-                            {exam.difference}
-                          </p>
-                        </div>
 
-                        <div className="h-px bg-slate-100" />
-
-                        {/* Ideal For */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2 text-xs font-bold text-dark-navy uppercase tracking-wider">
-                            <div className="w-5.5 h-5.5 rounded-md bg-amber-50 flex items-center justify-center text-brand-orange shrink-0">
-                              <FiCheckCircle className="w-3.5 h-3.5" />
-                            </div>
-                            <span>Ideal For</span>
+                          <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-dark-navy leading-tight group-hover:text-brand-blue transition-colors">
+                              {exam.title}
+                            </h2>
+                            <h3 className="text-xs sm:text-sm font-semibold text-brand-orange mt-0.5">
+                              {exam.subtitle}
+                            </h3>
                           </div>
-                          <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
-                            {exam.idealFor}
-                          </p>
+
+                          {/* Existing Paragraphs */}
+                          <div className="space-y-2 text-slate-600 text-sm sm:text-sm leading-relaxed font-normal">
+                            {exam.paragraphs.map((p, idx) => (
+                              <p key={idx}>{p}</p>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Enroll Action Button */}
-                      <button
-                        type="button"
-                        onClick={() => openApplyModal('topic', exam.title)}
-                        className="w-full py-2.5 px-4 bg-brand-blue hover:bg-brand-orange text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:shadow-brand-orange/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-1.5 group/btn cursor-pointer mt-2"
-                      >
-                        <span>Enroll Now</span>
-                        <FiArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:translate-x-1.5" />
-                      </button>
+                      {/* RIGHT — Supporting Information (lg:col-span-3) */}
+                      <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-[#E5ECF5] pt-5 lg:pt-0 lg:pl-6 space-y-5 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          {/* What Makes It Different */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-brand-blue uppercase tracking-wider">
+                              <div className="w-5.5 h-5.5 rounded-md bg-blue-50 flex items-center justify-center text-brand-blue shrink-0">
+                                <FiTarget className="w-3.5 h-3.5" />
+                              </div>
+                              <span>What Makes It Different?</span>
+                            </div>
+                            <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
+                              {exam.difference}
+                            </p>
+                          </div>
+
+                          <div className="h-px bg-slate-100" />
+
+                          {/* Ideal For */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs font-bold text-dark-navy uppercase tracking-wider">
+                              <div className="w-5.5 h-5.5 rounded-md bg-amber-50 flex items-center justify-center text-brand-orange shrink-0">
+                                <FiCheckCircle className="w-3.5 h-3.5" />
+                              </div>
+                              <span>Ideal For</span>
+                            </div>
+                            <p className="text-sm sm:text-xs text-slate-600 leading-relaxed font-normal">
+                              {exam.idealFor}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Enroll Action Button */}
+                        <button
+                          type="button"
+                          onClick={() => openApplyModal('topic', exam.title)}
+                          className="w-full py-2.5 px-4 bg-brand-blue hover:bg-brand-orange text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:shadow-brand-orange/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-1.5 group/btn cursor-pointer mt-2"
+                        >
+                          <span>Enroll Now</span>
+                          <FiArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/btn:translate-x-1.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              </Reveal>
-            ))}
+                  </motion.div>
+                </Reveal>
+              ))
+            )}
           </div>
         </section>
       </div>
 
       {/* 3. EDITORIAL INFOGRAPHIC FULL-WIDTH CAREER CTA BANNER SECTION */}
       <section className="relative py-14 sm:py-18 lg:py-20 bg-gradient-to-r from-[#07193C] via-[#0B2A6F] to-[#1558D6] text-white overflow-hidden w-full border-y border-white/10 shadow-2xl">
-        {/* SVG HALF CIRCLE & CURVED CONCENTRIC LINE VECTOR PATTERN (BLUE & WHITE ONLY) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Top-Right Half Circle Arc Lines */}
           <svg className="absolute -top-24 -right-24 w-[480px] sm:w-[540px] h-[480px] sm:h-[540px] text-white/15" viewBox="0 0 500 500" fill="none">
             <circle cx="250" cy="250" r="230" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 6" />
             <circle cx="250" cy="250" r="180" stroke="currentColor" strokeWidth="2" />
@@ -396,7 +423,6 @@ export default function Banking() {
             <circle cx="250" cy="250" r="80" stroke="currentColor" strokeWidth="2" />
           </svg>
 
-          {/* Bottom-Left Half Circle Arc Lines */}
           <svg className="absolute -bottom-24 -left-24 w-[420px] sm:w-[480px] h-[420px] sm:h-[480px] text-white/15" viewBox="0 0 450 450" fill="none">
             <circle cx="225" cy="225" r="205" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 6" />
             <circle cx="225" cy="225" r="155" stroke="currentColor" strokeWidth="2" />
@@ -404,20 +430,17 @@ export default function Banking() {
             <circle cx="225" cy="225" r="55" stroke="currentColor" strokeWidth="2" />
           </svg>
 
-          {/* Subtle Horizontal Curved Wave Lines */}
           <svg className="absolute inset-0 w-full h-full text-white/5" viewBox="0 0 1200 400" preserveAspectRatio="none" fill="none">
             <path d="M 0 200 Q 300 100 600 200 T 1200 200" stroke="currentColor" strokeWidth="2" />
             <path d="M 0 240 Q 300 140 600 240 T 1200 240" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 5" />
           </svg>
         </div>
 
-        {/* SOFT BLUE & WHITE AMBIENT GLOW ORBS */}
         <div className="absolute -top-32 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 right-1/4 w-[400px] h-[400px] rounded-full bg-white/10 blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-12 gap-8 items-end">
-            {/* LEFT COLUMN: SINGLE LINE HEADING, DIVIDER & EXPANDED CONTENT (~70% width) */}
             <Reveal variant="left" className="lg:col-span-8 space-y-4 text-left">
               <h2 className="text-2xl sm:text-3xl lg:text-[36px] font-extrabold text-brand-orange tracking-tight leading-tight">
                 Your Banking Career <br />
@@ -429,7 +452,6 @@ export default function Banking() {
               </p>
             </Reveal>
 
-            {/* RIGHT COLUMN: BUTTON ALIGNED TO BOTTOM RIGHT (~30% width) */}
             <Reveal variant="right" className="lg:col-span-4 flex lg:justify-end justify-start items-end pt-4 lg:pt-0">
               <button
                 type="button"
@@ -448,7 +470,6 @@ export default function Banking() {
       <section id="why-prepare-section" className="py-16 sm:py-24 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-            {/* Left Column: Heading & 4 Course Bullet Points */}
             <Reveal variant="left" className="lg:col-span-7 space-y-6">
               <div>
                 <h2 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight">
@@ -468,7 +489,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Comprehensive Syllabus Coverage</h3>
+                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Comprehensive Syllabus Coverage</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           In-depth preparation for Quantitative Aptitude, Reasoning Ability, English Language, and General/Banking Awareness.
                         </p>
@@ -482,7 +503,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Structured Prelims & Mains Training</h3>
+                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Structured Prelims & Mains Training</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Targeted strategy covering two-tier objective exams, speed tests, and descriptive paper practice.
                         </p>
@@ -496,7 +517,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Expert Banking Faculty & Mentorship</h3>
+                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Expert Banking Faculty & Mentorship</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Learn directly from experienced competitive exam specialists and former banking professionals.
                         </p>
@@ -510,7 +531,7 @@ export default function Banking() {
                         <FiCheckCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-dark-navy text-2xl sm:text-lg group-hover:text-brand-blue transition-colors">Full-Length Mock Tests & Analytics</h3>
+                        <h3 className="font-bold text-dark-navy text-base sm:text-lg group-hover:text-brand-blue transition-colors">Full-Length Mock Tests & Analytics</h3>
                         <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                           Regular section-wise speed tests, exam-pattern simulations, and detailed performance tracking.
                         </p>
@@ -521,7 +542,6 @@ export default function Banking() {
               </ul>
             </Reveal>
 
-            {/* Right Column: Upcoming Image Positioned ~10% down & CLICKABLE (MATCHING HOME) */}
             <Reveal variant="right" className="lg:col-span-5 flex justify-center lg:justify-end self-center my-auto pt-8 lg:pt-10">
               {upcomingLink ? (
                 <a
@@ -597,7 +617,7 @@ export default function Banking() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              exit={{ opacity: 0, scale: 0.95, y: 0 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl max-h-[90vh] flex flex-col border border-blue-100"
             >
@@ -632,11 +652,23 @@ export default function Banking() {
               {/* Modal Form Content */}
               <div className="p-5 sm:p-6 bg-[#F8FAFD]">
                 {isSubmitted ? (
-                  <div className="text-center py-6">
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FiCheckCircle className="w-8 h-8 text-emerald-600" />
+                  <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                      <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
-                    <h4 className="text-lg font-bold text-dark-navy">Success!</h4>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                      Submission Successful!
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                      Thank you for your enquiry. Our banking exam specialists will get in touch with you shortly.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={closeApplyModal}
+                      className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleApplySubmit} className="space-y-4">

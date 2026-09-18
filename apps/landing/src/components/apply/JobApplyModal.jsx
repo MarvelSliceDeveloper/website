@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiUpload, FiSend, FiCheck, FiAlertCircle, FiX } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit, trackDownload } from '../../lib/analytics';
 
@@ -46,9 +47,11 @@ function Field({ label, required, error, children }) {
 }
 
 export default function JobApplyModal({ job, onClose }) {
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const [form, setForm] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     position: '',
@@ -65,7 +68,8 @@ export default function JobApplyModal({ job, onClose }) {
   useEffect(() => {
     if (job) {
       setForm({
-        full_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
         position: job.title || '',
@@ -78,15 +82,6 @@ export default function JobApplyModal({ job, onClose }) {
       setAgreeTerms(false);
     }
   }, [job]);
-
-  useEffect(() => {
-    if (status?.type === 'success') {
-      const timer = setTimeout(() => {
-        closeModal();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
 
   if (!job) return null;
 
@@ -130,7 +125,8 @@ export default function JobApplyModal({ job, onClose }) {
 
   function validate() {
     const errs = {};
-    if (!form.full_name.trim()) errs.full_name = 'Full name is required';
+    if (!form.first_name.trim()) errs.first_name = 'First name is required';
+    if (!form.last_name.trim()) errs.last_name = 'Last name is required';
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Invalid email format';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
@@ -170,6 +166,7 @@ export default function JobApplyModal({ job, onClose }) {
         try {
           uploadFile = await compressImage(file);
         } catch { }
+      }
       try {
         file_url = await helperUploadFile(uploadFile);
         setUploading(false);
@@ -181,9 +178,11 @@ export default function JobApplyModal({ job, onClose }) {
       }
     }
 
+    const full_name = `${form.first_name.trim()} ${form.last_name.trim()}`;
+
     const { error: insertError } = await supabase
       .from('career_submissions')
-      .insert({ full_name: form.full_name, email: form.email, phone: form.phone, department: form.position, category: form.category, description: form.description, file_url });
+      .insert({ full_name, email: form.email, phone: form.phone, department: form.position, category: form.category, description: form.description, file_url });
 
     if (insertError) {
       console.error('Career application submission error:', insertError);
@@ -192,14 +191,15 @@ export default function JobApplyModal({ job, onClose }) {
     fetch('/api/submit-career', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, file_url }),
+      body: JSON.stringify({ ...form, full_name, file_url }),
     }).catch(() => {});
 
     trackFormSubmit('career');
     if (file_url) trackDownload('career_resume');
     setStatus({ type: 'success', message: 'Application submitted successfully! We will get back to you soon.' });
     setForm({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       position: job?.title || '',
@@ -215,7 +215,8 @@ export default function JobApplyModal({ job, onClose }) {
   function closeModal() {
     if (submitting || uploading) return;
     setForm({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       position: job?.title || '',
@@ -247,23 +248,39 @@ export default function JobApplyModal({ job, onClose }) {
         <div className="overflow-y-auto rounded-3xl flex-1">
           {status?.type !== 'success' && (
             <div className="bg-brand-blue px-6 py-4 text-white relative text-center flex flex-col items-center justify-center">
-              <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10 text-center">
-                Applying for: <span className="font-semibold">{job.title}</span>
-              </span>
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight text-center">
+                Position: {job.title}
+              </h3>
             </div>
           )}
 
         {status?.type === 'success' ? (
-          <div className="p-6 text-center">
+          <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
+              className="flex flex-col items-center justify-center text-center max-w-sm sm:max-w-md mx-auto"
             >
-              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FiCheck className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Success!</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                Submission Successful!
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 max-w-sm sm:max-w-md mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                Thank you for your submission. We have received your application information and will process it shortly. You will receive a confirmation update within the next few minutes.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  closeModal();
+                  navigate('/');
+                }}
+                className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                OK
+              </button>
             </motion.div>
           </div>
         ) : (
@@ -287,17 +304,17 @@ export default function JobApplyModal({ job, onClose }) {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 sm:p-8">
-              <Field label="Full Name" required error={errors.full_name}>
-                <input name="full_name" value={form.full_name} onChange={handleChange}
+              <Field label="First Name" required error={errors.first_name}>
+                <input name="first_name" value={form.first_name} onChange={handleChange}
                   className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
-                    errors.full_name ? 'border-red-300' : 'border-slate-200'
-                  }`} placeholder="John Doe" />
+                    errors.first_name ? 'border-red-300' : 'border-slate-200'
+                  }`} placeholder="John" />
               </Field>
-              <Field label="Email Address" required error={errors.email}>
-                <input name="email" type="email" value={form.email} onChange={handleChange}
+              <Field label="Last Name" required error={errors.last_name}>
+                <input name="last_name" value={form.last_name} onChange={handleChange}
                   className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
-                    errors.email ? 'border-red-300' : 'border-slate-200'
-                  }`} placeholder="john@example.com" />
+                    errors.last_name ? 'border-red-300' : 'border-slate-200'
+                  }`} placeholder="Doe" />
               </Field>
               <Field label="Phone Number" required error={errors.phone}>
                 <input name="phone" type="tel" value={form.phone} onChange={handleChange}
@@ -305,8 +322,11 @@ export default function JobApplyModal({ job, onClose }) {
                     errors.phone ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder="+1 234 567 890" />
               </Field>
-              <Field label="Position">
-                <p className="text-sm font-semibold text-slate-800 py-2.5">{form.position || '—'}</p>
+              <Field label="Email Address" required error={errors.email}>
+                <input name="email" type="email" value={form.email} onChange={handleChange}
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 transition-all outline-none placeholder:text-slate-400 ${
+                    errors.email ? 'border-red-300' : 'border-slate-200'
+                  }`} placeholder="john@example.com" />
               </Field>
               <div className="sm:col-span-2">
                 <Field label="Description" required error={errors.description}>

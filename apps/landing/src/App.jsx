@@ -7,6 +7,7 @@ import BankingHeader from './components/layout/BankingHeader';
 import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
 import FloatingContactButton from './components/FloatingContactButton';
+import LandingLoader from './components/ui/LandingLoader';
 import { trackPageView, initAnalytics } from './lib/analytics';
 import { getEnv } from './lib/env';
 import Home from './pages/Home';
@@ -112,8 +113,25 @@ function AnimatedRoutes() {
       <Route path="/career/jobs" element={<Navigate to="/career" replace />} />
       <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/banking" element={<BankingV2 />} />
+      <Route path="/banking" element={<Banking />} />
+      <Route path="/banking/aptitude" element={<Aptitude />} />
+      <Route path="/banking/reasoning" element={<Reasoning />} />
+      <Route path="/banking/english" element={<English />} />
+      <Route path="/banking/banking-awareness" element={<BankingAwareness />} />
+      <Route path="/banking/current-affairs" element={<CurrentAffairs />} />
+      <Route path="/banking/affairs" element={<CurrentAffairs />} />
+      <Route path="/banking/todays-affairs" element={<Navigate to="/banking/current-affairs?filter=today" replace />} />
+      <Route path="/banking/mock-exam" element={<MockExam />} />
+
       <Route path="/bankingv2" element={<BankingV2 />} />
+      <Route path="/bankingv2/aptitude" element={<Aptitude />} />
+      <Route path="/bankingv2/reasoning" element={<Reasoning />} />
+      <Route path="/bankingv2/english" element={<English />} />
+      <Route path="/bankingv2/banking-awareness" element={<BankingAwareness />} />
+      <Route path="/bankingv2/current-affairs" element={<CurrentAffairs />} />
+      <Route path="/bankingv2/affairs" element={<CurrentAffairs />} />
+      <Route path="/bankingv2/todays-affairs" element={<Navigate to="/bankingv2/current-affairs?filter=today" replace />} />
+      <Route path="/bankingv2/mock-exam" element={<MockExam />} />
       <Route path="/aptitude" element={<Aptitude />} />
       <Route path="/reasoning" element={<Reasoning />} />
       <Route path="/english" element={<English />} />
@@ -165,6 +183,7 @@ function PublicLayout() {
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-full relative">
+      <LandingLoader />
       <ScrollToTop />
       <PageTracker />
       <div className="fixed top-0 left-0 right-0 z-50 w-full">

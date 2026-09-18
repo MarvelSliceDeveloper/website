@@ -26,7 +26,7 @@ export default function InternshipsManager() {
   const defaultForm = {
     title: '', division: '', role_category_id: null, location: '', type: 'Internship',
     duration: '', stipend: '', experience: '', apply_url: '', description: '',
-    key_requirements: '', responsibilities: '', qualifications: '',
+    key_requirements: '', responsibilities: '', qualifications: '', skills: '',
     is_active: true, sort_order: 0,
   };
   const [form, setForm] = useState(defaultForm);
@@ -67,6 +67,7 @@ export default function InternshipsManager() {
         key_requirements: item.key_requirements || '',
         responsibilities: item.responsibilities || '',
         qualifications: item.qualifications || '',
+        skills: item.skills || '',
         is_active: item.is_active ?? true,
         sort_order: item.sort_order || 0,
       });
@@ -110,6 +111,7 @@ export default function InternshipsManager() {
       key_requirements: form.key_requirements?.trim() || null,
       responsibilities: form.responsibilities?.trim() || null,
       qualifications: form.qualifications?.trim() || null,
+      skills: form.skills?.trim() || null,
       apply_url: form.apply_url?.trim() || null,
       is_active: form.is_active,
       sort_order: form.sort_order,
@@ -189,7 +191,7 @@ export default function InternshipsManager() {
   const exportColumns = [
     { header: 'SL NO', accessor: 'slno', exportValue: (_, i) => i + 1 },
     { header: 'Title', accessor: 'title' },
-    { header: 'Division / Department', accessor: 'division', exportValue: (row) => row.division || row.department || '-' },
+    { header: 'Department', accessor: 'division', exportValue: (row) => row.division || row.department || '-' },
     { header: 'Category', accessor: 'role_categories', exportValue: (row) => row.role_categories?.name || 'Uncategorized' },
     { header: 'Location', accessor: 'location' },
     { header: 'Type', accessor: 'type' },
@@ -200,7 +202,8 @@ export default function InternshipsManager() {
     { header: 'Description / Overview', accessor: 'description' },
     { header: 'Key Requirements', accessor: 'key_requirements' },
     { header: 'Responsibilities', accessor: 'responsibilities' },
-    { header: 'Qualification & Experience', accessor: 'qualifications' },
+    { header: 'Qualification', accessor: 'qualifications' },
+    { header: 'Skills', accessor: 'skills' },
     { header: 'Status', accessor: 'is_active', exportValue: (row) => row.is_active ? 'Active' : 'Inactive' },
   ];
 
@@ -252,7 +255,7 @@ export default function InternshipsManager() {
                     <input name="title" value={form.title} onChange={handleChange} placeholder="e.g. Frontend Developer Intern" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Division / Department</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Department</label>
                     <input name="division" value={form.division} onChange={handleChange} placeholder="e.g. Marketing" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
                   </div>
                 </div>
@@ -274,6 +277,18 @@ export default function InternshipsManager() {
                     </select>
                   </div>
                 </div>
+                {/* Row 2: Qualification | Skills */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Qualification</label>
+                    <input name="qualifications" value={form.qualifications} onChange={handleChange} placeholder="e.g. B.E / B.Tech / MCA / Any Graduate" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Skills</label>
+                    <input name="skills" value={form.skills} onChange={handleChange} placeholder="e.g. React, Node.js, TypeScript, SQL" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                  </div>
+                </div>
+                {/* Row 3: Duration | Experience | Stipend */}
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">Duration *</label>
@@ -306,11 +321,6 @@ export default function InternshipsManager() {
                   <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Responsibilities</label>
                   <textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={4}
                     placeholder="• Assist the development team in building features&#10;• Write clean code&#10;• Participate in code reviews" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-black mb-1 uppercase tracking-wider">Qualification &amp; Experience</label>
-                  <textarea name="qualifications" value={form.qualifications} onChange={handleChange} rows={4}
-                    placeholder="• Pursuing/Completed Bachelor's in CS or IT&#10;• Good communication skills" className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all resize-y font-mono text-xs leading-relaxed" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-black mb-1.5 uppercase tracking-wider">External Apply URL (Optional)</label>

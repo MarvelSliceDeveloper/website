@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiStar, FiArrowRight, FiArrowLeft, FiUsers, FiBarChart2, FiClock, FiBookOpen, FiAward, FiBell, FiCode, FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiVideo, FiCalendar, FiRefreshCw, FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiX, FiCheck, FiAlertCircle, FiSend, FiPlay, FiCheckCircle, FiCreditCard, FiExternalLink } from 'react-icons/fi';
+import { FiStar, FiArrowRight, FiArrowLeft, FiHome, FiUsers, FiBarChart2, FiClock, FiBookOpen, FiAward, FiBell, FiCode, FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiVideo, FiCalendar, FiRefreshCw, FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiX, FiCheck, FiAlertCircle, FiSend, FiPlay, FiCheckCircle, FiCreditCard, FiExternalLink } from 'react-icons/fi';
 import Button from '../components/ui/Button';
 import TabBar from '../components/ui/TabBar';
 import { trackFormSubmit, trackDownload, trackCtaClick, trackVideoPlay } from '../lib/analytics';
@@ -409,21 +409,21 @@ export default function CourseDetail() {
 
   useEffect(() => {
     if (brochureDone) {
-      const timer = setTimeout(() => setShowBrochure(false), 1000);
+      const timer = setTimeout(() => setShowBrochure(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [brochureDone]);
 
   useEffect(() => {
     if (enquiryDone) {
-      const timer = setTimeout(() => setShowEnquiry(false), 1000);
+      const timer = setTimeout(() => setShowEnquiry(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [enquiryDone]);
 
   useEffect(() => {
     if (interestDone) {
-      const timer = setTimeout(() => setShowInterest(false), 1000);
+      const timer = setTimeout(() => setShowInterest(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [interestDone]);
@@ -449,11 +449,15 @@ export default function CourseDetail() {
     const action = course?.cta_left_action || 'choice_popup';
     const payUrl = course?.pay_now_url || course?.cta_link;
 
-    if (action === 'pay_now' && payUrl) {
-      if (payUrl.startsWith('http://') || payUrl.startsWith('https://')) {
-        window.open(payUrl, '_blank', 'noopener,noreferrer');
+    if (action === 'pay_now') {
+      if (payUrl && payUrl.trim()) {
+        let formattedUrl = payUrl.trim();
+        if (!/^https?:\/\//i.test(formattedUrl)) {
+          formattedUrl = `https://${formattedUrl}`;
+        }
+        window.open(formattedUrl, '_blank', 'noopener,noreferrer');
       } else {
-        window.location.href = payUrl;
+        openEnquiryModal(course?.cta_left || 'Talk to Advisor');
       }
     } else if (action === 'enquiry') {
       openEnquiryModal(course?.cta_left || 'Talk to Advisor');
@@ -561,14 +565,13 @@ export default function CourseDetail() {
         />
         <section className="bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-8 sm:pt-4 sm:pb-10 lg:pt-6 lg:pb-12">
-            <button
-              type="button"
-              onClick={handleBackNavigation}
+            <Link
+              to="/courses"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-brand-orange transition-colors mb-2 cursor-pointer group"
             >
-              <FiArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform group-hover:-translate-x-0.5" />
-              <span>Back</span>
-            </button>
+              <FiBookOpen className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform" />
+              <span>Back to Courses</span>
+            </Link>
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
                 <h1 className="text-[clamp(1.75rem,3.5vw,3rem)] font-extrabold text-dark-navy leading-[1.15]">
@@ -595,7 +598,7 @@ export default function CourseDetail() {
                     <button
                       type="button"
                       disabled
-                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-emerald-600 text-white font-semibold text-xs sm:text-base rounded-full shadow-md cursor-default transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
                       <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> You're Notified!
                     </button>
@@ -609,14 +612,14 @@ export default function CourseDetail() {
                         setInterestAgree(false);
                         setShowInterest(true);
                       }}
-                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                      className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-orange hover:bg-amber-600 text-white font-semibold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                     >
                       <FiBell className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Notify Me
                     </button>
                   )}
                   <Link
                     to="/courses"
-                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
+                    className="flex-1 sm:flex-none min-w-0 sm:min-w-[210px] px-6 py-3.5 sm:py-4 bg-brand-blue hover:bg-blue-700 text-white font-semibold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap text-center"
                   >
                     <span>Explore All Courses</span>
                     <FiArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -673,11 +676,23 @@ export default function CourseDetail() {
                   </div>
                 )}
                 {interestDone ? (
-                  <div className="p-6 text-center">
-                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
-                      <FiCheck className="w-7 h-7 text-emerald-600" />
+                  <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                      <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Success!</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                      Submission Successful!
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                      Thank you for registering your interest. We will notify you as soon as admissions open!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowInterest(false)}
+                      className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                    >
+                      OK
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleInterestSubmit} className="p-6 space-y-4">
@@ -783,7 +798,7 @@ export default function CourseDetail() {
       {/* Dynamic Futuristic Course CTA */}
       <CourseCTA
         course={course}
-        onCtaClick={() => handleLeftCtaClick()}
+        onCtaClick={(label) => openEnquiryModal(label || 'Course Enquiry')}
       />
 
 
@@ -800,7 +815,7 @@ export default function CourseDetail() {
             <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy whitespace-pre-line">More Courses You Might Like</Reveal>
             <Link
               to="/courses"
-              className="hidden sm:inline-flex items-center gap-2 bg-brand-orange text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
+              className="hidden sm:inline-flex items-center gap-2 bg-brand-orange text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm hover:shadow-md active:scale-95 transition-all cursor-pointer shrink-0 w-fit group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -812,7 +827,7 @@ export default function CourseDetail() {
           <div className="mt-8 flex justify-center sm:hidden">
             <Link
               to="/courses"
-              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-bold text-xs px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm active:scale-95 transition-all cursor-pointer w-auto text-center group"
+              className="inline-flex items-center justify-center gap-2 bg-brand-orange text-white font-semibold text-xs px-5 py-2.5 rounded-full hover:bg-amber-600 shadow-sm active:scale-95 transition-all cursor-pointer w-auto text-center group"
             >
               <span>Explore All Courses</span>
               <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -861,11 +876,23 @@ export default function CourseDetail() {
                   </div>
                 )}
               {brochureDone ? (
-                <div className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
-                    <FiCheck className="w-7 h-7 text-emerald-600" />
+                <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                    <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Success!</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                    Submission Successful!
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                    Thank you for your request. The course brochure details have been processed.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowBrochureModal(false)}
+                    className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                  >
+                    OK
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleBrochureSubmit} className="p-6 space-y-4">
@@ -962,11 +989,23 @@ export default function CourseDetail() {
                 )}
 
               {enquiryDone ? (
-                <div className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
-                    <FiCheck className="w-7 h-7 text-emerald-600" />
+                <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center bg-white rounded-3xl">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-sm">
+                    <FiCheck className="w-9 h-9 sm:w-11 sm:h-11 text-white stroke-[2.5]" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Success!</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-3">
+                    Submission Successful!
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 max-w-xs sm:max-w-sm mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
+                    Thank you for your enquiry. Our course advisor will reach out to you shortly.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowEnquiryModal(false)}
+                    className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold text-sm sm:text-base py-2.5 px-8 sm:py-3 sm:px-10 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+                  >
+                    OK
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleEnquirySubmit} className="p-6 space-y-4">

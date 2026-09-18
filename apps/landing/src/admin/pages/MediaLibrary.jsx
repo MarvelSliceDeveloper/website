@@ -4,8 +4,9 @@ import AdminButton from '../components/AdminButton';
 import { FiCopy, FiTrash2, FiUpload, FiSearch, FiCheck, FiX, FiGrid, FiList, FiFolder, FiFile, FiLayers, FiDownload } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
+import { uploadFile } from '../../lib/uploadHelper';
 
-const BUCKETS = ['hero-images', 'course-thumbnails', 'certificates', 'company-logos', 'nav-icons', 'pages'];
+const BUCKETS = ['server-storage', 'hero-images', 'course-thumbnails', 'certificates', 'company-logos', 'nav-icons', 'pages'];
 
 function formatSize(bytes) {
   if (!bytes) return '';
@@ -42,7 +43,21 @@ async function listFilesRecursive(bucket, prefix = '') {
   return all;
 }
 
+async function listServerUploads() {
+  try {
+    const res = await fetch('/api/uploads');
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.files || [];
+  } catch {
+    return [];
+  }
+}
+
 function getFileUrl(file) {
+  if (file._bucket === 'server-storage' || file.url) {
+    return file.url;
+  }
   return supabase.storage.from(file._bucket).getPublicUrl(file._path).data.publicUrl;
 }
 
@@ -117,8 +132,13 @@ const [confirm, confirmDialog] = useConfirm();
     setLoading(true);
     try {
       if (bucket === 'all') {
-        const results = await Promise.all(BUCKETS.map(b => listFilesRecursive(b)));
-        setFiles(results.flat());
+        const [serverFiles, ...bucketResults] = await Promise.all([
+          listServerUploads(),
+          ...BUCKETS.filter(b => b !== 'server-storage').map(b => listFilesRecursive(b))
+        ]);
+        setFiles([...serverFiles, ...bucketResults.flat()]);
+      } else if (bucket === 'server-storage') {
+        setFiles(await listServerUploads());
       } else {
         setFiles(await listFilesRecursive(bucket));
       }
@@ -141,14 +161,17 @@ const [confirm, confirmDialog] = useConfirm();
   async function handleUpload(e) {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
-    if (bucket === 'all') {
-      alert('Select a specific bucket to upload files.');
-      if (uploadRef.current) uploadRef.current.value = '';
-      return;
-    }
     for (const file of fileList) {
-      const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      await supabase.storage.from(bucket).upload(path, file);
+      try {
+        await uploadFile(file);
+        if (bucket !== 'all' && bucket !== 'server-storage') {
+          const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          await supabase.storage.from(bucket).upload(path, file).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Server storage upload failed:', err);
+        alert(`Upload failed: ${err.message}`);
+      }
     }
     loadFiles();
     if (uploadRef.current) uploadRef.current.value = '';
@@ -159,13 +182,17 @@ const [confirm, confirmDialog] = useConfirm();
     setIsDragging(false);
     const fileList = e.dataTransfer.files;
     if (!fileList || fileList.length === 0) return;
-    if (bucket === 'all') {
-      alert('Select a specific bucket to upload files.');
-      return;
-    }
     for (const file of fileList) {
-      const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      await supabase.storage.from(bucket).upload(path, file);
+      try {
+        await uploadFile(file);
+        if (bucket !== 'all' && bucket !== 'server-storage') {
+          const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          await supabase.storage.from(bucket).upload(path, file).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Server storage upload failed:', err);
+        alert(`Upload failed: ${err.message}`);
+      }
     }
     loadFiles();
   }
@@ -189,7 +216,19 @@ const [confirm, confirmDialog] = useConfirm();
 
   async function deleteFile(file) {
     if (!(await confirm(`Delete "${file.name}"?`))) return;
-    await supabase.storage.from(file._bucket).remove([file._path]);
+    if (file._bucket === 'server-storage') {
+      try {
+        await fetch('/api/delete-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name }),
+        });
+      } catch (err) {
+        console.error('Failed to delete server storage file:', err);
+      }
+    } else {
+      await supabase.storage.from(file._bucket).remove([file._path]);
+    }
     loadFiles();
   }
 

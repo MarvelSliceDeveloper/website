@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiCheckCircle, FiMapPin, FiPhone, FiMail, FiBriefcase } from 'react-icons/fi';
+import { FiCheckCircle, FiMapPin, FiPhone, FiMail, FiBriefcase, FiClock } from 'react-icons/fi';
 import * as LuIcons from 'react-icons/lu';
 import Button from './Button';
 import Card from './Card';
@@ -283,26 +283,129 @@ export default function SectionRenderer({ section, className }) {
         </div>
       );
     }
-    case 'contact_info':
+    case 'contact_info': {
+      const phoneItems = [];
+      const phoneComp = section.phone_competitive || section.phone_1;
+      const phoneSoft = section.phone_software || section.phone_2;
+
+      if (phoneComp) {
+        phoneItems.push({
+          heading: section.phone_competitive_heading || section.phone_1_heading || 'Competitive Exam Enquiry',
+          phone: phoneComp,
+        });
+      }
+      if (phoneSoft) {
+        phoneItems.push({
+          heading: section.phone_software_heading || section.phone_2_heading || 'Software Enquiry',
+          phone: phoneSoft,
+        });
+      }
+      if (phoneItems.length === 0 && (section.phone || section.display_phone)) {
+        extractPhoneNumbers(section.phone || section.display_phone).forEach((ph, idx) => {
+          phoneItems.push({
+            heading: idx === 0 ? 'Competitive Exam Enquiry' : idx === 1 ? 'Software Enquiry' : 'Enquiry',
+            phone: ph,
+          });
+        });
+      }
+
+      let emailItems = [];
+      if (Array.isArray(section.emails) && section.emails.length > 0) {
+        emailItems = section.emails
+          .filter(e => e && (e.email || e.heading))
+          .map(e => ({ heading: e.heading || '', email: e.email || '' }));
+      } else if (section.email) {
+        emailItems = [{ heading: section.email_heading || '', email: section.email }];
+      }
+
+      const workingTime = section.working_time || section.business_hours || '';
+      const workingTimeSaturday = section.working_time_saturday || section.saturday_hours || '';
+
       return (
         <Reveal className="py-12 sm:py-16 max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
           {section.heading && <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6 text-center leading-tight sm:leading-snug">{section.heading}</h2>}
           <div className="space-y-4">
-            {section.address && <div className="flex items-start gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMapPin className="w-5 h-5 text-brand-orange" /></div><div className="text-slate-600 text-sm sm:text-base font-normal whitespace-pre-line">{section.address}</div></div>}
-            {section.phone && extractPhoneNumbers(section.phone).map((ph, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
-                  <FiPhone className="w-5 h-5 text-brand-orange" />
+            {section.address && (
+              <div className="flex flex-col text-left">
+                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">Address</h5>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                    <FiMapPin className="w-5 h-5 text-brand-orange" />
+                  </div>
+                  <div className="text-slate-600 text-sm sm:text-base font-normal whitespace-pre-line">{section.address}</div>
                 </div>
-                <a href={cleanTelHref(ph)} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">
-                  {ph}
-                </a>
+              </div>
+            )}
+            {phoneItems.map((ph, idx) => (
+              <div key={idx} className="flex flex-col text-left">
+                {ph.heading && (
+                  <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">{ph.heading}</h5>
+                )}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                    <FiPhone className="w-5 h-5 text-brand-orange" />
+                  </div>
+                  <a href={cleanTelHref(ph.phone)} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">
+                    {ph.phone}
+                  </a>
+                </div>
               </div>
             ))}
-            {section.email && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0"><FiMail className="w-5 h-5 text-brand-orange" /></div><a href={`mailto:${section.email}`} className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors">{section.email}</a></div>}
+            {emailItems.length > 0 && (
+              <div className="flex flex-col text-left">
+                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">
+                  EMAIL
+                </h5>
+                <div className="space-y-2">
+                  {emailItems.map((em, idx) => (
+                    <div key={idx} className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiMail className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <a
+                        href={`mailto:${em.email}`}
+                        className="text-slate-600 text-sm sm:text-base font-normal hover:text-brand-orange transition-colors"
+                      >
+                        {em.email}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(workingTime || workingTimeSaturday) && (
+              <div className="flex flex-col text-left">
+                <h5 className="font-bold uppercase tracking-wider text-[10px] sm:text-xs text-slate-500 mb-1">
+                  WORKING TIME
+                </h5>
+                <div className="space-y-2">
+                  {workingTime && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiClock className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <span className="text-slate-600 text-sm sm:text-base font-normal">
+                        {workingTime}
+                      </span>
+                    </div>
+                  )}
+                  {workingTimeSaturday && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center shrink-0">
+                        <FiClock className="w-5 h-5 text-brand-orange" />
+                      </div>
+                      <span className="text-slate-600 text-sm sm:text-base font-normal">
+                        {workingTimeSaturday}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </Reveal>
       );
+    }
     case 'map_embed': {
       const raw = section.content || '';
       const match = raw.match(/src=["']([^"']+)["']/);

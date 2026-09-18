@@ -1,5 +1,8 @@
+import { Link } from 'react-router-dom';
 import HeroBackground from './HeroBackground';
-import { FiArrowLeft, FiCheckCircle, FiPlay, FiBarChart2 } from 'react-icons/fi';
+import { FiBookOpen, FiCheckCircle, FiPlay, FiBarChart2 } from 'react-icons/fi';
+import Reveal, { Stagger, StaggerItem } from './Reveal';
+import Button from './Button';
 
 function VideoVisual({ embedUrl, videoPlaying, setVideoPlaying, trackVideoPlay, course }) {
   return (
@@ -76,26 +79,25 @@ export default function CourseHero({
   const points = (Array.isArray(rawPoints) ? rawPoints : []).filter(Boolean).slice(0, 6);
 
   return (
-    <section className="relative overflow-hidden bg-white py-8 sm:py-14 lg:py-16">
+    <section className="relative overflow-hidden bg-white pt-3 sm:pt-5 lg:pt-6 pb-8 sm:pb-14 lg:pb-16">
       {/* Reusable Modular Hero Visual Background */}
       <HeroBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Link - Hidden on Mobile */}
-        {handleBackNavigation && (
-          <button
-            type="button"
-            onClick={handleBackNavigation}
-            className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E56C7] hover:text-blue-700 transition-colors mb-5 cursor-pointer group"
+        {/* Back to Courses Link */}
+        <Reveal variant="up" delay={0.05}>
+          <Link
+            to="/courses"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E56C7] hover:text-blue-700 transition-colors mb-3 sm:mb-4 cursor-pointer group"
           >
-            <FiArrowLeft className="w-4 h-4 text-[#1E56C7] group-hover:-translate-x-1 transition-transform duration-200" />
-            <span>Back</span>
-          </button>
-        )}
+            <FiBookOpen className="w-4 h-4 text-[#1E56C7] group-hover:scale-110 transition-transform duration-200" />
+            <span>Back to Courses</span>
+          </Link>
+        </Reveal>
 
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* LEFT SIDE (Content) ~ 48% width */}
-          <div className="lg:col-span-6 flex flex-col items-start text-left">
+          <Reveal variant="up" className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Dynamic Title */}
             <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.65rem] font-extrabold text-[#1E56C7] leading-tight tracking-tight w-full max-w-full lg:max-w-xl text-left whitespace-pre-line">
               {course.title}
@@ -110,7 +112,7 @@ export default function CourseHero({
 
             {/* Dynamic Description */}
             {course.description && (
-              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] w-full max-w-full lg:max-w-[600px] indent-6 whitespace-pre-line">
+              <p className="mt-4 lg:mt-5 text-sm sm:text-base lg:text-base text-slate-600 leading-relaxed lg:leading-[1.6] text-justify [text-align-last:left] w-full max-w-full lg:max-w-[600px] indent-6 whitespace-pre-line">
                 {course.description}
               </p>
             )}
@@ -129,47 +131,51 @@ export default function CourseHero({
             {/* Dynamic Course Points (Keys) */}
             {points.length > 0 && (
               <div className="mt-5 lg:mt-6 w-full max-w-[600px]">
-                <div className="grid grid-cols-1 gap-2.5 text-left">
+                <Stagger className="grid grid-cols-1 gap-2.5 text-left">
                   {points.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5 min-w-0">
+                    <StaggerItem key={i} className="flex items-start gap-2.5 min-w-0">
                       <FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
                       <span className="text-[15px] sm:text-base font-medium text-slate-600 leading-snug break-words">
                         {typeof item === 'string' ? item : (item?.label || item?.title || '')}
                       </span>
-                    </div>
+                    </StaggerItem>
                   ))}
-                </div>
+                </Stagger>
               </div>
             )}
 
             {/* Responsive CTA Buttons: Equal width (even) and centered on tablet & mobile */}
             <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 mt-6 lg:mt-8 w-full max-w-xl mx-auto lg:mx-0">
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                shape="pill"
+                size="lg"
                 onClick={() => {
                   if (onLeftCtaClick) {
                     onLeftCtaClick();
                   } else {
-                    openEnquiryModal?.(course.cta_left || 'Talk to Advisor/Pay Now');
+                    openEnquiryModal?.(course.cta_left || 'Talk to Advisor');
                   }
                 }}
-                className="flex-1 px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 bg-brand-orange hover:bg-amber-600 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center whitespace-nowrap min-h-[44px] sm:min-h-[48px]"
+                className="flex-1 !font-semibold text-xs sm:text-[18px] lg:text-[18px] px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
               >
-                {course.cta_left || 'Talk to Advisor/Pay Now'}
-              </button>
+                {course.cta_left || 'Talk to Advisor'}
+              </Button>
 
-              <button
-                type="button"
-                onClick={() => openEnquiryModal?.(course.cta_right || 'Download Brochure')}
-                className="flex-1 px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 bg-brand-blue hover:bg-blue-700 text-white font-extrabold text-xs sm:text-base rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center text-center whitespace-nowrap min-h-[44px] sm:min-h-[48px]"
+              <Button
+                variant="primary"
+                shape="pill"
+                size="lg"
+                onClick={() => openEnquiryModal?.(course.cta_right || 'Brochure Enquiry')}
+                className="flex-1 !bg-brand-blue hover:!bg-blue-700 !font-semibold text-xs sm:text-[18px] lg:text-[18px] px-4 sm:px-8 lg:px-9 py-3 sm:py-3.5 lg:py-4 min-h-[44px] sm:min-h-[48px] shadow-md hover:shadow-lg whitespace-nowrap"
               >
-                {course.cta_right || 'Download Brochure'}
-              </button>
+                {course.cta_right || 'Brochure Enquiry'}
+              </Button>
             </div>
-          </div>
+          </Reveal>
 
           {/* RIGHT SIDE (Desktop Video Visual) ~ 52% width */}
-          <div className="hidden lg:flex lg:col-span-6 relative items-center justify-center w-full lg:translate-y-6">
+          <Reveal variant="left" className="hidden lg:flex lg:col-span-6 relative items-center justify-center w-full lg:translate-y-6">
             <VideoVisual
               embedUrl={embedUrl}
               videoPlaying={videoPlaying}
@@ -177,7 +183,7 @@ export default function CourseHero({
               trackVideoPlay={trackVideoPlay}
               course={course}
             />
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

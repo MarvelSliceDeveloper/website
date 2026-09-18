@@ -18,8 +18,50 @@ function row(label, value) {
   </tr>`;
 }
 
+async function sendWhatsAppNotification() {
+  // WhatsApp Cloud API disabled — email notifications are active for user & admin
+  return;
+}
+
 async function handleApiRequest(req, res, body) {
   const ts = new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+
+  if (req.url === '/api/notify-whatsapp') {
+    const { phone, message, token, phoneId } = body;
+    const finalToken = token || process.env.WHATSAPP_ACCESS_TOKEN || process.env.VITE_WHATSAPP_ACCESS_TOKEN;
+    const finalPhoneId = phoneId || process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.VITE_WHATSAPP_PHONE_NUMBER_ID;
+    const targetPhone = phone || process.env.WHATSAPP_RECIPIENT_PHONE || process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
+
+    const clean = String(targetPhone || '').replace(/[^\d]/g, '');
+    const finalPhone = clean.length === 10 ? `91${clean}` : clean;
+    const cleanPhoneId = String(finalPhoneId || '').trim().replace(/[^\d]/g, '');
+
+    if (!finalToken || !cleanPhoneId || !finalPhone || !message) {
+      return res.end(JSON.stringify({ success: false, error: 'Missing WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, phone recipient, or message' }));
+    }
+
+    try {
+      const metaUrl = `https://graph.facebook.com/v20.0/${cleanPhoneId}/messages`;
+      const resp = await fetch(metaUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${finalToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: finalPhone,
+          type: 'text',
+          text: { preview_url: false, body: message },
+        }),
+      });
+      const json = await resp.json();
+      return res.end(JSON.stringify({ success: resp.ok, data: json }));
+    } catch (err) {
+      return res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+  }
 
   if (req.url === '/api/submit-career' || req.url === '/api/submit-career-contact') {
     const careerConfig = getCareerTransporter();
@@ -65,6 +107,13 @@ async function handleApiRequest(req, res, body) {
     } catch (err) {
       console.error('[server.js] Error sending career email:', err.message);
     }
+    sendCallMeBotNotification({
+      formName: req.url === '/api/submit-career' ? 'Career Application' : 'Career Contact',
+      name: full_name,
+      phone,
+      email,
+      details: [position, category, description].filter(Boolean).join(' | '),
+    }).catch(() => {});
     return res.end(JSON.stringify({ success: true }));
   }
 
@@ -72,7 +121,7 @@ async function handleApiRequest(req, res, body) {
   if (!generalConfig) return res.end(JSON.stringify({ success: true }));
   const { transporter, user: smtpUser, adminEmail } = generalConfig;
 
-  if (req.url === '/api/submit-contact' || req.url === '/api/submit-form' || req.url === '/api/submit-enquiry' || req.url === '/api/submit-about') {
+  if (req.url === '/api/submit-contact' || req.url === '/api/submit-form' || req.url === '/api/submit-enquiry' || req.url === '/api/submit-about' || req.url === '/api/submit-brochure') {
     const { full_name, name, email, phone, role, message, course_title, button_clicked } = body;
     const clientName = full_name || name || 'User';
     if (!email) return res.end(JSON.stringify({ error: 'Email is required' }));
@@ -107,11 +156,20 @@ async function handleApiRequest(req, res, body) {
     </div>`;
 
     try {
-      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Inquiry from ${clientName}`, html: adminHtml });
-      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Inquiry Received — Marvel Slice', html: autoReplyHtml });
+      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: adminEmail, subject: `New Enquiry from ${clientName}`, html: adminHtml });
+      await transporter.sendMail({ from: `"Marvel Slice" <${smtpUser}>`, to: email, subject: 'Enquiry Received — Marvel Slice', html: autoReplyHtml });
     } catch (err) {
       console.error('[server.js] Error sending contact email:', err.message);
     }
+    sendCallMeBotNotification({
+      formName: req.url === '/api/submit-form' ? 'Demo Class Request' : (req.url === '/api/submit-enquiry' ? 'Course Enquiry' : (req.url === '/api/submit-brochure' ? 'Brochure Download' : 'Contact Us Form')),
+      name: clientName,
+      phone,
+      email,
+      role,
+      course: course_title,
+      details: message || button_clicked,
+    }).catch(() => {});
     return res.end(JSON.stringify({ success: true }));
   }
 
@@ -139,6 +197,14 @@ async function handleApiRequest(req, res, body) {
     } catch (err) {
       console.error('[server.js] Error sending banking email:', err.message);
     }
+    sendCallMeBotNotification({
+      formName: 'Banking Course Enquiry',
+      name: full_name,
+      phone,
+      email,
+      course: course_title || 'Banking & Finance Training',
+      details: location,
+    }).catch(() => {});
     return res.end(JSON.stringify({ success: true }));
   }
 

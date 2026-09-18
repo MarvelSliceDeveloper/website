@@ -1,5 +1,12 @@
 async function compressImage(file, maxWidth = 1920, quality = 0.82) {
-  if (!file || !file.type?.startsWith('image/') || file.type?.includes('svg')) {
+  if (
+    !file ||
+    !file.type?.startsWith('image/') ||
+    file.type?.includes('svg') ||
+    file.type?.includes('png') ||
+    file.type?.includes('gif') ||
+    file.type?.includes('webp')
+  ) {
     return file;
   }
   return new Promise((resolve) => {
