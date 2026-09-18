@@ -11,16 +11,10 @@ RUN corepack enable && corepack prepare pnpm@11.1.1 --activate \
 WORKDIR /app
 
 # ─── Prune workspace to @lms/web (+ @lms/config, @lms/types) ───
-# Invalidates only when manifests/lockfile change — never on source edits.
+# Needs full source so out/full is complete; prune itself takes <1s and the
+# downstream deps stage stays cached (its inputs are out/json + lockfile).
 FROM base AS pruner
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/web/package.json apps/web/package.json
-COPY apps/api/package.json apps/api/package.json
-COPY apps/landing/package.json apps/landing/package.json
-COPY packages/config/package.json packages/config/package.json
-COPY packages/email-templates/package.json packages/email-templates/package.json
-COPY packages/types/package.json packages/types/package.json
-COPY packages/utils/package.json packages/utils/package.json
+COPY . ./
 RUN turbo prune @lms/web --docker
 
 # ─── Dependencies (cached, pruned) ───
