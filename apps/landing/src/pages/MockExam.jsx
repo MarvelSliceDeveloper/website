@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiX, FiLoader, FiClock, FiAward, FiHelpCircle, FiCheck, FiRefreshCw, FiList, FiAlertCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiX, FiLoader, FiClock, FiAward, FiHelpCircle, FiCheck, FiRefreshCw, FiList, FiAlertCircle, FiBookmark } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
@@ -152,9 +152,9 @@ export default function MockExam() {
 
   // User Reg Form before starting test
   const [showUserRegModal, setShowUserRegModal] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [userPhone, setUserPhone] = useState('');
+  const [userName, setUserName] = useState('Lethin');
+  const [userEmail, setUserEmail] = useState('lethin@example.com');
+  const [userPhone, setUserPhone] = useState('+91 98765 43210');
   const [userDept, setUserDept] = useState('Computer Science & Engineering');
   const [userYear, setUserYear] = useState('3rd Year');
   const [userCollege, setUserCollege] = useState('Marvel Institute of Technology');
@@ -164,6 +164,7 @@ export default function MockExam() {
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({}); // { [qId]: optionIndex }
+  const [markedForReview, setMarkedForReview] = useState({}); // { [qId]: boolean }
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
@@ -194,6 +195,21 @@ export default function MockExam() {
     };
   }, [quizStarted, quizFinished, timeLeftSeconds]);
 
+  // Prevent background scrolling when test or result modal is open
+  useEffect(() => {
+    if (quizStarted || quizFinished) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [quizStarted, quizFinished]);
+
   async function fetchActiveExams() {
     setLoadingExams(true);
     const { data, error } = await supabase
@@ -211,15 +227,15 @@ export default function MockExam() {
     setLoadingExams(false);
   }
 
-  // Triggered when user clicks "Start Test" on an exam card
+  // Triggered when user clicks "Start Test" on an exam card - DIRECTLY STARTS QUIZ
   async function handleSelectExam(exam) {
     setSelectedExam(exam);
     setLoadingQuestions(true);
 
+    let questions = [];
     if (exam.questions) {
       // Demo exam with inline questions
-      setExamQuestions(exam.questions);
-      setLoadingQuestions(false);
+      questions = exam.questions;
     } else {
       // Fetch questions from Supabase
       const { data, error } = await supabase
@@ -229,23 +245,33 @@ export default function MockExam() {
         .order('order_index', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        setExamQuestions(data.map(q => ({
+        questions = data.map(q => ({
           id: q.id,
           question_text: q.question_text,
           options: Array.isArray(q.options) ? q.options : [],
           correct_option: q.correct_option ?? 0,
           explanation: q.explanation || '',
           marks: q.marks || 1
-        })));
+        }));
       } else {
         // Fallback if no questions added yet in DB
-        setExamQuestions(DEMO_EXAMS[0].questions);
+        questions = DEMO_EXAMS[0].questions;
       }
-      setLoadingQuestions(false);
     }
 
-    // Open User Info Registration Modal before starting test
-    setShowUserRegModal(true);
+    setExamQuestions(questions);
+    setLoadingQuestions(false);
+
+    // Skip registration modal and start quiz immediately
+    setQuizStarted(true);
+    setQuizFinished(false);
+    setQuizResult(null);
+    setCurrentQIndex(0);
+    setUserAnswers({});
+    setMarkedForReview({});
+    const totalSecs = (exam.time_limit_mins || 20) * 60;
+    setTimeLeftSeconds(totalSecs);
+    trackEnroll(exam.title || 'Mock Exam', 'mock_exam_quiz');
   }
 
   function handleUserRegSubmit(e) {
@@ -270,6 +296,7 @@ export default function MockExam() {
     setQuizResult(null);
     setCurrentQIndex(0);
     setUserAnswers({});
+    setMarkedForReview({});
     const totalSecs = (selectedExam?.time_limit_mins || 20) * 60;
     setTimeLeftSeconds(totalSecs);
     trackEnroll(selectedExam?.title || 'Mock Exam', 'mock_exam_quiz');
@@ -360,6 +387,7 @@ export default function MockExam() {
     setQuizStarted(false);
     setQuizFinished(false);
     setQuizResult(null);
+    setMarkedForReview({});
   }
 
   function formatTime(seconds) {
@@ -370,139 +398,169 @@ export default function MockExam() {
 
   const allExamsList = dbExams;
 
-  return (
-    <div className="bg-white min-h-screen text-slate-800">
-      <div className="banking-career-content">
-        {/* ACTIVE TIMED QUIZ INTERFACE */}
-        {quizStarted && selectedExam && (
-          <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
-            {/* QUIZ HEADER */}
-            <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 shrink-0 shadow-xs">
-              <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-3">
-                {/* TOP LEFT: CANDIDATE PHOTO & DETAILS */}
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
-                    <svg className="w-8 h-8 sm:w-9 sm:h-9 text-slate-400 mt-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                    </svg>
-                  </div>
-                  <div className="text-[11px] sm:text-xs leading-tight text-slate-600 font-medium space-y-0.5">
-                    <div><span className="font-bold text-slate-800">Name:</span> {userName.trim() || 'John Doe'}</div>
-                    <div><span className="font-bold text-slate-800">Department:</span> {userDept || 'Computer Science & Engineering'}</div>
-                    <div><span className="font-bold text-slate-800">Year:</span> {userYear || '3rd Year'}</div>
-                    <div><span className="font-bold text-slate-800">College:</span> {userCollege || 'Marvel Institute of Technology'}</div>
-                  </div>
-                </div>
-
-                {/* CENTER: UNCLICKABLE STATIC LOGO & COMPANY NAME */}
-                <div className="flex items-center gap-2 select-none cursor-default justify-center mx-auto md:mx-0">
-                  {settings?.logo_url ? (
-                    <img
-                      src={settings.logo_url}
-                      alt="Marvel Slice Logo"
-                      className="h-8 sm:h-9 w-auto object-contain pointer-events-none"
-                    />
-                  ) : (
-                    <img
-                      src="/apple-touch-icon.png"
-                      alt="Marvel Slice Logo"
-                      className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  )}
-                  <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-                    Marvel <span className="text-brand-orange">Slice</span>
-                  </span>
-                </div>
-
-                {/* RIGHT SIDE: TIMER & SUBMIT BUTTON */}
-                <div className="flex items-center gap-3.5 shrink-0 ml-auto md:ml-0">
-                  <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs sm:text-sm font-bold shadow-2xs ${
-                    timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50 text-amber-800 border border-amber-200/80'
-                  }`}>
-                    <FiClock className="w-4 h-4 shrink-0 text-amber-600" />
-                    <span>{formatTime(timeLeftSeconds)}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSubmitQuiz(false)}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
-                  >
-                    Submit Test
-                  </button>
-                </div>
+  // ACTIVE TIMED QUIZ INTERFACE (EARLY RETURN FOR FULL ISOLATION)
+  if (quizStarted && selectedExam) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
+        {/* QUIZ HEADER (ENLARGED & SPACIOUS WITH CENTERED LOGO) */}
+        <header className="bg-white border-b border-slate-200 px-6 sm:px-8 lg:px-10 py-4 sm:py-5 shrink-0 shadow-sm z-10 relative">
+          <div className="flex items-center justify-between gap-4 relative">
+            {/* TOP LEFT: CANDIDATE PHOTO & DETAILS */}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
+                <svg className="w-10 h-10 sm:w-11 sm:h-11 text-slate-400 mt-1.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
               </div>
-            </header>
+              <div className="text-xs sm:text-sm leading-snug text-slate-600 font-medium space-y-0.5">
+                <div><span className="font-bold text-slate-800">Name:</span> {userName.trim() || 'Lethin'}</div>
+                <div><span className="font-bold text-slate-800">Department:</span> {userDept || 'Computer Science & Engineering'}</div>
+                <div><span className="font-bold text-slate-800">Year:</span> {userYear || '3rd Year'}</div>
+                <div><span className="font-bold text-slate-800">College:</span> {userCollege || 'Marvel Institute of Technology'}</div>
+              </div>
+            </div>
 
-            {/* QUIZ MAIN BODY */}
-            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-50">
-              {/* QUESTION CONTENT AREA */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                {examQuestions.length > 0 && (
-                  <div className="max-w-3xl mx-auto space-y-6">
-                    {/* QUESTION TITLE BAR */}
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                      <span className="text-xs font-bold text-slate-500">
-                        Question {currentQIndex + 1} of {examQuestions.length}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                          +{examQuestions[currentQIndex]?.marks || 1} Mark
-                        </span>
-                      </div>
-                    </div>
+            {/* CENTER: UNCLICKABLE STATIC LOGO, COMPANY NAME & EXAM TITLE (PERFECTLY CENTERED) */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center select-none cursor-default justify-center pointer-events-none text-center">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                {settings?.logo_url ? (
+                  <img
+                    src={settings.logo_url}
+                    alt="Marvel Slice Logo"
+                    className="h-8 sm:h-10 w-auto object-contain pointer-events-none"
+                  />
+                ) : (
+                  <img
+                    src="/apple-touch-icon.png"
+                    alt="Marvel Slice Logo"
+                    className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                )}
+                <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                  Marvel <span className="text-brand-orange">Slice</span>
+                </span>
+              </div>
+              <span className="text-sm sm:text-base font-normal text-slate-600 tracking-wide mt-0.5">
+                Exam Title: {selectedExam?.title || 'Mock Exam'}
+              </span>
+            </div>
 
-                    {/* QUESTION STATEMENT */}
-                    <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
-                      <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 whitespace-pre-line">
-                        {examQuestions[currentQIndex]?.question_text}
-                      </p>
-                    </div>
+            {/* RIGHT SIDE: LIVE COUNTDOWN TIMER ONLY */}
+            <div className="flex items-center gap-4 shrink-0 ml-auto">
+              <div className={`flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-mono text-sm sm:text-base font-bold shadow-xs ${
+                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50 text-amber-800 border border-amber-200/80'
+              }`}>
+                <FiClock className="w-5 h-5 shrink-0 text-amber-600" />
+                <span>{formatTime(timeLeftSeconds)}</span>
+              </div>
+            </div>
+          </div>
+        </header>
 
-                    {/* OPTIONS GRID */}
-                    <div className="space-y-3">
-                      {examQuestions[currentQIndex]?.options.map((optText, optIdx) => {
-                        const qId = examQuestions[currentQIndex]?.id;
-                        const isSelected = userAnswers[qId] === optIdx;
-                        const optLabel = String.fromCharCode(65 + optIdx);
+        {/* QUIZ MAIN BODY */}
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-50">
+          {/* QUESTION CONTENT AREA */}
+          <div className="flex-1 min-h-0 flex flex-col bg-slate-50 border-r border-slate-200">
+            {examQuestions.length > 0 && (
+              <div className="flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto p-4 sm:p-6">
+                {/* QUESTION TOP BAR */}
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Question {currentQIndex + 1} of {examQuestions.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-2xs">
+                      +{examQuestions[currentQIndex]?.marks || 1} Mark
+                    </span>
+                  </div>
+                </div>
 
-                        return (
-                          <button
-                            key={optIdx}
-                            type="button"
-                            onClick={() => handleOptionSelect(qId, optIdx)}
-                            className={`w-full flex items-start gap-3.5 p-4 rounded-xl text-left border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-blue-50/80 border-brand-blue text-brand-blue font-semibold ring-1 ring-brand-blue shadow-xs'
-                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
-                              isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                            }`}>
-                              {optLabel}
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium leading-relaxed pt-0.5">
-                              {optText}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                {/* SEPARATE SCROLLABLE QUESTION & OPTIONS SECTION */}
+                <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-5 min-h-0">
+                  {/* QUESTION STATEMENT */}
+                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs">
+                    <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 whitespace-pre-line">
+                      {examQuestions[currentQIndex]?.question_text}
+                    </p>
+                  </div>
 
-                    {/* NAVIGATION CONTROL BUTTONS */}
-                    <div className="pt-4 flex items-center justify-between border-t border-slate-200">
+                  {/* OPTIONS GRID */}
+                  <div className="space-y-3 pb-2">
+                    {examQuestions[currentQIndex]?.options.map((optText, optIdx) => {
+                      const qId = examQuestions[currentQIndex]?.id;
+                      const isSelected = userAnswers[qId] === optIdx;
+                      const optLabel = String.fromCharCode(65 + optIdx);
+
+                      return (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => handleOptionSelect(qId, optIdx)}
+                          className={`w-full flex items-start gap-3.5 p-4 rounded-xl text-left transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-blue-50/90 border-2 border-brand-blue text-brand-blue font-semibold shadow-2xs'
+                              : 'bg-white border-2 border-slate-200/90 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
+                            isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
+                            {optLabel}
+                          </div>
+                          <span className="text-xs sm:text-sm font-medium leading-relaxed pt-0.5">
+                            {optText}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ACTION BUTTONS & LEGEND BAR (MATCHING USER MOCKUP EXACTLY) */}
+                <div className="pt-4 mt-2 border-t border-slate-200 shrink-0 bg-slate-50 space-y-3">
+                  {/* TOP ROW: ACTION BUTTONS */}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      {/* Mark for review Button */}
                       <button
                         type="button"
-                        disabled={currentQIndex === 0}
-                        onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
-                        className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-xs disabled:opacity-40 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        onClick={() => {
+                          const qId = examQuestions[currentQIndex]?.id;
+                          if (qId) {
+                            setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
+                          }
+                        }}
+                        className={`px-5 py-2.5 rounded-full font-semibold text-xs sm:text-sm text-white transition-colors cursor-pointer shadow-xs active:scale-95 ${
+                          markedForReview[examQuestions[currentQIndex]?.id]
+                            ? 'bg-rose-950 ring-2 ring-rose-500'
+                            : 'bg-[#ad0909] hover:bg-[#8e0707]'
+                        }`}
                       >
-                        <FiArrowLeft className="w-4 h-4" />
-                        <span>Previous</span>
+                        {markedForReview[examQuestions[currentQIndex]?.id] ? 'Marked for Review' : 'Mark for review'}
                       </button>
 
+                      {/* Grouped Previous & Next Buttons */}
+                      <div className="inline-flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={currentQIndex === 0}
+                          onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
+                          className="px-5 py-2.5 rounded-l-full rounded-r-xs bg-[#2b78c5] hover:bg-[#2063a7] text-white font-semibold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          disabled={currentQIndex === examQuestions.length - 1}
+                          onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
+                          className="px-5 py-2.5 rounded-r-full rounded-l-xs bg-[#2b78c5] hover:bg-[#2063a7] text-white font-semibold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                        >
+                          Next
+                        </button>
+                      </div>
+
+                      {/* Clear Choice Button */}
                       <button
                         type="button"
                         onClick={() => setUserAnswers(prev => {
@@ -510,234 +568,307 @@ export default function MockExam() {
                           delete copy[examQuestions[currentQIndex]?.id];
                           return copy;
                         })}
-                        className="text-xs text-slate-500 hover:text-slate-700 underline cursor-pointer"
+                        className="px-4 py-2.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
                       >
                         Clear Choice
                       </button>
-
-                      {currentQIndex < examQuestions.length - 1 ? (
-                        <button
-                          type="button"
-                          onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
-                          className="px-5 py-2 rounded-xl bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-                        >
-                          <span>Next Question</span>
-                          <FiArrowRight className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSubmitQuiz(false)}
-                          className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-                        >
-                          <span>Finish Test</span>
-                          <FiCheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
-                  </div>
-                )}
-              </div>
 
-              {/* SIDE QUESTION PALETTE */}
-              <div className="w-full lg:w-72 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 p-4 shrink-0 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Question Palette ({examQuestions.length})
-                  </h3>
-
-                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 max-h-48 lg:max-h-96 overflow-y-auto pr-1">
-                    {examQuestions.map((q, idx) => {
-                      const isAnswered = userAnswers[q.id] !== undefined;
-                      const isCurrent = currentQIndex === idx;
-
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setCurrentQIndex(idx)}
-                          className={`w-9 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
-                            isCurrent
-                              ? 'ring-2 ring-brand-blue text-white bg-brand-blue shadow-xs'
-                              : isAnswered
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-extrabold'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
-                          }`}
-                        >
-                          {idx + 1}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-200 text-[11px] text-slate-500 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded bg-emerald-50 border border-emerald-300 inline-block" />
-                    <span>Answered</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded bg-slate-100 border border-slate-200 inline-block" />
-                    <span>Unanswered</span>
+                    {/* Submit Test Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleSubmitQuiz(false)}
+                      className="px-6 py-2.5 rounded-full bg-[#2d8a39] hover:bg-[#23702c] text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 ml-auto"
+                    >
+                      Submit Test
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
 
-        {/* QUIZ RESULT & SOLUTION REVIEW SCREEN */}
-        {quizFinished && quizResult && selectedExam && (
-          <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto p-4 sm:p-6 lg:p-8 text-slate-800">
-            <div className="max-w-4xl mx-auto space-y-8 py-6">
-              {/* RESULT SCORE CARD */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl text-center space-y-6">
-                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-                  <FiAward className="w-8 h-8" />
-                </div>
+          {/* SIDE QUESTION PALETTE */}
+          <div className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 p-5 shrink-0 overflow-y-auto flex flex-col justify-between">
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Question Palette ({examQuestions.length})
+              </h3>
 
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-orange bg-amber-50 px-3 py-1 rounded-full border border-amber-200/80">
-                    Test Completed
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-dark-navy mt-2">
-                    {selectedExam.title}
-                  </h2>
-                </div>
+              <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2.5 pr-1">
+                {examQuestions.map((q, idx) => {
+                  const isAnswered = userAnswers[q.id] !== undefined;
+                  const isMarked = markedForReview[q.id];
+                  const isCurrent = currentQIndex === idx;
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Total Score</p>
-                    <p className="text-2xl font-black text-brand-blue mt-1">
-                      {quizResult.score} / {quizResult.totalQuestions}
-                    </p>
-                  </div>
+                  let fillColor = "#f1f5f9";
+                  let strokeColor = "#cbd5e1";
+                  let textColor = "#334155";
+                  let isGradient = false;
 
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Accuracy Rate</p>
-                    <p className="text-2xl font-black text-emerald-600 mt-1">
-                      {quizResult.percentage}%
-                    </p>
-                  </div>
+                  if (isCurrent) {
+                    fillColor = isAnswered ? "#059669" : "#2563eb";
+                    strokeColor = "#1d4ed8";
+                    textColor = "#ffffff";
+                  } else if (isAnswered && isMarked) {
+                    isGradient = true;
+                    strokeColor = "#7e22ce";
+                    textColor = "#ffffff";
+                  } else if (isMarked) {
+                    fillColor = "#9333ea";
+                    strokeColor = "#7e22ce";
+                    textColor = "#ffffff";
+                  } else if (isAnswered) {
+                    fillColor = "#059669";
+                    strokeColor = "#047857";
+                    textColor = "#ffffff";
+                  }
 
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Correct / Wrong</p>
-                    <p className="text-2xl font-black text-amber-600 mt-1">
-                      {quizResult.correctCount} / {quizResult.wrongCount}
-                    </p>
-                  </div>
+                  const isCircleShape = isAnswered;
 
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Time Taken</p>
-                    <p className="text-2xl font-black text-indigo-600 mt-1">
-                      {formatTime(quizResult.timeTakenSeconds)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleRetakeTest}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
-                  >
-                    <FiRefreshCw className="w-4 h-4" />
-                    <span>Retake Test</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleBackToExams}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl border border-slate-200 transition-all cursor-pointer"
-                  >
-                    <FiArrowLeft className="w-4 h-4" />
-                    <span>Back to All Mock Exams</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* DETAILED QUESTION SOLUTION REVIEW */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-dark-navy flex items-center gap-2">
-                  <FiList className="w-5 h-5 text-brand-orange" />
-                  <span>Question-by-Question Solution Review</span>
-                </h3>
-
-                <div className="space-y-4">
-                  {examQuestions.map((q, idx) => {
-                    const userAns = userAnswers[q.id];
-                    const isAnswered = userAns !== undefined;
-                    const isCorrect = isAnswered && Number(userAns) === Number(q.correct_option);
-
-                    return (
-                      <div
-                        key={q.id || idx}
-                        className={`bg-white rounded-2xl p-5 sm:p-6 border ${
-                          isCorrect
-                            ? 'border-emerald-300 shadow-xs'
-                            : isAnswered
-                            ? 'border-rose-300 shadow-xs'
-                            : 'border-slate-200 shadow-xs'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
-                          <span className="text-xs font-bold text-slate-500">
-                            Question #{idx + 1}
-                          </span>
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                            isCorrect
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : isAnswered
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : 'bg-slate-100 text-slate-500 border border-slate-200'
-                          }`}>
-                            {isCorrect ? 'Correct (+1)' : isAnswered ? 'Incorrect (0)' : 'Unanswered'}
-                          </span>
-                        </div>
-
-                        <p className="text-sm font-semibold text-slate-800 mb-4 whitespace-pre-line">
-                          {q.question_text}
-                        </p>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
-                          {q.options.map((optText, optIdx) => {
-                            const isUserChoice = userAns === optIdx;
-                            const isCorrectOpt = Number(q.correct_option) === optIdx;
-
-                            return (
-                              <div
-                                key={optIdx}
-                                className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between ${
-                                  isCorrectOpt
-                                    ? 'bg-emerald-50/80 border-emerald-400 text-emerald-900 font-semibold'
-                                    : isUserChoice
-                                    ? 'bg-rose-50/80 border-rose-400 text-rose-900 font-semibold'
-                                    : 'bg-slate-50/70 border-slate-200 text-slate-600'
-                                }`}
-                              >
-                                <span>{String.fromCharCode(65 + optIdx)}. {optText}</span>
-                                {isCorrectOpt && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">Correct Answer</span>}
-                                {isUserChoice && !isCorrectOpt && <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">Your Choice</span>}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {q.explanation && (
-                          <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/80 text-xs text-slate-700 space-y-1">
-                            <span className="font-bold text-amber-700 uppercase tracking-wider text-[10px] block">Explanation & Solution:</span>
-                            <p className="leading-relaxed text-slate-700">{q.explanation}</p>
-                          </div>
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentQIndex(idx)}
+                      className="relative w-10 h-10 flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
+                      title={`Question ${idx + 1}`}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-10 h-10 drop-shadow-2xs">
+                        {isGradient && (
+                          <defs>
+                            <linearGradient id={`pacman-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="50%" stopColor="#10b981" />
+                              <stop offset="50%" stopColor="#9333ea" />
+                            </linearGradient>
+                          </defs>
                         )}
-                      </div>
-                    );
-                  })}
-                </div>
+                        {isCircleShape ? (
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            fill={isGradient ? `url(#pacman-grad-${idx})` : fillColor}
+                            stroke={strokeColor}
+                            strokeWidth={isCurrent ? "2" : "1"}
+                          />
+                        ) : (
+                          <path
+                            d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z"
+                            fill={fillColor}
+                            stroke={strokeColor}
+                            strokeWidth={isCurrent ? "2" : "1"}
+                          />
+                        )}
+                      </svg>
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center ${isCircleShape ? '' : 'pr-1.5'} font-black text-xs pointer-events-none select-none`}
+                        style={{ color: textColor }}
+                      >
+                        {idx + 1}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* LEGEND WITH PACMAN & CIRCLE ICON SHAPES */}
+            <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2.5 mt-4">
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <circle cx="12" cy="12" r="10" fill="#059669" stroke="#047857" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Answered</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#9333ea" stroke="#7e22ce" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Marked for Review</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <defs>
+                    <linearGradient id="legend-pacman-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="50%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#9333ea" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="12" cy="12" r="10" fill="url(#legend-pacman-grad)" stroke="#7e22ce" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Answered & Marked</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Unanswered</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
 
+  {/* QUIZ RESULT & SOLUTION REVIEW SCREEN (EARLY RETURN FOR FULL ISOLATION) */}
+  if (quizFinished && quizResult && selectedExam) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto p-4 sm:p-6 lg:p-8 text-slate-800">
+        <div className="max-w-4xl mx-auto space-y-8 py-6">
+          {/* RESULT SCORE CARD */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+              <FiAward className="w-8 h-8" />
+            </div>
+
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-orange bg-amber-50 px-3 py-1 rounded-full border border-amber-200/80">
+                Test Completed
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-dark-navy mt-2">
+                {selectedExam.title}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Total Score</p>
+                <p className="text-2xl font-black text-brand-blue mt-1">
+                  {quizResult.score} / {quizResult.totalQuestions}
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Accuracy Rate</p>
+                <p className="text-2xl font-black text-emerald-600 mt-1">
+                  {quizResult.percentage}%
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Correct / Wrong</p>
+                <p className="text-2xl font-black text-amber-600 mt-1">
+                  {quizResult.correctCount} / {quizResult.wrongCount}
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Time Taken</p>
+                <p className="text-2xl font-black text-indigo-600 mt-1">
+                  {formatTime(quizResult.timeTakenSeconds)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleRetakeTest}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+                <span>Retake Test</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleBackToExams}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl border border-slate-200 transition-all cursor-pointer"
+              >
+                <FiArrowLeft className="w-4 h-4" />
+                <span>Back to All Mock Exams</span>
+              </button>
+            </div>
+          </div>
+
+          {/* DETAILED QUESTION SOLUTION REVIEW */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-dark-navy flex items-center gap-2">
+              <FiList className="w-5 h-5 text-brand-orange" />
+              <span>Question-by-Question Solution Review</span>
+            </h3>
+
+            <div className="space-y-4">
+              {examQuestions.map((q, idx) => {
+                const userAns = userAnswers[q.id];
+                const isAnswered = userAns !== undefined;
+                const isCorrect = isAnswered && Number(userAns) === Number(q.correct_option);
+
+                return (
+                  <div
+                    key={q.id || idx}
+                    className={`bg-white rounded-2xl p-5 sm:p-6 border ${
+                      isCorrect
+                        ? 'border-emerald-300 shadow-xs'
+                        : isAnswered
+                        ? 'border-rose-300 shadow-xs'
+                        : 'border-slate-200 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
+                      <span className="text-xs font-bold text-slate-500">
+                        Question #{idx + 1}
+                      </span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                        isCorrect
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : isAnswered
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}>
+                        {isCorrect ? 'Correct (+1)' : isAnswered ? 'Incorrect (0)' : 'Unanswered'}
+                      </span>
+                    </div>
+
+                    <p className="text-sm font-semibold text-slate-800 mb-4 whitespace-pre-line">
+                      {q.question_text}
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+                      {q.options.map((optText, optIdx) => {
+                        const isUserChoice = userAns === optIdx;
+                        const isCorrectOpt = Number(q.correct_option) === optIdx;
+
+                        return (
+                          <div
+                            key={optIdx}
+                            className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between ${
+                              isCorrectOpt
+                                ? 'bg-emerald-50/80 border-emerald-400 text-emerald-900 font-semibold'
+                                : isUserChoice
+                                ? 'bg-rose-50/80 border-rose-400 text-rose-900 font-semibold'
+                                : 'bg-slate-50/70 border-slate-200 text-slate-600'
+                            }`}
+                          >
+                            <span>{String.fromCharCode(65 + optIdx)}. {optText}</span>
+                            {isCorrectOpt && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">Correct Answer</span>}
+                            {isUserChoice && !isCorrectOpt && <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">Your Choice</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {q.explanation && (
+                      <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/80 text-xs text-slate-700 space-y-1">
+                        <span className="font-bold text-amber-700 uppercase tracking-wider text-[10px] block">Explanation & Solution:</span>
+                        <p className="leading-relaxed text-slate-700">{q.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white min-h-screen text-slate-800">
+      <div className="banking-career-content">
         {/* HERO SECTION */}
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
