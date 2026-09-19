@@ -37,7 +37,7 @@ const DEMO_EXAMS = [
   {
     id: 'demo-banking-1',
     title: 'IBPS PO Prelims Speed Drill Mock Test',
-    category: 'Banking',
+    category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 15,
     total_marks: 5,
     description: 'Timed speed drill covering Quantitative Aptitude, Reasoning, and English for IBPS PO & SBI PO Prelims.',
@@ -87,7 +87,7 @@ const DEMO_EXAMS = [
   {
     id: 'demo-banking-2',
     title: 'SBI Clerk & RRB Assistant Full Mock Test',
-    category: 'Banking',
+    category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 20,
     total_marks: 5,
     description: 'Comprehensive practice mock test with real exam interface for SBI Clerk & RRB Assistant aspirants.',
@@ -402,61 +402,79 @@ export default function MockExam() {
   if (quizStarted && selectedExam) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
-        {/* QUIZ HEADER (ENLARGED & SPACIOUS WITH CENTERED LOGO) */}
-        <header className="bg-white border-b border-slate-200 px-6 sm:px-8 lg:px-10 py-4 sm:py-5 shrink-0 shadow-sm z-10 relative">
-          <div className="flex items-center justify-between gap-4 relative">
-            {/* TOP LEFT: CANDIDATE PHOTO & DETAILS */}
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
-                <svg className="w-10 h-10 sm:w-11 sm:h-11 text-slate-400 mt-1.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
+        {/* TOP HEADER WITH LOGO */}
+        <header className="bg-white border-b border-slate-200 px-6 py-3 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
+          <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
+            {settings?.logo_url ? (
+              <img
+                src={settings.logo_url}
+                alt="Marvel Slice Logo"
+                className="h-9 sm:h-10 w-auto object-contain pointer-events-none"
+              />
+            ) : (
+              <img
+                src="/apple-touch-icon.png"
+                alt="Marvel Slice Logo"
+                className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            )}
+            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
+          </div>
+        </header>
+
+        {/* BELOW SECTION: TOP EXAM HEADING & CANDIDATE DETAILS BELOW IT */}
+        <div className="bg-slate-50 border-b border-slate-200 px-6 sm:px-10 py-4 sm:py-5 shrink-0 z-10 shadow-2xs space-y-4">
+          {/* TOP HEADING OF BELOW SECTION */}
+          <div className="text-center pb-1 border-b border-slate-200/60">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-wide">
+              {selectedExam?.title || 'Banking & Quantitative Aptitude'}
+            </h2>
+          </div>
+
+          {/* BELOW HEADING: CANDIDATE INFO & LIVE TIMER */}
+          <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-6">
+            {/* LEFT: CANDIDATE PHOTO & DETAILS */}
+            <div className="flex items-center gap-5">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 border-2 border-slate-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250"
+                  alt="Candidate Photo"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="hidden w-full h-full items-center justify-center bg-slate-100">
+                  <svg className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 mt-1.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </div>
               </div>
-              <div className="text-xs sm:text-sm leading-snug text-slate-600 font-medium space-y-0.5">
-                <div><span className="font-bold text-slate-800">Name:</span> {userName.trim() || 'Lethin'}</div>
-                <div><span className="font-bold text-slate-800">Department:</span> {userDept || 'Computer Science & Engineering'}</div>
-                <div><span className="font-bold text-slate-800">Year:</span> {userYear || '3rd Year'}</div>
-                <div><span className="font-bold text-slate-800">College:</span> {userCollege || 'Marvel Institute of Technology'}</div>
+              <div className="text-sm sm:text-base leading-relaxed text-slate-700 font-medium space-y-1">
+                <div><span className="font-bold text-slate-900">Name:</span> <span className="font-semibold text-slate-800">{userName.trim() || 'Lethin'}</span></div>
+                <div><span className="font-bold text-slate-900">Department:</span> <span className="font-semibold text-slate-800">{userDept || 'Computer Science & Engineering'}</span></div>
+                <div><span className="font-bold text-slate-900">Year:</span> <span className="font-semibold text-slate-800">{userYear || '3rd Year'}</span></div>
+                <div><span className="font-bold text-slate-900">College:</span> <span className="font-semibold text-slate-800">{userCollege || 'Marvel Institute of Technology'}</span></div>
               </div>
             </div>
 
-            {/* CENTER: UNCLICKABLE STATIC LOGO, COMPANY NAME & EXAM TITLE (PERFECTLY CENTERED) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center select-none cursor-default justify-center pointer-events-none text-center">
-              <div className="flex items-center gap-2 sm:gap-2.5">
-                {settings?.logo_url ? (
-                  <img
-                    src={settings.logo_url}
-                    alt="Marvel Slice Logo"
-                    className="h-8 sm:h-10 w-auto object-contain pointer-events-none"
-                  />
-                ) : (
-                  <img
-                    src="/apple-touch-icon.png"
-                    alt="Marvel Slice Logo"
-                    className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                )}
-                <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-                  Marvel <span className="text-brand-orange">Slice</span>
-                </span>
-              </div>
-              <span className="text-sm sm:text-base font-normal text-slate-600 tracking-wide mt-0.5">
-                Exam Title: {selectedExam?.title || 'Mock Exam'}
-              </span>
-            </div>
-
-            {/* RIGHT SIDE: LIVE COUNTDOWN TIMER ONLY */}
-            <div className="flex items-center gap-4 shrink-0 ml-auto">
-              <div className={`flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-mono text-sm sm:text-base font-bold shadow-xs ${
+            {/* RIGHT SIDE: LIVE COUNTDOWN TIMER */}
+            <div className="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
+              <div className={`flex items-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-mono text-base sm:text-lg font-bold shadow-xs ${
                 timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50 text-amber-800 border border-amber-200/80'
               }`}>
-                <FiClock className="w-5 h-5 shrink-0 text-amber-600" />
+                <FiClock className="w-6 h-6 shrink-0 text-amber-600" />
                 <span>{formatTime(timeLeftSeconds)}</span>
               </div>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* QUIZ MAIN BODY */}
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-50">
@@ -531,10 +549,10 @@ export default function MockExam() {
                             setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
                           }
                         }}
-                        className={`px-5 py-2.5 rounded-full font-semibold text-xs sm:text-sm text-white transition-colors cursor-pointer shadow-xs active:scale-95 ${
+                        className={`px-5 py-2.5 rounded-full font-bold text-xs sm:text-sm text-white transition-all cursor-pointer shadow-xs active:scale-95 ${
                           markedForReview[examQuestions[currentQIndex]?.id]
-                            ? 'bg-rose-950 ring-2 ring-rose-500'
-                            : 'bg-[#ad0909] hover:bg-[#8e0707]'
+                            ? 'bg-brand-orange ring-2 ring-amber-400'
+                            : 'bg-brand-orange hover:bg-brand-orange/90'
                         }`}
                       >
                         {markedForReview[examQuestions[currentQIndex]?.id] ? 'Marked for Review' : 'Mark for review'}
@@ -546,7 +564,7 @@ export default function MockExam() {
                           type="button"
                           disabled={currentQIndex === 0}
                           onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
-                          className="px-5 py-2.5 rounded-l-full rounded-r-xs bg-[#2b78c5] hover:bg-[#2063a7] text-white font-semibold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                          className="px-5 py-2.5 rounded-l-full rounded-r-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
                         >
                           Previous
                         </button>
@@ -554,7 +572,7 @@ export default function MockExam() {
                           type="button"
                           disabled={currentQIndex === examQuestions.length - 1}
                           onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
-                          className="px-5 py-2.5 rounded-r-full rounded-l-xs bg-[#2b78c5] hover:bg-[#2063a7] text-white font-semibold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                          className="px-5 py-2.5 rounded-r-full rounded-l-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
                         >
                           Next
                         </button>
@@ -568,7 +586,7 @@ export default function MockExam() {
                           delete copy[examQuestions[currentQIndex]?.id];
                           return copy;
                         })}
-                        className="px-4 py-2.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+                        className="px-4 py-2.5 rounded-full bg-white border-2 border-brand-blue/30 hover:border-brand-blue text-brand-blue font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                       >
                         Clear Choice
                       </button>
@@ -578,7 +596,7 @@ export default function MockExam() {
                     <button
                       type="button"
                       onClick={() => handleSubmitQuiz(false)}
-                      className="px-6 py-2.5 rounded-full bg-[#2d8a39] hover:bg-[#23702c] text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 ml-auto"
+                      className="px-6 py-2.5 rounded-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 ml-auto"
                     >
                       Submit Test
                     </button>
@@ -589,13 +607,13 @@ export default function MockExam() {
           </div>
 
           {/* SIDE QUESTION PALETTE */}
-          <div className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 p-5 shrink-0 overflow-y-auto flex flex-col justify-between">
+          <div className="w-full lg:w-80 bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-5 shrink-0 overflow-y-auto flex flex-col justify-between">
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Question Palette ({examQuestions.length})
               </h3>
 
-              <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2.5 pr-1">
+              <div className="grid grid-cols-5 gap-[10px]">
                 {examQuestions.map((q, idx) => {
                   const isAnswered = userAnswers[q.id] !== undefined;
                   const isMarked = markedForReview[q.id];
@@ -766,7 +784,7 @@ export default function MockExam() {
               <button
                 type="button"
                 onClick={handleRetakeTest}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
               >
                 <FiRefreshCw className="w-4 h-4" />
                 <span>Retake Test</span>
@@ -775,7 +793,7 @@ export default function MockExam() {
               <button
                 type="button"
                 onClick={handleBackToExams}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl border border-slate-200 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-blue-50 text-brand-blue font-bold text-xs sm:text-sm rounded-xl border-2 border-brand-blue transition-all cursor-pointer"
               >
                 <FiArrowLeft className="w-4 h-4" />
                 <span>Back to All Mock Exams</span>
@@ -875,7 +893,7 @@ export default function MockExam() {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
                 <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
-                  Banking Mock Exam Series & Timed Practice
+                  Banking & Quantitative Aptitude Mock Exam Series & Timed Practice
                 </h1>
 
                 <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
@@ -915,7 +933,7 @@ export default function MockExam() {
                 ONLINE MOCK TESTS
               </span>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mt-2">
-                Available Banking Mock Exams
+                Available Banking & Quantitative Aptitude Mock Exams
               </h2>
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-4 mx-auto" />
               <p className="text-xs sm:text-sm font-normal text-slate-600 max-w-2xl mx-auto leading-relaxed">
@@ -932,7 +950,7 @@ export default function MockExam() {
                 <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto">
                   <FiHelpCircle className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-800">No Active Banking Mock Exams</h3>
+                <h3 className="text-base font-bold text-slate-800">No Active Banking & Quantitative Aptitude Mock Exams</h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
                   There are currently no published mock exams available. Please check back later for updates!
                 </p>
@@ -948,7 +966,7 @@ export default function MockExam() {
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                              {exam.category || 'Banking'}
+                              {exam.category || 'Banking & Quantitative Aptitude'}
                             </span>
                             <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
                               <FiClock className="w-3.5 h-3.5 text-brand-orange" />
