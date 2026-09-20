@@ -112,7 +112,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    networks: [lms-network]
+    # Also join the self-hosted Supabase network so nginx can reach the API
+    # gateway by container name (supabase-envoy:8000) without exposing a host port.
+    networks: [lms-network, landing-supabase_default]
 
   landing-api:
     build:
@@ -234,3 +236,9 @@ volumes:
 networks:
   lms-network:
     driver: bridge
+  # Network created by the deploy/landing-supabase compose project.
+  # Override the name via LANDING_SUPABASE_NETWORK if your project name differs
+  # (check: docker network ls | grep -i supabase).
+  landing-supabase_default:
+    external: true
+    name: ${LANDING_SUPABASE_NETWORK:-landing-supabase_default}
