@@ -1481,8 +1481,14 @@ alter table public.brochure_downloads add column if not exists name text;
 alter table public.upcoming_class_registrations add column if not exists name text;
 alter table public.upcoming_class_registrations add column if not exists full_name text;
 
-alter table public.enquiries add column if not exists name text;
-alter table public.enquiries add column if not exists full_name text;
+-- The `enquiries` table is not created by this schema (legacy reference);
+-- guard so the schema load does not abort on a missing relation.
+do $$ begin
+  if to_regclass('public.enquiries') is not null then
+    alter table public.enquiries add column if not exists name text;
+    alter table public.enquiries add column if not exists full_name text;
+  end if;
+end $$;
 
 -- Current Affairs Automated RSS Table
 create table if not exists public.current_affairs (
