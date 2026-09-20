@@ -6,7 +6,9 @@ DEPLOY="$(cd "$HERE/.." && pwd)"
 ROOT="$(cd "$DEPLOY/../.." && pwd)"                                # repo root
 LANDING="$ROOT/apps/landing"
 DB="${POSTGRES_DB:-landing_prod}"
-USER="${POSTGRES_USER:-postgres}"
+# In supabase/postgres the superuser is `supabase_admin`; `postgres` is not the
+# database owner and lacks CREATE on schema public.
+USER="${POSTGRES_USER:-supabase_admin}"
 CONTAINER="${SUPABASE_DB_CONTAINER:-supabase-db}"
 
 COMPOSE=(docker compose
@@ -27,6 +29,12 @@ for _ in $(seq 1 60); do
   fi
   sleep 3
 done
+
+# Fall back if the chosen role cannot connect locally.
+if ! docker exec "$CONTAINER" psql -U "$USER" -d "$DB" -tAc 'select 1' >/dev/null 2>&1; then
+  echo "role $USER unavailable; falling back to postgres"
+  USER=postgres
+fi
 
 psql_file() {
   local f="$1"

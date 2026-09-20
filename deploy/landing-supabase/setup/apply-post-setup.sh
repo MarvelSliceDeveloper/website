@@ -3,7 +3,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB="${POSTGRES_DB:-landing_prod}"
-USER="${POSTGRES_USER:-postgres}"
+# supabase/postgres superuser (see load-landing-db.sh).
+USER="${POSTGRES_USER:-supabase_admin}"
 CONTAINER="${SUPABASE_DB_CONTAINER:-supabase-db}"
 
 wait_healthy() {
