@@ -3,13 +3,16 @@
 name: landing-supabase
 
 services:
-  # Bind the DB pooler to localhost only; never expose Postgres publicly.
+  # Compose CONCATENATES `ports` lists across files (it does not replace them),
+  # which duplicated the base mappings and caused
+  # "bind host port 127.0.0.1:54329: address already in use".
+  # `!override` (Compose v2.24+) replaces the base list instead.
+  # The landing app talks to Postgres via PostgREST, not the pooler, but keep it
+  # available on localhost only.
   supavisor:
-    ports:
+    ports: !override
       - "127.0.0.1:54329:5432"
       - "127.0.0.1:65439:6543"
 
-  # Bind the API gateway to localhost; nginx proxies to it on the host.
-  api-gw:
-    ports:
-      - "127.0.0.1:8000:8000"
+  # The API gateway already binds to 127.0.0.1 because API_GW_HTTP_PORT
+  # includes the host IP, so no port override is needed here.
