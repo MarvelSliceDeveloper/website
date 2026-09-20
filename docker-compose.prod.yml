@@ -109,6 +109,8 @@ services:
     env_file: .env.production
     depends_on:
       - landing-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks: [lms-network]
 

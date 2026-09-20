@@ -1,0 +1,15 @@
+# Layered on the vendored upstream compose:
+#   docker compose -f vendor/docker/docker-compose.yml -f docker-compose.override.yml --env-file .env up -d
+name: landing-supabase
+
+services:
+  # Bind the DB pooler to localhost only; never expose Postgres publicly.
+  supavisor:
+    ports:
+      - "127.0.0.1:54329:5432"
+      - "127.0.0.1:65439:6543"
+
+  # Bind the API gateway to localhost; nginx proxies to it on the host.
+  api-gw:
+    ports:
+      - "127.0.0.1:8000:8000"
