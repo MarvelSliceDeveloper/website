@@ -29,11 +29,23 @@ docker exec -i "$CONTAINER" psql -v ON_ERROR_STOP=1 -U "$USER" -d "$DB" < "$HERE
 if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_PASSWORD:-}" ]; then
   docker exec -i "$CONTAINER" psql -v ON_ERROR_STOP=1 -U "$USER" -d "$DB" \
     -v email="$ADMIN_EMAIL" -v pass="$ADMIN_PASSWORD" <<'SQL'
-select case
-  when (select count(*) from public.admin_profiles) = 0
-  then public.bootstrap_master_admin(:'email', 'Master Admin', 'master_admin', :'pass')
-  else jsonb_build_object('skipped', 'admin already exists')
-end;
+do $$
+begin
+  if not exists (select 1 from information_schema.tables
+                 where table_schema = 'public' and table_name = 'admin_profiles') then
+    raise exception 'public.admin_profiles is missing — run setup/load-landing-db.sh first';
+  end if;
+end $$;
+
+insert into public.admin_profiles (id, email, full_name, role, password_hash)
+values (
+  gen_random_uuid(),
+  lower(trim(:'email')),
+  'Master Admin',
+  'master_admin',
+  crypt(:'pass', gen_salt('bf', 10))
+)
+on conflict (email) do nothing;
 SQL
   echo "Admin bootstrap checked for $ADMIN_EMAIL"
 fi
