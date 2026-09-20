@@ -4,7 +4,7 @@ A unified Learning Management System monorepo containing three independent appli
 
 - **`apps/web`** — The LMS portal (student / instructor / admin / super-admin dashboards, course builder, payments)
 - **`apps/api`** — The LMS backend REST API (Express + Prisma)
-- **`apps/landing`** — The public "Marvel Slice" marketing website, fully independent (own Supabase database)
+- **`apps/landing`** — The public "Marvel Slice" marketing website, fully independent (own self-hosted PostgreSQL database via `deploy/landing-supabase/`)
 
 Built with pnpm + Turborepo.
 
@@ -17,10 +17,11 @@ Built with pnpm + Turborepo.
                               │   apps/landing (React SPA)  │
                               │   marvelslice.com           │
                               └──────────────┬─────────────┘
-                                             │ Supabase (own DB)
+                                             │ self-hosted Supabase API
                              ┌───────────────▼──────────────┐
-Public marketing site         │  Supabase Postgres + Storage │
-─────────────────────────────►└──────────────────────────────┘
+Public marketing site         │  landing_prod (Postgres) +    │
+─────────────────────────────►│  Storage / Realtime           │
+                              └──────────────────────────────┘
 
                               ┌────────────────────────────┐
                               │    apps/web (Next.js)       │
@@ -91,7 +92,7 @@ The landing site and the LMS are **fully independent** — no shared data, auth,
 | **Server state**   | TanStack Query v5                        |
 | **Styling**        | Tailwind CSS 4                           |
 | **UI / Animation** | Headless UI, Framer Motion, React Icons  |
-| **Backend**        | Supabase (own Postgres + Storage + REST) |
+| **Backend**        | Self-hosted Supabase (own Postgres + Storage + REST) |
 | **Email**          | Nodemailer / Resend (dev mail server)    |
 | **PDF**            | jsPDF + jspdf-autotable                  |
 | **Linting**        | Oxlint                                   |
@@ -137,7 +138,7 @@ LMS/
 │   │       ├── jobs/         # Background sync (Graph, recordings)
 │   │       ├── utils/        # errors, paginate, encryption
 │   │       └── __tests__/    # Unit + integration tests
-│   ├── landing/              # Marvel Slice marketing site (Vite 8 + React 19 + Supabase)
+│   ├── landing/              # Marvel Slice marketing site (Vite 8 + React 19 + self-hosted Supabase)
 │   └── web/                  # Next.js 16 + React 19 + Tailwind 4
 │       └── src/
 │           ├── app/          # App Router pages
@@ -215,7 +216,7 @@ pnpm dev
 ```bash
 cd apps/landing
 cp .env.example .env
-# Fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+# Fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY (see deploy/landing-supabase/README.md)
 ```
 
 See `apps/landing/README.md` for DB schema, seed data, and first admin user.

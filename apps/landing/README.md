@@ -1,6 +1,6 @@
 # Marvel Slice
 
-Dynamic education/lMS website built with React + Supabase. Features a DB-driven front end with a full admin dashboard for content management — no auth required (simple email/password admin login).
+Dynamic education/LMS website built with React and a self-hosted Supabase (Postgres) backend. Features a DB-driven front end with a full admin dashboard for content management — no auth required (simple email/password admin login).
 
 ---
 
@@ -15,7 +15,7 @@ Dynamic education/lMS website built with React + Supabase. Features a DB-driven 
 | **UI Animation** | Framer Motion |
 | **Icons** | React Icons (Feather) |
 | **UI Library** | Headless UI |
-| **Backend** | Supabase (PostgreSQL + Storage + REST API) |
+| **Backend** | Self-hosted Supabase open-source stack (PostgreSQL + PostgREST + Storage + Realtime) — see `deploy/landing-supabase/` |
 | **Linting** | Oxlint |
 | **Deployment** | Vercel (SPA with rewrites) |
 
@@ -286,7 +286,7 @@ Title, slug (auto-generated), excerpt, content, image, category dropdown, author
 
 ### Prerequisites
 - Node.js 18+
-- Supabase project
+- Running self-hosted Supabase stack (`deploy/landing-supabase/`)
 
 ### Installation
 ```bash
@@ -337,8 +337,8 @@ create policy "Public access pages" on storage.objects for all using (bucket_id 
 
 ## Environment Variables
 ```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_URL=https://marvelslice.com
+VITE_SUPABASE_ANON_KEY=<ANON_KEY from deploy/landing-supabase/.env>
 ```
 
 ---

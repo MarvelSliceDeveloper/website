@@ -2,7 +2,7 @@
   MARVEL SLICE — FULL PROJECT DOCUMENTATION
 ================================================================================
 
-A dynamic education/LMS website built with React + Supabase.
+A dynamic education/LMS website built with React and a self-hosted Supabase (Postgres) backend.
 Features a DB-driven front end with a full admin dashboard for content
 management — no Supabase Auth required (simple email/password admin login).
 

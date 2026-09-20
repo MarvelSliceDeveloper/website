@@ -14,7 +14,17 @@ export const CreateFileAssignmentSchema = z.object({
   description: z.string().min(3),
   dueDate: z.string().datetime(),
   maxPoints: z.number().int().min(1).default(100),
-  questionPdfUrl: z.string().min(1),
+  questionPdfUrl: z.string().optional().or(z.literal("")),
+});
+
+export const UpdateFileAssignmentSchema = z.object({
+  title: z.string().min(3).max(150).optional(),
+  description: z.string().min(3).optional(),
+  dueDate: z.string().datetime().optional(),
+  maxPoints: z.number().int().min(1).optional(),
+  questionPdfUrl: z.string().optional().or(z.literal("")),
+  courseId: z.string().min(1).optional(),
+  batchId: z.string().min(1).optional(),
 });
 
 export const GradeSubmissionSchema = z.object({
@@ -69,7 +79,7 @@ export const assignmentService = {
   async createFileAssignment(
     instructorId: string,
     data: z.infer<typeof CreateFileAssignmentSchema>,
-    questionPdfUrl: string,
+    questionPdfUrl?: string,
   ) {
     await this._verifyBatchInstructor(
       instructorId,
@@ -84,7 +94,7 @@ export const assignmentService = {
         title: data.title,
         description: data.description,
         type: "ASSIGNMENT",
-        questionPdfUrl,
+        questionPdfUrl: questionPdfUrl || data.questionPdfUrl || null,
         dueDate: new Date(data.dueDate),
         maxPoints: data.maxPoints,
       },
@@ -111,6 +121,75 @@ export const assignmentService = {
     }
 
     return assignment;
+  },
+
+  // Updates an assignment
+  async updateAssignment(
+    instructorId: string,
+    role: string,
+    assignmentId: string,
+    data: z.infer<typeof UpdateFileAssignmentSchema>,
+  ) {
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: { batch: { include: { courseMentors: true } } },
+    });
+    if (!assignment) throw new AppError(404, "Assignment not found");
+
+    if (role === "INSTRUCTOR" && assignment.batch?.instructorId !== instructorId) {
+      const isMentor = assignment.batch?.courseMentors?.some(
+        (m) => m.mentorId === instructorId && m.courseId === assignment.courseId,
+      );
+      if (!isMentor) {
+        throw new AppError(403, "You do not have permission to update this assignment");
+      }
+    }
+
+    if (data.batchId && data.courseId) {
+      await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
+    }
+
+    return prisma.assignment.update({
+      where: { id: assignmentId },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
+        ...(data.maxPoints && { maxPoints: data.maxPoints }),
+        ...(data.questionPdfUrl !== undefined && {
+          questionPdfUrl: data.questionPdfUrl || null,
+        }),
+        ...(data.batchId && { batchId: data.batchId }),
+        ...(data.courseId && { courseId: data.courseId }),
+      },
+    });
+  },
+
+  // Deletes an assignment (soft-delete)
+  async deleteAssignment(instructorId: string, role: string, assignmentId: string) {
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: { batch: { include: { courseMentors: true } } },
+    });
+    if (!assignment) throw new AppError(404, "Assignment not found");
+
+    if (role === "INSTRUCTOR" && assignment.batch?.instructorId !== instructorId) {
+      const isMentor = assignment.batch?.courseMentors?.some(
+        (m) => m.mentorId === instructorId && m.courseId === assignment.courseId,
+      );
+      if (!isMentor) {
+        throw new AppError(403, "You do not have permission to delete this assignment");
+      }
+    }
+
+    await prisma.assignment.update({
+      where: { id: assignmentId },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: instructorId,
+      },
+    });
+    return { success: true };
   },
 
   // Lists assignments filtered by role and batch
@@ -164,7 +243,18 @@ export const assignmentService = {
         where,
         include: {
           course: { select: { id: true, title: true } },
-          batch: { select: { id: true, name: true, passingScore: true } },
+          batch: {
+            select: {
+              id: true,
+              name: true,
+              passingScore: true,
+              _count: {
+                select: {
+                  enrollments: { where: { status: "APPROVED" } },
+                },
+              },
+            },
+          },
           submissions: filters.studentId
             ? {
                 where: { studentId: filters.studentId },
@@ -175,7 +265,15 @@ export const assignmentService = {
                   submittedAt: true,
                 },
               }
-            : undefined,
+            : {
+                select: {
+                  id: true,
+                  status: true,
+                  totalScore: true,
+                  grade: true,
+                  submittedAt: true,
+                },
+              },
           _count: { select: { submissions: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -186,14 +284,15 @@ export const assignmentService = {
     ]);
 
     const items = assignments.map((a) => {
-      const submission = filters.studentId
-        ? (a as any).submissions?.[0] || null
-        : null;
-      const { submissions: _sub, ...rest } = a as any;
-      return {
-        ...rest,
-        submission,
-      };
+      if (filters.studentId) {
+        const submission = (a as any).submissions?.[0] || null;
+        const { submissions: _sub, ...rest } = a as any;
+        return {
+          ...rest,
+          submission,
+        };
+      }
+      return a;
     });
 
     return { items, total, page: currentPage, limit: currentLimit };
