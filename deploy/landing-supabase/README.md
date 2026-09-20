@@ -10,6 +10,7 @@ is never touched.
 bash setup/fetch-upstream.sh
 cp .env.example .env
 node setup/generate-keys.mjs
+bash setup/merge-env-defaults.sh   # fill any defaults added after you copied .env
 
 # Starts db + rest + storage (storage-api creates the `storage` schema that
 # schema.sql writes to), loads schema + migrations + seed, then grants
