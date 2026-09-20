@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiX, FiLoader, FiClock, FiAward, FiHelpCircle, FiCheck, FiRefreshCw, FiList, FiAlertCircle, FiCpu, FiZap, FiSend } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiArrowRight, FiX, FiLoader, FiClock, FiAward, FiHelpCircle, FiCheck, FiRefreshCw, FiList, FiAlertCircle, FiBookmark } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
 import AccordionItem from '../components/ui/AccordionItem';
 import { supabase } from '../lib/supabaseClient';
 import { trackRegister, trackFormSubmit, trackEnroll } from '../lib/analytics';
 import BankingTestimonialsSection from '../components/banking/BankingTestimonialsSection';
-import { getQuestionHintAI, explainQuestionSolutionAI } from '../lib/mockExamAIService';
+import { useSiteSettings } from '../hooks/useSupabase';
 
 const FAQS = [
   {
@@ -37,7 +37,7 @@ const DEMO_EXAMS = [
   {
     id: 'demo-banking-1',
     title: 'IBPS PO Prelims Speed Drill Mock Test',
-    category: 'Banking',
+    category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 15,
     total_marks: 5,
     description: 'Timed speed drill covering Quantitative Aptitude, Reasoning, and English for IBPS PO & SBI PO Prelims.',
@@ -87,7 +87,7 @@ const DEMO_EXAMS = [
   {
     id: 'demo-banking-2',
     title: 'SBI Clerk & RRB Assistant Full Mock Test',
-    category: 'Banking',
+    category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 20,
     total_marks: 5,
     description: 'Comprehensive practice mock test with real exam interface for SBI Clerk & RRB Assistant aspirants.',
@@ -138,6 +138,7 @@ const DEMO_EXAMS = [
 
 export default function MockExam() {
   const navigate = useNavigate();
+  const { data: settings } = useSiteSettings();
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   // Mock Exams state
@@ -151,62 +152,25 @@ export default function MockExam() {
 
   // User Reg Form before starting test
   const [showUserRegModal, setShowUserRegModal] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [userPhone, setUserPhone] = useState('');
+  const [userName, setUserName] = useState('Lethin');
+  const [userEmail, setUserEmail] = useState('lethin@example.com');
+  const [userPhone, setUserPhone] = useState('+91 98765 43210');
+  const [userDept, setUserDept] = useState('Computer Science & Engineering');
+  const [userYear, setUserYear] = useState('3rd Year');
+  const [userCollege, setUserCollege] = useState('Marvel Institute of Technology');
   const [userFormErrors, setUserFormErrors] = useState({});
 
   // Active Quiz State
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({}); // { [qId]: optionIndex }
+  const [markedForReview, setMarkedForReview] = useState({}); // { [qId]: boolean }
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [isSubmittingTest, setIsSubmittingTest] = useState(false);
 
-  // AI Features State
-  const [aiHints, setAiHints] = useState({});
-  const [loadingHint, setLoadingHint] = useState({});
-  const [activeAiExplainQuestion, setActiveAiExplainQuestion] = useState(null);
-  const [aiExplanationText, setAiExplanationText] = useState('');
-  const [loadingAiExplanation, setLoadingAiExplanation] = useState(false);
-  const [customDoubtQuery, setCustomDoubtQuery] = useState('');
-
   const timerRef = useRef(null);
-
-  async function handleFetchAiHint(questionObj) {
-    if (!questionObj || !questionObj.id) return;
-    const qId = questionObj.id;
-    if (aiHints[qId]) return;
-
-    setLoadingHint(prev => ({ ...prev, [qId]: true }));
-    const res = await getQuestionHintAI({
-      question: questionObj.question_text,
-      options: questionObj.options || []
-    });
-
-    setAiHints(prev => ({ ...prev, [qId]: res.hint }));
-    setLoadingHint(prev => ({ ...prev, [qId]: false }));
-  }
-
-  async function handleOpenAiExplain(questionObj, customQuery = '') {
-    if (!questionObj) return;
-    setActiveAiExplainQuestion(questionObj);
-    setLoadingAiExplanation(true);
-    if (!customQuery) setCustomDoubtQuery('');
-
-    const res = await explainQuestionSolutionAI({
-      question: questionObj.question_text,
-      options: questionObj.options || [],
-      correctAnswerIndex: questionObj.correct_option ?? 0,
-      explanation: questionObj.explanation || '',
-      userQuestion: customQuery
-    });
-
-    setAiExplanationText(res.explanation);
-    setLoadingAiExplanation(false);
-  }
 
   useEffect(() => {
     fetchActiveExams();
@@ -231,6 +195,21 @@ export default function MockExam() {
     };
   }, [quizStarted, quizFinished, timeLeftSeconds]);
 
+  // Prevent background scrolling when test or result modal is open
+  useEffect(() => {
+    if (quizStarted || quizFinished) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [quizStarted, quizFinished]);
+
   async function fetchActiveExams() {
     setLoadingExams(true);
     const { data, error } = await supabase
@@ -248,15 +227,15 @@ export default function MockExam() {
     setLoadingExams(false);
   }
 
-  // Triggered when user clicks "Start Test" on an exam card
+  // Triggered when user clicks "Start Test" on an exam card - DIRECTLY STARTS QUIZ
   async function handleSelectExam(exam) {
     setSelectedExam(exam);
     setLoadingQuestions(true);
 
+    let questions = [];
     if (exam.questions) {
       // Demo exam with inline questions
-      setExamQuestions(exam.questions);
-      setLoadingQuestions(false);
+      questions = exam.questions;
     } else {
       // Fetch questions from Supabase
       const { data, error } = await supabase
@@ -266,23 +245,33 @@ export default function MockExam() {
         .order('order_index', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        setExamQuestions(data.map(q => ({
+        questions = data.map(q => ({
           id: q.id,
           question_text: q.question_text,
           options: Array.isArray(q.options) ? q.options : [],
           correct_option: q.correct_option ?? 0,
           explanation: q.explanation || '',
           marks: q.marks || 1
-        })));
+        }));
       } else {
         // Fallback if no questions added yet in DB
-        setExamQuestions(DEMO_EXAMS[0].questions);
+        questions = DEMO_EXAMS[0].questions;
       }
-      setLoadingQuestions(false);
     }
 
-    // Open User Info Registration Modal before starting test
-    setShowUserRegModal(true);
+    setExamQuestions(questions);
+    setLoadingQuestions(false);
+
+    // Skip registration modal and start quiz immediately
+    setQuizStarted(true);
+    setQuizFinished(false);
+    setQuizResult(null);
+    setCurrentQIndex(0);
+    setUserAnswers({});
+    setMarkedForReview({});
+    const totalSecs = (exam.time_limit_mins || 20) * 60;
+    setTimeLeftSeconds(totalSecs);
+    trackEnroll(exam.title || 'Mock Exam', 'mock_exam_quiz');
   }
 
   function handleUserRegSubmit(e) {
@@ -307,6 +296,7 @@ export default function MockExam() {
     setQuizResult(null);
     setCurrentQIndex(0);
     setUserAnswers({});
+    setMarkedForReview({});
     const totalSecs = (selectedExam?.time_limit_mins || 20) * 60;
     setTimeLeftSeconds(totalSecs);
     trackEnroll(selectedExam?.title || 'Mock Exam', 'mock_exam_quiz');
@@ -397,6 +387,7 @@ export default function MockExam() {
     setQuizStarted(false);
     setQuizFinished(false);
     setQuizResult(null);
+    setMarkedForReview({});
   }
 
   function formatTime(seconds) {
@@ -407,139 +398,187 @@ export default function MockExam() {
 
   const allExamsList = dbExams;
 
-  return (
-    <div className="bg-white min-h-screen text-slate-800">
-      <div className="banking-career-content">
-        {/* ACTIVE TIMED QUIZ INTERFACE */}
-        {quizStarted && selectedExam && (
-          <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col text-white overflow-hidden">
-            {/* QUIZ HEADER */}
-            <div className="bg-slate-950 px-4 sm:px-6 py-3 border-b border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="bg-brand-blue/20 text-brand-blue border border-brand-blue/30 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shrink-0">
-                  {selectedExam.category || 'Banking'}
-                </span>
-                <h2 className="text-xs sm:text-base font-bold truncate">
-                  {selectedExam.title}
-                </h2>
-              </div>
+  // ACTIVE TIMED QUIZ INTERFACE (EARLY RETURN FOR FULL ISOLATION)
+  if (quizStarted && selectedExam) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
+        {/* TOP HEADER WITH LOGO */}
+        <header className="bg-white border-b border-slate-200 px-6 py-3 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
+          <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
+            {settings?.logo_url ? (
+              <img
+                src={settings.logo_url}
+                alt="Marvel Slice Logo"
+                className="h-9 sm:h-10 w-auto object-contain pointer-events-none"
+              />
+            ) : (
+              <img
+                src="/apple-touch-icon.png"
+                alt="Marvel Slice Logo"
+                className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            )}
+            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
+          </div>
+        </header>
 
-              <div className="flex items-center gap-4 shrink-0">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs sm:text-sm font-bold shadow-inner ${
-                  timeLeftSeconds < 120 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse' : 'bg-slate-800 text-amber-400 border border-slate-700'
-                }`}>
-                  <FiClock className="w-4 h-4 shrink-0" />
-                  <span>{formatTime(timeLeftSeconds)}</span>
+        {/* BELOW SECTION: TOP EXAM HEADING & CANDIDATE DETAILS BELOW IT */}
+        <div className="bg-slate-50 border-b border-slate-200 px-6 sm:px-10 py-4 sm:py-5 shrink-0 z-10 shadow-2xs space-y-4">
+          {/* TOP HEADING OF BELOW SECTION */}
+          <div className="text-center pb-1 border-b border-slate-200/60">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-wide">
+              {selectedExam?.title || 'Banking & Quantitative Aptitude'}
+            </h2>
+          </div>
+
+          {/* BELOW HEADING: CANDIDATE INFO & LIVE TIMER */}
+          <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-6">
+            {/* LEFT: CANDIDATE PHOTO & DETAILS */}
+            <div className="flex items-center gap-5">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 border-2 border-slate-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250"
+                  alt="Candidate Photo"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="hidden w-full h-full items-center justify-center bg-slate-100">
+                  <svg className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 mt-1.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleSubmitQuiz(false)}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-lg transition-colors cursor-pointer shadow-md"
-                >
-                  Submit Test
-                </button>
+              </div>
+              <div className="text-sm sm:text-base leading-relaxed text-slate-700 font-medium space-y-1">
+                <div><span className="font-bold text-slate-900">Name:</span> <span className="font-semibold text-slate-800">{userName.trim() || 'Lethin'}</span></div>
+                <div><span className="font-bold text-slate-900">Department:</span> <span className="font-semibold text-slate-800">{userDept || 'Computer Science & Engineering'}</span></div>
+                <div><span className="font-bold text-slate-900">Year:</span> <span className="font-semibold text-slate-800">{userYear || '3rd Year'}</span></div>
+                <div><span className="font-bold text-slate-900">College:</span> <span className="font-semibold text-slate-800">{userCollege || 'Marvel Institute of Technology'}</span></div>
               </div>
             </div>
 
-            {/* QUIZ MAIN BODY */}
-            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-900">
-              {/* QUESTION CONTENT AREA */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                {examQuestions.length > 0 && (
-                  <div className="max-w-3xl mx-auto space-y-6">
-                    {/* QUESTION TITLE BAR */}
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                      <span className="text-xs font-bold text-slate-400">
-                        Question {currentQIndex + 1} of {examQuestions.length}
-                      </span>
-                      <div className="flex items-center gap-2">
+            {/* RIGHT SIDE: LIVE COUNTDOWN TIMER */}
+            <div className="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
+              <div className={`flex items-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-mono text-base sm:text-lg font-bold shadow-xs ${
+                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50 text-amber-800 border border-amber-200/80'
+              }`}>
+                <FiClock className="w-6 h-6 shrink-0 text-amber-600" />
+                <span>{formatTime(timeLeftSeconds)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* QUIZ MAIN BODY */}
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-50">
+          {/* QUESTION CONTENT AREA */}
+          <div className="flex-1 min-h-0 flex flex-col bg-slate-50 border-r border-slate-200">
+            {examQuestions.length > 0 && (
+              <div className="flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto p-4 sm:p-6">
+                {/* QUESTION TOP BAR */}
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Question {currentQIndex + 1} of {examQuestions.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-2xs">
+                      +{examQuestions[currentQIndex]?.marks || 1} Mark
+                    </span>
+                  </div>
+                </div>
+
+                {/* SEPARATE SCROLLABLE QUESTION & OPTIONS SECTION */}
+                <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-5 min-h-0">
+                  {/* QUESTION STATEMENT */}
+                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs">
+                    <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 whitespace-pre-line">
+                      {examQuestions[currentQIndex]?.question_text}
+                    </p>
+                  </div>
+
+                  {/* OPTIONS GRID */}
+                  <div className="space-y-3 pb-2">
+                    {examQuestions[currentQIndex]?.options.map((optText, optIdx) => {
+                      const qId = examQuestions[currentQIndex]?.id;
+                      const isSelected = userAnswers[qId] === optIdx;
+                      const optLabel = String.fromCharCode(65 + optIdx);
+
+                      return (
                         <button
+                          key={optIdx}
                           type="button"
-                          onClick={() => handleFetchAiHint(examQuestions[currentQIndex])}
-                          disabled={loadingHint[examQuestions[currentQIndex]?.id]}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-600/30 to-purple-600/30 hover:from-indigo-600/50 hover:to-purple-600/50 text-indigo-300 border border-indigo-500/40 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                          onClick={() => handleOptionSelect(qId, optIdx)}
+                          className={`w-full flex items-start gap-3.5 p-4 rounded-xl text-left transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-blue-50/90 border-2 border-brand-blue text-brand-blue font-semibold shadow-2xs'
+                              : 'bg-white border-2 border-slate-200/90 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                          }`}
                         >
-                          {loadingHint[examQuestions[currentQIndex]?.id] ? <FiLoader className="w-3.5 h-3.5 animate-spin text-amber-300" /> : <FiCpu className="w-3.5 h-3.5 text-amber-300" />}
-                          <span>{loadingHint[examQuestions[currentQIndex]?.id] ? 'Generating Hint...' : '🤖 AI Hint'}</span>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
+                            isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
+                            {optLabel}
+                          </div>
+                          <span className="text-xs sm:text-sm font-medium leading-relaxed pt-0.5">
+                            {optText}
+                          </span>
                         </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                        <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-0.5 rounded-full">
-                          +{examQuestions[currentQIndex]?.marks || 1} Mark
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* AI TUTOR HINT BANNER */}
-                    {aiHints[examQuestions[currentQIndex]?.id] && (
-                      <div className="bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border border-purple-500/50 p-4 rounded-2xl text-xs text-purple-100 flex items-start gap-3 shadow-xl animate-in fade-in duration-200">
-                        <div className="p-2 rounded-xl bg-purple-900/70 text-amber-300 shrink-0">
-                          <FiZap className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <span className="font-extrabold text-amber-400 uppercase tracking-wider text-[10px] block">AI Tutor Hint:</span>
-                          <p className="leading-relaxed text-purple-100">{aiHints[examQuestions[currentQIndex]?.id]}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setAiHints(prev => ({ ...prev, [examQuestions[currentQIndex]?.id]: null }))}
-                          className="text-purple-400 hover:text-purple-200 p-1"
-                        >
-                          <FiX className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* QUESTION STATEMENT */}
-                    <div className="bg-slate-800/80 rounded-2xl p-5 sm:p-6 border border-slate-700/80 shadow-md">
-                      <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-100 whitespace-pre-line">
-                        {examQuestions[currentQIndex]?.question_text}
-                      </p>
-                    </div>
-
-                    {/* OPTIONS GRID */}
-                    <div className="space-y-3">
-                      {examQuestions[currentQIndex]?.options.map((optText, optIdx) => {
-                        const qId = examQuestions[currentQIndex]?.id;
-                        const isSelected = userAnswers[qId] === optIdx;
-                        const optLabel = String.fromCharCode(65 + optIdx);
-
-                        return (
-                          <button
-                            key={optIdx}
-                            type="button"
-                            onClick={() => handleOptionSelect(qId, optIdx)}
-                            className={`w-full flex items-start gap-3.5 p-4 rounded-xl text-left border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-brand-blue/20 border-brand-blue text-white ring-1 ring-brand-blue'
-                                : 'bg-slate-800/60 border-slate-700/70 text-slate-200 hover:bg-slate-800 hover:border-slate-600'
-                            }`}
-                          >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
-                              isSelected ? 'bg-brand-blue text-white' : 'bg-slate-700 text-slate-300'
-                            }`}>
-                              {optLabel}
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium leading-relaxed pt-0.5">
-                              {optText}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* NAVIGATION CONTROL BUTTONS */}
-                    <div className="pt-4 flex items-center justify-between border-t border-slate-800">
+                {/* ACTION BUTTONS & LEGEND BAR (MATCHING USER MOCKUP EXACTLY) */}
+                <div className="pt-4 mt-2 border-t border-slate-200 shrink-0 bg-slate-50 space-y-3">
+                  {/* TOP ROW: ACTION BUTTONS */}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      {/* Mark for review Button */}
                       <button
                         type="button"
-                        disabled={currentQIndex === 0}
-                        onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
-                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs disabled:opacity-40 transition-colors cursor-pointer flex items-center gap-1.5"
+                        onClick={() => {
+                          const qId = examQuestions[currentQIndex]?.id;
+                          if (qId) {
+                            setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
+                          }
+                        }}
+                        className={`px-5 py-2.5 rounded-full font-bold text-xs sm:text-sm text-white transition-all cursor-pointer shadow-xs active:scale-95 ${
+                          markedForReview[examQuestions[currentQIndex]?.id]
+                            ? 'bg-brand-orange ring-2 ring-amber-400'
+                            : 'bg-brand-orange hover:bg-brand-orange/90'
+                        }`}
                       >
-                        <FiArrowLeft className="w-4 h-4" />
-                        <span>Previous</span>
+                        {markedForReview[examQuestions[currentQIndex]?.id] ? 'Marked for Review' : 'Mark for review'}
                       </button>
 
+                      {/* Grouped Previous & Next Buttons */}
+                      <div className="inline-flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={currentQIndex === 0}
+                          onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
+                          className="px-5 py-2.5 rounded-l-full rounded-r-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          disabled={currentQIndex === examQuestions.length - 1}
+                          onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
+                          className="px-5 py-2.5 rounded-r-full rounded-l-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
+                        >
+                          Next
+                        </button>
+                      </div>
+
+                      {/* Clear Choice Button */}
                       <button
                         type="button"
                         onClick={() => setUserAnswers(prev => {
@@ -547,349 +586,314 @@ export default function MockExam() {
                           delete copy[examQuestions[currentQIndex]?.id];
                           return copy;
                         })}
-                        className="text-xs text-slate-400 hover:text-slate-200 underline cursor-pointer"
+                        className="px-4 py-2.5 rounded-full bg-white border-2 border-brand-blue/30 hover:border-brand-blue text-brand-blue font-bold text-xs sm:text-sm transition-colors cursor-pointer"
                       >
                         Clear Choice
                       </button>
-
-                      {currentQIndex < examQuestions.length - 1 ? (
-                        <button
-                          type="button"
-                          onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
-                          className="px-5 py-2 rounded-xl bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-                        >
-                          <span>Next Question</span>
-                          <FiArrowRight className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleSubmitQuiz(false)}
-                          className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-                        >
-                          <span>Finish Test</span>
-                          <FiCheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
-                  </div>
-                )}
-              </div>
 
-              {/* SIDE QUESTION PALETTE */}
-              <div className="w-full lg:w-72 bg-slate-950 border-t lg:border-t-0 lg:border-l border-slate-800 p-4 shrink-0 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Question Palette ({examQuestions.length})
-                  </h3>
-
-                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 max-h-48 lg:max-h-96 overflow-y-auto pr-1">
-                    {examQuestions.map((q, idx) => {
-                      const isAnswered = userAnswers[q.id] !== undefined;
-                      const isCurrent = currentQIndex === idx;
-
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setCurrentQIndex(idx)}
-                          className={`w-9 h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
-                            isCurrent
-                              ? 'ring-2 ring-brand-blue text-white bg-brand-blue'
-                              : isAnswered
-                              ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50'
-                              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                          }`}
-                        >
-                          {idx + 1}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-400 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded bg-emerald-600/40 border border-emerald-500/60 inline-block" />
-                    <span>Answered</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded bg-slate-800 inline-block" />
-                    <span>Unanswered</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* QUIZ RESULT & SOLUTION REVIEW SCREEN */}
-        {quizFinished && quizResult && selectedExam && (
-          <div className="fixed inset-0 z-50 bg-slate-900 overflow-y-auto p-4 sm:p-6 lg:p-8 text-white">
-            <div className="max-w-4xl mx-auto space-y-8 py-6">
-              {/* RESULT SCORE CARD */}
-              <div className="bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl text-center space-y-6">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-                  <FiAward className="w-8 h-8" />
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-orange bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                    Test Completed
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
-                    {selectedExam.title}
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Total Score</p>
-                    <p className="text-2xl font-black text-brand-blue mt-1">
-                      {quizResult.score} / {quizResult.totalQuestions}
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Accuracy Rate</p>
-                    <p className="text-2xl font-black text-emerald-400 mt-1">
-                      {quizResult.percentage}%
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Correct / Wrong</p>
-                    <p className="text-2xl font-black text-amber-400 mt-1">
-                      {quizResult.correctCount} / {quizResult.wrongCount}
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 text-center">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Time Taken</p>
-                    <p className="text-2xl font-black text-indigo-400 mt-1">
-                      {formatTime(quizResult.timeTakenSeconds)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleRetakeTest}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
-                  >
-                    <FiRefreshCw className="w-4 h-4" />
-                    <span>Retake Test</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleBackToExams}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
-                  >
-                    <FiArrowLeft className="w-4 h-4" />
-                    <span>Back to All Mock Exams</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* DETAILED QUESTION SOLUTION REVIEW */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <FiList className="w-5 h-5 text-brand-orange" />
-                  <span>Question-by-Question Solution Review</span>
-                </h3>
-
-                <div className="space-y-4">
-                  {examQuestions.map((q, idx) => {
-                    const userAns = userAnswers[q.id];
-                    const isAnswered = userAns !== undefined;
-                    const isCorrect = isAnswered && Number(userAns) === Number(q.correct_option);
-
-                    return (
-                      <div
-                        key={q.id || idx}
-                        className={`bg-slate-800/80 rounded-2xl p-5 sm:p-6 border ${
-                          isCorrect
-                            ? 'border-emerald-500/40'
-                            : isAnswered
-                            ? 'border-rose-500/40'
-                            : 'border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2 border-b border-slate-700/80 pb-3 mb-3">
-                          <span className="text-xs font-bold text-slate-300">
-                            Question #{idx + 1}
-                          </span>
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                            isCorrect
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                              : isAnswered
-                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                              : 'bg-slate-700 text-slate-400'
-                          }`}>
-                            {isCorrect ? 'Correct (+1)' : isAnswered ? 'Incorrect (0)' : 'Unanswered'}
-                          </span>
-                        </div>
-
-                        <p className="text-sm font-semibold text-slate-100 mb-4 whitespace-pre-line">
-                          {q.question_text}
-                        </p>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
-                          {q.options.map((optText, optIdx) => {
-                            const isUserChoice = userAns === optIdx;
-                            const isCorrectOpt = Number(q.correct_option) === optIdx;
-
-                            return (
-                              <div
-                                key={optIdx}
-                                className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between ${
-                                  isCorrectOpt
-                                    ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200'
-                                    : isUserChoice
-                                    ? 'bg-rose-950/60 border-rose-500 text-rose-200'
-                                    : 'bg-slate-900/50 border-slate-700/60 text-slate-400'
-                                }`}
-                              >
-                                <span>{String.fromCharCode(65 + optIdx)}. {optText}</span>
-                                {isCorrectOpt && <span className="text-[10px] font-bold text-emerald-400 bg-emerald-900/60 px-2 py-0.5 rounded-full">Correct Answer</span>}
-                                {isUserChoice && !isCorrectOpt && <span className="text-[10px] font-bold text-rose-400 bg-rose-900/60 px-2 py-0.5 rounded-full">Your Choice</span>}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {q.explanation && (
-                          <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/80 text-xs text-slate-300 space-y-1">
-                            <span className="font-bold text-amber-400 uppercase tracking-wider text-[10px] block">Explanation & Solution:</span>
-                            <p className="leading-relaxed text-slate-300">{q.explanation}</p>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenAiExplain(q)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
-                          >
-                            <FiCpu className="w-3.5 h-3.5 text-amber-300" />
-                            <span>Ask AI Explainer</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* AI SOLUTION EXPLAINER & DOUBT MODAL */}
-            {activeAiExplainQuestion && (
-              <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 text-white">
-                <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 max-h-[90vh] flex flex-col">
-                  {/* MODAL HEADER */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/40 text-amber-300">
-                        <FiCpu className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">AI Solution & Doubt Resolver</h3>
-                        <p className="text-xs text-slate-400">Step-by-step reasoning and concept clarification</p>
-                      </div>
-                    </div>
+                    {/* Submit Test Button */}
                     <button
                       type="button"
-                      onClick={() => setActiveAiExplainQuestion(null)}
-                      className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+                      onClick={() => handleSubmitQuiz(false)}
+                      className="px-6 py-2.5 rounded-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 ml-auto"
                     >
-                      <FiX className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* MODAL BODY */}
-                  <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-                    <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Question</span>
-                      <p className="text-sm font-semibold text-slate-100">{activeAiExplainQuestion.question_text}</p>
-                    </div>
-
-                    {/* AI GENERATED EXPLANATION */}
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-indigo-500/30 space-y-3">
-                      <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                        <FiZap className="w-4 h-4" />
-                        <span>AI Tutor Explanation</span>
-                      </div>
-
-                      {loadingAiExplanation ? (
-                        <div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-                          <FiLoader className="w-6 h-6 animate-spin text-indigo-400" />
-                          <span>Analyzing formula and generating deep breakdown...</span>
-                        </div>
-                      ) : (
-                        <div className="text-xs leading-relaxed text-slate-200 whitespace-pre-line space-y-2">
-                          {aiExplanationText}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CUSTOM DOUBT INPUT BOX */}
-                    <div className="space-y-2 pt-2">
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Have a specific doubt about this question?
-                      </label>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (customDoubtQuery.trim() && !loadingAiExplanation) {
-                            handleOpenAiExplain(activeAiExplainQuestion, customDoubtQuery.trim());
-                          }
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <input
-                          type="text"
-                          value={customDoubtQuery}
-                          onChange={e => setCustomDoubtQuery(e.target.value)}
-                          placeholder="e.g. Can you explain the shortcut formula for this?"
-                          className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                        />
-                        <button
-                          type="submit"
-                          disabled={loadingAiExplanation || !customDoubtQuery.trim()}
-                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                        >
-                          <FiSend className="w-3.5 h-3.5" />
-                          <span>Ask AI</span>
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-
-                  {/* MODAL FOOTER */}
-                  <div className="pt-3 border-t border-slate-800 flex justify-end shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setActiveAiExplainQuestion(null)}
-                      className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition-colors cursor-pointer"
-                    >
-                      Close
+                      Submit Test
                     </button>
                   </div>
                 </div>
               </div>
             )}
           </div>
-        )}
 
+          {/* SIDE QUESTION PALETTE */}
+          <div className="w-full lg:w-80 bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-5 shrink-0 overflow-y-auto flex flex-col justify-between">
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Question Palette ({examQuestions.length})
+              </h3>
+
+              <div className="grid grid-cols-5 gap-[10px]">
+                {examQuestions.map((q, idx) => {
+                  const isAnswered = userAnswers[q.id] !== undefined;
+                  const isMarked = markedForReview[q.id];
+                  const isCurrent = currentQIndex === idx;
+
+                  let fillColor = "#f1f5f9";
+                  let strokeColor = "#cbd5e1";
+                  let textColor = "#334155";
+                  let isGradient = false;
+
+                  if (isCurrent) {
+                    fillColor = isAnswered ? "#059669" : "#2563eb";
+                    strokeColor = "#1d4ed8";
+                    textColor = "#ffffff";
+                  } else if (isAnswered && isMarked) {
+                    isGradient = true;
+                    strokeColor = "#7e22ce";
+                    textColor = "#ffffff";
+                  } else if (isMarked) {
+                    fillColor = "#9333ea";
+                    strokeColor = "#7e22ce";
+                    textColor = "#ffffff";
+                  } else if (isAnswered) {
+                    fillColor = "#059669";
+                    strokeColor = "#047857";
+                    textColor = "#ffffff";
+                  }
+
+                  const isCircleShape = isAnswered;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentQIndex(idx)}
+                      className="relative w-10 h-10 flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
+                      title={`Question ${idx + 1}`}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-10 h-10 drop-shadow-2xs">
+                        {isGradient && (
+                          <defs>
+                            <linearGradient id={`pacman-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="50%" stopColor="#10b981" />
+                              <stop offset="50%" stopColor="#9333ea" />
+                            </linearGradient>
+                          </defs>
+                        )}
+                        {isCircleShape ? (
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            fill={isGradient ? `url(#pacman-grad-${idx})` : fillColor}
+                            stroke={strokeColor}
+                            strokeWidth={isCurrent ? "2" : "1"}
+                          />
+                        ) : (
+                          <path
+                            d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z"
+                            fill={fillColor}
+                            stroke={strokeColor}
+                            strokeWidth={isCurrent ? "2" : "1"}
+                          />
+                        )}
+                      </svg>
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center ${isCircleShape ? '' : 'pr-1.5'} font-black text-xs pointer-events-none select-none`}
+                        style={{ color: textColor }}
+                      >
+                        {idx + 1}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* LEGEND WITH PACMAN & CIRCLE ICON SHAPES */}
+            <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2.5 mt-4">
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <circle cx="12" cy="12" r="10" fill="#059669" stroke="#047857" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Answered</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#9333ea" stroke="#7e22ce" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Marked for Review</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <defs>
+                    <linearGradient id="legend-pacman-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="50%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#9333ea" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="12" cy="12" r="10" fill="url(#legend-pacman-grad)" stroke="#7e22ce" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Answered & Marked</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                </svg>
+                <span className="font-medium">Unanswered</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  {/* QUIZ RESULT & SOLUTION REVIEW SCREEN (EARLY RETURN FOR FULL ISOLATION) */}
+  if (quizFinished && quizResult && selectedExam) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto p-4 sm:p-6 lg:p-8 text-slate-800">
+        <div className="max-w-4xl mx-auto space-y-8 py-6">
+          {/* RESULT SCORE CARD */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+              <FiAward className="w-8 h-8" />
+            </div>
+
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-orange bg-amber-50 px-3 py-1 rounded-full border border-amber-200/80">
+                Test Completed
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-dark-navy mt-2">
+                {selectedExam.title}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Total Score</p>
+                <p className="text-2xl font-black text-brand-blue mt-1">
+                  {quizResult.score} / {quizResult.totalQuestions}
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Accuracy Rate</p>
+                <p className="text-2xl font-black text-emerald-600 mt-1">
+                  {quizResult.percentage}%
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Correct / Wrong</p>
+                <p className="text-2xl font-black text-amber-600 mt-1">
+                  {quizResult.correctCount} / {quizResult.wrongCount}
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500">Time Taken</p>
+                <p className="text-2xl font-black text-indigo-600 mt-1">
+                  {formatTime(quizResult.timeTakenSeconds)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleRetakeTest}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+                <span>Retake Test</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleBackToExams}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-blue-50 text-brand-blue font-bold text-xs sm:text-sm rounded-xl border-2 border-brand-blue transition-all cursor-pointer"
+              >
+                <FiArrowLeft className="w-4 h-4" />
+                <span>Back to All Mock Exams</span>
+              </button>
+            </div>
+          </div>
+
+          {/* DETAILED QUESTION SOLUTION REVIEW */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-dark-navy flex items-center gap-2">
+              <FiList className="w-5 h-5 text-brand-orange" />
+              <span>Question-by-Question Solution Review</span>
+            </h3>
+
+            <div className="space-y-4">
+              {examQuestions.map((q, idx) => {
+                const userAns = userAnswers[q.id];
+                const isAnswered = userAns !== undefined;
+                const isCorrect = isAnswered && Number(userAns) === Number(q.correct_option);
+
+                return (
+                  <div
+                    key={q.id || idx}
+                    className={`bg-white rounded-2xl p-5 sm:p-6 border ${
+                      isCorrect
+                        ? 'border-emerald-300 shadow-xs'
+                        : isAnswered
+                        ? 'border-rose-300 shadow-xs'
+                        : 'border-slate-200 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-3">
+                      <span className="text-xs font-bold text-slate-500">
+                        Question #{idx + 1}
+                      </span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                        isCorrect
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : isAnswered
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}>
+                        {isCorrect ? 'Correct (+1)' : isAnswered ? 'Incorrect (0)' : 'Unanswered'}
+                      </span>
+                    </div>
+
+                    <p className="text-sm font-semibold text-slate-800 mb-4 whitespace-pre-line">
+                      {q.question_text}
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+                      {q.options.map((optText, optIdx) => {
+                        const isUserChoice = userAns === optIdx;
+                        const isCorrectOpt = Number(q.correct_option) === optIdx;
+
+                        return (
+                          <div
+                            key={optIdx}
+                            className={`p-3 rounded-xl text-xs font-medium border flex items-center justify-between ${
+                              isCorrectOpt
+                                ? 'bg-emerald-50/80 border-emerald-400 text-emerald-900 font-semibold'
+                                : isUserChoice
+                                ? 'bg-rose-50/80 border-rose-400 text-rose-900 font-semibold'
+                                : 'bg-slate-50/70 border-slate-200 text-slate-600'
+                            }`}
+                          >
+                            <span>{String.fromCharCode(65 + optIdx)}. {optText}</span>
+                            {isCorrectOpt && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">Correct Answer</span>}
+                            {isUserChoice && !isCorrectOpt && <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">Your Choice</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {q.explanation && (
+                      <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/80 text-xs text-slate-700 space-y-1">
+                        <span className="font-bold text-amber-700 uppercase tracking-wider text-[10px] block">Explanation & Solution:</span>
+                        <p className="leading-relaxed text-slate-700">{q.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white min-h-screen text-slate-800">
+      <div className="banking-career-content">
         {/* HERO SECTION */}
         <section className="bg-white pt-8 pb-12 sm:pb-16 border-b border-[#E5ECF5]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               <Reveal variant="left" className="lg:col-span-7 space-y-5">
                 <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-dark-navy leading-tight sm:leading-snug max-w-none">
-                  Banking Mock Exam Series & Timed Practice
+                  Banking & Quantitative Aptitude Mock Exam Series & Timed Practice
                 </h1>
 
                 <p className="text-sm sm:text-base leading-relaxed text-justify [text-align-last:left] text-slate-600 w-full indent-6 sm:indent-10 whitespace-pre-line">
@@ -929,7 +933,7 @@ export default function MockExam() {
                 ONLINE MOCK TESTS
               </span>
               <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy mt-2">
-                Available Banking Mock Exams
+                Available Banking & Quantitative Aptitude Mock Exams
               </h2>
               <div className="w-16 h-[3px] bg-brand-orange rounded-full mt-3 mb-4 mx-auto" />
               <p className="text-xs sm:text-sm font-normal text-slate-600 max-w-2xl mx-auto leading-relaxed">
@@ -946,7 +950,7 @@ export default function MockExam() {
                 <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto">
                   <FiHelpCircle className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-800">No Active Banking Mock Exams</h3>
+                <h3 className="text-base font-bold text-slate-800">No Active Banking & Quantitative Aptitude Mock Exams</h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
                   There are currently no published mock exams available. Please check back later for updates!
                 </p>
@@ -962,7 +966,7 @@ export default function MockExam() {
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                              {exam.category || 'Banking'}
+                              {exam.category || 'Banking & Quantitative Aptitude'}
                             </span>
                             <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
                               <FiClock className="w-3.5 h-3.5 text-brand-orange" />
