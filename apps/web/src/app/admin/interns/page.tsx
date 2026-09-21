@@ -408,6 +408,7 @@ export default function AdminInternsPage() {
             loading={loadingInterns}
             showSerialNumber
             pageSize={10}
+            headerVariant="blue"
             emptyState={
               <EmptyState
                 variant="glass"
