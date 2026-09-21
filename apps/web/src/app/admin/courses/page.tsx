@@ -28,6 +28,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
+import PublishChecklistModal, {
+  type PublishChecklistItem,
+  extractPublishChecklist,
+} from "@/components/admin/PublishChecklistModal";
 
 type Course = {
   id: string;
@@ -47,7 +51,7 @@ type CourseListResponse = {
   limit: number;
 };
 
-type ChecklistItem = { item: string; passed: boolean };
+type ChecklistItem = PublishChecklistItem;
 
 export default function AdminCoursesPage() {
   usePageTitle("Courses");
@@ -72,6 +76,8 @@ function CoursesPageContent() {
   const [statusFilter, setStatusFilter] = useState(statusParam);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [failedChecklist, setFailedChecklist] =
+    useState<PublishChecklistItem[] | null>(null);
   const confirmDelete = useConfirmDialog();
   const queryClient = useQueryClient();
   const refreshCatalogue = () =>
@@ -145,6 +151,15 @@ function CoursesPageContent() {
           };
         }
         return "Course published";
+      },
+      error: (err: unknown) => {
+        const checklist = extractPublishChecklist(err);
+        if (checklist) {
+          setFailedChecklist(checklist);
+          const unmet = checklist.filter((c) => !c.passed).length;
+          return `Cannot publish: ${unmet} requirement${unmet === 1 ? "" : "s"} unmet`;
+        }
+        return getErrorMessage(err);
       },
     }).then(() => {
       void coursesQuery.refetch();
@@ -365,6 +380,10 @@ function CoursesPageContent() {
           onPageChange={setPage}
         />
       )}
+      <PublishChecklistModal
+        checklist={failedChecklist}
+        onClose={() => setFailedChecklist(null)}
+      />
     </div>
   );
 }
