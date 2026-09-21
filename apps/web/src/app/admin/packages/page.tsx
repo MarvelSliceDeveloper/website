@@ -120,38 +120,12 @@ export default function AdminPackagesPage() {
       key: "name",
       label: "Package",
       render: (_, pkg) => (
-        <div className="min-w-0">
-          <Link
-            href={`/admin/packages/${pkg.id}`}
-            className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
-          >
-            {pkg.name}
-          </Link>
-          {pkg.description && (
-            <p className="text-xs text-muted truncate">{pkg.description}</p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "courses",
-      label: "Courses",
-      render: (_, pkg) => (
-        <div className="flex flex-wrap gap-1 max-w-[260px]">
-          {pkg.courses.slice(0, 2).map((pc) => (
-            <span
-              key={pc.id}
-              className="rounded-md bg-primary/8 px-2 py-0.5 text-[10px] font-medium text-primary"
-            >
-              {pc.course.title}
-            </span>
-          ))}
-          {pkg.courses.length > 2 && (
-            <span className="rounded-md bg-primary/8 px-2 py-0.5 text-[10px] font-medium text-primary">
-              +{pkg.courses.length - 2} more
-            </span>
-          )}
-        </div>
+        <Link
+          href={`/admin/packages/${pkg.id}`}
+          className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
+        >
+          {pkg.name}
+        </Link>
       ),
     },
     {
@@ -280,7 +254,11 @@ export default function AdminPackagesPage() {
         />
       ) : (
         <>
-          <DataTable columns={columns} data={visiblePackages} />
+          <DataTable
+            columns={columns}
+            data={visiblePackages}
+            headerVariant="blue"
+          />
           <PaginationBar
             page={currentPage}
             pageSize={PAGE_SIZE}
