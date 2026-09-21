@@ -109,7 +109,7 @@ export default function DataTable<T>({
         <tr
           className={`border-b text-left ${
             isBlue
-              ? "border-blue-700 bg-blue-700"
+              ? "border-blue-800 bg-blue-800"
               : "border-border bg-muted/15"
           }`}
         >
