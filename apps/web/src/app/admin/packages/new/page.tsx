@@ -48,7 +48,10 @@ export default function CreatePackagePage() {
     ["admin", "packages", "courses"],
     "/api/admin/packages/courses",
   );
-  const availableCourses = coursesQuery.data?.courses ?? [];
+  const availableCourses = useMemo(
+    () => coursesQuery.data?.courses ?? [],
+    [coursesQuery.data],
+  );
   const loadingCourses = coursesQuery.isPending;
 
   const packageNameOptions = dbPackageNames.length
@@ -57,14 +60,21 @@ export default function CreatePackagePage() {
 
   // When a package name is chosen, auto-select the related courses so the
   // admin gets a sensible starter set (they can still add/remove via the UI).
+  // Setters are equality-guarded (returning prev bails out of the render),
+  // otherwise the fresh array identities each run would re-trigger this
+  // effect forever (Maximum update depth exceeded).
   useEffect(() => {
     if (isInternship) {
-      setRelatedCourseIds([]);
-      setSelectedCourseIds([]);
+      setRelatedCourseIds((prev) => (prev.length === 0 ? prev : []));
+      setSelectedCourseIds((prev) => (prev.length === 0 ? prev : []));
       return;
     }
     const ids = name ? getRelatedCourseIds(name, availableCourses) : [];
-    setRelatedCourseIds(ids);
+    setRelatedCourseIds((prev) =>
+      prev.length === ids.length && prev.every((v, i) => v === ids[i])
+        ? prev
+        : ids,
+    );
     setSelectedCourseIds((prev) => {
       const union = new Set([...prev, ...ids]);
       if (prev.length === union.size) return prev;
