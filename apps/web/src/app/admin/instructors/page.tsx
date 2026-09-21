@@ -466,6 +466,7 @@ export default function AdminInstructorsPage() {
         pageSize={pageSize}
         totalItems={total}
         onPageChange={setPage}
+        headerVariant="blue"
         emptyState={
           <EmptyState
             variant="glass"

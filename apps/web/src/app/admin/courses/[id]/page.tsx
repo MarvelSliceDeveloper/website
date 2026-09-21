@@ -20,6 +20,10 @@ import { usePageTitle } from "@/lib/use-page-title";
 import TabButton from "./_components/TabButton";
 import { IconAward } from "@tabler/icons-react";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import PublishChecklistModal, {
+  type PublishChecklistItem,
+  extractPublishChecklist,
+} from "@/components/admin/PublishChecklistModal";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -51,6 +55,8 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState<
     "details" | "content" | "certification"
   >("details");
+  const [failedChecklist, setFailedChecklist] =
+    useState<PublishChecklistItem[] | null>(null);
 
   const [form, setForm] = useState<CourseFormData>({
     title: "",
@@ -146,6 +152,15 @@ export default function CourseDetailPage() {
             }
             return "Course published";
           },
+          error: (err: unknown) => {
+            const checklist = extractPublishChecklist(err);
+            if (checklist) {
+              setFailedChecklist(checklist);
+              const unmet = checklist.filter((c) => !c.passed).length;
+              return `Cannot publish: ${unmet} requirement${unmet === 1 ? "" : "s"} unmet`;
+            }
+            return getErrorMessage(err);
+          },
         },
       ),
     onSuccess: (result) => {
@@ -154,7 +169,9 @@ export default function CourseDetailPage() {
         void refreshCatalogue();
       }
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+    onError: (err: unknown) => {
+      if (!extractPublishChecklist(err)) toast.error(getErrorMessage(err));
+    },
   });
 
   const handlePublish = () => publishMutation.mutate();
@@ -319,6 +336,10 @@ export default function CourseDetailPage() {
       {activeTab === "certification" && (
         <CertificationTab courseId={course.id} />
       )}
+      <PublishChecklistModal
+        checklist={failedChecklist}
+        onClose={() => setFailedChecklist(null)}
+      />
     </div>
   );
 }

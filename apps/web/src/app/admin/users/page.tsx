@@ -488,6 +488,7 @@ export default function AdminUsersPage() {
         pageSize={pageSize}
         totalItems={filtered.length}
         onPageChange={setPage}
+        headerVariant="blue"
         emptyState={
           <EmptyState
             variant="glass"

@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  SUGGESTED_COURSE_TITLES,
   SUGGESTED_CATEGORIES,
   SUGGESTED_TAGS,
   getSuggestedCourseMeta,
@@ -46,10 +45,6 @@ export default function CreateCoursePage() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
 
-  const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
-    ["admin", "content", "titles"],
-    "/api/admin/content/titles",
-  );
   const categoriesQuery = useApiQuery<{ categories: { name: string }[] }>(
     ["admin", "content", "categories"],
     "/api/admin/content/categories",
@@ -59,7 +54,6 @@ export default function CreateCoursePage() {
     "/api/admin/content/tags",
   );
 
-  const dbTitles = titlesQuery.data?.titles.map((t) => t.name) ?? [];
   const dbCategories =
     categoriesQuery.data?.categories.map((c) => c.name) ?? [];
   const dbTags = tagsQuery.data?.tags.map((t) => t.name) ?? [];
@@ -152,9 +146,6 @@ export default function CreateCoursePage() {
     );
   };
 
-  const titleOptions = dbTitles.length
-    ? dbTitles
-    : (SUGGESTED_COURSE_TITLES as readonly string[]);
   const categoryOptions = dbCategories.length
     ? dbCategories
     : (SUGGESTED_CATEGORIES as readonly string[]);
@@ -394,71 +385,13 @@ export default function CreateCoursePage() {
               onChange={(e) => update("title", e.target.value)}
               placeholder="e.g. Python for Data Analysis Beginners"
               className="field w-full"
-              list="course-title-suggestions"
               required
               minLength={3}
             />
-            <datalist id="course-title-suggestions">
-              {titleOptions.map((t) => (
-                <option key={t} value={t} />
-              ))}
-            </datalist>
-            {titleOptions.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                {titleOptions.slice(0, 8).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => update("title", t)}
-                    className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
-                      form.title === t
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
             <p className="mt-1 text-[11px] text-muted-foreground">
               Top AI bar fills title + details together; &quot;Generate
               title&quot; creates just the title from your topic/description.
             </p>
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Thumbnail <span className="text-danger">*</span>
-            </label>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
-                {thumbnailPreview ? (
-                  <Image
-                    src={thumbnailPreview}
-                    alt="Course thumbnail preview"
-                    width={112}
-                    height={80}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  "\ud83d\udcda"
-                )}
-              </div>
-              <div className="space-y-1">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={handleThumbnailChange}
-                  className="field w-full"
-                  required
-                />
-                <p className="text-xs text-muted">
-                  JPG, PNG, or WebP. Max 5 MB.
-                </p>
-              </div>
-            </div>
           </div>
 
           <div>
@@ -617,6 +550,40 @@ export default function CreateCoursePage() {
             <p className="mt-1 text-xs text-muted">
               AI fills this from the draft — you can add or remove items before adding.
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Thumbnail <span className="text-danger">*</span>
+            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
+                {thumbnailPreview ? (
+                  <Image
+                    src={thumbnailPreview}
+                    alt="Course thumbnail preview"
+                    width={112}
+                    height={80}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  "\ud83d\udcda"
+                )}
+              </div>
+              <div className="space-y-1">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleThumbnailChange}
+                  className="field w-full"
+                  required
+                />
+                <p className="text-xs text-muted">
+                  JPG, PNG, or WebP. Max 5 MB.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
