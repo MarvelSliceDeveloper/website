@@ -8,7 +8,9 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import QuickActionCard from "@/components/admin/QuickActionCard";
-import StatCard from "@/components/admin/StatCard";
+import GradientStatCard, {
+  type GradientTone,
+} from "@/components/admin/GradientStatCard";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -137,7 +139,7 @@ function SuperAdminDashboard() {
     value: string | number;
     icon: typeof IconServer;
     href: string;
-    variant: "blue" | "green" | "orange" | "red" | "purple";
+    tone: GradientTone;
   }> = [
     {
       label: "System Status",
@@ -148,42 +150,42 @@ function SuperAdminDashboard() {
           : "Degraded",
       icon: IconServer,
       href: "/health",
-      variant: saStats.healthStatus === "ok" ? "green" : "red",
+      tone: saStats.healthStatus === "ok" ? "teal" : "pink",
     },
     {
       label: "Active API Keys",
       value: saStats.apiKeysActive,
       icon: IconKey,
       href: "/admin/settings/api-keys",
-      variant: "purple",
+      tone: "purple",
     },
     {
       label: "Activity Logs (30d)",
       value: saStats.totalLogs,
       icon: IconHistory,
       href: "/admin/logs",
-      variant: "blue",
+      tone: "blue",
     },
     {
       label: "Failed Logs (30d)",
       value: saStats.failedLogs,
       icon: IconLock,
       href: "/admin/logs",
-      variant: "red",
+      tone: "pink",
     },
     {
       label: "Pending Instructors",
       value: saStats.pendingInstructors,
       icon: IconUserCheck,
       href: "/admin/users?role=INSTRUCTOR",
-      variant: "orange",
+      tone: "orange",
     },
     {
       label: "Trash Items",
       value: saStats.trashCount,
       icon: IconTrash,
       href: "/admin/trash",
-      variant: "red",
+      tone: "crimson",
     },
   ];
 
@@ -239,7 +241,9 @@ function SuperAdminDashboard() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <Badge variant="danger" size="sm" dot>Super Admin</Badge>
+              <Badge variant="danger" size="sm" dot>
+                Super Admin
+              </Badge>
             </div>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               System Dashboard
@@ -286,13 +290,13 @@ function SuperAdminDashboard() {
       {/* System Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {saCards.map((stat) => (
-          <StatCard
+          <GradientStatCard
             key={stat.label}
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
             href={stat.href}
-            variant={stat.variant}
+            tone={stat.tone}
             loading={loading}
           />
         ))}
@@ -347,7 +351,9 @@ function SuperAdminDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+          <CardTitle className="text-base font-semibold">
+            Quick Actions
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -440,28 +446,28 @@ function AdminDashboard() {
       label: "Total Courses",
       value: stats.totalCourses,
       icon: IconBook,
-      variant: "blue" as const,
+      tone: "blue" as const,
       href: "/admin/courses",
     },
     {
       label: "Active Batches",
       value: stats.activeBatches,
       icon: IconUsersGroup,
-      variant: "purple" as const,
+      tone: "purple" as const,
       href: "/admin/batches",
     },
     {
       label: "Live Sessions",
       value: stats.liveSessions,
       icon: IconVideo,
-      variant: "green" as const,
+      tone: "teal" as const,
       href: "/admin/sessions",
     },
     {
       label: "Total Students",
       value: stats.totalStudents,
       icon: IconSchool,
-      variant: "orange" as const,
+      tone: "orange" as const,
       href: "/admin/users",
     },
   ];
@@ -527,12 +533,12 @@ function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsCards.map((stat) => (
-          <StatCard
+          <GradientStatCard
             key={stat.label}
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
-            variant={stat.variant}
+            tone={stat.tone}
             href={stat.href}
             loading={loading}
           />
@@ -814,7 +820,9 @@ function AdminDashboard() {
                           <p className="font-semibold text-foreground">
                             {e.userName}
                           </p>
-                          <p className="text-xs text-muted-foreground">{e.userEmail}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {e.userEmail}
+                          </p>
                         </td>
                         <td className="px-5 py-3 text-foreground font-medium">
                           {e.packageName}
@@ -861,7 +869,9 @@ function AdminDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+          <CardTitle className="text-base font-semibold">
+            Quick Actions
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
