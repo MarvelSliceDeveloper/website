@@ -378,6 +378,7 @@ function CoursesPageContent() {
           pageSize={PAGE_SIZE}
           totalItems={total}
           onPageChange={setPage}
+          headerVariant="blue"
         />
       )}
       <PublishChecklistModal

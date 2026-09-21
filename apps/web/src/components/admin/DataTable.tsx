@@ -28,6 +28,7 @@ interface DataTableProps<T> {
   onPageChange?: (page: number) => void;
   showSerialNumber?: boolean;
   serialNumberLabel?: string;
+  headerVariant?: "default" | "blue";
 }
 
 export default function DataTable<T>({
@@ -41,6 +42,7 @@ export default function DataTable<T>({
   onPageChange,
   showSerialNumber = false,
   serialNumberLabel = "#",
+  headerVariant = "default",
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -99,45 +101,69 @@ export default function DataTable<T>({
 
   const serialOffset = (activePage - 1) * pageSize;
 
-  const renderTableHeader = () => (
-    <thead>
-      <tr className="border-b border-border text-left bg-muted/15">
-        {showSerialNumber && (
-          <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12">
-            {serialNumberLabel}
-          </th>
-        )}
-        {columns.map((col) => (
-          <th
-            key={col.key}
-            className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
-              col.sortable
-                ? "cursor-pointer select-none hover:text-primary transition-colors"
-                : ""
-            }`}
-            onClick={() => col.sortable && handleSort(col.key)}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              {col.label}
-              {col.sortable &&
-                sortKey === col.key &&
-                (sortDir === "asc" ? (
-                  <IconChevronUp size={14} className="text-primary" />
-                ) : (
-                  <IconChevronDown size={14} className="text-primary" />
-                ))}
-              {col.filterable && (
-                <IconFilter
-                  size={13}
-                  className="text-muted-foreground hover:text-primary cursor-pointer"
-                />
-              )}
-            </span>
-          </th>
-        ))}
-      </tr>
-    </thead>
-  );
+  const renderTableHeader = () => {
+    const isBlue = headerVariant === "blue";
+    const headerText = isBlue ? "text-white" : "text-muted-foreground";
+    return (
+      <thead>
+        <tr
+          className={`border-b text-left ${
+            isBlue
+              ? "border-blue-700 bg-blue-700"
+              : "border-border bg-muted/15"
+          }`}
+        >
+          {showSerialNumber && (
+            <th
+              className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider w-12 ${headerText}`}
+            >
+              {serialNumberLabel}
+            </th>
+          )}
+          {columns.map((col) => (
+            <th
+              key={col.key}
+              className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider ${headerText} ${
+                col.sortable
+                  ? `cursor-pointer select-none transition-colors ${
+                      isBlue ? "hover:text-blue-100" : "hover:text-primary"
+                    }`
+                  : ""
+              }`}
+              onClick={() => col.sortable && handleSort(col.key)}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                {col.label}
+                {col.sortable &&
+                  sortKey === col.key &&
+                  (sortDir === "asc" ? (
+                    <IconChevronUp
+                      size={14}
+                      className={isBlue ? "text-white" : "text-primary"}
+                    />
+                  ) : (
+                    <IconChevronDown
+                      size={14}
+                      className={isBlue ? "text-white" : "text-primary"}
+                    />
+                  ))}
+                {col.filterable && (
+                  <IconFilter
+                    size={13}
+                    className={`cursor-pointer ${
+                      isBlue
+                        ? "text-blue-100 hover:text-white"
+                        : "text-muted-foreground hover:text-primary"
+                    }`}
+                  />
+                )}
+              </span>
+            </th>
+          ))}
+        </tr>
+      </thead>
+    );
+  };
 
   const renderTableBody = (rows: T[]) => (
     <tbody className="divide-y divide-border/50">
