@@ -8,9 +8,6 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
 import {
   IconPlus,
   IconClipboardList,
@@ -27,10 +24,10 @@ import type {
   SortDir,
 } from "./types";
 
-import { AssignmentStats } from "./_components/AssignmentStats";
-import { NeedsAttentionBanner } from "./_components/NeedsAttentionBanner";
-import { AssignmentFilterBar } from "./_components/AssignmentFilterBar";
-import { AssignmentCard } from "./_components/AssignmentCard";
+import { AssignmentRow } from "./_components/AssignmentRow";
+import { StatsStrip } from "./_components/StatsStrip";
+import { AttentionStrip } from "./_components/AttentionStrip";
+import { FilterToolbar } from "./_components/FilterToolbar";
 import { CreateAssignmentModal } from "./_components/CreateAssignmentModal";
 import { EditAssignmentModal } from "./_components/EditAssignmentModal";
 import { AssignmentDetailsModal } from "./_components/AssignmentDetailsModal";
@@ -52,18 +49,16 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Card className="border border-border/80 shadow-2xs">
-      <CardContent className="flex flex-col items-center p-12 text-center">
-        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-muted/20 text-muted-foreground">
-          {icon}
-        </div>
-        <p className="text-base font-bold text-foreground">{title}</p>
-        <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-          {description}
-        </p>
-        {action && <div className="mt-4">{action}</div>}
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-14 text-center">
+      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground">
+        {icon}
+      </div>
+      <p className="text-base font-bold text-foreground">{title}</p>
+      <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+        {description}
+      </p>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </div>
   );
 }
 
@@ -306,19 +301,19 @@ export default function InstructorAssignmentsPage() {
         ]}
         role="Instructor"
         action={
-          <Button
-            variant="primary"
+          <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
-            leftIcon={<IconPlus size={16} />}
-            className="shadow-xs"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:brightness-110 cursor-pointer"
           >
+            <IconPlus size={15} />
             Create Assignment
-          </Button>
+          </button>
         }
       />
 
       {/* 2. Top Actionable KPIs */}
-      <AssignmentStats
+      <StatsStrip
         totalAssignments={totalAssignmentsCount}
         pendingReviewCount={totalPendingReviewCount}
         reviewedCount={totalReviewedCount}
@@ -327,14 +322,14 @@ export default function InstructorAssignmentsPage() {
       />
 
       {/* 3. "NEEDS YOUR ATTENTION" Alert Section (prominent when pending > 0) */}
-      <NeedsAttentionBanner
+      <AttentionStrip
         assignmentsWithPending={assignmentsWithPending}
         totalPendingCount={totalPendingReviewCount}
         onReview={handleReviewAssignment}
       />
 
       {/* 4. Compressed Search & Multi-Filter Toolbar */}
-      <AssignmentFilterBar
+      <FilterToolbar
         search={search}
         onSearchChange={setSearch}
         courseFilter={courseFilter}
@@ -355,11 +350,14 @@ export default function InstructorAssignmentsPage() {
         onClearFilters={clearFilters}
       />
 
-      {/* 5. Assignment Cards List */}
+      {/* 5. Assignment Rows List */}
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-3" aria-busy="true" aria-label="Loading assignments">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            <div
+              key={i}
+              className="h-36 w-full animate-pulse rounded-2xl bg-muted/30"
+            />
           ))}
         </div>
       ) : assignments.length === 0 ? (
@@ -368,14 +366,14 @@ export default function InstructorAssignmentsPage() {
           title="No assignments created yet"
           description="Create assignments for your batches to collect student submissions and grade their work."
           action={
-            <Button
-              variant="primary"
-              size="sm"
+            <button
+              type="button"
               onClick={() => setShowCreateModal(true)}
-              leftIcon={<IconPlus size={16} />}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:brightness-110 cursor-pointer"
             >
+              <IconPlus size={15} />
               Create Your First Assignment
-            </Button>
+            </button>
           }
         />
       ) : filteredAssignments.length === 0 ? (
@@ -384,15 +382,19 @@ export default function InstructorAssignmentsPage() {
           title="No assignments match your filters"
           description="Try clearing or adjusting your search query, course, batch, or status filter."
           action={
-            <Button variant="secondary" size="sm" onClick={clearFilters}>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-bold text-foreground transition-all hover:bg-muted/30 cursor-pointer"
+            >
               Clear filters
-            </Button>
+            </button>
           }
         />
       ) : (
         <div className="space-y-3">
           {filteredAssignments.map((a) => (
-            <AssignmentCard
+            <AssignmentRow
               key={a.id}
               assignment={a}
               onReview={handleReviewAssignment}
