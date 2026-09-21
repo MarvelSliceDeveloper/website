@@ -6,6 +6,7 @@ import { ssrfSafeFetch } from "../../utils/ssrf";
 import {
   assignmentService,
   CreateFileAssignmentSchema,
+  UpdateFileAssignmentSchema,
   GradeSubmissionSchema,
 } from "./assignment.service";
 import { buildAssignmentFileUrl } from "./assignment.upload";
@@ -24,6 +25,44 @@ export const assignmentController = {
         data.questionPdfUrl,
       );
       return res.status(201).json({ assignment });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // PUT /api/assignments/:id — updates an assignment
+  async update(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const data = UpdateFileAssignmentSchema.parse(req.body);
+      const assignment = await assignmentService.updateAssignment(
+        req.user.userId,
+        req.user.role,
+        req.params.id,
+        data,
+      );
+      return res.status(200).json({ assignment });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // DELETE /api/assignments/:id — deletes an assignment
+  async delete(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const result = await assignmentService.deleteAssignment(
+        req.user.userId,
+        req.user.role,
+        req.params.id,
+      );
+      return res.status(200).json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

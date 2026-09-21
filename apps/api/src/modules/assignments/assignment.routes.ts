@@ -24,6 +24,20 @@ router.post(
   assignmentController.uploadPdf,
 );
 
+// PUT /api/assignments/:id — update assignment (admins + instructors)
+router.put(
+  "/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.update,
+);
+
+// DELETE /api/assignments/:id — delete assignment (admins + instructors)
+router.delete(
+  "/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.delete,
+);
+
 // GET /api/assignments — list assignments
 router.get("/", assignmentController.list);
 
