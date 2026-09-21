@@ -426,19 +426,19 @@ export default function MockExam() {
         </header>
 
         {/* BELOW SECTION: TOP EXAM HEADING & CANDIDATE DETAILS BELOW IT */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 sm:px-10 py-4 sm:py-5 shrink-0 z-10 shadow-2xs space-y-4">
+        <div className="bg-slate-50 border-b border-slate-200 px-3 sm:px-8 py-2.5 sm:py-4 shrink-0 z-10 shadow-2xs space-y-2 sm:space-y-3">
           {/* TOP HEADING OF BELOW SECTION */}
           <div className="text-center pb-1 border-b border-slate-200/60">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-wide">
+            <h2 className="text-xs sm:text-base md:text-lg font-bold text-slate-900 tracking-wide">
               {selectedExam?.title || 'Banking & Quantitative Aptitude'}
             </h2>
           </div>
 
           {/* BELOW HEADING: CANDIDATE INFO & LIVE TIMER */}
-          <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-6">
+          <div className="flex items-center justify-between gap-2 sm:gap-6">
             {/* LEFT: CANDIDATE PHOTO & DETAILS */}
-            <div className="flex items-center gap-5">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 border-2 border-slate-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+            <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-slate-100 border-2 border-slate-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250"
                   alt="Candidate Photo"
@@ -451,25 +451,25 @@ export default function MockExam() {
                   }}
                 />
                 <div className="hidden w-full h-full items-center justify-center bg-slate-100">
-                  <svg className="w-12 h-12 sm:w-14 sm:h-14 text-slate-400 mt-1.5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-8 h-8 sm:w-12 sm:h-12 text-slate-400 mt-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-sm sm:text-base leading-relaxed text-slate-700 font-medium space-y-1">
-                <div><span className="font-bold text-slate-900">Name:</span> <span className="font-semibold text-slate-800">{userName.trim() || 'Lethin'}</span></div>
-                <div><span className="font-bold text-slate-900">Department:</span> <span className="font-semibold text-slate-800">{userDept || 'Computer Science & Engineering'}</span></div>
-                <div><span className="font-bold text-slate-900">Year:</span> <span className="font-semibold text-slate-800">{userYear || '3rd Year'}</span></div>
-                <div><span className="font-bold text-slate-900">College:</span> <span className="font-semibold text-slate-800">{userCollege || 'Marvel Institute of Technology'}</span></div>
+              <div className="text-[11px] sm:text-sm leading-snug sm:leading-relaxed text-slate-700 font-medium space-y-0.5 min-w-0">
+                <div className="truncate"><span className="font-bold text-slate-900">Name:</span> <span className="font-semibold text-slate-800">{userName.trim() || 'Lethin'}</span></div>
+                <div className="truncate"><span className="font-bold text-slate-900">Department:</span> <span className="font-semibold text-slate-800">{userDept || 'Computer Science & Engineering'}</span></div>
+                <div className="truncate"><span className="font-bold text-slate-900">Year:</span> <span className="font-semibold text-slate-800">{userYear || '3rd Year'}</span></div>
+                <div className="truncate"><span className="font-bold text-slate-900">College:</span> <span className="font-semibold text-slate-800">{userCollege || 'Marvel Institute of Technology'}</span></div>
               </div>
             </div>
 
             {/* RIGHT SIDE: LIVE COUNTDOWN TIMER */}
-            <div className="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
-              <div className={`flex items-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-mono text-base sm:text-lg font-bold shadow-xs ${
+            <div className="flex items-center gap-2 shrink-0 ml-auto">
+              <div className={`flex items-center gap-1.5 sm:gap-2.5 px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-xs ${
                 timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50 text-amber-800 border border-amber-200/80'
               }`}>
-                <FiClock className="w-6 h-6 shrink-0 text-amber-600" />
+                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
                 <span>{formatTime(timeLeftSeconds)}</span>
               </div>
             </div>
@@ -479,12 +479,12 @@ export default function MockExam() {
         {/* QUIZ MAIN BODY */}
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-50">
           {/* QUESTION CONTENT AREA */}
-          <div className="flex-1 min-h-0 flex flex-col bg-slate-50 border-r border-slate-200">
+          <div className="flex-1 min-h-0 flex flex-col bg-slate-50 order-1 lg:order-2">
             {examQuestions.length > 0 && (
-              <div className="flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto p-4 sm:p-6">
+              <div className="flex-1 min-h-0 flex flex-col max-w-5xl w-full mx-auto p-3.5 sm:p-6 lg:p-8">
                 {/* QUESTION TOP BAR */}
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5 mb-4 sm:mb-6 shrink-0">
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#1f1212]">
                     Question {currentQIndex + 1} of {examQuestions.length}
                   </span>
                   <div className="flex items-center gap-2">
@@ -495,16 +495,16 @@ export default function MockExam() {
                 </div>
 
                 {/* SEPARATE SCROLLABLE QUESTION & OPTIONS SECTION */}
-                <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-5 min-h-0">
+                <div className="flex-1 overflow-y-auto px-1 sm:px-2 py-1 space-y-4 sm:space-y-5 min-h-0">
                   {/* QUESTION STATEMENT */}
-                  <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs">
-                    <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-800 whitespace-pre-line">
+                  <div className="py-1 px-1">
+                    <p className="text-sm sm:text-base font-semibold leading-relaxed text-[#1f1212] whitespace-pre-line">
                       {examQuestions[currentQIndex]?.question_text}
                     </p>
                   </div>
 
                   {/* OPTIONS GRID */}
-                  <div className="space-y-3 pb-2">
+                  <div className="space-y-2.5 sm:space-y-3 pb-3">
                     {examQuestions[currentQIndex]?.options.map((optText, optIdx) => {
                       const qId = examQuestions[currentQIndex]?.id;
                       const isSelected = userAnswers[qId] === optIdx;
@@ -515,18 +515,18 @@ export default function MockExam() {
                           key={optIdx}
                           type="button"
                           onClick={() => handleOptionSelect(qId, optIdx)}
-                          className={`w-full flex items-start gap-3.5 p-4 rounded-xl text-left transition-all cursor-pointer ${
+                          className={`w-full flex items-center gap-3 p-3 sm:p-3.5 rounded-xl text-left transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-blue-50/90 border-2 border-brand-blue text-brand-blue font-semibold shadow-2xs'
-                              : 'bg-white border-2 border-slate-200/90 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                              ? 'bg-blue-50/90 border-2 border-brand-blue text-brand-blue font-semibold shadow-xs'
+                              : 'bg-white border-2 border-slate-200/90 text-[#1f1212] hover:bg-slate-50 hover:border-slate-300'
                           }`}
                         >
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 ${
-                            isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                            isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-[#1f1212] border border-slate-300'
                           }`}>
                             {optLabel}
                           </div>
-                          <span className="text-xs sm:text-sm font-medium leading-relaxed pt-0.5">
+                          <span className="text-xs sm:text-sm font-medium text-[#1f1212] leading-snug">
                             {optText}
                           </span>
                         </button>
@@ -535,68 +535,65 @@ export default function MockExam() {
                   </div>
                 </div>
 
-                {/* ACTION BUTTONS & LEGEND BAR (MATCHING USER MOCKUP EXACTLY) */}
-                <div className="pt-4 mt-2 border-t border-slate-200 shrink-0 bg-slate-50 space-y-3">
-                  {/* TOP ROW: ACTION BUTTONS */}
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      {/* Mark for review Button */}
+                {/* ACTION BUTTONS BAR - ALL IN A SINGLE STRAIGHT HORIZONTAL LINE */}
+                <div className="pt-3 sm:pt-4 mt-3 border-t border-slate-200 shrink-0 bg-slate-50">
+                  <div className="flex items-center justify-between gap-1.5 sm:gap-3 overflow-x-auto py-1 no-scrollbar w-full">
+                    {/* 1. Mark for review Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const qId = examQuestions[currentQIndex]?.id;
+                        if (qId) {
+                          setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
+                        }
+                      }}
+                      className={`px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-xs md:text-sm text-white transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0 ${
+                        markedForReview[examQuestions[currentQIndex]?.id]
+                          ? 'bg-brand-orange ring-2 ring-amber-400'
+                          : 'bg-brand-orange hover:bg-brand-orange/90'
+                      }`}
+                    >
+                      {markedForReview[examQuestions[currentQIndex]?.id] ? 'Marked for Review' : 'Mark for review'}
+                    </button>
+
+                    {/* 2 & 3. Grouped Previous & Next Buttons */}
+                    <div className="inline-flex items-center gap-0.5 shrink-0">
                       <button
                         type="button"
-                        onClick={() => {
-                          const qId = examQuestions[currentQIndex]?.id;
-                          if (qId) {
-                            setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
-                          }
-                        }}
-                        className={`px-5 py-2.5 rounded-full font-bold text-xs sm:text-sm text-white transition-all cursor-pointer shadow-xs active:scale-95 ${
-                          markedForReview[examQuestions[currentQIndex]?.id]
-                            ? 'bg-brand-orange ring-2 ring-amber-400'
-                            : 'bg-brand-orange hover:bg-brand-orange/90'
-                        }`}
+                        disabled={currentQIndex === 0}
+                        onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
+                        className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-l-full rounded-r-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] sm:text-xs md:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
                       >
-                        {markedForReview[examQuestions[currentQIndex]?.id] ? 'Marked for Review' : 'Mark for review'}
+                        Previous
                       </button>
-
-                      {/* Grouped Previous & Next Buttons */}
-                      <div className="inline-flex items-center gap-0.5">
-                        <button
-                          type="button"
-                          disabled={currentQIndex === 0}
-                          onClick={() => setCurrentQIndex(prev => Math.max(prev - 1, 0))}
-                          className="px-5 py-2.5 rounded-l-full rounded-r-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
-                        >
-                          Previous
-                        </button>
-                        <button
-                          type="button"
-                          disabled={currentQIndex === examQuestions.length - 1}
-                          onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
-                          className="px-5 py-2.5 rounded-r-full rounded-l-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
-                        >
-                          Next
-                        </button>
-                      </div>
-
-                      {/* Clear Choice Button */}
                       <button
                         type="button"
-                        onClick={() => setUserAnswers(prev => {
-                          const copy = { ...prev };
-                          delete copy[examQuestions[currentQIndex]?.id];
-                          return copy;
-                        })}
-                        className="px-4 py-2.5 rounded-full bg-white border-2 border-brand-blue/30 hover:border-brand-blue text-brand-blue font-bold text-xs sm:text-sm transition-colors cursor-pointer"
+                        disabled={currentQIndex === examQuestions.length - 1}
+                        onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
+                        className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-r-full rounded-l-xs bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] sm:text-xs md:text-sm disabled:opacity-40 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
                       >
-                        Clear Choice
+                        Next
                       </button>
                     </div>
 
-                    {/* Submit Test Button */}
+                    {/* 4. Clear Choice Button */}
+                    <button
+                      type="button"
+                      onClick={() => setUserAnswers(prev => {
+                        const copy = { ...prev };
+                        delete copy[examQuestions[currentQIndex]?.id];
+                        return copy;
+                      })}
+                      className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-white border-2 border-brand-blue/30 hover:border-brand-blue text-brand-blue font-bold text-[11px] sm:text-xs md:text-sm transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      Clear Choice
+                    </button>
+
+                    {/* 5. Submit Test Button */}
                     <button
                       type="button"
                       onClick={() => handleSubmitQuiz(false)}
-                      className="px-6 py-2.5 rounded-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 ml-auto"
+                      className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[11px] sm:text-xs md:text-sm transition-colors cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
                     >
                       Submit Test
                     </button>
@@ -607,7 +604,7 @@ export default function MockExam() {
           </div>
 
           {/* SIDE QUESTION PALETTE */}
-          <div className="w-full lg:w-80 bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-5 shrink-0 overflow-y-auto flex flex-col justify-between">
+          <div className="w-full lg:w-80 bg-slate-100 border-t lg:border-t-0 lg:border-r border-slate-200 p-4 sm:p-5 shrink-0 overflow-y-auto flex flex-col justify-between order-2 lg:order-1">
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Question Palette ({examQuestions.length})
@@ -672,7 +669,7 @@ export default function MockExam() {
                           />
                         ) : (
                           <path
-                            d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z"
+                            d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z"
                             fill={fillColor}
                             stroke={strokeColor}
                             strokeWidth={isCurrent ? "2" : "1"}
@@ -680,7 +677,7 @@ export default function MockExam() {
                         )}
                       </svg>
                       <span
-                        className={`absolute inset-0 flex items-center justify-center ${isCircleShape ? '' : 'pr-1.5'} font-black text-xs pointer-events-none select-none`}
+                        className="absolute inset-0 flex items-center justify-center font-bold text-xs pointer-events-none select-none"
                         style={{ color: textColor }}
                       >
                         {idx + 1}
@@ -691,7 +688,7 @@ export default function MockExam() {
               </div>
             </div>
 
-            {/* LEGEND WITH PACMAN & CIRCLE ICON SHAPES */}
+            {/* LEGEND WITH PUZZLE PIECE & CIRCLE ICON SHAPES */}
             <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2.5 mt-4">
               <div className="flex items-center gap-2.5">
                 <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
@@ -701,7 +698,7 @@ export default function MockExam() {
               </div>
               <div className="flex items-center gap-2.5">
                 <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
-                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#9333ea" stroke="#7e22ce" strokeWidth="1" />
+                  <path d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z" fill="#9333ea" stroke="#7e22ce" strokeWidth="1" />
                 </svg>
                 <span className="font-medium">Marked for Review</span>
               </div>
@@ -719,7 +716,7 @@ export default function MockExam() {
               </div>
               <div className="flex items-center gap-2.5">
                 <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
-                  <path d="M 12 12 L 20.66 7 A 10 10 0 1 0 20.66 17 Z" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                  <path d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
                 </svg>
                 <span className="font-medium">Unanswered</span>
               </div>
@@ -840,7 +837,7 @@ export default function MockExam() {
                       </span>
                     </div>
 
-                    <p className="text-sm font-semibold text-slate-800 mb-4 whitespace-pre-line">
+                    <p className="text-sm font-bold text-black mb-4 whitespace-pre-line">
                       {q.question_text}
                     </p>
 

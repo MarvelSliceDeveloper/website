@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiDollarSign, FiBook, FiUser, FiAward, FiLayers, FiHelpCircle, FiCheckSquare } from 'react-icons/fi';
+import { FiSearch, FiX, FiChevronDown, FiChevronRight, FiMail, FiPhone, FiDollarSign, FiBook, FiAward, FiLayers, FiHelpCircle, FiCheckSquare } from 'react-icons/fi';
 import { FaLinkedinIn, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -256,24 +256,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
             </div>
           </div>
 
-          {/* Right Log In / Sign Up */}
-          <div className="hidden sm:flex items-center gap-2 text-xs sm:text-sm font-semibold shrink-0">
-            <button
-              type="button"
-              onClick={() => onOpenLoginModal && onOpenLoginModal('general', 'Log In')}
-              className="text-slate-700 hover:text-brand-blue transition-colors cursor-pointer px-2 py-1"
-            >
-              Log In
-            </button>
-            <span className="text-slate-300">/</span>
-            <button
-              type="button"
-              onClick={() => onOpenLoginModal && onOpenLoginModal('general', 'Sign Up')}
-              className="text-brand-blue hover:text-brand-orange transition-colors font-bold cursor-pointer px-2 py-1"
-            >
-              Sign Up
-            </button>
-          </div>
+
 
           {/* Mobile Hamburger Menu Button */}
           <motion.button
@@ -500,19 +483,7 @@ export default function BankingHeader({ onOpenLoginModal }) {
                 })}
               </div>
 
-              <div className="p-4 border-t border-slate-200 bg-white shrink-0 flex justify-start">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    if (onOpenLoginModal) onOpenLoginModal('general', 'Log In');
-                  }}
-                  className="py-2 px-4 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs rounded-xl inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <FiUser className="w-4 h-4 text-white" />
-                  <span>Log In</span>
-                </button>
-              </div>
+
             </motion.div>
           </>
         )}
