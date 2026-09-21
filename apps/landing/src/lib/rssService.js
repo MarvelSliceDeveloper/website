@@ -124,6 +124,11 @@ export const RSS_FEEDS = [
   },
 ];
 
+// Max rows per Supabase upsert request. Keeps each POST body well under
+// reverse-proxy body limits (e.g. nginx client_max_body_size) so a large
+// aggregated feed fetch can't fail the whole run with HTTP 413.
+export const RSS_UPSERT_BATCH_SIZE = 50;
+
 function decodeHtmlEntities(str = '') {
   return str
     .replace(/&amp;/g, '&')
@@ -299,16 +304,29 @@ export async function fetchAndStoreCurrentAffairs() {
     const newItems = uniqueItems.filter((item) => !existingUrls.has(item.source_url));
 
     if (newItems.length > 0) {
-      const { data: inserted, error: insertErr } = await supabase
-        .from('current_affairs')
-        .upsert(newItems, { onConflict: 'source_url', ignoreDuplicates: true })
-        .select('id');
+      // Insert in small batches: one giant POST gets rejected by the
+      // reverse proxy (HTTP 413) and fails the entire run, while batches
+      // isolate a failure to just that batch.
+      let failedBatches = 0;
+      for (let i = 0; i < newItems.length; i += RSS_UPSERT_BATCH_SIZE) {
+        const batch = newItems.slice(i, i + RSS_UPSERT_BATCH_SIZE);
+        const { data: inserted, error: insertErr } = await supabase
+          .from('current_affairs')
+          .upsert(batch, { onConflict: 'source_url', ignoreDuplicates: true })
+          .select('id');
 
-      if (insertErr) {
-        console.error('[RSS] Supabase insertion error:', insertErr.message);
-      } else {
-        totalInserted = inserted ? inserted.length : 0;
+        if (insertErr) {
+          failedBatches += 1;
+          const batchNo = i / RSS_UPSERT_BATCH_SIZE + 1;
+          console.error(`[RSS] Supabase insertion error (batch ${batchNo}):`, insertErr.message);
+        } else {
+          totalInserted += inserted ? inserted.length : 0;
+        }
+      }
+      if (failedBatches === 0) {
         console.log(`[RSS] Successfully processed ${newItems.length} articles (${totalInserted} new inserted).`);
+      } else {
+        console.log(`[RSS] Processed ${newItems.length} articles (${totalInserted} new inserted, ${failedBatches} batches failed).`);
       }
     } else {
       console.log('[RSS] All fetched articles are already up to date.');
