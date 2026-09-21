@@ -185,7 +185,9 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
-    networks: [lms-network]
+    # Join landing-supabase network so pgAdmin can resolve `supabase-db`
+    # (landing_prod) by container name — same as `landing` service below.
+    networks: [lms-network, landing-supabase_default]
 
   portainer:
     image: portainer/portainer-ce:latest
