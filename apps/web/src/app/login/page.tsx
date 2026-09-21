@@ -519,16 +519,6 @@ export default function LoginPage() {
                 <span>Browse Course Catalogue</span>
                 <span aria-hidden="true">&rarr;</span>
               </Link>
-              <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                <span>Are you an instructor?</span>
-                <Link
-                  href="/instructor/login"
-                  className="text-[#FF5E14] font-bold hover:underline cursor-pointer inline-flex items-center gap-0.5 transition-colors"
-                >
-                  <span>Instructor Portal</span>
-                  <span aria-hidden="true">&rarr;</span>
-                </Link>
-              </div>
             </div>
 
             {/* Demo Accounts (dev only) */}
