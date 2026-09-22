@@ -5,7 +5,7 @@ import { trackCtaClick, trackPhoneClick, trackEmailClick, trackSocialClick } fro
 
 import { extractPhoneNumbers, cleanTelHref } from '../../lib/phoneUtils';
 
-export default function TopBar() {
+export default function TopBar({ onOpenLoginModal }) {
   const { data: settings } = useSiteSettings();
 
   const email = settings?.contact_email || '';
@@ -44,12 +44,16 @@ export default function TopBar() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs lg:text-sm font-medium">
-          <a href="#" className="hover:underline transition-colors" onClick={() => trackCtaClick('Login', 'topbar')}>Login</a>
+        <div className="flex items-center gap-3 text-xs lg:text-sm font-medium">
+          <a
+            href="https://lms.marvelslice.com/login"
+            onClick={() => trackCtaClick('Login', 'topbar')}
+            className="hover:underline transition-colors cursor-pointer text-white font-semibold"
+          >
+            Login
+          </a>
           <span className="text-white/40">|</span>
-          <a href="#" className="hover:underline transition-colors" onClick={() => trackCtaClick('Sign Up', 'topbar')}>Sign Up</a>
-          <span className="text-white/40">|</span>
-          <div className="flex items-center gap-3 ml-2">
+          <div className="flex items-center gap-3">
             <a href={social.youtube || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackSocialClick('YouTube', social.youtube)} aria-label="YouTube" className="flex h-5 w-5 items-center justify-center rounded-full bg-white border border-white shadow-xs transition-all duration-300 hover:scale-110 hover:-translate-y-0.5">
               <FaYoutube className="w-3 h-3 text-[#FF0000]" />
             </a>

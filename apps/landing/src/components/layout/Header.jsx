@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiSettings, FiUser, FiMoreVertical, FiAward } from 'react-icons/fi';
+import { FiMenu, FiX, FiChevronDown, FiChevronRight, FiSettings, FiMoreVertical, FiAward } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavDropdown, { MobileNav } from './NavDropdown';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -222,20 +222,7 @@ export default function Header({ onOpenLoginModal }) {
                 />
               </div>
 
-              {/* Drawer Footer - Left-Aligned Log In Brand Button with Slightly Darker Shadow */}
-              <div className="relative z-10 p-4 border-t border-slate-200/80 bg-white shrink-0 flex justify-start shadow-[0_-3px_14px_rgba(148,163,184,0.4)]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    if (onOpenLoginModal) onOpenLoginModal('general', 'Log In');
-                  }}
-                  className="py-2 px-4 bg-brand-blue hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <FiUser className="w-4 h-4 text-white" />
-                  <span>Log In</span>
-                </button>
-              </div>
+
             </motion.div>
           </>
         )}

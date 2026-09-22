@@ -1528,9 +1528,18 @@ create table if not exists public.mock_exams (
   total_marks integer default 100,
   pass_marks integer default 40,
   description text,
+  question_count_option integer default 25,
+  registration_start_time timestamptz,
+  exam_start_time timestamptz,
+  rules_text text,
   is_active boolean default true,
   created_at timestamptz default now()
 );
+
+alter table public.mock_exams add column if not exists question_count_option integer default 25;
+alter table public.mock_exams add column if not exists registration_start_time timestamptz;
+alter table public.mock_exams add column if not exists exam_start_time timestamptz;
+alter table public.mock_exams add column if not exists rules_text text;
 
 create table if not exists public.mock_exam_questions (
   id uuid primary key default gen_random_uuid(),
@@ -1550,6 +1559,10 @@ create table if not exists public.mock_exam_submissions (
   user_name text not null,
   user_email text not null,
   user_phone text not null,
+  user_department text,
+  user_year text,
+  user_college text,
+  candidate_photo text,
   score integer default 0,
   total_questions integer default 0,
   correct_answers integer default 0,
@@ -1559,6 +1572,23 @@ create table if not exists public.mock_exam_submissions (
   is_read boolean default false,
   created_at timestamptz default now()
 );
+
+alter table public.mock_exam_submissions add column if not exists user_department text;
+alter table public.mock_exam_submissions add column if not exists user_year text;
+alter table public.mock_exam_submissions add column if not exists user_college text;
+alter table public.mock_exam_submissions add column if not exists candidate_photo text;
+
+-- Server time RPC to prevent browser system clock manipulation
+create or replace function public.get_server_time()
+returns timestamptz
+language sql
+stable
+security definer
+as $$
+  select now();
+$$;
+
+grant execute on function public.get_server_time() to anon, authenticated;
 
 alter table public.mock_exams enable row level security;
 drop policy if exists "Allow public select mock_exams" on public.mock_exams;

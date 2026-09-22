@@ -31,6 +31,10 @@ import BankingAwareness from './pages/BankingAwareness';
 import CurrentAffairs from './pages/CurrentAffairs';
 import CurrentAffairsDetail from './pages/CurrentAffairsDetail';
 import MockExam from './pages/MockExam';
+import CustomExamRegister from './pages/custom-exam/CustomExamRegister';
+import CustomExamLogin from './pages/custom-exam/CustomExamLogin';
+import CustomExamInstructions from './pages/custom-exam/CustomExamInstructions';
+import CustomExamTest from './pages/custom-exam/CustomExamTest';
 import { pageTransition } from './lib/motion';
 
 const Admin = lazy(() => import('./admin/Admin'));
@@ -140,6 +144,10 @@ function AnimatedRoutes() {
       <Route path="/todays-affairs" element={<Navigate to="/current-affairs?filter=today" replace />} />
       <Route path="/current-affairs/:id" element={<CurrentAffairsDetail />} />
       <Route path="/mock-exam" element={<MockExam />} />
+      <Route path="/custom-exam/register/:slug" element={<CustomExamRegister />} />
+      <Route path="/custom-exam/login/:slug" element={<CustomExamLogin />} />
+      <Route path="/custom-exam/instructions/:slug" element={<CustomExamInstructions />} />
+      <Route path="/custom-exam/test/:slug" element={<CustomExamTest />} />
       <Route path="/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
       <Route path="/competitive-exam" element={<Navigate to="/banking" replace />} />
       <Route path="/terms" element={<LegalPage pageKey="terms" />} />
@@ -169,6 +177,17 @@ function AnimatedRoutes() {
 
 function PublicLayout() {
   const { pathname } = useLocation();
+
+  if (pathname.startsWith('/custom-exam/')) {
+    return (
+      <div className="min-h-screen w-full bg-slate-100 text-slate-800">
+        <ScrollToTop />
+        <PageTracker />
+        <AnimatedRoutes />
+      </div>
+    );
+  }
+
   const isBankingPage = [
     '/banking',
     '/bankingv2',
