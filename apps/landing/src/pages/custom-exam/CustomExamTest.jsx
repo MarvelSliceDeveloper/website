@@ -215,16 +215,20 @@ export default function CustomExamTest() {
 
     setExamQuestions(questions);
 
-    // Check if candidate already submitted this exam previously in DB
+    // Check if candidate already submitted this exam previously in DB with actual answered questions
     if (currentExam.id && !currentExam.id.startsWith('demo-') && authCand?.user_email) {
       const { data: existingSub } = await supabase
         .from('custom_mock_exam_submissions')
         .select('*')
         .eq('custom_mock_exam_id', currentExam.id)
         .eq('user_email', authCand.user_email.toLowerCase())
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (existingSub) {
+      const hasValidAnswers = existingSub?.answers && typeof existingSub.answers === 'object' && Object.keys(existingSub.answers).length > 0;
+
+      if (existingSub && hasValidAnswers) {
         setUserAnswers(existingSub.answers || {});
         setFeedbackAnswers(existingSub.feedback_answers || {});
         setActiveStep('SUBMITTED');
@@ -266,10 +270,10 @@ export default function CustomExamTest() {
 
       const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
       const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
-      const hasAnsweredQuestions = Object.keys(cached.userAnswers || {}).length > 0;
+      const hasAnsweredQuestions = cached.userAnswers && typeof cached.userAnswers === 'object' && Object.keys(cached.userAnswers).length > 0;
 
-      // If cached session is submitted OR expired without any answers, clear stale cache and start fresh exam!
-      if (cached.activeStep === 'SUBMITTED' || (remainingSecs <= 0 && !hasAnsweredQuestions)) {
+      // If cached session has no answered questions OR is marked SUBMITTED, clear stale cache and start fresh exam!
+      if (cached.activeStep === 'SUBMITTED' || !hasAnsweredQuestions) {
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         setTimeLeftSeconds(fullExamSecs);
         setVisitedQuestions(initialVisited);
@@ -284,7 +288,11 @@ export default function CustomExamTest() {
       if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
       if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
 
-      if (remainingSecs <= 0 && hasAnsweredQuestions) {
+      if (remainingSecs > 0) {
+        setTimeLeftSeconds(remainingSecs);
+        setActiveStep(cached.activeStep || 'QUIZ');
+        setIsSessionRestored(true);
+      } else if (hasAnsweredQuestions) {
         setTimeLeftSeconds(0);
         setActiveStep(cached.activeStep || 'QUIZ');
         setIsSessionRestored(true);
@@ -292,9 +300,9 @@ export default function CustomExamTest() {
           triggerFeedbackOrSubmit();
         }, 500);
       } else {
-        setTimeLeftSeconds(remainingSecs > 0 ? remainingSecs : fullExamSecs);
-        setActiveStep(cached.activeStep || 'QUIZ');
-        setIsSessionRestored(true);
+        setTimeLeftSeconds(fullExamSecs);
+        setVisitedQuestions(initialVisited);
+        setActiveStep('QUIZ');
       }
     } catch (e) {
       setTimeLeftSeconds(fullExamSecs);
