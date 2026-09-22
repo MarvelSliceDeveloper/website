@@ -28,20 +28,27 @@ export default function MockExamEditor() {
   const [timeLimitMins, setTimeLimitMins] = useState(20);
   const [totalMarks, setTotalMarks] = useState(100);
   const [passMarks, setPassMarks] = useState(40);
+  const [questionCountOption, setQuestionCountOption] = useState(25);
+  const [registrationStartTime, setRegistrationStartTime] = useState('');
+  const [examStartTime, setExamStartTime] = useState('');
+  const [rulesText, setRulesText] = useState(
+    '1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch tabs during the exam.\n3. Each question carries 1 mark. Select the correct option.\n4. Negative marking of 0.25 marks applies for incorrect answers.\n5. The exam will auto-submit when the timer expires.'
+  );
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
 
-  // Questions State
-  const [questions, setQuestions] = useState([
-    {
-      id: 'temp-1',
-      question_text: '',
-      options: ['', '', '', ''],
-      correct_option: 0,
-      explanation: '',
-      marks: 1
+  // Helper to format ISO to datetime-local
+  function toDatetimeLocal(isoStr) {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch {
+      return '';
     }
-  ]);
+  }
 
   useEffect(() => {
     if (isEditing) {
@@ -69,6 +76,10 @@ export default function MockExamEditor() {
     setTimeLimitMins(exam.time_limit_mins || 20);
     setTotalMarks(exam.total_marks || 100);
     setPassMarks(exam.pass_marks || 40);
+    setQuestionCountOption(exam.question_count_option || 25);
+    setRegistrationStartTime(toDatetimeLocal(exam.registration_start_time));
+    setExamStartTime(toDatetimeLocal(exam.exam_start_time));
+    setRulesText(exam.rules_text || '1. Ensure a stable internet connection.\n2. Do not refresh or switch tabs.\n3. Each question carries 1 mark.\n4. Negative marking applies.');
     setDescription(exam.description || '');
     setIsActive(exam.is_active ?? true);
 
@@ -188,24 +199,40 @@ export default function MockExamEditor() {
       }
     }
 
+    // Validation: 10 minutes timing guard between registration start and exam start
+    if (registrationStartTime && examStartTime) {
+      const regMs = new Date(registrationStartTime).getTime();
+      const examMs = new Date(examStartTime).getTime();
+      if (examMs - regMs < 10 * 60 * 1000) {
+        alert('Registration start time must be at least 10 minutes before the scheduled Exam Start Time.');
+        return;
+      }
+    }
+
     setSaving(true);
     setErrorMsg(null);
 
     let examId = id;
 
+    const examPayload = {
+      title: title.trim(),
+      category,
+      time_limit_mins: Number(timeLimitMins) || 20,
+      total_marks: Number(totalMarks) || 100,
+      pass_marks: Number(passMarks) || 40,
+      question_count_option: Number(questionCountOption) || 25,
+      registration_start_time: registrationStartTime ? new Date(registrationStartTime).toISOString() : null,
+      exam_start_time: examStartTime ? new Date(examStartTime).toISOString() : null,
+      rules_text: rulesText ? rulesText.trim() : null,
+      description: description.trim(),
+      is_active: isActive
+    };
+
     // 1. Save or Update Mock Exam
     if (isEditing) {
       const { error: updateErr } = await supabase
         .from('mock_exams')
-        .update({
-          title: title.trim(),
-          category,
-          time_limit_mins: Number(timeLimitMins) || 20,
-          total_marks: Number(totalMarks) || 100,
-          pass_marks: Number(passMarks) || 40,
-          description: description.trim(),
-          is_active: isActive
-        })
+        .update(examPayload)
         .eq('id', id);
 
       if (updateErr) {
@@ -217,15 +244,7 @@ export default function MockExamEditor() {
     } else {
       const { data: newExam, error: insertErr } = await supabase
         .from('mock_exams')
-        .insert({
-          title: title.trim(),
-          category,
-          time_limit_mins: Number(timeLimitMins) || 20,
-          total_marks: Number(totalMarks) || 100,
-          pass_marks: Number(passMarks) || 40,
-          description: description.trim(),
-          is_active: isActive
-        })
+        .insert(examPayload)
         .select()
         .single();
 
@@ -282,7 +301,7 @@ export default function MockExamEditor() {
   return (
     <PageShell
       title={isEditing ? 'Edit Banking Mock Exam' : 'Create Banking Mock Exam'}
-      subtitle="Configure test time limit, category, and MCQ questions"
+      subtitle="Configure test timing schedule, question count, rules, and MCQ questions"
       actions={
         <Link
           to="/admin/banking/mock-exams"
@@ -304,7 +323,7 @@ export default function MockExamEditor() {
         <div className="bg-slate-50/60 rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-4">
           <h2 className="text-base font-bold text-dark-navy flex items-center gap-2">
             <FiAward className="w-5 h-5 text-brand-orange" />
-            <span>Mock Exam Settings</span>
+            <span>Mock Exam Settings & Schedule</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -333,6 +352,22 @@ export default function MockExamEditor() {
               >
                 <option value="Banking">Banking & Insurance</option>
                 <option value="Competitive Exam">Competitive Exam</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                Question Count Option (Total Questions) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={questionCountOption}
+                onChange={e => setQuestionCountOption(Number(e.target.value))}
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none font-bold text-brand-blue"
+              >
+                <option value={25}>25 Questions</option>
+                <option value={50}>50 Questions</option>
+                <option value={75}>75 Questions</option>
+                <option value={100}>100 Questions</option>
               </select>
             </div>
 
@@ -367,28 +402,66 @@ export default function MockExamEditor() {
               />
             </div>
 
-            <div>
+            {/* SCHEDULED REGISTRATION & EXAM START TIMES */}
+            <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl md:col-span-2 space-y-3">
+              <div className="flex items-center gap-2">
+                <FiClock className="w-4 h-4 text-amber-700" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                  Scheduled Timing Guard (Min 10 mins before exam start)
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Registration Start Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={registrationStartTime}
+                    onChange={e => setRegistrationStartTime(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Registration opens to students at this exact time.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Exam Start Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={examStartTime}
+                    onChange={e => setExamStartTime(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none font-semibold text-brand-blue"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Students are unlocked to begin exam at this exact time.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Passing Marks
+                Rules & Guidelines Text (Displayed on Rules Step before exam)
               </label>
-              <input
-                type="number"
-                min="1"
-                value={passMarks}
-                onChange={e => setPassMarks(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
+              <textarea
+                rows={4}
+                value={rulesText}
+                onChange={e => setRulesText(e.target.value)}
+                placeholder="Enter rules and instructions for candidates..."
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none leading-relaxed"
               />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Description / Exam Instructions
+                Description / Overview
               </label>
               <textarea
                 rows={2}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Overview or instructions displayed before starting test..."
+                placeholder="Overview or instructions displayed on exam card..."
                 className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none"
               />
             </div>
