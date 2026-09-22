@@ -407,27 +407,39 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
   const [confirm, confirmDialog] = useConfirm();
   const searchRef = useRef(null);
 
+  const [fetchError, setFetchError] = useState(null);
+
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
+    setFetchError(null);
     let query = supabase.from(table).select('*');
     if (fetchQuery) query = fetchQuery(query);
     query = query.order('created_at', { ascending: false });
     const { data: result, error } = await query;
-    if (error) console.error(`SubmissionsInbox error for ${table}:`, error);
-    setData(result || []);
+    if (error) {
+      console.error(`SubmissionsInbox error for ${table}:`, error);
+      setFetchError(error.message || `Failed to fetch data from ${table}`);
+    } else {
+      setData(result || []);
+    }
     setLoading(false);
   }
 
   async function refresh() {
     setLoading(true);
+    setFetchError(null);
     let query = supabase.from(table).select('*');
     if (fetchQuery) query = fetchQuery(query);
     query = query.order('created_at', { ascending: false });
     const { data: result, error } = await query;
-    if (error) console.error(`SubmissionsInbox refresh error for ${table}:`, error);
-    setData(result || []);
+    if (error) {
+      console.error(`SubmissionsInbox refresh error for ${table}:`, error);
+      setFetchError(error.message || `Failed to refresh data from ${table}`);
+    } else {
+      setData(result || []);
+    }
     setLoading(false);
   }
 
@@ -555,6 +567,14 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
         </div>
       </div>
 
+      {fetchError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-center justify-between text-xs font-medium shadow-sm">
+          <span>Database Error: {fetchError}</span>
+          <button onClick={refresh} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-xs font-bold shrink-0">
+            Retry
+          </button>
+        </div>
+      )}
 
         <div className="bg-white border border-admin-200 p-5 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-end">

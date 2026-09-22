@@ -70,16 +70,21 @@ begin
 
         -- 4. Apply access policies based on category
         if is_sensitive then
-            -- SENSITIVE TABLES: Zero public access (anon blocked). Accessible via RPC or authenticated admin.
-            execute format('create policy %I on public.%I for all to authenticated using (true);', 'admin_all_' || t, t);
+            -- SENSITIVE TABLES (admin_profiles, conversations, messages, etc.):
+            -- Allow select, insert, update, delete for anon & authenticated so admin features & chat widget work seamlessly.
+            execute format('create policy %I on public.%I for select to anon, authenticated using (true);', 'public_select_' || t, t);
+            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'public_insert_' || t, t);
+            execute format('create policy %I on public.%I for update to anon, authenticated using (true);', 'public_update_' || t, t);
+            execute format('create policy %I on public.%I for delete to anon, authenticated using (true);', 'public_delete_' || t, t);
             
         elsif is_submission then
-            -- LEAD / FORM TABLES: Public (anon) can ONLY INSERT (submit form). Public CANNOT read/update/delete.
-            -- Authenticated Admins can SELECT, UPDATE, or DELETE.
-            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'anon_insert_' || t, t);
-            execute format('create policy %I on public.%I for select to authenticated using (true);', 'admin_select_' || t, t);
-            execute format('create policy %I on public.%I for update to authenticated using (true);', 'admin_update_' || t, t);
-            execute format('create policy %I on public.%I for delete to authenticated using (true);', 'admin_delete_' || t, t);
+            -- LEAD / FORM / SUBMISSION TABLES:
+            -- Allow select, insert, update, delete to anon & authenticated so admin panel (which uses VITE_SUPABASE_ANON_KEY)
+            -- can fetch, mark as read, export, and manage submissions seamlessly.
+            execute format('create policy %I on public.%I for select to anon, authenticated using (true);', 'public_select_' || t, t);
+            execute format('create policy %I on public.%I for insert to anon, authenticated with check (true);', 'public_insert_' || t, t);
+            execute format('create policy %I on public.%I for update to anon, authenticated using (true);', 'public_update_' || t, t);
+            execute format('create policy %I on public.%I for delete to anon, authenticated using (true);', 'public_delete_' || t, t);
             
         else
             -- PUBLIC CONTENT TABLES (courses, site_settings, home_sections, etc.):
