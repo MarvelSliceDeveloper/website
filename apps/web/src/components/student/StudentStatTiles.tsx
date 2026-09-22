@@ -42,73 +42,75 @@ function useCountUp(target: number, duration = 800) {
   return count;
 }
 
-const TILE_STYLES: Record<string, { bg: string; chip: string; icon: string }> =
-  {
-    blue: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-blue)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-brand-blue",
-    },
-    orange: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-brand-amber",
-    },
-    green: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-success)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-success",
-    },
-    indigo: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-indigo)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-brand-indigo",
-    },
-    amber: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-brand-amber",
-    },
-    red: {
-      bg: "bg-[radial-gradient(at_bottom_right,var(--color-danger)_0%,transparent_80%)]",
-      chip: "bg-white",
-      icon: "text-danger",
-    },
-  };
+const TILE_GRADIENTS: Record<string, { from: string; to: string }> = {
+  blue: { from: "#2563EB", to: "#4F46E5" },
+  orange: { from: "#FB923C", to: "#F87171" },
+  green: { from: "#14B8A6", to: "#22C55E" },
+  indigo: { from: "#6366F1", to: "#8B5CF6" },
+  amber: { from: "#F59E0B", to: "#F97316" },
+  red: { from: "#EC4899", to: "#EF4444" },
+};
 
 function StatTile({ tile, index }: { tile: StudentStatTile; index: number }) {
   const count = useCountUp(tile.value);
-  const style = TILE_STYLES[tile.iconColor] || TILE_STYLES.blue;
+  const gradient = TILE_GRADIENTS[tile.iconColor] ?? TILE_GRADIENTS.blue;
 
   return (
     <button
       onClick={tile.onClick}
-      style={{ animationDelay: `${index * 80}ms` }}
-      className={`tile-stagger group relative flex flex-col gap-3 overflow-hidden p-5 text-left rounded-2xl border border-hairline bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${style.bg}`}
+      style={{
+        animationDelay: `${index * 80}ms`,
+        background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+        boxShadow: "0 12px 24px -10px rgba(0,0,0,.25)",
+      }}
+      className="tile-stagger group relative flex flex-col gap-3 overflow-hidden rounded-[18px] p-5 text-left text-white transition-all duration-300 hover:-translate-y-1 cursor-pointer"
     >
+      {/* Decorative translucent circles, clipped to the card */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          width: 140,
+          height: 140,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.12)",
+          top: -48,
+          right: -48,
+        }}
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          width: 88,
+          height: 88,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.14)",
+          top: 24,
+          right: 52,
+        }}
+      />
       <div className="relative z-[1] flex items-center justify-between">
-        <div
-          className={`flex h-12 w-12 items-center justify-center rounded-xl ${style.chip} shadow-sm ring-1 ring-black/5`}
-        >
-          <div className={`[&>svg]:size-[22px] ${style.icon}`}>{tile.icon}</div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white shadow-sm">
+          <div className="[&>svg]:size-[22px]">{tile.icon}</div>
         </div>
         {tile.liveBadge ? (
-          <span className="rounded-full bg-gradient-to-r from-danger to-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm shadow-danger/30">
+          <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
             {tile.liveBadge}
           </span>
         ) : null}
       </div>
       <div className="relative z-[1]">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate">
+        <p className="text-xs font-bold uppercase tracking-wider text-white/85">
           {tile.label}
         </p>
-        <p className="mt-0.5 text-4xl font-extrabold tracking-tight text-ink">
+        <p className="mt-0.5 text-4xl font-extrabold tracking-tight">
           {count}
         </p>
       </div>
       <IconArrowRight
         size={14}
-        className={`absolute right-4 top-4 ${style.icon} opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100 z-[1]`}
+        className="absolute right-4 top-4 z-[1] text-white opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
       />
     </button>
   );
