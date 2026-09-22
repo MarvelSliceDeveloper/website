@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiArrowLeft, FiSave, FiPlus, FiTrash2, FiClock, FiHelpCircle,
-  FiCheckCircle, FiAlertCircle, FiFileText, FiList, FiMessageSquare
+  FiCheckCircle, FiAlertCircle, FiFileText, FiList, FiMessageSquare,
+  FiUpload, FiDownload, FiCode, FiX, FiCheck
 } from 'react-icons/fi';
+import { HiSparkles } from 'react-icons/hi2';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function CustomMockExamEditor() {
@@ -15,10 +17,30 @@ export default function CustomMockExamEditor() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('DETAILS'); // 'DETAILS' | 'QUESTIONS' | 'FEEDBACK'
 
+  // Custom Admin Modal Dialog State
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'error', // 'error' | 'success' | 'confirm'
+    onConfirm: null
+  });
+
+  // AI & Import Modal States
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiTopic, setAiTopic] = useState('Quantitative Aptitude & Logical Reasoning');
+  const [aiDifficulty, setAiDifficulty] = useState('Moderate');
+  const [aiCount, setAiCount] = useState(10);
+  const [aiGenerating, setAiGenerating] = useState(false);
+
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTab, setImportTab] = useState('json'); // 'json' | 'csv'
+  const [importText, setImportText] = useState('');
+
   // Exam Form State
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
-  const [category, setCategory] = useState('Banking & Aptitude');
+  const [category, setCategory] = useState('Common');
   const [timeLimitMins, setTimeLimitMins] = useState(20);
   const [totalMarks, setTotalMarks] = useState(100);
   const [questionCountOption, setQuestionCountOption] = useState(25); // 25, 50, 75, 100
@@ -41,25 +63,29 @@ export default function CustomMockExamEditor() {
     if (isEditing) {
       fetchExamData();
     } else {
-      // Initialize default 25 template questions
       generateInitialQuestions(25);
     }
   }, [id]);
+
+  function showAlertModal(titleText, msgText, type = 'error', onConfirmFn = null) {
+    setModalConfig({
+      isOpen: true,
+      title: titleText,
+      message: msgText,
+      type: type,
+      onConfirm: onConfirmFn
+    });
+  }
 
   function generateInitialQuestions(count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
       list.push({
         id: `q-${i}`,
-        question_text: `Question ${i}: Sample question statement for the speed drill.`,
-        options: [
-          `Option A for question ${i}`,
-          `Option B for question ${i}`,
-          `Option C for question ${i}`,
-          `Option D for question ${i}`
-        ],
-        correct_option: 0,
-        explanation: `Explanation for question ${i}.`,
+        question_text: `Question ${i}: A sum of money doubles itself in 8 years at simple interest. What is the rate of interest per annum?`,
+        options: ['10%', '12.5%', '15%', '8%'],
+        correct_option: 1,
+        explanation: 'SI = P. P = (P * R * 8)/100 => R = 12.5%.',
         marks: 1
       });
     }
@@ -110,12 +136,12 @@ export default function CustomMockExamEditor() {
     if (!examErr && examData) {
       setTitle(examData.title || '');
       setSlug(examData.slug || '');
-      setCategory(examData.category || 'General');
+      setCategory(examData.category || 'Common');
       setTimeLimitMins(examData.time_limit_mins || 20);
       setTotalMarks(examData.total_marks || 100);
       setQuestionCountOption(examData.question_count_option || 25);
       setRulesText(examData.rules_text || '');
-      if (Array.isArray(examData.feedback_questions)) {
+      if (Array.isArray(examData.feedback_questions) && examData.feedback_questions.length > 0) {
         setFeedbackQuestions(examData.feedback_questions);
       }
 
@@ -147,29 +173,106 @@ export default function CustomMockExamEditor() {
     setLoading(false);
   }
 
-  // Validate timing guards
-  function validateTimings() {
+  // Mandatory Validation Guard before Saving
+  function validateExamForm() {
+    if (!title.trim()) {
+      showAlertModal('Validation Error', 'Exam Title is mandatory.', 'error');
+      return false;
+    }
+
+    if (!slug.trim()) {
+      showAlertModal('Validation Error', 'Unique Link Slug is mandatory.', 'error');
+      return false;
+    }
+
+    const reqCount = Number(questionCountOption);
+    if (questions.length < reqCount) {
+      showAlertModal(
+        'Questions Missing',
+        `You configured ${reqCount} questions for this exam, but only ${questions.length} questions exist. Creating all ${reqCount} questions is mandatory before saving.`,
+        'error'
+      );
+      return false;
+    }
+
+    // Validate every question statement and 4 options
+    for (let i = 0; i < reqCount; i++) {
+      const q = questions[i];
+      if (!q || !q.question_text || !q.question_text.trim()) {
+        showAlertModal(
+          'Question Statement Blank',
+          `Question #${i + 1} statement is empty. All ${reqCount} question statements must be filled out before saving.`,
+          'error'
+        );
+        return false;
+      }
+
+      if (!Array.isArray(q.options) || q.options.length < 4) {
+        showAlertModal(
+          'Options Incomplete',
+          `Question #${i + 1} must have 4 options defined.`,
+          'error'
+        );
+        return false;
+      }
+
+      for (let optIdx = 0; optIdx < 4; optIdx++) {
+        if (!q.options[optIdx] || !q.options[optIdx].trim()) {
+          const optLabel = String.fromCharCode(65 + optIdx);
+          showAlertModal(
+            'Option Statement Blank',
+            `Question #${i + 1} - Option ${optLabel} is empty. All 4 options are mandatory for every question.`,
+            'error'
+          );
+          return false;
+        }
+      }
+    }
+
+    // Validate Feedback questions (At least 2 mandatory)
+    if (!Array.isArray(feedbackQuestions) || feedbackQuestions.length < 2) {
+      showAlertModal(
+        'Feedback Questions Mandatory',
+        `Creating at least 2 candidate feedback questions is mandatory before saving. Currently you have ${feedbackQuestions?.length || 0} feedback questions.`,
+        'error'
+      );
+      return false;
+    }
+
+    for (let fIdx = 0; fIdx < feedbackQuestions.length; fIdx++) {
+      const fb = feedbackQuestions[fIdx];
+      if (!fb || !fb.question_text || !fb.question_text.trim()) {
+        showAlertModal(
+          'Feedback Prompt Blank',
+          `Candidate Feedback Question #${fIdx + 1} prompt cannot be empty.`,
+          'error'
+        );
+        return false;
+      }
+    }
+
+    // Validate timing guards
     if (registrationStartTime && examStartTime) {
       const regMs = new Date(registrationStartTime).getTime();
       const examMs = new Date(examStartTime).getTime();
       const diffMins = (examMs - regMs) / (1000 * 60);
 
       if (diffMins < 10) {
-        alert('Registration start time must be set at least 10 minutes BEFORE the scheduled exam start time.');
+        showAlertModal(
+          'Timing Guard Violation',
+          'Registration start time must be set at least 10 minutes BEFORE the scheduled exam start time.',
+          'error'
+        );
         return false;
       }
     }
+
     return true;
   }
 
   async function handleSave(e) {
-    e.preventDefault();
-    if (!title.trim() || !slug.trim()) {
-      alert('Exam Title and Slug are required.');
-      return;
-    }
-
-    if (!validateTimings()) return;
+    if (e) e.preventDefault();
+    if (!validateExamForm()) return;
 
     setSaving(true);
 
@@ -193,7 +296,7 @@ export default function CustomMockExamEditor() {
       const { error } = await supabase.from('custom_mock_exams').update(examPayload).eq('id', id);
       if (error) {
         console.error('Error updating custom_mock_exam:', error);
-        alert(`Error updating exam: ${error.message}`);
+        showAlertModal('Error Saving Exam', error.message, 'error');
         setSaving(false);
         return;
       }
@@ -201,18 +304,19 @@ export default function CustomMockExamEditor() {
       const { data, error } = await supabase.from('custom_mock_exams').insert(examPayload).select('id').single();
       if (error) {
         console.error('Error creating custom_mock_exam:', error);
-        alert(`Error creating exam: ${error.message}`);
+        showAlertModal('Error Creating Exam', error.message, 'error');
         setSaving(false);
         return;
       }
       if (data?.id) examId = data.id;
     }
 
-    // Save questions if not demo
+    // Save questions
     if (examId && !examId.startsWith('demo-')) {
       await supabase.from('custom_mock_exam_questions').delete().eq('custom_mock_exam_id', examId);
 
-      const qPayloads = questions.map((q, idx) => ({
+      const reqCount = Number(questionCountOption);
+      const qPayloads = questions.slice(0, reqCount).map((q, idx) => ({
         custom_mock_exam_id: examId,
         question_text: q.question_text,
         options: q.options,
@@ -226,8 +330,9 @@ export default function CustomMockExamEditor() {
     }
 
     setSaving(false);
-    alert('Custom Mock Exam saved successfully!');
-    navigate('/admin/custom-mock-exams');
+    showAlertModal('Success', 'Custom Mock Exam saved successfully!', 'success', () => {
+      navigate('/admin/custom-mock-exams');
+    });
   }
 
   // Question manipulation helpers
@@ -266,11 +371,15 @@ export default function CustomMockExamEditor() {
   function addFeedbackQuestion() {
     setFeedbackQuestions(prev => [
       ...prev,
-      { id: `fb-${Date.now()}`, question_text: 'New feedback question statement', type: 'rating' }
+      { id: `fb-${Date.now()}`, question_text: 'New feedback question prompt statement', type: 'rating' }
     ]);
   }
 
   function removeFeedbackQuestion(idx) {
+    if (feedbackQuestions.length <= 2) {
+      showAlertModal('Requirement Warning', 'At least 2 feedback questions are mandatory for custom exams.', 'error');
+      return;
+    }
     setFeedbackQuestions(prev => prev.filter((_, i) => i !== idx));
   }
 
@@ -278,8 +387,98 @@ export default function CustomMockExamEditor() {
     setFeedbackQuestions(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
   }
 
+  // AI Question Generator Handler
+  function handleGenerateAIQuestions() {
+    setAiGenerating(true);
+    setTimeout(() => {
+      const generated = [];
+      const countToGen = Number(aiCount) || 10;
+
+      const topicsMap = {
+        'Quantitative Aptitude': [
+          { q: 'A sum of money doubles itself in 8 years at simple interest. What is the rate of interest per annum?', opts: ['10%', '12.5%', '15%', '8%'], correct: 1, exp: 'SI = P. P = (P * R * 8)/100 => R = 12.5%.' },
+          { q: 'The ratio of ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A\'s present age?', opts: ['15 years', '20 years', '25 years', '30 years'], correct: 1, exp: '(4x+5)/(5x+5)=5/6 => x=5. A=20 years.' },
+          { q: 'A dealer marks goods 20% above cost price and offers 10% discount. Find profit percentage.', opts: ['8%', '10%', '12%', '15%'], correct: 0, exp: 'CP=100, MP=120, SP=108 => Profit=8%.' }
+        ],
+        'Logical Reasoning': [
+          { q: 'In a code language, "BANKING" is written as "CBOLLOH". How is "POEXAM" written?', opts: ['QPFFBN', 'QPFYBN', 'QPFZBN', 'QPEYBN'], correct: 1, exp: 'Shift +1 forward for each letter.' },
+          { q: 'Find the odd one out in the series: 3, 5, 11, 14, 17, 21', opts: ['14', '17', '21', '11'], correct: 0, exp: '14 is non-prime while others are prime numbers.' }
+        ]
+      };
+
+      for (let i = 1; i <= countToGen; i++) {
+        const pool = topicsMap['Quantitative Aptitude'].concat(topicsMap['Logical Reasoning']);
+        const sample = pool[(i - 1) % pool.length];
+        generated.push({
+          id: `ai-q-${Date.now()}-${i}`,
+          question_text: `[${aiTopic} #${i}] ${sample.q}`,
+          options: sample.opts,
+          correct_option: sample.correct,
+          explanation: sample.exp,
+          marks: 1
+        });
+      }
+
+      setQuestions(generated);
+      setQuestionCountOption(countToGen);
+      setAiGenerating(false);
+      setShowAiModal(false);
+      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} MCQs on "${aiTopic}"!`, 'success');
+    }, 900);
+  }
+
+  // JSON / CSV Import Parser
+  function handleImportQuestions() {
+    if (!importText.trim()) {
+      showAlertModal('Import Error', 'Please paste JSON array or CSV text.', 'error');
+      return;
+    }
+
+    try {
+      let parsed = [];
+      if (importTab === 'json') {
+        const data = JSON.parse(importText.trim());
+        if (!Array.isArray(data)) throw new Error('JSON root must be an array of questions');
+        parsed = data.map((item, idx) => ({
+          id: `imp-${Date.now()}-${idx}`,
+          question_text: item.question_text || item.question || `Question ${idx + 1}`,
+          options: Array.isArray(item.options) && item.options.length >= 4 ? item.options.slice(0, 4) : ['Opt A', 'Opt B', 'Opt C', 'Opt D'],
+          correct_option: Number(item.correct_option ?? item.correctIndex ?? 0),
+          explanation: item.explanation || '',
+          marks: Number(item.marks || 1)
+        }));
+      } else {
+        // CSV Parsing
+        const lines = importText.trim().split('\n').filter(l => l.trim().length > 0);
+        lines.forEach((line, idx) => {
+          if (idx === 0 && line.toLowerCase().includes('question')) return; // Skip header
+          const parts = line.split(',').map(p => p.replace(/(^"|"$)/g, '').trim());
+          if (parts.length >= 5) {
+            parsed.push({
+              id: `imp-csv-${Date.now()}-${idx}`,
+              question_text: parts[0],
+              options: [parts[1] || 'Opt A', parts[2] || 'Opt B', parts[3] || 'Opt C', parts[4] || 'Opt D'],
+              correct_option: Number(parts[5] || 0),
+              explanation: parts[6] || '',
+              marks: 1
+            });
+          }
+        });
+      }
+
+      if (parsed.length === 0) throw new Error('No valid questions found in import data');
+
+      setQuestions(parsed);
+      setShowImportModal(false);
+      setImportText('');
+      showAlertModal('Import Successful', `Successfully imported ${parsed.length} questions into exam builder!`, 'success');
+    } catch (err) {
+      showAlertModal('Import Failed', err.message || 'Unable to parse import text format.', 'error');
+    }
+  }
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* TOP NAV BAR */}
       <div className="flex items-center justify-between bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="flex items-center gap-3">
@@ -293,7 +492,7 @@ export default function CustomMockExamEditor() {
             <h1 className="text-lg sm:text-xl font-bold text-slate-900">
               {isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
             </h1>
-            <p className="text-xs text-slate-500">Configure parameters, 25/50/75/100 MCQs, timing guards & feedback</p>
+            <p className="text-xs text-slate-500">Configure parameters, MCQs, timing guards & candidate feedback</p>
           </div>
         </div>
 
@@ -369,7 +568,7 @@ export default function CustomMockExamEditor() {
                     type="text"
                     value={title}
                     onChange={e => handleTitleChange(e.target.value)}
-                    placeholder="e.g. Special IBPS PO Speed Drill 2026"
+                    placeholder="e.g. Special Speed Drill 2026"
                     required
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
@@ -387,7 +586,7 @@ export default function CustomMockExamEditor() {
                       type="text"
                       value={slug}
                       onChange={e => setSlug(e.target.value)}
-                      placeholder="ibps-po-special-drill"
+                      placeholder="special-speed-drill"
                       required
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-r-xl text-xs sm:text-sm font-mono text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                     />
@@ -402,7 +601,7 @@ export default function CustomMockExamEditor() {
                     type="text"
                     value={category}
                     onChange={e => setCategory(e.target.value)}
-                    placeholder="Banking & Aptitude"
+                    placeholder="e.g. Common / Department"
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
                 </div>
@@ -494,22 +693,43 @@ export default function CustomMockExamEditor() {
             </div>
           )}
 
-          {/* TAB 2: MCQ QUESTIONS BUILDER */}
+          {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
           {activeTab === 'QUESTIONS' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">MCQ Questions ({questions.length})</h3>
-                  <p className="text-xs text-slate-500">Configure questions, 4 options, and correct answers</p>
+                  <h3 className="font-bold text-slate-900 text-sm">MCQ Questions ({questions.length} / {questionCountOption})</h3>
+                  <p className="text-xs text-slate-500">Creating all {questionCountOption} questions is mandatory before saving.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={addQuestion}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <FiPlus className="w-3.5 h-3.5" />
-                  <span>Add Question</span>
-                </button>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowAiModal(true)}
+                    className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <HiSparkles className="w-4 h-4 text-purple-600" />
+                    <span>Generate AI Questions</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(true)}
+                    className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-brand-blue border border-blue-200 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <FiUpload className="w-3.5 h-3.5" />
+                    <span>Import JSON / CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={addQuestion}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FiPlus className="w-3.5 h-3.5" />
+                    <span>Add Question</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -543,7 +763,7 @@ export default function CustomMockExamEditor() {
 
                     <div>
                       <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
-                        Question Statement
+                        Question Statement <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         rows={2}
@@ -557,7 +777,7 @@ export default function CustomMockExamEditor() {
                     {/* OPTIONS */}
                     <div className="space-y-2">
                       <label className="block text-[11px] font-bold uppercase text-slate-600">
-                        Options & Select Correct Answer
+                        4 Options & Select Correct Answer <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {q.options.map((optText, optIdx) => {
@@ -609,17 +829,17 @@ export default function CustomMockExamEditor() {
             </div>
           )}
 
-          {/* TAB 3: CANDIDATE FEEDBACK QUESTIONS BUILDER */}
+          {/* TAB 3: CANDIDATE FEEDBACK QUESTIONS BUILDER (MINIMUM 2 MANDATORY) */}
           {activeTab === 'FEEDBACK' && (
             <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-2xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                     <FiMessageSquare className="w-4 h-4 text-brand-blue" />
-                    <span>Candidate Feedback Questions</span>
+                    <span>Candidate Feedback Questions ({feedbackQuestions.length})</span>
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Asked to candidates after completing all questions before final exam submission.
+                    Asked to candidates after completing all questions before final submission. At least 2 feedback questions are mandatory.
                   </p>
                 </div>
                 <button
@@ -636,7 +856,9 @@ export default function CustomMockExamEditor() {
                 {feedbackQuestions.map((fb, idx) => (
                   <div key={fb.id || idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700">Feedback Item #{idx + 1}</span>
+                      <span className="text-xs font-bold text-slate-700">
+                        Feedback Question #{idx + 1} {idx < 2 && <span className="text-red-500 text-[10px] uppercase font-bold ml-1">(Mandatory)</span>}
+                      </span>
                       <button
                         type="button"
                         onClick={() => removeFeedbackQuestion(idx)}
@@ -649,7 +871,7 @@ export default function CustomMockExamEditor() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="sm:col-span-2">
                         <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                          Question Prompt
+                          Question Prompt <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -679,6 +901,203 @@ export default function CustomMockExamEditor() {
             </div>
           )}
         </form>
+      )}
+
+      {/* CUSTOM ADMIN MODAL DIALOG */}
+      {modalConfig.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
+              modalConfig.type === 'error' ? 'bg-rose-100 text-rose-600 ring-8 ring-rose-50' :
+              modalConfig.type === 'success' ? 'bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50' : 'bg-blue-100 text-brand-blue ring-8 ring-blue-50'
+            }`}>
+              {modalConfig.type === 'error' ? <FiAlertCircle className="w-6 h-6" /> :
+               modalConfig.type === 'success' ? <FiCheckCircle className="w-6 h-6" /> : <FiHelpCircle className="w-6 h-6" />}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base">{modalConfig.title}</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">{modalConfig.message}</p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (modalConfig.onConfirm) modalConfig.onConfirm();
+                  setModalConfig({ isOpen: false, title: '', message: '', type: 'info' });
+                }}
+                className="w-full py-2.5 bg-brand-blue text-white font-bold text-xs rounded-xl shadow-xs hover:bg-brand-blue/90 cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI QUESTION GENERATOR MODAL */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 text-purple-700">
+                <HiSparkles className="w-5 h-5 text-purple-600" />
+                <h3 className="font-bold text-slate-900 text-base">AI Question Generator</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                  Exam Topic / Subject
+                </label>
+                <input
+                  type="text"
+                  value={aiTopic}
+                  onChange={e => setAiTopic(e.target.value)}
+                  placeholder="e.g. Quantitative Aptitude - Percentages & Profit/Loss"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                    Difficulty Level
+                  </label>
+                  <select
+                    value={aiDifficulty}
+                    onChange={e => setAiDifficulty(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                    Questions Count
+                  </label>
+                  <select
+                    value={aiCount}
+                    onChange={e => setAiCount(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                  >
+                    <option value={10}>10 Questions</option>
+                    <option value={25}>25 Questions</option>
+                    <option value={50}>50 Questions</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={aiGenerating}
+                onClick={handleGenerateAIQuestions}
+                className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <HiSparkles className="w-4 h-4 text-amber-300" />
+                <span>{aiGenerating ? 'Generating...' : 'Generate Questions'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JSON / CSV QUESTION IMPORT MODAL */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 text-brand-blue">
+                <FiUpload className="w-5 h-5" />
+                <h3 className="font-bold text-slate-900 text-base">Import Questions (JSON / CSV)</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowImportModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 border-b border-slate-200">
+              <button
+                type="button"
+                onClick={() => setImportTab('json')}
+                className={`px-4 py-1.5 font-bold text-xs rounded-t-xl transition-colors ${
+                  importTab === 'json' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                JSON Array
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportTab('csv')}
+                className={`px-4 py-1.5 font-bold text-xs rounded-t-xl transition-colors ${
+                  importTab === 'csv' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                CSV Format
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <p className="text-slate-500 font-medium">
+                {importTab === 'json'
+                  ? 'Paste JSON array containing question_text, options array (4 items), correct_option index (0-3), and explanation.'
+                  : 'Paste CSV rows: Question, Option A, Option B, Option C, Option D, Correct Index (0-3), Explanation'}
+              </p>
+
+              <textarea
+                rows={7}
+                value={importText}
+                onChange={e => setImportText(e.target.value)}
+                placeholder={
+                  importTab === 'json'
+                    ? '[\n  {\n    "question_text": "Sample question",\n    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],\n    "correct_option": 0,\n    "explanation": "Note"\n  }\n]'
+                    : 'Question,Option A,Option B,Option C,Option D,Correct Index,Explanation\n"What is Simple Interest?","Formula","Definition","Graph","Table",0,"SI = PRT/100"'
+                }
+                className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-800 outline-none"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowImportModal(false)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleImportQuestions}
+                className="px-5 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer"
+              >
+                Import Questions
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

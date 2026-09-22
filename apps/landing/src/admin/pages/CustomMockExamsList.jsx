@@ -146,196 +146,170 @@ export default function CustomMockExamsList() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {exams.map((exam) => {
-            const countOpt = exam.question_count_option || exam.custom_mock_exam_questions?.length || 25;
-            const isRegCopied = copiedId?.slug === exam.slug && copiedId?.type === 'reg';
-            const isLoginCopied = copiedId?.slug === exam.slug && copiedId?.type === 'login';
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                  <th className="p-3.5 w-14">SL NO</th>
+                  <th className="p-3.5">Exam Title & Slug</th>
+                  <th className="p-3.5">MCQs / Duration</th>
+                  <th className="p-3.5">Reg Start Time</th>
+                  <th className="p-3.5">Exam Start Time</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5">Shareable Links</th>
+                  <th className="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                {exams.map((exam, idx) => {
+                  const countOpt = exam.question_count_option || exam.custom_mock_exam_questions?.length || 25;
+                  const isRegCopied = copiedId?.slug === exam.slug && copiedId?.type === 'reg';
+                  const isLoginCopied = copiedId?.slug === exam.slug && copiedId?.type === 'login';
 
-            return (
-              <div
-                key={exam.id}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs hover:shadow-md transition-all space-y-5 flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  {/* TOP TITLE ROW */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">
-                          {exam.category || 'General'}
+                  return (
+                    <tr key={exam.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3.5 font-bold text-slate-400">
+                        {idx + 1}
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">
+                              {exam.category || 'Common'}
+                            </span>
+                          </div>
+                          <Link
+                            to={`/admin/custom-mock-exams/${exam.id}/edit`}
+                            className="font-bold text-slate-900 hover:text-brand-blue text-xs block transition-colors"
+                          >
+                            {exam.title}
+                          </Link>
+                          <span className="font-mono text-[10px] text-slate-400 block">
+                            /{exam.slug}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-900 block">{countOpt} MCQs</span>
+                          <span className="text-[10px] text-slate-500 block">{exam.time_limit_mins || 20} Mins · {exam.total_marks || 100} Marks</span>
+                        </div>
+                      </td>
+
+                      <td className="p-3.5 text-slate-700">
+                        <span className="font-semibold block text-[11px]">
+                          {exam.registration_start_time ? new Date(exam.registration_start_time).toLocaleString() : 'Immediate'}
                         </span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                          exam.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                        }`}>
+                      </td>
+
+                      <td className="p-3.5 text-slate-700">
+                        <span className="font-semibold text-brand-blue block text-[11px]">
+                          {exam.exam_start_time ? new Date(exam.exam_start_time).toLocaleString() : 'Immediate'}
+                        </span>
+                      </td>
+
+                      <td className="p-3.5">
+                        <button
+                          type="button"
+                          onClick={() => toggleExamActive(exam)}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors ${
+                            exam.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}
+                        >
                           {exam.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-bold text-slate-900 leading-snug">
-                        {exam.title}
-                      </h3>
-                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
-                        slug: /{exam.slug}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleExamActive(exam)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                        exam.is_active ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {exam.is_active ? 'Enabled' : 'Disabled'}
-                    </button>
-                  </div>
-
-                  {/* PARAMETERS GRID */}
-                  <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-center text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Questions</span>
-                      <span className="font-bold text-slate-900">{countOpt} MCQs</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Time Limit</span>
-                      <span className="font-bold text-brand-blue">{exam.time_limit_mins || 20} Mins</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Marks</span>
-                      <span className="font-bold text-emerald-600">{exam.total_marks || 100} Marks</span>
-                    </div>
-                  </div>
-
-                  {/* TIMING GUARDS INFO */}
-                  <div className="text-[11px] text-slate-600 space-y-1 bg-blue-50/50 p-3 rounded-xl border border-blue-100/60">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-500 flex items-center gap-1">
-                        <FiCalendar className="w-3.5 h-3.5 text-brand-blue" /> Reg Start:
-                      </span>
-                      <span className="font-medium text-slate-800">
-                        {exam.registration_start_time ? new Date(exam.registration_start_time).toLocaleString() : 'Immediate'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-500 flex items-center gap-1">
-                        <FiClock className="w-3.5 h-3.5 text-brand-orange" /> Exam Start:
-                      </span>
-                      <span className="font-medium text-slate-800">
-                        {exam.exam_start_time ? new Date(exam.exam_start_time).toLocaleString() : 'Immediate'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* DYNAMIC SHAREABLE LINKS SECTION */}
-                  <div className="space-y-2 pt-1 border-t border-slate-100">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Shareable Unique Links
-                    </span>
-
-                    {/* 1. Registration Link */}
-                    <div className="flex items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                      <div className="min-w-0 flex-1 truncate">
-                        <span className="font-bold text-slate-700 block text-[10px] uppercase">1. Candidate Registration Link:</span>
-                        <span className="font-mono text-slate-600 truncate block text-[11px]">
-                          {`${window.location.origin}/custom-exam/register/${exam.slug}`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleCopyLink(exam.slug, 'reg')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer ${
-                            isRegCopied ? 'bg-emerald-600 text-white' : 'bg-brand-blue text-white hover:bg-brand-blue/90'
-                          }`}
-                        >
-                          {isRegCopied ? <FiCheck className="w-3 h-3" /> : <FiCopy className="w-3 h-3" />}
-                          <span>{isRegCopied ? 'Copied' : 'Copy'}</span>
                         </button>
-                        <a
-                          href={`/custom-exam/register/${exam.slug}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 text-slate-500 hover:text-brand-blue rounded-lg transition-colors"
-                          title="Open Registration Link"
-                        >
-                          <FiExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </div>
+                      </td>
 
-                    {/* 2. Exam Login Link */}
-                    <div className="flex items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                      <div className="min-w-0 flex-1 truncate">
-                        <span className="font-bold text-slate-700 block text-[10px] uppercase">2. Exam Portal Login Link:</span>
-                        <span className="font-mono text-slate-600 truncate block text-[11px]">
-                          {`${window.location.origin}/custom-exam/login/${exam.slug}`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleCopyLink(exam.slug, 'login')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer ${
-                            isLoginCopied ? 'bg-emerald-600 text-white' : 'bg-brand-blue text-white hover:bg-brand-blue/90'
-                          }`}
-                        >
-                          {isLoginCopied ? <FiCheck className="w-3 h-3" /> : <FiCopy className="w-3 h-3" />}
-                          <span>{isLoginCopied ? 'Copied' : 'Copy'}</span>
-                        </button>
-                        <a
-                          href={`/custom-exam/login/${exam.slug}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 text-slate-500 hover:text-brand-blue rounded-lg transition-colors"
-                          title="Open Exam Login Link"
-                        >
-                          <FiExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      <td className="p-3.5">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(exam.slug, 'reg')}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 cursor-pointer ${
+                                isRegCopied ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {isRegCopied ? <FiCheck className="w-3 h-3" /> : <FiCopy className="w-3 h-3" />}
+                              <span>{isRegCopied ? 'Reg Link Copied' : 'Reg Link'}</span>
+                            </button>
+                            <a
+                              href={`/custom-exam/register/${exam.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-slate-400 hover:text-brand-blue"
+                              title="Open Reg URL"
+                            >
+                              <FiExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
 
-                {/* BOTTOM ACTION BAR */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      to={`/admin/custom-mock-exams/registrations?examId=${exam.id}`}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors"
-                    >
-                      <FiUsers className="w-3.5 h-3.5 text-brand-blue" />
-                      <span>Candidates</span>
-                    </Link>
-                    <Link
-                      to={`/admin/custom-mock-exams/submissions?examId=${exam.id}`}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors"
-                    >
-                      <FiClipboard className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Results</span>
-                    </Link>
-                  </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(exam.slug, 'login')}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 cursor-pointer ${
+                                isLoginCopied ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {isLoginCopied ? <FiCheck className="w-3 h-3" /> : <FiCopy className="w-3 h-3" />}
+                              <span>{isLoginCopied ? 'Login Link Copied' : 'Login Link'}</span>
+                            </button>
+                            <a
+                              href={`/custom-exam/login/${exam.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-slate-400 hover:text-brand-blue"
+                              title="Open Login URL"
+                            >
+                              <FiExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
+                      </td>
 
-                  <div className="flex items-center gap-1">
-                    <Link
-                      to={`/admin/custom-mock-exams/${exam.id}/edit`}
-                      className="p-2 text-slate-500 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                      title="Edit Exam"
-                    >
-                      <FiEdit2 className="w-4 h-4" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteModalId(exam.id)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="Delete Exam"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      <td className="p-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            to={`/admin/custom-mock-exams/${exam.id}/edit`}
+                            className="p-1.5 text-slate-600 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Exam"
+                          >
+                            <FiEdit2 className="w-4 h-4" />
+                          </Link>
+                          <Link
+                            to={`/admin/custom-mock-exams/registrations?examId=${exam.id}`}
+                            className="p-1.5 text-slate-600 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View Candidates"
+                          >
+                            <FiUsers className="w-4 h-4" />
+                          </Link>
+                          <Link
+                            to={`/admin/custom-mock-exams/submissions?examId=${exam.id}`}
+                            className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="View Results"
+                          >
+                            <FiClipboard className="w-4 h-4" />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteModalId(exam.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Exam"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

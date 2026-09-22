@@ -171,13 +171,14 @@ export default function CustomExamLogin() {
                 Password (Date of Birth) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none z-10" />
                 <input
                   type="date"
                   value={dob}
                   onChange={e => setDob(e.target.value)}
                   required
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  style={{ colorScheme: 'light' }}
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
                 />
               </div>
             </div>
@@ -198,18 +199,6 @@ export default function CustomExamLogin() {
               </button>
             </div>
           </form>
-
-          <div className="text-center pt-2 border-t border-slate-100">
-            <p className="text-xs text-slate-500">
-              Not registered yet?{' '}
-              <Link
-                to={`/custom-exam/register/${slug}`}
-                className="font-bold text-brand-blue hover:underline"
-              >
-                Register for this exam here
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>
