@@ -245,21 +245,11 @@ export default function CustomExamInstructions() {
           ) : null}
 
           {/* ACTION BUTTON */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-            <Link
-              to={`/custom-exam/login/${slug}`}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              Sign Out
-            </Link>
-
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
               type="button"
               disabled={!unlocked || ended}
               onClick={() => {
-                try {
-                  localStorage.removeItem(`custom_exam_test_session_${slug}`);
-                } catch (e) {}
                 navigate(`/custom-exam/test/${slug}`);
               }}
               className="inline-flex items-center gap-2 px-7 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"

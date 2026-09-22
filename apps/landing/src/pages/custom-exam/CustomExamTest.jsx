@@ -267,26 +267,25 @@ export default function CustomExamTest() {
       const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
       const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
 
-      // If the cached session is expired (remainingSecs <= 0) or was marked SUBMITTED in cache
-      // but NOT in DB, clear stale cache and start fresh exam!
-      if (remainingSecs <= 0 || cached.activeStep === 'SUBMITTED') {
-        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
-        setTimeLeftSeconds(fullExamSecs);
-        setVisitedQuestions(initialVisited);
-        setActiveStep('QUIZ');
-        return;
-      }
-
-      // Valid ongoing session restored from refresh
+      // Restore answered, visited, marked for review, and feedback state from local cache
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
       if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
       if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
       if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
       if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
 
-      setTimeLeftSeconds(remainingSecs);
-      setActiveStep(cached.activeStep || 'QUIZ');
-      setIsSessionRestored(true);
+      if (remainingSecs <= 0) {
+        setTimeLeftSeconds(0);
+        setActiveStep(cached.activeStep || 'QUIZ');
+        setIsSessionRestored(true);
+        setTimeout(() => {
+          triggerFeedbackOrSubmit();
+        }, 500);
+      } else {
+        setTimeLeftSeconds(remainingSecs);
+        setActiveStep(cached.activeStep || 'QUIZ');
+        setIsSessionRestored(true);
+      }
     } catch (e) {
       setTimeLeftSeconds(fullExamSecs);
       setVisitedQuestions(initialVisited);

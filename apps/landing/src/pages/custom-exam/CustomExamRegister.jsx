@@ -129,6 +129,80 @@ function PhotoCapture({ photoUrl, onPhotoCaptured }) {
   );
 }
 
+function EasyDobInput({ value, onChange, disabled }) {
+  const parts = (value || '').split('-');
+  const selectedYear = parts[0] || '';
+  const selectedMonth = parts[1] || '';
+  const selectedDay = parts[2] || '';
+
+  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
+  const months = [
+    { num: '01', name: '01 - Jan' },
+    { num: '02', name: '02 - Feb' },
+    { num: '03', name: '03 - Mar' },
+    { num: '04', name: '04 - Apr' },
+    { num: '05', name: '05 - May' },
+    { num: '06', name: '06 - Jun' },
+    { num: '07', name: '07 - Jul' },
+    { num: '08', name: '08 - Aug' },
+    { num: '09', name: '09 - Sep' },
+    { num: '10', name: '10 - Oct' },
+    { num: '11', name: '11 - Nov' },
+    { num: '12', name: '12 - Dec' },
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 70 }, (_, i) => String(currentYear - 10 - i));
+
+  function updateDob(d, m, y) {
+    if (d && m && y) {
+      onChange(`${y}-${m}-${d}`);
+    } else {
+      onChange(`${y || ''}-${m || ''}-${d || ''}`);
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      <select
+        value={selectedDay}
+        disabled={disabled}
+        onChange={e => updateDob(e.target.value, selectedMonth, selectedYear)}
+        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
+      >
+        <option value="">Day</option>
+        {days.map(d => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+
+      <select
+        value={selectedMonth}
+        disabled={disabled}
+        onChange={e => updateDob(selectedDay, e.target.value, selectedYear)}
+        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
+      >
+        <option value="">Month</option>
+        {months.map(m => (
+          <option key={m.num} value={m.num}>{m.name}</option>
+        ))}
+      </select>
+
+      <select
+        value={selectedYear}
+        disabled={disabled}
+        onChange={e => updateDob(selectedDay, selectedMonth, e.target.value)}
+        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
+      >
+        <option value="">Year</option>
+        {years.map(y => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function CustomExamRegister() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -136,7 +210,7 @@ export default function CustomExamRegister() {
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [serverTimeMs, setServerTimeMs] = useState(Date.now());
+  const [serverOffsetMs, setServerOffsetMs] = useState(0);
   const [regCountdownSecs, setRegCountdownSecs] = useState(0);
 
   // Form State
@@ -159,9 +233,19 @@ export default function CustomExamRegister() {
 
   async function syncServerTime() {
     try {
+      const startMs = Date.now();
       const { data } = await supabase.rpc('get_server_time');
-      if (data) setServerTimeMs(new Date(data).getTime());
+      const endMs = Date.now();
+      const latency = Math.round((endMs - startMs) / 2);
+      if (data) {
+        const serverNowMs = new Date(data).getTime() + latency;
+        setServerOffsetMs(serverNowMs - Date.now());
+      }
     } catch (e) {}
+  }
+
+  function getSyncedNow() {
+    return Date.now() + serverOffsetMs;
   }
 
   async function fetchExam() {
@@ -194,28 +278,36 @@ export default function CustomExamRegister() {
   useEffect(() => {
     if (exam?.registration_start_time) {
       const regStartMs = new Date(exam.registration_start_time).getTime();
-      const timer = setInterval(() => {
-        const nowMs = Date.now();
+      const check = () => {
+        const nowMs = getSyncedNow();
         const diff = Math.max(0, Math.floor((regStartMs - nowMs) / 1000));
         setRegCountdownSecs(diff);
-      }, 1000);
+      };
+      check();
+      const timer = setInterval(check, 1000);
       return () => clearInterval(timer);
     }
-  }, [exam]);
+  }, [exam, serverOffsetMs]);
 
   const isRegistrationOpen = () => {
     if (!exam?.registration_start_time) return true;
-    return Date.now() >= new Date(exam.registration_start_time).getTime();
+    return getSyncedNow() >= new Date(exam.registration_start_time).getTime();
   };
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!isRegistrationOpen()) {
+      alert('Registration is not open yet! Please wait for the scheduled start time.');
+      return;
+    }
+
     const errs = {};
     if (!userName.trim()) errs.name = 'Full name is required';
     if (!userEmail.trim()) errs.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) errs.email = 'Valid email is required';
     if (!userPhone.trim()) errs.phone = 'Phone number is required';
-    if (!userDob) errs.dob = 'Date of birth calendar selection is required';
+    const dobParts = (userDob || '').split('-').filter(Boolean);
+    if (!userDob || dobParts.length < 3) errs.dob = 'Complete Date of Birth selection is required';
     if (!userCollege.trim()) errs.college = 'College/Institute name is required';
 
     setFormErrors(errs);
@@ -248,8 +340,13 @@ export default function CustomExamRegister() {
   }
 
   function formatCountdown(sec) {
-    const m = Math.floor(sec / 60);
+    if (sec <= 0) return '00:00:00';
+    const d = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
+    if (d > 0) return `${d}d ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    if (h > 0) return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 
@@ -376,13 +473,9 @@ export default function CustomExamRegister() {
                   <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
                     Date of Birth (Password) <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
+                  <EasyDobInput
                     value={userDob}
-                    onChange={e => setUserDob(e.target.value)}
-                    required
-                    style={{ colorScheme: 'light' }}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
+                    onChange={setUserDob}
                   />
                   {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
                 </div>
@@ -440,11 +533,11 @@ export default function CustomExamRegister() {
                 {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
               </div>
 
-              <div className="pt-3 border-t border-slate-100">
+              <div className="pt-3 border-t border-slate-100 flex justify-center">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <span>{submitting ? 'Submitting...' : 'Submit'}</span>
                   <FiArrowRight className="w-4 h-4" />
