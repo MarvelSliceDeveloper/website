@@ -134,13 +134,10 @@ export default function CustomExamLogin() {
 
         {/* LOGIN CARD */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-          <div className="border-b border-slate-100 pb-4 text-center space-y-1">
+          <div className="border-b border-slate-100 pb-4 text-center">
             <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-brand-blue border border-blue-100">
               Exam Access Guard
             </span>
-            <h1 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-              {exam?.title}
-            </h1>
           </div>
 
           {loginError && (
@@ -196,7 +193,7 @@ export default function CustomExamLogin() {
                 disabled={loggingIn}
                 className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                <span>{loggingIn ? 'Authenticating...' : 'Login & View Exam Instructions'}</span>
+                <span>{loggingIn ? 'Logging in...' : 'Login'}</span>
                 <FiArrowRight className="w-4 h-4" />
               </button>
             </div>

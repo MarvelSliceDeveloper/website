@@ -280,9 +280,6 @@ export default function CustomExamRegister() {
             <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-brand-blue border border-blue-100">
               Exam Registration
             </span>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900 mt-2">
-              {exam?.title}
-            </h1>
           </div>
 
           {/* TIMING GUARD CLOSED STATE */}
@@ -449,7 +446,7 @@ export default function CustomExamRegister() {
                   disabled={submitting}
                   className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                 >
-                  <span>{submitting ? 'Registering...' : 'Register & Get Login Credentials'}</span>
+                  <span>{submitting ? 'Submitting...' : 'Submit'}</span>
                   <FiArrowRight className="w-4 h-4" />
                 </button>
               </div>
