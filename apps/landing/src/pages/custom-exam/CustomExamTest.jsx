@@ -759,130 +759,156 @@ export default function CustomExamTest() {
                     className="relative w-full aspect-square flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
                     title={`Question ${idx + 1}`}
                   >
-                    <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible">
-                      <defs>
-                        <radialGradient id={`orb-green-${idx}`} cx="45%" cy="30%" r="75%">
-                          <stop offset="0%" stopColor="#4ade80" />
-                          <stop offset="40%" stopColor="#22c55e" />
-                          <stop offset="100%" stopColor="#15803d" />
-                        </radialGradient>
-                        <radialGradient id={`orb-purple-${idx}`} cx="45%" cy="30%" r="75%">
-                          <stop offset="0%" stopColor="#c084fc" />
-                          <stop offset="40%" stopColor="#a855f7" />
-                          <stop offset="100%" stopColor="#7e22ce" />
-                        </radialGradient>
-                        <linearGradient id={`orb-dual-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#22c55e" />
-                          <stop offset="48%" stopColor="#15803d" />
-                          <stop offset="52%" stopColor="#a855f7" />
-                          <stop offset="100%" stopColor="#7e22ce" />
-                        </linearGradient>
-                        <radialGradient id={`orb-red-${idx}`} cx="45%" cy="30%" r="75%">
-                          <stop offset="0%" stopColor="#f87171" />
-                          <stop offset="40%" stopColor="#ef4444" />
-                          <stop offset="100%" stopColor="#b91c1c" />
-                        </radialGradient>
-                        <radialGradient id={`orb-blue-${idx}`} cx="45%" cy="30%" r="75%">
-                          <stop offset="0%" stopColor="#60a5fa" />
-                          <stop offset="40%" stopColor="#2563eb" />
-                          <stop offset="100%" stopColor="#1d4ed8" />
-                        </radialGradient>
-                        <radialGradient id={`orb-gray-${idx}`} cx="45%" cy="30%" r="75%">
-                          <stop offset="0%" stopColor="#ffffff" />
-                          <stop offset="40%" stopColor="#f1f5f9" />
-                          <stop offset="100%" stopColor="#cbd5e1" />
-                        </radialGradient>
-                        <linearGradient id={`orb-top-gloss-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
-                          <stop offset="50%" stopColor="#ffffff" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
+                      <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible">
+                        <defs>
+                          <linearGradient id={`sq-bg-green-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#4ade80" />
+                            <stop offset="45%" stopColor="#22c55e" />
+                            <stop offset="100%" stopColor="#15803d" />
+                          </linearGradient>
+                          <linearGradient id={`sq-bg-purple-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#c084fc" />
+                            <stop offset="45%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#7e22ce" />
+                          </linearGradient>
+                          <linearGradient id={`sq-bg-dual-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="48%" stopColor="#15803d" />
+                            <stop offset="52%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#7e22ce" />
+                          </linearGradient>
+                          <linearGradient id={`sq-bg-red-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#f87171" />
+                            <stop offset="45%" stopColor="#ef4444" />
+                            <stop offset="100%" stopColor="#b91c1c" />
+                          </linearGradient>
+                          <linearGradient id={`sq-bg-blue-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="45%" stopColor="#2563eb" />
+                            <stop offset="100%" stopColor="#1d4ed8" />
+                          </linearGradient>
+                          <linearGradient id={`sq-bg-gray-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#ffffff" />
+                            <stop offset="45%" stopColor="#f8fafc" />
+                            <stop offset="100%" stopColor="#e2e8f0" />
+                          </linearGradient>
 
-                      {isCurrent && (
-                        <circle cx="16" cy="16" r="14.0" fill="none" stroke="#2563eb" strokeWidth="1.8" className="animate-pulse" />
-                      )}
+                          {/* Top-Right Diagonal Glass Gloss Sheen */}
+                          <linearGradient id={`sq-diag-gloss-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                          </linearGradient>
 
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="12.5"
-                        fill={
-                          orbType === 'answered' ? `url(#orb-green-${idx})` :
-                          orbType === 'marked' ? `url(#orb-purple-${idx})` :
-                          orbType === 'answered-marked' ? `url(#orb-dual-${idx})` :
-                          orbType === 'not-answered' ? `url(#orb-red-${idx})` :
-                          orbType === 'current' && !isVisited ? `url(#orb-blue-${idx})` :
-                          `url(#orb-gray-${idx})`
-                        }
-                        stroke="rgba(0,0,0,0.25)"
-                        strokeWidth="0.75"
-                      />
+                          {/* Top Inner Gloss Highlight */}
+                          <linearGradient id={`sq-top-glow-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
 
-                      <path
-                        d="M 4.2,14.5 A 12,12 0 0,1 27.8,14.5 A 11.5,7.5 0 0,0 4.2,14.5 Z"
-                        fill={`url(#orb-top-gloss-${idx})`}
-                      />
+                        {/* Active Question Outer Pulsing Ring */}
+                        {isCurrent && (
+                          <rect x="0.8" y="0.8" width="30.4" height="30.4" rx="7" ry="7" fill="none" stroke="#2563eb" strokeWidth="2.0" className="animate-pulse" />
+                        )}
 
-                      <path
-                        d="M 7.5,20 A 9.5,5 0 0,0 24.5,20 A 9.5,7 0 0,1 7.5,20 Z"
-                        fill="#ffffff"
-                        fillOpacity="0.25"
-                      />
+                        {/* Main 3D Glossy Rounded Square Base */}
+                        <rect
+                          x="3"
+                          y="3"
+                          width="26"
+                          height="26"
+                          rx="6"
+                          ry="6"
+                          fill={
+                            orbType === 'answered' ? `url(#sq-bg-green-${idx})` :
+                            orbType === 'marked' ? `url(#sq-bg-purple-${idx})` :
+                            orbType === 'answered-marked' ? `url(#sq-bg-dual-${idx})` :
+                            orbType === 'not-answered' ? `url(#sq-bg-red-${idx})` :
+                            orbType === 'current' && !isVisited ? `url(#sq-bg-blue-${idx})` :
+                            `url(#sq-bg-gray-${idx})`
+                          }
+                          stroke={orbType === 'unvisited' ? '#cbd5e1' : 'rgba(0,0,0,0.18)'}
+                          strokeWidth="1.0"
+                        />
 
-                      <text
-                        x="16"
-                        y="16"
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                        fontWeight="500"
-                        fontSize="16"
-                        fill={orbType === 'unvisited' ? '#1e293b' : '#ffffff'}
-                        style={{
-                          filter: orbType === 'unvisited'
-                            ? 'drop-shadow(0px 1px 0px rgba(255,255,255,0.9))'
-                            : 'drop-shadow(0px 1px 1px rgba(0,0,0,0.6))'
-                        }}
-                      >
-                        {idx + 1}
-                      </text>
-                    </svg>
-                  </button>
-                );
-              })}
+                        {/* Top Inner Glass Glow Highlight */}
+                        <rect
+                          x="4"
+                          y="4"
+                          width="24"
+                          height="11"
+                          rx="4"
+                          ry="4"
+                          fill={`url(#sq-top-glow-${idx})`}
+                          opacity="0.5"
+                        />
+
+                        {/* Top-Right Diagonal Glass Gloss Sheen */}
+                        <path
+                          d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z"
+                          fill={`url(#sq-diag-gloss-${idx})`}
+                          opacity="0.8"
+                        />
+
+                        {/* Perfectly Centered SVG Text */}
+                        <text
+                          x="16"
+                          y="16"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontFamily="system-ui, -apple-system, sans-serif"
+                          fontWeight="500"
+                          fontSize="16"
+                          fill={orbType === 'unvisited' ? '#1e293b' : '#ffffff'}
+                          style={{
+                            filter: orbType === 'unvisited'
+                              ? 'drop-shadow(0px 1px 0px rgba(255,255,255,0.9))'
+                              : 'drop-shadow(0px 1px 1px rgba(0,0,0,0.6))'
+                          }}
+                        >
+                          {idx + 1}
+                        </text>
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* LEGEND WITH 3D GLOSSY GLASS ORBS */}
-          <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-4">
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                <circle cx="16" cy="16" r="13.5" fill="#22c55e" />
-              </svg>
-              <span className="font-medium">Answered</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                <circle cx="16" cy="16" r="13.5" fill="#ef4444" />
-              </svg>
-              <span className="font-medium">Not Answered</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                <circle cx="16" cy="16" r="13.5" fill="#a855f7" />
-              </svg>
-              <span className="font-medium">Marked for Review</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                <circle cx="16" cy="16" r="13.5" fill="#cbd5e1" />
-              </svg>
-              <span className="font-medium">Not Visited</span>
+            {/* LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
+            <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-4">
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#22c55e" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+                </svg>
+                <span className="font-medium">Answered</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#ef4444" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+                </svg>
+                <span className="font-medium">Not Answered</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#a855f7" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+                </svg>
+                <span className="font-medium">Marked for Review</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.5" />
+                </svg>
+                <span className="font-medium">Not Visited</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
