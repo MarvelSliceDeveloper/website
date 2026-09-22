@@ -39,7 +39,7 @@ const DEMO_EXAMS = [
     title: 'IBPS PO Prelims Speed Drill Mock Test',
     category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 15,
-    total_marks: 5,
+    total_marks: 10,
     description: 'Timed speed drill covering Quantitative Aptitude, Reasoning, and English for IBPS PO & SBI PO Prelims.',
     questions: [
       {
@@ -81,6 +81,46 @@ const DEMO_EXAMS = [
         correct_option: 1,
         explanation: 'Let ages be 4x and 5x. (4x+5)/(5x+5) = 5/6 => 24x + 30 = 25x + 25 => x = 5. A\'s present age = 4x = 20 years.',
         marks: 1
+      },
+      {
+        id: 'q6',
+        question_text: 'Two trains running in opposite directions cross a man standing on the platform in 27 seconds and 17 seconds respectively and they cross each other in 23 seconds. The ratio of their speeds is:',
+        options: ['1 : 3', '3 : 2', '3 : 4', '2 : 3'],
+        correct_option: 1,
+        explanation: 'Let speeds be x and y. Distance = 27x and 17y. Relative speed = x+y. Time = (27x+17y)/(x+y) = 23 => 27x + 17y = 23x + 23y => 4x = 6y => x/y = 3/2.',
+        marks: 1
+      },
+      {
+        id: 'q7',
+        question_text: 'Find the odd one out in the series: 3, 5, 11, 14, 17, 21',
+        options: ['14', '17', '21', '11'],
+        correct_option: 0,
+        explanation: 'All numbers in the sequence except 14 are prime numbers.',
+        marks: 1
+      },
+      {
+        id: 'q8',
+        question_text: 'What is the full form of NEFT in banking terms?',
+        options: ['National Electronic Fund Transfer', 'National Efficient Fund Transaction', 'Net Electronic Financial Transfer', 'National Exchange Financial Technology'],
+        correct_option: 0,
+        explanation: 'NEFT stands for National Electronic Funds Transfer, a nation-wide payment system facilitating one-to-one funds transfer.',
+        marks: 1
+      },
+      {
+        id: 'q9',
+        question_text: 'A dealer marks his goods 20% above cost price and allows a discount of 10%. Find his profit percentage.',
+        options: ['8%', '10%', '12%', '15%'],
+        correct_option: 0,
+        explanation: 'Let CP = 100. MP = 120. SP = 120 * 0.9 = 108. Profit = 8%.',
+        marks: 1
+      },
+      {
+        id: 'q10',
+        question_text: 'If 12 men or 18 women can do a piece of work in 14 days, then 8 men and 16 women can do the same work in how many days?',
+        options: ['9 days', '8 days', '7 days', '10 days'],
+        correct_option: 0,
+        explanation: '12M = 18W => 2M = 3W. 8M + 16W = 12W + 16W = 28W. Time = (18 * 14) / 28 = 9 days.',
+        marks: 1
       }
     ]
   },
@@ -89,7 +129,7 @@ const DEMO_EXAMS = [
     title: 'SBI Clerk & RRB Assistant Full Mock Test',
     category: 'Banking & Quantitative Aptitude',
     time_limit_mins: 20,
-    total_marks: 5,
+    total_marks: 10,
     description: 'Comprehensive practice mock test with real exam interface for SBI Clerk & RRB Assistant aspirants.',
     questions: [
       {
@@ -97,7 +137,7 @@ const DEMO_EXAMS = [
         question_text: 'What is 15% of 480 + 25% of 320?',
         options: ['140', '152', '160', '148'],
         correct_option: 0,
-        explanation: '15% of 480 = 72. 25% of 320 = 80. Total = 72 + 80 = 152. Wait! 72 + 80 = 152.',
+        explanation: '15% of 480 = 72. 25% of 320 = 80. Total = 72 + 80 = 152.',
         marks: 1
       },
       {
@@ -130,6 +170,46 @@ const DEMO_EXAMS = [
         options: ['Accomodate', 'Accommodate', 'Acommodate', 'Accommodett'],
         correct_option: 1,
         explanation: 'The correct spelling is "Accommodate" with double c and double m.',
+        marks: 1
+      },
+      {
+        id: 'q26',
+        question_text: 'In how many different ways can the letters of the word "LEADING" be arranged such that the vowels always come together?',
+        options: ['360', '480', '720', '5040'],
+        correct_option: 2,
+        explanation: 'Vowels: E, A, I (3 vowels). Consonants: L, D, N, G (4 consonants). Treating 3 vowels as 1 unit gives 5 items (5! = 120). 3 vowels can be arranged in 3! = 6 ways. Total = 120 * 6 = 720.',
+        marks: 1
+      },
+      {
+        id: 'q27',
+        question_text: 'A boat can travel at a speed of 13 km/hr in still water. If the speed of the stream is 4 km/hr, find the time taken by the boat to go 68 km downstream.',
+        options: ['4 hours', '5 hours', '6 hours', '3.5 hours'],
+        correct_option: 0,
+        explanation: 'Downstream speed = 13 + 4 = 17 km/hr. Time = 68 / 17 = 4 hours.',
+        marks: 1
+      },
+      {
+        id: 'q28',
+        question_text: 'Which benchmark interest rate was introduced by RBI to replace Marginal Cost of Funds based Lending Rate (MCLR) for retail loans?',
+        options: ['EBLR / Repo Linked Rate', 'PLR', 'LIBOR', 'SOFR'],
+        correct_option: 0,
+        explanation: 'External Benchmark Lending Rate (EBLR) linked to Repo Rate was mandated by RBI for all retail floating rate loans.',
+        marks: 1
+      },
+      {
+        id: 'q29',
+        question_text: 'A pipe can fill a tank in 6 hours and another pipe can empty it in 12 hours. If both pipes are opened together, the tank will be filled in:',
+        options: ['8 hours', '10 hours', '12 hours', '15 hours'],
+        correct_option: 2,
+        explanation: 'Net rate = 1/6 - 1/12 = 1/12 per hour. Time required = 12 hours.',
+        marks: 1
+      },
+      {
+        id: 'q30',
+        question_text: 'The average of 5 consecutive numbers is 27. What is the largest number?',
+        options: ['29', '30', '28', '31'],
+        correct_option: 0,
+        explanation: 'The average of 5 consecutive numbers is the middle number (3rd number = 27). The 5 numbers are 25, 26, 27, 28, 29. Largest = 29.',
         marks: 1
       }
     ]
@@ -479,7 +559,7 @@ export default function MockExam() {
         {/* QUIZ MAIN BODY */}
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-slate-50">
           {/* QUESTION CONTENT AREA */}
-          <div className="flex-1 min-h-0 flex flex-col bg-slate-50 order-1 lg:order-2">
+          <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-slate-50 order-1 lg:order-1">
             {examQuestions.length > 0 && (
               <div className="flex-1 min-h-0 flex flex-col max-w-5xl w-full mx-auto p-3.5 sm:p-6 lg:p-8">
                 {/* QUESTION TOP BAR */}
@@ -604,119 +684,312 @@ export default function MockExam() {
           </div>
 
           {/* SIDE QUESTION PALETTE */}
-          <div className="w-full lg:w-80 bg-slate-100 border-t lg:border-t-0 lg:border-r border-slate-200 p-4 sm:p-5 shrink-0 overflow-y-auto flex flex-col justify-between order-2 lg:order-1">
+          <div className="w-full lg:w-[20%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-4 sm:p-5 shrink-0 overflow-y-auto flex flex-col justify-between order-2 lg:order-2">
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Question Palette ({examQuestions.length})
               </h3>
 
-              <div className="grid grid-cols-5 gap-[10px]">
+              <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-2">
                 {examQuestions.map((q, idx) => {
                   const isAnswered = userAnswers[q.id] !== undefined;
                   const isMarked = markedForReview[q.id];
                   const isCurrent = currentQIndex === idx;
 
-                  let fillColor = "#f1f5f9";
-                  let strokeColor = "#cbd5e1";
-                  let textColor = "#334155";
-                  let isGradient = false;
-
-                  if (isCurrent) {
-                    fillColor = isAnswered ? "#059669" : "#2563eb";
-                    strokeColor = "#1d4ed8";
-                    textColor = "#ffffff";
-                  } else if (isAnswered && isMarked) {
-                    isGradient = true;
-                    strokeColor = "#7e22ce";
-                    textColor = "#ffffff";
+                  let orbType = "unanswered";
+                  if (isAnswered && isMarked) {
+                    orbType = "answered-marked";
                   } else if (isMarked) {
-                    fillColor = "#9333ea";
-                    strokeColor = "#7e22ce";
-                    textColor = "#ffffff";
+                    orbType = "marked";
                   } else if (isAnswered) {
-                    fillColor = "#059669";
-                    strokeColor = "#047857";
-                    textColor = "#ffffff";
+                    orbType = "answered";
+                  } else if (isCurrent) {
+                    orbType = "current";
                   }
 
-                  const isCircleShape = isAnswered;
+                  let textColor = (orbType === 'unanswered') ? "#334155" : "#ffffff";
+
+                  let glowColor = (
+                    orbType === 'answered' ? '#16a34a' :
+                    orbType === 'marked' ? '#9333ea' :
+                    orbType === 'answered-marked' ? '#16a34a' :
+                    orbType === 'current' ? '#2563eb' :
+                    '#64748b'
+                  );
+
+                  const isSquare = idx >= 5;
 
                   return (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setCurrentQIndex(idx)}
-                      className="relative w-10 h-10 flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
+                      className="relative w-full aspect-square flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
                       title={`Question ${idx + 1}`}
                     >
-                      <svg viewBox="0 0 24 24" className="w-10 h-10 drop-shadow-2xs">
-                        {isGradient && (
-                          <defs>
-                            <linearGradient id={`pacman-grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="50%" stopColor="#10b981" />
-                              <stop offset="50%" stopColor="#9333ea" />
-                            </linearGradient>
-                          </defs>
-                        )}
-                        {isCircleShape ? (
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            fill={isGradient ? `url(#pacman-grad-${idx})` : fillColor}
-                            stroke={strokeColor}
-                            strokeWidth={isCurrent ? "2" : "1"}
-                          />
+                      <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible">
+                        <defs>
+                          <radialGradient id={`orb-green-${idx}`} cx="45%" cy="30%" r="75%">
+                            <stop offset="0%" stopColor="#4ade80" />
+                            <stop offset="40%" stopColor="#22c55e" />
+                            <stop offset="100%" stopColor="#15803d" />
+                          </radialGradient>
+                          <radialGradient id={`orb-purple-${idx}`} cx="45%" cy="30%" r="75%">
+                            <stop offset="0%" stopColor="#c084fc" />
+                            <stop offset="40%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#7e22ce" />
+                          </radialGradient>
+                          <linearGradient id={`orb-dual-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="48%" stopColor="#15803d" />
+                            <stop offset="52%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#7e22ce" />
+                          </linearGradient>
+                          <radialGradient id={`orb-blue-${idx}`} cx="45%" cy="30%" r="75%">
+                            <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="40%" stopColor="#2563eb" />
+                            <stop offset="100%" stopColor="#1d4ed8" />
+                          </radialGradient>
+                          <radialGradient id={`orb-gray-${idx}`} cx="45%" cy="30%" r="75%">
+                            <stop offset="0%" stopColor="#ffffff" />
+                            <stop offset="40%" stopColor="#f1f5f9" />
+                            <stop offset="100%" stopColor="#cbd5e1" />
+                          </radialGradient>
+                          <linearGradient id={`orb-top-gloss-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+                            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+
+                        {isSquare ? (
+                          <>
+                            <defs>
+                              <linearGradient id={`sq-diagonal-gloss-${idx}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+                                <stop offset="60%" stopColor="#ffffff" stopOpacity="0.25" />
+                                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                              </linearGradient>
+                              {orbType === 'answered' && (
+                                <linearGradient id={`sq-bg-${idx}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor="#4ade80" />
+                                  <stop offset="50%" stopColor="#22c55e" />
+                                  <stop offset="100%" stopColor="#15803d" />
+                                </linearGradient>
+                              )}
+                              {orbType === 'marked' && (
+                                <linearGradient id={`sq-bg-${idx}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor="#c084fc" />
+                                  <stop offset="50%" stopColor="#a855f7" />
+                                  <stop offset="100%" stopColor="#7e22ce" />
+                                </linearGradient>
+                              )}
+                              {orbType === 'answered-marked' && (
+                                <linearGradient id={`sq-bg-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#22c55e" />
+                                  <stop offset="50%" stopColor="#15803d" />
+                                  <stop offset="50%" stopColor="#a855f7" />
+                                  <stop offset="100%" stopColor="#7e22ce" />
+                                </linearGradient>
+                              )}
+                              {orbType === 'current' && (
+                                <linearGradient id={`sq-bg-${idx}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor="#38bdf8" />
+                                  <stop offset="50%" stopColor="#0284c7" />
+                                  <stop offset="100%" stopColor="#0369a1" />
+                                </linearGradient>
+                              )}
+                              {orbType === 'unanswered' && (
+                                <linearGradient id={`sq-bg-${idx}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor="#ffffff" />
+                                  <stop offset="50%" stopColor="#f1f5f9" />
+                                  <stop offset="100%" stopColor="#cbd5e1" />
+                                </linearGradient>
+                              )}
+                            </defs>
+
+                            {/* Current Active Outer Ring */}
+                            {isCurrent && (
+                              <rect
+                                x="1.5"
+                                y="1.5"
+                                width="29"
+                                height="29"
+                                rx="7"
+                                ry="7"
+                                fill="none"
+                                stroke="#2563eb"
+                                strokeWidth="1.8"
+                                className="animate-pulse"
+                              />
+                            )}
+
+                            {/* Base Rounded Square with Bright Outer Rim */}
+                            <rect
+                              x="3"
+                              y="3"
+                              width="26"
+                              height="26"
+                              rx="6"
+                              ry="6"
+                              fill={`url(#sq-bg-${idx})`}
+                              stroke={
+                                orbType === 'answered' ? '#86efac' :
+                                orbType === 'marked' ? '#e9d5ff' :
+                                orbType === 'current' ? '#7dd3fc' :
+                                '#cbd5e1'
+                              }
+                              strokeWidth="1.2"
+                            />
+
+                            {/* Top-Right Diagonal Glass Sheen */}
+                            <path
+                              d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,20 L 12,3 Z"
+                              fill={`url(#sq-diagonal-gloss-${idx})`}
+                            />
+
+                            {/* Inner Rim Top Highlight */}
+                            <rect
+                              x="4.5"
+                              y="4.5"
+                              width="23"
+                              height="23"
+                              rx="4.5"
+                              ry="4.5"
+                              fill="none"
+                              stroke="#ffffff"
+                              strokeWidth="0.6"
+                              strokeOpacity="0.4"
+                            />
+                          </>
                         ) : (
-                          <path
-                            d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z"
-                            fill={fillColor}
-                            stroke={strokeColor}
-                            strokeWidth={isCurrent ? "2" : "1"}
-                          />
+                          <>
+                            {/* Current Active Outer Ring */}
+                            {isCurrent && (
+                              <circle cx="16" cy="16" r="14.0" fill="none" stroke="#2563eb" strokeWidth="1.8" className="animate-pulse" />
+                            )}
+
+                            {/* Base Spherical Circle */}
+                            <circle
+                              cx="16"
+                              cy="16"
+                              r="12.5"
+                              fill={
+                                orbType === 'answered' ? `url(#orb-green-${idx})` :
+                                orbType === 'marked' ? `url(#orb-purple-${idx})` :
+                                orbType === 'answered-marked' ? `url(#orb-dual-${idx})` :
+                                orbType === 'current' ? `url(#orb-blue-${idx})` :
+                                `url(#orb-gray-${idx})`
+                              }
+                              stroke="rgba(0,0,0,0.25)"
+                              strokeWidth="0.75"
+                            />
+
+                            {/* Crescent Glass Gloss Cap */}
+                            <path
+                              d="M 4.2,14.5 A 12,12 0 0,1 27.8,14.5 A 11.5,7.5 0 0,0 4.2,14.5 Z"
+                              fill={`url(#orb-top-gloss-${idx})`}
+                            />
+
+                            {/* Bottom Rim Glow Highlight */}
+                            <path
+                              d="M 7.5,20 A 9.5,5 0 0,0 24.5,20 A 9.5,7 0 0,1 7.5,20 Z"
+                              fill="#ffffff"
+                              fillOpacity="0.25"
+                            />
+                          </>
                         )}
+
+                        {/* Perfectly Centered SVG Text */}
+                        <text
+                          x="16"
+                          y="16"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontFamily="system-ui, -apple-system, sans-serif"
+                          fontWeight="500"
+                          fontSize="16"
+                          fill={orbType === 'unanswered' ? '#1e293b' : '#ffffff'}
+                          style={{
+                            filter: orbType === 'unanswered'
+                              ? 'drop-shadow(0px 1px 0px rgba(255,255,255,0.9))'
+                              : 'drop-shadow(0px 1px 1px rgba(0,0,0,0.6))'
+                          }}
+                        >
+                          {idx + 1}
+                        </text>
                       </svg>
-                      <span
-                        className="absolute inset-0 flex items-center justify-center font-bold text-xs pointer-events-none select-none"
-                        style={{ color: textColor }}
-                      >
-                        {idx + 1}
-                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* LEGEND WITH PUZZLE PIECE & CIRCLE ICON SHAPES */}
+            {/* LEGEND WITH OPTIMIZED 3D GLOSSY GLASS ORBS */}
             <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2.5 mt-4">
               <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
-                  <circle cx="12" cy="12" r="10" fill="#059669" stroke="#047857" strokeWidth="1" />
+                <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
+                  <defs>
+                    <radialGradient id="leg-orb-green" cx="45%" cy="30%" r="75%">
+                      <stop offset="0%" stopColor="#4ade80" />
+                      <stop offset="40%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#15803d" />
+                    </radialGradient>
+                    <linearGradient id="leg-top-gloss-g" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+                      <stop offset="50%" stopColor="#ffffff" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="16" cy="16" r="13.5" fill="url(#leg-orb-green)" stroke="rgba(0,0,0,0.25)" strokeWidth="0.75" />
+                  <path d="M 3.5,14.5 A 13,13 0 0,1 28.5,14.5 A 12.5,8 0 0,0 3.5,14.5 Z" fill="url(#leg-top-gloss-g)" />
+                  <path d="M 7,20.5 A 10.5,5.5 0 0,0 25,20.5 A 10.5,7.5 0 0,1 7,20.5 Z" fill="#ffffff" fillOpacity="0.25" />
                 </svg>
                 <span className="font-medium">Answered</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
-                  <path d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z" fill="#9333ea" stroke="#7e22ce" strokeWidth="1" />
+                <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
+                  <defs>
+                    <radialGradient id="leg-orb-purple" cx="45%" cy="30%" r="75%">
+                      <stop offset="0%" stopColor="#c084fc" />
+                      <stop offset="40%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#7e22ce" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="16" cy="16" r="13.5" fill="url(#leg-orb-purple)" stroke="rgba(0,0,0,0.25)" strokeWidth="0.75" />
+                  <path d="M 3.5,14.5 A 13,13 0 0,1 28.5,14.5 A 12.5,8 0 0,0 3.5,14.5 Z" fill="url(#leg-top-gloss-g)" />
+                  <path d="M 7,20.5 A 10.5,5.5 0 0,0 25,20.5 A 10.5,7.5 0 0,1 7,20.5 Z" fill="#ffffff" fillOpacity="0.25" />
                 </svg>
                 <span className="font-medium">Marked for Review</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                   <defs>
-                    <linearGradient id="legend-pacman-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="50%" stopColor="#10b981" />
-                      <stop offset="50%" stopColor="#9333ea" />
+                    <linearGradient id="leg-orb-dual" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#22c55e" />
+                      <stop offset="48%" stopColor="#15803d" />
+                      <stop offset="52%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#7e22ce" />
                     </linearGradient>
                   </defs>
-                  <circle cx="12" cy="12" r="10" fill="url(#legend-pacman-grad)" stroke="#7e22ce" strokeWidth="1" />
+                  <circle cx="16" cy="16" r="13.5" fill="url(#leg-orb-dual)" stroke="rgba(0,0,0,0.25)" strokeWidth="0.75" />
+                  <path d="M 3.5,14.5 A 13,13 0 0,1 28.5,14.5 A 12.5,8 0 0,0 3.5,14.5 Z" fill="url(#leg-top-gloss-g)" />
+                  <path d="M 7,20.5 A 10.5,5.5 0 0,0 25,20.5 A 10.5,7.5 0 0,1 7,20.5 Z" fill="#ffffff" fillOpacity="0.25" />
                 </svg>
                 <span className="font-medium">Answered & Marked</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
-                  <path d="M 7 5 L 10 5 C 10 3.6 11.1 2.5 12.5 2.5 C 13.9 2.5 15 3.6 15 5 L 17 5 C 18.1 5 19 5.9 19 7 L 19 10 C 20.4 10 21.5 11.1 21.5 12.5 C 21.5 13.9 20.4 15 19 15 L 19 17 C 19 18.1 18.1 19 17 19 L 15 19 C 15 17.6 13.9 16.5 12.5 16.5 C 11.1 16.5 10 17.6 10 19 L 7 19 C 5.9 19 5 18.1 5 17 L 5 15 C 6.4 15 7.5 13.9 7.5 12.5 C 7.5 11.1 6.4 10 5 10 L 5 7 C 5 5.9 5.9 5 7 5 Z" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
+                  <defs>
+                    <radialGradient id="leg-orb-gray" cx="45%" cy="30%" r="75%">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="40%" stopColor="#f1f5f9" />
+                      <stop offset="100%" stopColor="#cbd5e1" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="16" cy="16" r="13.5" fill="url(#leg-orb-gray)" stroke="rgba(0,0,0,0.25)" strokeWidth="0.75" />
+                  <path d="M 3.5,14.5 A 13,13 0 0,1 28.5,14.5 A 12.5,8 0 0,0 3.5,14.5 Z" fill="url(#leg-top-gloss-g)" />
+                  <path d="M 7,20.5 A 10.5,5.5 0 0,0 25,20.5 A 10.5,7.5 0 0,1 7,20.5 Z" fill="#ffffff" fillOpacity="0.25" />
                 </svg>
                 <span className="font-medium">Unanswered</span>
               </div>
