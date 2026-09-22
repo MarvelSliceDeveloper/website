@@ -90,6 +90,14 @@ const navGroups = [
     ],
   },
   {
+    label: "Custom Mock Exams", icon: FiCheckSquare, items: [
+      { to: "/admin/custom-mock-exams/new", label: "Add Custom Exam", icon: FiPlusCircle },
+      { to: "/admin/custom-mock-exams", label: "View Custom Exams", icon: FiCheckSquare, catchSubRoutes: true, siblingRoutes: ["/admin/custom-mock-exams/new"] },
+      { to: "/admin/custom-mock-exams/registrations", label: "Registered Candidates", icon: FiUsers },
+      { to: "/admin/custom-mock-exams/submissions", label: "Exam Submissions", icon: FiClipboard }
+    ],
+  },
+  {
     label: "Blog", icon: FiFileText, items: [
       { to: "/admin/blog/new", label: "Add Blog", icon: FiPlusCircle },
       { to: "/admin/blog", label: "View Posts", icon: FiFileText, catchSubRoutes: true, siblingRoutes: ["/admin/blog/categories", "/admin/blog/new"] },

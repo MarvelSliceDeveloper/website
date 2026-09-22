@@ -42,6 +42,10 @@ import BankingEnquiries from './pages/BankingEnquiries';
 import MockExamsList from './pages/MockExamsList';
 import MockExamEditor from './pages/MockExamEditor';
 import MockExamSubmissions from './pages/MockExamSubmissions';
+import CustomMockExamsList from './pages/CustomMockExamsList';
+import CustomMockExamEditor from './pages/CustomMockExamEditor';
+import CustomMockExamRegistrations from './pages/CustomMockExamRegistrations';
+import CustomMockExamSubmissions from './pages/CustomMockExamSubmissions';
 import UpcomingCourseInterests from './pages/UpcomingCourseInterests';
 import TestimonialsManager from './pages/TestimonialsManager';
 import TestimonialEditor from './pages/TestimonialEditor';
@@ -176,6 +180,11 @@ export default function Admin() {
           <Route path="banking/mock-exams/new" element={<MockExamEditor key="new" />} />
           <Route path="banking/mock-exams/:id/edit" element={<MockExamEditor key="edit" />} />
           <Route path="banking/mock-exam-submissions" element={<MockExamSubmissions />} />
+          <Route path="custom-mock-exams" element={<CustomMockExamsList />} />
+          <Route path="custom-mock-exams/new" element={<CustomMockExamEditor key="new" />} />
+          <Route path="custom-mock-exams/:id/edit" element={<CustomMockExamEditor key="edit" />} />
+          <Route path="custom-mock-exams/registrations" element={<CustomMockExamRegistrations />} />
+          <Route path="custom-mock-exams/submissions" element={<CustomMockExamSubmissions />} />
           <Route path="upcoming-course-interests" element={<UpcomingCourseInterests />} />
           <Route path="newsletter-subscribers" element={<NewsletterSubscribers />} />
           <Route path="contact-submissions" element={<ContactSubmissions />} />
