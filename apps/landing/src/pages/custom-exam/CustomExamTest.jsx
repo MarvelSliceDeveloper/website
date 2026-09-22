@@ -214,6 +214,25 @@ export default function CustomExamTest() {
     if (questions.length > countOpt) questions = questions.slice(0, countOpt);
 
     setExamQuestions(questions);
+
+    // Check if candidate already submitted this exam previously in DB
+    if (currentExam.id && !currentExam.id.startsWith('demo-') && authCand?.user_email) {
+      const { data: existingSub } = await supabase
+        .from('custom_mock_exam_submissions')
+        .select('*')
+        .eq('custom_mock_exam_id', currentExam.id)
+        .eq('user_email', authCand.user_email.toLowerCase())
+        .maybeSingle();
+
+      if (existingSub) {
+        setUserAnswers(existingSub.answers || {});
+        setFeedbackAnswers(existingSub.feedback_answers || {});
+        setActiveStep('SUBMITTED');
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(false);
 
     // Restore cached exam session if page was refreshed
@@ -221,39 +240,57 @@ export default function CustomExamTest() {
   }
 
   function restoreSessionFromCache(currentExam, questions) {
+    let fullExamSecs = (currentExam.time_limit_mins || 20) * 60;
+    if (currentExam.exam_end_time) {
+      const endMs = new Date(currentExam.exam_end_time).getTime();
+      fullExamSecs = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+    }
+    const initialVisited = questions[0]?.id ? { [questions[0].id]: true } : {};
+
     try {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
       if (!raw) {
-        setTimeLeftSeconds((currentExam.time_limit_mins || 20) * 60);
-        setVisitedQuestions(questions[0]?.id ? { [questions[0].id]: true } : {});
+        setTimeLeftSeconds(fullExamSecs);
+        setVisitedQuestions(initialVisited);
+        setActiveStep('QUIZ');
         return;
       }
 
       const cached = JSON.parse(raw);
-      if (!cached) return;
+      if (!cached) {
+        setTimeLeftSeconds(fullExamSecs);
+        setVisitedQuestions(initialVisited);
+        setActiveStep('QUIZ');
+        return;
+      }
 
+      const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
+      const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
+
+      // If the cached session is expired (remainingSecs <= 0) or was marked SUBMITTED in cache
+      // but NOT in DB, clear stale cache and start fresh exam!
+      if (remainingSecs <= 0 || cached.activeStep === 'SUBMITTED') {
+        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
+        setTimeLeftSeconds(fullExamSecs);
+        setVisitedQuestions(initialVisited);
+        setActiveStep('QUIZ');
+        return;
+      }
+
+      // Valid ongoing session restored from refresh
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
       if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
       if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
       if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
       if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
 
-      if (cached.activeStep === 'QUIZ') {
-        const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
-        const remainingSecs = Math.max(0, (cached.timeLeftSeconds || 0) - elapsedSecs);
-        setTimeLeftSeconds(remainingSecs);
-
-        if (remainingSecs <= 0) {
-          triggerFeedbackOrSubmit();
-        } else {
-          setActiveStep('QUIZ');
-          setIsSessionRestored(true);
-        }
-      } else {
-        setActiveStep(cached.activeStep);
-      }
+      setTimeLeftSeconds(remainingSecs);
+      setActiveStep(cached.activeStep || 'QUIZ');
+      setIsSessionRestored(true);
     } catch (e) {
-      setTimeLeftSeconds((currentExam.time_limit_mins || 20) * 60);
+      setTimeLeftSeconds(fullExamSecs);
+      setVisitedQuestions(initialVisited);
+      setActiveStep('QUIZ');
     }
   }
 

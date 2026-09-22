@@ -299,43 +299,26 @@ export default function CustomExamRegister() {
               </div>
             </div>
           ) : isRegistered ? (
-            /* SUCCESS CONFIRMATION & CREDENTIALS BOX */
-            <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
+            /* SUCCESS CONFIRMATION */
+            <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-4">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
                 <FiCheckCircle className="w-8 h-8" />
               </div>
 
-              <div className="space-y-1">
-                <h2 className="text-lg font-extrabold text-slate-900">Registration Successful! 🎉</h2>
-                <p className="text-xs text-slate-600">
-                  Your candidate record has been saved. Please use the credentials below to log in to the exam portal.
+              <div className="space-y-2">
+                <h2 className="text-xl font-extrabold text-slate-900">Registration Completed! 🎉</h2>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                  Your candidate details have been successfully recorded. You will be able to log in to the exam portal using your registered email address and Date of Birth once the exam commences.
                 </p>
               </div>
 
-              {/* CREDENTIALS BOX */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left space-y-2 font-mono text-xs">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans border-b border-slate-200 pb-1">
-                  Your Generated Exam Credentials
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-500">Username (Email):</span>
-                  <span className="font-bold text-slate-900">{userEmail}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-slate-500">Password (DOB):</span>
-                  <span className="font-bold text-brand-blue">{userDob}</span>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/custom-exam/login/${exam.slug}`)}
-                  className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <span>Proceed to Exam Portal Login</span>
-                  <FiArrowRight className="w-4 h-4" />
-                </button>
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl text-center space-y-1">
+                <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
+                  Registration Details Saved
+                </p>
+                <p className="text-xs text-emerald-700">
+                  <span className="font-semibold">{userEmail}</span>
+                </p>
               </div>
             </div>
           ) : (

@@ -105,6 +105,11 @@ export default function CustomExamInstructions() {
     return getSyncedNow() >= new Date(exam.exam_start_time).getTime();
   };
 
+  const isExamEnded = () => {
+    if (!exam?.exam_end_time) return false;
+    return getSyncedNow() >= new Date(exam.exam_end_time).getTime();
+  };
+
   function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -120,7 +125,20 @@ export default function CustomExamInstructions() {
   }
 
   const unlocked = isExamUnlocked();
+  const ended = isExamEnded();
   const qCount = exam?.question_count_option || exam?.custom_mock_exam_questions?.length || 25;
+
+  let durationText = `${exam?.time_limit_mins || 20} Mins`;
+  if (exam?.exam_start_time && exam?.exam_end_time) {
+    const diffMins = Math.round((new Date(exam.exam_end_time).getTime() - new Date(exam.exam_start_time).getTime()) / (1000 * 60));
+    if (diffMins > 0) {
+      const h = Math.floor(diffMins / 60);
+      const m = diffMins % 60;
+      if (h > 0 && m > 0) durationText = `${h} hr ${m} mins`;
+      else if (h > 0) durationText = `${h} Hour${h > 1 ? 's' : ''}`;
+      else durationText = `${m} Mins`;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 py-10 px-4 flex flex-col justify-center">
@@ -177,7 +195,7 @@ export default function CustomExamInstructions() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl">
               <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Duration</span>
-              <span className="text-sm sm:text-base font-black text-brand-blue">{exam?.time_limit_mins || 20} Mins</span>
+              <span className="text-sm sm:text-base font-black text-brand-blue">{durationText}</span>
             </div>
             <div className="p-3.5 bg-amber-50/60 border border-amber-100 rounded-2xl">
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Total MCQs</span>
@@ -202,8 +220,16 @@ export default function CustomExamInstructions() {
             </div>
           </div>
 
-          {/* SCHEDULED START TIME TIMING GUARD */}
-          {!unlocked && (
+          {/* SCHEDULED TIMING GUARDS */}
+          {ended ? (
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3">
+              <FiLock className="w-5 h-5 text-rose-600 shrink-0" />
+              <div className="text-xs text-rose-900">
+                <span className="font-bold block">Exam Concluded</span>
+                <span>The scheduled end time for this exam has passed. Exam submissions are closed.</span>
+              </div>
+            </div>
+          ) : !unlocked ? (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <FiLock className="w-5 h-5 text-amber-600 shrink-0" />
@@ -216,7 +242,7 @@ export default function CustomExamInstructions() {
                 Starts in {formatTime(countdownSecs)}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* ACTION BUTTON */}
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -229,11 +255,16 @@ export default function CustomExamInstructions() {
 
             <button
               type="button"
-              disabled={!unlocked}
-              onClick={() => navigate(`/custom-exam/test/${slug}`)}
+              disabled={!unlocked || ended}
+              onClick={() => {
+                try {
+                  localStorage.removeItem(`custom_exam_test_session_${slug}`);
+                } catch (e) {}
+                navigate(`/custom-exam/test/${slug}`);
+              }}
               className="inline-flex items-center gap-2 px-7 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
-              <span>I Agree & Start Exam</span>
+              <span>{ended ? 'Exam Concluded' : 'I Agree & Start Exam'}</span>
               <FiCheckCircle className="w-4 h-4" />
             </button>
           </div>

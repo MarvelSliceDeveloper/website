@@ -220,7 +220,7 @@ export default function CustomMockExamRegistrations() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                <tr className="bg-brand-blue text-white uppercase tracking-wider font-bold text-[10px]">
                   <th className="p-3.5">Candidate</th>
                   <th className="p-3.5">Login Credentials</th>
                   <th className="p-3.5">College & Dept</th>

@@ -101,6 +101,8 @@ export default function CustomExamLogin() {
 
     try {
       sessionStorage.setItem(`custom_exam_auth_${slug}`, JSON.stringify(authSession));
+      // Clear any stale cached test session for this slug on fresh login
+      localStorage.removeItem(`custom_exam_test_session_${slug}`);
     } catch (err) {
       console.warn('Could not save auth session:', err);
     }

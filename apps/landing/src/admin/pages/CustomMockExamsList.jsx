@@ -150,12 +150,14 @@ export default function CustomMockExamsList() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
-                  <th className="p-3.5 w-14">SL NO</th>
+                <tr className="bg-brand-blue text-white uppercase tracking-wider font-bold text-[10px]">
+                  <th className="p-3.5 w-12">SL NO</th>
                   <th className="p-3.5">Exam Title & Slug</th>
-                  <th className="p-3.5">MCQs / Duration</th>
+                  <th className="p-3.5">MCQs / Marks</th>
+                  <th className="p-3.5">Duration</th>
                   <th className="p-3.5">Reg Start Time</th>
                   <th className="p-3.5">Exam Start Time</th>
+                  <th className="p-3.5">Exam End Time</th>
                   <th className="p-3.5">Status</th>
                   <th className="p-3.5">Shareable Links</th>
                   <th className="p-3.5 text-right">Actions</th>
@@ -167,17 +169,37 @@ export default function CustomMockExamsList() {
                   const isRegCopied = copiedId?.slug === exam.slug && copiedId?.type === 'reg';
                   const isLoginCopied = copiedId?.slug === exam.slug && copiedId?.type === 'login';
 
+                  // Calculate Duration
+                  let durationDisplay = `${exam.time_limit_mins || 20} Mins`;
+                  if (exam.exam_start_time && exam.exam_end_time) {
+                    const diffMins = Math.round((new Date(exam.exam_end_time).getTime() - new Date(exam.exam_start_time).getTime()) / (1000 * 60));
+                    if (diffMins > 0) {
+                      const h = Math.floor(diffMins / 60);
+                      const m = diffMins % 60;
+                      if (h > 0 && m > 0) durationDisplay = `${h}h ${m}m`;
+                      else if (h > 0) durationDisplay = `${h} hr${h > 1 ? 's' : ''}`;
+                      else durationDisplay = `${m} Mins`;
+                    }
+                  }
+
                   return (
-                    <tr key={exam.id} className="hover:bg-slate-50/80 transition-colors">
+                    <tr key={exam.id} className="hover:bg-blue-50/40 transition-colors">
                       <td className="p-3.5 font-bold text-slate-400">
                         {idx + 1}
                       </td>
 
                       <td className="p-3.5">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">
                               {exam.category || 'Common'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                              exam.exam_mode === 'link_only'
+                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            }`}>
+                              {exam.exam_mode === 'link_only' ? '🔗 Reg Link Only' : '📝 Exam with MCQs'}
                             </span>
                           </div>
                           <Link
@@ -195,19 +217,31 @@ export default function CustomMockExamsList() {
                       <td className="p-3.5">
                         <div className="space-y-0.5">
                           <span className="font-bold text-slate-900 block">{countOpt} MCQs</span>
-                          <span className="text-[10px] text-slate-500 block">{exam.time_limit_mins || 20} Mins · {exam.total_marks || 100} Marks</span>
+                          <span className="text-[10px] text-slate-500 block">{exam.total_marks || 100} Marks</span>
                         </div>
                       </td>
 
+                      <td className="p-3.5">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 inline-block whitespace-nowrap">
+                          {durationDisplay}
+                        </span>
+                      </td>
+
                       <td className="p-3.5 text-slate-700">
-                        <span className="font-semibold block text-[11px]">
+                        <span className="font-semibold block text-[11px] whitespace-nowrap">
                           {exam.registration_start_time ? new Date(exam.registration_start_time).toLocaleString() : 'Immediate'}
                         </span>
                       </td>
 
                       <td className="p-3.5 text-slate-700">
-                        <span className="font-semibold text-brand-blue block text-[11px]">
+                        <span className="font-semibold text-brand-blue block text-[11px] whitespace-nowrap">
                           {exam.exam_start_time ? new Date(exam.exam_start_time).toLocaleString() : 'Immediate'}
+                        </span>
+                      </td>
+
+                      <td className="p-3.5 text-slate-700">
+                        <span className="font-semibold text-rose-600 block text-[11px] whitespace-nowrap">
+                          {exam.exam_end_time ? new Date(exam.exam_end_time).toLocaleString() : 'No Limit'}
                         </span>
                       </td>
 

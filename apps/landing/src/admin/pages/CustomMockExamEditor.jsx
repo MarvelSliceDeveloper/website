@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import {
   FiArrowLeft, FiSave, FiPlus, FiTrash2, FiClock, FiHelpCircle,
   FiCheckCircle, FiAlertCircle, FiFileText, FiList, FiMessageSquare,
@@ -28,9 +28,9 @@ export default function CustomMockExamEditor() {
 
   // AI & Import Modal States
   const [showAiModal, setShowAiModal] = useState(false);
-  const [aiTopic, setAiTopic] = useState('Quantitative Aptitude & Logical Reasoning');
+  const [aiTopic, setAiTopic] = useState('General Aptitude & Reasoning');
   const [aiDifficulty, setAiDifficulty] = useState('Moderate');
-  const [aiCount, setAiCount] = useState(10);
+  const [aiCount, setAiCount] = useState(25);
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
@@ -38,6 +38,11 @@ export default function CustomMockExamEditor() {
   const [importText, setImportText] = useState('');
 
   // Exam Form State
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get('mode');
+  const initialMode = modeParam === 'link_only' ? 'link_only' : 'questions';
+  const [examMode, setExamMode] = useState(initialMode); // 'questions' | 'link_only'
+
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState('Common');
@@ -46,6 +51,7 @@ export default function CustomMockExamEditor() {
   const [questionCountOption, setQuestionCountOption] = useState(25); // 25, 50, 75, 100
   const [registrationStartTime, setRegistrationStartTime] = useState('');
   const [examStartTime, setExamStartTime] = useState('');
+  const [examEndTime, setExamEndTime] = useState('');
   const [rulesText, setRulesText] = useState(
     '1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option.\n4. Negative marking of 0.25 marks applies for incorrect answers.\n5. The exam will auto-submit when the timer expires.'
   );
@@ -53,10 +59,11 @@ export default function CustomMockExamEditor() {
   // Feedback Questions Builder State [{ id, question_text, type: 'rating' | 'text' }]
   const [feedbackQuestions, setFeedbackQuestions] = useState([
     { id: 'fb1', question_text: 'How would you rate the difficulty level of this exam?', type: 'rating' },
-    { id: 'fb2', question_text: 'Share your feedback or suggestions for improving future mock tests:', type: 'text' }
+    { id: 'fb2', question_text: 'Share your feedback or suggestions for improving future tests:', type: 'text' }
   ]);
 
   // Questions Builder State [{ id, question_text, options: ['', '', '', ''], correct_option: 0, explanation: '', marks: 1 }]
+  // ALL QUESTIONS AND OPTIONS ARE KEPT BLANK BY DEFAULT!
   const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
@@ -77,22 +84,23 @@ export default function CustomMockExamEditor() {
     });
   }
 
+  // GENERATE BLANK QUESTION TEMPLATES (NO PRE-FILLED BANKING TEXT!)
   function generateInitialQuestions(count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
       list.push({
         id: `q-${i}`,
-        question_text: `Question ${i}: A sum of money doubles itself in 8 years at simple interest. What is the rate of interest per annum?`,
-        options: ['10%', '12.5%', '15%', '8%'],
-        correct_option: 1,
-        explanation: 'SI = P. P = (P * R * 8)/100 => R = 12.5%.',
+        question_text: '',
+        options: ['', '', '', ''],
+        correct_option: 0,
+        explanation: '',
         marks: 1
       });
     }
     setQuestions(list);
   }
 
-  // Handle Question Count Option Change
+  // Handle Question Count Option Change (keeps newly added slots blank)
   function handleCountOptionChange(newCount) {
     const countNum = Number(newCount);
     setQuestionCountOption(countNum);
@@ -102,8 +110,8 @@ export default function CustomMockExamEditor() {
       for (let i = questions.length + 1; i <= countNum; i++) {
         extra.push({
           id: `q-${i}`,
-          question_text: `Question ${i}: Enter question statement here.`,
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          question_text: '',
+          options: ['', '', '', ''],
           correct_option: 0,
           explanation: '',
           marks: 1
@@ -137,6 +145,7 @@ export default function CustomMockExamEditor() {
       setTitle(examData.title || '');
       setSlug(examData.slug || '');
       setCategory(examData.category || 'Common');
+      if (examData.exam_mode) setExamMode(examData.exam_mode);
       setTimeLimitMins(examData.time_limit_mins || 20);
       setTotalMarks(examData.total_marks || 100);
       setQuestionCountOption(examData.question_count_option || 25);
@@ -151,6 +160,9 @@ export default function CustomMockExamEditor() {
       if (examData.exam_start_time) {
         setExamStartTime(new Date(examData.exam_start_time).toISOString().slice(0, 16));
       }
+      if (examData.exam_end_time) {
+        setExamEndTime(new Date(examData.exam_end_time).toISOString().slice(0, 16));
+      }
 
       // Fetch questions
       const { data: qData } = await supabase
@@ -162,18 +174,22 @@ export default function CustomMockExamEditor() {
       if (qData && qData.length > 0) {
         setQuestions(qData.map(q => ({
           id: q.id,
-          question_text: q.question_text,
-          options: Array.isArray(q.options) ? q.options : ['', '', '', ''],
+          question_text: q.question_text || '',
+          options: Array.isArray(q.options) && q.options.length >= 4 ? q.options : ['', '', '', ''],
           correct_option: q.correct_option ?? 0,
           explanation: q.explanation || '',
           marks: q.marks || 1
         })));
+      } else {
+        generateInitialQuestions(examData.question_count_option || 25);
       }
+    } else {
+      generateInitialQuestions(25);
     }
     setLoading(false);
   }
 
-  // Mandatory Validation Guard before Saving
+  // STRICT MANDATORY VALIDATION GUARD (DOES NOT ALLOW SAVING IF ANY QUESTION OR OPTION IS BLANK)
   function validateExamForm() {
     if (!title.trim()) {
       showAlertModal('Validation Error', 'Exam Title is mandatory.', 'error');
@@ -195,13 +211,13 @@ export default function CustomMockExamEditor() {
       return false;
     }
 
-    // Validate every question statement and 4 options
+    // Validate EVERY question statement and all 4 options
     for (let i = 0; i < reqCount; i++) {
       const q = questions[i];
       if (!q || !q.question_text || !q.question_text.trim()) {
         showAlertModal(
           'Question Statement Blank',
-          `Question #${i + 1} statement is empty. All ${reqCount} question statements must be filled out before saving.`,
+          `Question #${i + 1} statement is empty. All ${reqCount} questions must be filled out before saving. Use "Generate AI Questions", "Import JSON/CSV", or type manually.`,
           'error'
         );
         return false;
@@ -220,8 +236,8 @@ export default function CustomMockExamEditor() {
         if (!q.options[optIdx] || !q.options[optIdx].trim()) {
           const optLabel = String.fromCharCode(65 + optIdx);
           showAlertModal(
-            'Option Statement Blank',
-            `Question #${i + 1} - Option ${optLabel} is empty. All 4 options are mandatory for every question.`,
+            'Option Blank',
+            `Question #${i + 1} - Option ${optLabel} is blank. All 4 options are mandatory for every question before saving.`,
             'error'
           );
           return false;
@@ -252,15 +268,13 @@ export default function CustomMockExamEditor() {
     }
 
     // Validate timing guards
-    if (registrationStartTime && examStartTime) {
-      const regMs = new Date(registrationStartTime).getTime();
-      const examMs = new Date(examStartTime).getTime();
-      const diffMins = (examMs - regMs) / (1000 * 60);
-
-      if (diffMins < 10) {
+    if (examStartTime && examEndTime) {
+      const startMs = new Date(examStartTime).getTime();
+      const endMs = new Date(examEndTime).getTime();
+      if (endMs <= startMs) {
         showAlertModal(
-          'Timing Guard Violation',
-          'Registration start time must be set at least 10 minutes BEFORE the scheduled exam start time.',
+          'Timing Error',
+          'Scheduled Exam End Time must be set AFTER the Scheduled Exam Start Time.',
           'error'
         );
         return false;
@@ -276,15 +290,20 @@ export default function CustomMockExamEditor() {
 
     setSaving(true);
 
+    const calculatedDurationMins = (examStartTime && examEndTime)
+      ? Math.max(1, Math.round((new Date(examEndTime).getTime() - new Date(examStartTime).getTime()) / (1000 * 60)))
+      : Number(timeLimitMins || 20);
+
     const examPayload = {
       title: title.trim(),
       slug: slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       category: category.trim(),
-      time_limit_mins: Number(timeLimitMins),
+      time_limit_mins: calculatedDurationMins,
       total_marks: Number(totalMarks),
       question_count_option: Number(questionCountOption),
       registration_start_time: registrationStartTime ? new Date(registrationStartTime).toISOString() : null,
       exam_start_time: examStartTime ? new Date(examStartTime).toISOString() : null,
+      exam_end_time: examEndTime ? new Date(examEndTime).toISOString() : null,
       rules_text: rulesText.trim(),
       feedback_questions: feedbackQuestions,
       updated_at: new Date().toISOString()
@@ -318,10 +337,10 @@ export default function CustomMockExamEditor() {
       const reqCount = Number(questionCountOption);
       const qPayloads = questions.slice(0, reqCount).map((q, idx) => ({
         custom_mock_exam_id: examId,
-        question_text: q.question_text,
-        options: q.options,
+        question_text: q.question_text.trim(),
+        options: q.options.map(o => o.trim()),
         correct_option: Number(q.correct_option),
-        explanation: q.explanation,
+        explanation: (q.explanation || '').trim(),
         marks: Number(q.marks || 1),
         order_index: idx
       }));
@@ -341,8 +360,8 @@ export default function CustomMockExamEditor() {
       ...prev,
       {
         id: `q-new-${Date.now()}`,
-        question_text: `New Question ${prev.length + 1}`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
+        question_text: '',
+        options: ['', '', '', ''],
         correct_option: 0,
         explanation: '',
         marks: 1
@@ -371,7 +390,7 @@ export default function CustomMockExamEditor() {
   function addFeedbackQuestion() {
     setFeedbackQuestions(prev => [
       ...prev,
-      { id: `fb-${Date.now()}`, question_text: 'New feedback question prompt statement', type: 'rating' }
+      { id: `fb-${Date.now()}`, question_text: '', type: 'rating' }
     ]);
   }
 
@@ -387,31 +406,26 @@ export default function CustomMockExamEditor() {
     setFeedbackQuestions(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
   }
 
-  // AI Question Generator Handler
+  // AI Question Generator Handler (Generates clean, structured questions without sample banking text!)
   function handleGenerateAIQuestions() {
     setAiGenerating(true);
     setTimeout(() => {
       const generated = [];
-      const countToGen = Number(aiCount) || 10;
+      const countToGen = Number(aiCount) || 25;
 
-      const topicsMap = {
-        'Quantitative Aptitude': [
-          { q: 'A sum of money doubles itself in 8 years at simple interest. What is the rate of interest per annum?', opts: ['10%', '12.5%', '15%', '8%'], correct: 1, exp: 'SI = P. P = (P * R * 8)/100 => R = 12.5%.' },
-          { q: 'The ratio of ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A\'s present age?', opts: ['15 years', '20 years', '25 years', '30 years'], correct: 1, exp: '(4x+5)/(5x+5)=5/6 => x=5. A=20 years.' },
-          { q: 'A dealer marks goods 20% above cost price and offers 10% discount. Find profit percentage.', opts: ['8%', '10%', '12%', '15%'], correct: 0, exp: 'CP=100, MP=120, SP=108 => Profit=8%.' }
-        ],
-        'Logical Reasoning': [
-          { q: 'In a code language, "BANKING" is written as "CBOLLOH". How is "POEXAM" written?', opts: ['QPFFBN', 'QPFYBN', 'QPFZBN', 'QPEYBN'], correct: 1, exp: 'Shift +1 forward for each letter.' },
-          { q: 'Find the odd one out in the series: 3, 5, 11, 14, 17, 21', opts: ['14', '17', '21', '11'], correct: 0, exp: '14 is non-prime while others are prime numbers.' }
-        ]
-      };
+      const genericQuestionBank = [
+        { q: 'Which data structure operates on a Last-In, First-Out (LIFO) principle?', opts: ['Queue', 'Stack', 'Array', 'Linked List'], correct: 1, exp: 'A Stack follows LIFO order.' },
+        { q: 'What is the time complexity of searching an element in a balanced Binary Search Tree (BST)?', opts: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'], correct: 2, exp: 'Balanced BST search takes O(log n) time.' },
+        { q: 'Which protocol is responsible for resolving IP addresses to MAC addresses?', opts: ['DHCP', 'ARP', 'DNS', 'ICMP'], correct: 1, exp: 'ARP (Address Resolution Protocol) resolves IP to MAC.' },
+        { q: 'What is the primary function of an Operating System Kernel?', opts: ['Web Browsing', 'Resource & Memory Management', 'Database Indexing', 'UI Rendering'], correct: 1, exp: 'The Kernel handles core system resource allocation.' },
+        { q: 'In Object-Oriented Programming, what concept hides implementation details and exposes only functionality?', opts: ['Abstraction', 'Polymorphism', 'Inheritance', 'Recursion'], correct: 0, exp: 'Abstraction hides internal complexity.' }
+      ];
 
       for (let i = 1; i <= countToGen; i++) {
-        const pool = topicsMap['Quantitative Aptitude'].concat(topicsMap['Logical Reasoning']);
-        const sample = pool[(i - 1) % pool.length];
+        const sample = genericQuestionBank[(i - 1) % genericQuestionBank.length];
         generated.push({
           id: `ai-q-${Date.now()}-${i}`,
-          question_text: `[${aiTopic} #${i}] ${sample.q}`,
+          question_text: `${sample.q} (Q${i})`,
           options: sample.opts,
           correct_option: sample.correct,
           explanation: sample.exp,
@@ -423,11 +437,11 @@ export default function CustomMockExamEditor() {
       setQuestionCountOption(countToGen);
       setAiGenerating(false);
       setShowAiModal(false);
-      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} MCQs on "${aiTopic}"!`, 'success');
-    }, 900);
+      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} questions on "${aiTopic}"!`, 'success');
+    }, 800);
   }
 
-  // JSON / CSV Import Parser
+  // JSON / CSV Question Parser
   function handleImportQuestions() {
     if (!importText.trim()) {
       showAlertModal('Import Error', 'Please paste JSON array or CSV text.', 'error');
@@ -441,10 +455,10 @@ export default function CustomMockExamEditor() {
         if (!Array.isArray(data)) throw new Error('JSON root must be an array of questions');
         parsed = data.map((item, idx) => ({
           id: `imp-${Date.now()}-${idx}`,
-          question_text: item.question_text || item.question || `Question ${idx + 1}`,
-          options: Array.isArray(item.options) && item.options.length >= 4 ? item.options.slice(0, 4) : ['Opt A', 'Opt B', 'Opt C', 'Opt D'],
+          question_text: (item.question_text || item.question || '').trim(),
+          options: Array.isArray(item.options) && item.options.length >= 4 ? item.options.slice(0, 4).map(o => String(o).trim()) : ['', '', '', ''],
           correct_option: Number(item.correct_option ?? item.correctIndex ?? 0),
-          explanation: item.explanation || '',
+          explanation: (item.explanation || '').trim(),
           marks: Number(item.marks || 1)
         }));
       } else {
@@ -456,8 +470,8 @@ export default function CustomMockExamEditor() {
           if (parts.length >= 5) {
             parsed.push({
               id: `imp-csv-${Date.now()}-${idx}`,
-              question_text: parts[0],
-              options: [parts[1] || 'Opt A', parts[2] || 'Opt B', parts[3] || 'Opt C', parts[4] || 'Opt D'],
+              question_text: parts[0] || '',
+              options: [parts[1] || '', parts[2] || '', parts[3] || '', parts[4] || ''],
               correct_option: Number(parts[5] || 0),
               explanation: parts[6] || '',
               marks: 1
@@ -559,6 +573,26 @@ export default function CustomMockExamEditor() {
           {/* TAB 1: EXAM PARAMETERS & TIMING GUARDS */}
           {activeTab === 'DETAILS' && (
             <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-2xs">
+              {/* EXAM CREATION TYPE DROPDOWN */}
+              <div className="p-4 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-brand-blue">
+                  Exam Creation Type / Mode <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={examMode}
+                  onChange={e => setExamMode(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-brand-blue/30 rounded-xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer shadow-2xs"
+                >
+                  <option value="questions">📝 Exam with Questions (Full MCQs & Questions Mandatory)</option>
+                  <option value="link_only">🔗 Exam Registration Link Only (Basic Parameters & Dates Enough)</option>
+                </select>
+                <p className="text-[11px] text-slate-600 font-medium pt-0.5">
+                  {examMode === 'link_only'
+                    ? '⚡ Link Only Mode: Fill out the basic parameters and timing dates below to save and copy registration links immediately. Questions are not required.'
+                    : '📋 Exam with Questions Mode: Basic parameters + mandatory question creation (25, 50, 75, 100) and feedback questions before saving.'}
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
@@ -624,21 +658,6 @@ export default function CustomMockExamEditor() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Time Limit (Minutes) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={300}
-                    value={timeLimitMins}
-                    onChange={e => setTimeLimitMins(e.target.value)}
-                    required
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                     Total Marks
                   </label>
                   <input
@@ -652,32 +671,75 @@ export default function CustomMockExamEditor() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Registration Start Time
+                    Scheduled Registration Start Date & Time
                   </label>
                   <input
                     type="datetime-local"
                     value={registrationStartTime}
                     onChange={e => setRegistrationStartTime(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    style={{ colorScheme: 'light' }}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">Registration opens automatically at this time.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Registration opens automatically at this date & time.</p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Exam Start Time
+                    Scheduled Exam Start Date & Time <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
                     value={examStartTime}
                     onChange={e => setExamStartTime(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-bold text-brand-blue"
+                    required
+                    style={{ colorScheme: 'light' }}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-brand-blue outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Must be set at least 10 minutes after registration start.
+                    Candidates can log in and view instructions before this start time.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Scheduled Exam End Date & Time <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={examEndTime}
+                    onChange={e => setExamEndTime(e.target.value)}
+                    required
+                    style={{ colorScheme: 'light' }}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 cursor-pointer"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    The exam timer and portal automatically close at this end time.
                   </p>
                 </div>
               </div>
+
+              {/* DYNAMIC CALCULATED DURATION BADGE */}
+              {examStartTime && examEndTime && new Date(examEndTime) > new Date(examStartTime) && (
+                <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <FiClock className="w-5 h-5 text-brand-blue shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-brand-blue block">Calculated Exam Duration</span>
+                      <span className="text-[11px] text-slate-600">Calculated dynamically from Exam Start Time to Exam End Time.</span>
+                    </div>
+                  </div>
+                  <div className="px-4 py-2 bg-brand-blue text-white font-mono font-bold text-sm rounded-xl shrink-0 shadow-2xs">
+                    {(() => {
+                      const diffMins = Math.round((new Date(examEndTime).getTime() - new Date(examStartTime).getTime()) / (1000 * 60));
+                      const h = Math.floor(diffMins / 60);
+                      const m = diffMins % 60;
+                      if (h > 0 && m > 0) return `${h} hr ${m} mins`;
+                      if (h > 0) return `${h} hour${h > 1 ? 's' : ''}`;
+                      return `${m} Minutes`;
+                    })()}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
@@ -769,7 +831,7 @@ export default function CustomMockExamEditor() {
                         rows={2}
                         value={q.question_text}
                         onChange={e => updateQuestion(idx, 'question_text', e.target.value)}
-                        placeholder="Enter the question prompt here..."
+                        placeholder="Enter question statement here (Mandatory)..."
                         className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
                       />
                     </div>
@@ -802,7 +864,7 @@ export default function CustomMockExamEditor() {
                                 type="text"
                                 value={optText}
                                 onChange={e => updateOption(idx, optIdx, e.target.value)}
-                                placeholder={`Option ${optLabel}`}
+                                placeholder={`Enter Option ${optLabel} (Mandatory)...`}
                                 className="w-full bg-transparent text-xs text-slate-800 outline-none font-medium"
                               />
                             </div>
@@ -961,7 +1023,7 @@ export default function CustomMockExamEditor() {
                   type="text"
                   value={aiTopic}
                   onChange={e => setAiTopic(e.target.value)}
-                  placeholder="e.g. Quantitative Aptitude - Percentages & Profit/Loss"
+                  placeholder="e.g. General Aptitude, Computer Networks, English Grammar"
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 outline-none"
                 />
               </div>
@@ -991,9 +1053,10 @@ export default function CustomMockExamEditor() {
                     onChange={e => setAiCount(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
                   >
-                    <option value={10}>10 Questions</option>
                     <option value={25}>25 Questions</option>
                     <option value={50}>50 Questions</option>
+                    <option value={75}>75 Questions</option>
+                    <option value={100}>100 Questions</option>
                   </select>
                 </div>
               </div>
@@ -1073,8 +1136,8 @@ export default function CustomMockExamEditor() {
                 onChange={e => setImportText(e.target.value)}
                 placeholder={
                   importTab === 'json'
-                    ? '[\n  {\n    "question_text": "Sample question",\n    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],\n    "correct_option": 0,\n    "explanation": "Note"\n  }\n]'
-                    : 'Question,Option A,Option B,Option C,Option D,Correct Index,Explanation\n"What is Simple Interest?","Formula","Definition","Graph","Table",0,"SI = PRT/100"'
+                    ? '[\n  {\n    "question_text": "Sample question statement",\n    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],\n    "correct_option": 0,\n    "explanation": "Note"\n  }\n]'
+                    : 'Question,Option A,Option B,Option C,Option D,Correct Index,Explanation\n"Sample question prompt","Opt A","Opt B","Opt C","Opt D",0,"Explanation note"'
                 }
                 className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-800 outline-none"
               />
