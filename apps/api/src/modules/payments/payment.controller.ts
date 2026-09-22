@@ -155,6 +155,20 @@ export const paymentController = {
     }
   },
 
+  async getIncompletePurchases(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+      const items = await paymentService.getIncompletePurchases(
+        req.user.userId,
+      );
+      return res.json({ items });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   async getAdminPayments(req: AuthRequest, res: Response) {
     try {
       const { page, limit } = req.query;

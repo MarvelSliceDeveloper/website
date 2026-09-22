@@ -610,6 +610,24 @@ export const paymentService = {
     };
   },
 
+  async getIncompletePurchases(userId: string) {
+    // PAID payments with no enrollment yet — the buyer paid but never
+    // finished batch selection. The student portal uses this to prompt
+    // completion on login so nobody is stuck without access or emails.
+    const payments = await prisma.payment.findMany({
+      where: { userId, status: "PAID", enrollment: null },
+      include: { package: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    return payments.map((p) => ({
+      paymentId: p.id,
+      packageId: p.packageId,
+      packageName: p.package?.name ?? "Course Package",
+      amount: p.amount,
+      paidAt: p.createdAt,
+    }));
+  },
+
   async getAdminPayments(params?: PaginationParams) {
     const { page, limit } = params || {};
     const {
