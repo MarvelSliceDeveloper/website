@@ -6,7 +6,7 @@ export type GradientTone =
 interface GradientStatCardProps {
   label: string;
   value: string | number | null;
-  icon: React.ComponentType<{
+  icon?: React.ComponentType<{
     size?: number | string;
     stroke?: number | string;
   }>;
@@ -95,9 +95,11 @@ export default function GradientStatCard({
         <p className="text-[11px] font-bold uppercase tracking-wider text-white/85">
           {label}
         </p>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-          <Icon size={20} stroke={1.8} />
-        </span>
+        {Icon && (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+            <Icon size={20} stroke={1.8} />
+          </span>
+        )}
       </div>
       <p className="relative mt-3 text-3xl font-extrabold tracking-tight">
         {displayValue}

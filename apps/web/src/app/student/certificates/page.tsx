@@ -12,7 +12,9 @@ import {
   IconX,
   IconClock,
   IconLock,
+  IconSchool,
 } from "@tabler/icons-react";
+import GradientStatCard from "@/components/admin/GradientStatCard";
 
 type CertificateItem = {
   id: string;
@@ -225,17 +227,17 @@ export default function CertificatesPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard
+        <GradientStatCard
           label="Issued Certificates"
           value={String(data.certificates.length)}
-          icon="🏆"
-          color="from-warning to-amber-400"
+          icon={IconAward}
+          tone="orange"
         />
-        <StatCard
+        <GradientStatCard
           label="Programs In Progress"
           value={String(packageProgresses.length)}
-          icon="📚"
-          color="from-primary to-primary-hover"
+          icon={IconSchool}
+          tone="blue"
         />
       </div>
 
@@ -634,36 +636,6 @@ export default function CertificatesPage() {
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: string;
-  icon: string;
-  color: string;
-}) {
-  return (
-    <div className="glass-card p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted">
-            {label}
-          </p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-        </div>
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${color} text-lg opacity-80`}
-        >
-          {icon}
-        </div>
-      </div>
     </div>
   );
 }

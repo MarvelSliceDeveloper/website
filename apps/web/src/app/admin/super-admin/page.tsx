@@ -3,6 +3,7 @@
 import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import Link from "next/link";
+import GradientStatCard from "@/components/admin/GradientStatCard";
 
 interface HealthData {
   status: string;
@@ -10,33 +11,6 @@ interface HealthData {
   uptime: number;
   database: string;
   memory: { rss: number; heapTotal: number; heapUsed: number };
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  status?: "ok" | "degraded" | "error";
-}
-
-function StatCard({ label, value, status }: StatCardProps) {
-  const dotColor =
-    status === "ok"
-      ? "bg-success"
-      : status === "degraded"
-        ? "bg-warning"
-        : "bg-muted";
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-2 mb-1">
-        {status && <span className={`w-2 h-2 rounded-full ${dotColor}`} />}
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">
-          {label}
-        </span>
-      </div>
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-    </div>
-  );
 }
 
 export default function SuperAdminPage() {
@@ -154,22 +128,27 @@ export default function SuperAdminPage() {
           ))
         ) : health ? (
           <>
-            <StatCard
+            <GradientStatCard
               label="Server Status"
               value={health.status === "ok" ? "Healthy" : "Degraded"}
-              status={health.status as "ok" | "degraded"}
+              tone={health.status === "ok" ? "teal" : "orange"}
             />
-            <StatCard
+            <GradientStatCard
               label="Database"
               value={
                 health.database === "connected" ? "Connected" : "Disconnected"
               }
-              status={health.database === "connected" ? "ok" : "error"}
+              tone={health.database === "connected" ? "teal" : "pink"}
             />
-            <StatCard label="Uptime" value={formatUptime(health.uptime)} />
-            <StatCard
+            <GradientStatCard
+              label="Uptime"
+              value={formatUptime(health.uptime)}
+              tone="blue"
+            />
+            <GradientStatCard
               label="Memory"
               value={`${(health.memory.heapUsed / 1024 / 1024).toFixed(0)} MB`}
+              tone="purple"
             />
           </>
         ) : (
