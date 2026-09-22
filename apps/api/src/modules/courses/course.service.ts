@@ -9,6 +9,7 @@ import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { AppError } from "../../utils/errors";
 import { moduleService } from "./module.service";
+import { emailService } from "../../services/email.service";
 
 // --- Zod Schemas ---
 
@@ -733,23 +734,41 @@ export const courseService = {
     });
     if (!course) throw new AppError(404, "Course not found");
     if (!course.price) throw new AppError(400, "Invalid course price");
-    // Find or create guest user
+    // Find or create guest user (email lookup is case-insensitive everywhere
+    // else — lowercase here too so User@x.com can't fork a second account)
+    const normalizedEmail = payload.email.toLowerCase();
     let user = await prisma.user.findUnique({
-      where: { email: payload.email },
+      where: { email: normalizedEmail },
     });
     if (!user) {
       const bcrypt = await import("bcryptjs");
-      const dummy = Math.random().toString(36).slice(2, 10);
-      const hash = await bcrypt.hash(dummy, 10);
+      // Dynamic import mirrors createCatalogueCheckout (avoids module cycles)
+      const { generateDummyPassword } = await import(
+        "../payments/payment.service"
+      );
+      const dummy = generateDummyPassword();
+      const hash = await bcrypt.hash(dummy, 12);
       user = await prisma.user.create({
         data: {
           name: payload.name,
-          email: payload.email,
+          email: normalizedEmail,
           passwordHash: hash,
+          mustChangePassword: true,
           role: "STUDENT",
           phone: payload.phone,
         },
       });
+      // Fire-and-forget: the buyer needs these credentials to log in.
+      // Without this email the account is unreachable (random password).
+      emailService
+        .sendWelcomeEmail({
+          name: payload.name,
+          email: normalizedEmail,
+          credentials: { email: normalizedEmail, password: dummy },
+        })
+        .catch((err: Error) =>
+          console.error("[catalogue] Failed to send welcome email:", err),
+        );
     }
     // verify signature if provided — skip strict check in stub mode
     const payment = await prisma.payment.create({
@@ -842,22 +861,36 @@ export const courseService = {
     )
       throw new AppError(400, "Batch not available for this course");
     // Same guest handling as verifyCataloguePayment (email kept as provided)
+    const normalizedEmail = payload.email.toLowerCase();
     let user = await prisma.user.findUnique({
-      where: { email: payload.email },
+      where: { email: normalizedEmail },
     });
     if (!user) {
       const bcrypt = await import("bcryptjs");
-      const dummy = Math.random().toString(36).slice(2, 10);
-      const hash = await bcrypt.hash(dummy, 10);
+      const { generateDummyPassword } = await import(
+        "../payments/payment.service"
+      );
+      const dummy = generateDummyPassword();
+      const hash = await bcrypt.hash(dummy, 12);
       user = await prisma.user.create({
         data: {
           name: payload.name,
-          email: payload.email,
+          email: normalizedEmail,
           passwordHash: hash,
+          mustChangePassword: true,
           role: "STUDENT",
           phone: payload.phone,
         },
       });
+      emailService
+        .sendWelcomeEmail({
+          name: payload.name,
+          email: normalizedEmail,
+          credentials: { email: normalizedEmail, password: dummy },
+        })
+        .catch((err: Error) =>
+          console.error("[catalogue] Failed to send welcome email:", err),
+        );
     }
     const enrollment = await prisma.courseEnrollment.upsert({
       where: { paymentId: payment.id },
