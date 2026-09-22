@@ -238,24 +238,37 @@ export default function StudentPortalShell({
               </button>
 
               {breadcrumbs.length > 0 && (
-                <nav className="hidden min-w-0 items-center gap-1 overflow-hidden text-xs text-muted md:flex">
-                  {breadcrumbs.map((crumb, i) => (
-                    <span key={i} className="flex items-center gap-1">
-                      {i > 0 && <span className="text-border">/</span>}
-                      {crumb.onClick ? (
-                        <button
-                          onClick={crumb.onClick}
-                          className="max-w-35 truncate transition-colors hover:text-foreground"
-                        >
-                          {crumb.label}
-                        </button>
-                      ) : (
-                        <span className="max-w-35 truncate text-muted-foreground">
-                          {crumb.label}
-                        </span>
-                      )}
-                    </span>
-                  ))}
+                <nav
+                  aria-label="Breadcrumb"
+                  className="hidden min-w-0 items-center gap-1 overflow-hidden text-xs text-muted md:flex"
+                >
+                  {breadcrumbs.map((crumb, i) => {
+                    const isActive = i === breadcrumbs.length - 1;
+                    return (
+                      <span key={i} className="flex items-center gap-1">
+                        {i > 0 && <span className="text-border">/</span>}
+                        {crumb.onClick && !isActive ? (
+                          <button
+                            onClick={crumb.onClick}
+                            className="max-w-35 truncate transition-colors hover:text-foreground"
+                          >
+                            {crumb.label}
+                          </button>
+                        ) : (
+                          <span
+                            aria-current={isActive ? "page" : undefined}
+                            className={`max-w-35 truncate ${
+                              isActive
+                                ? "font-bold text-primary"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {crumb.label}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </nav>
               )}
             </div>

@@ -8,6 +8,7 @@ import {
 import { UserRole } from "@lms/types";
 import bcrypt from "bcryptjs";
 import { emailService } from "../../services/email.service";
+import { generateDummyPassword } from "../payments/payment.service";
 import { paginate } from "../../utils/paginate";
 
 const router = Router();
@@ -74,6 +75,7 @@ router.get("/", async (req: Request, res: Response) => {
           internFieldId: true,
           internField: { select: { id: true, name: true } },
           isSuspended: true,
+          mustChangePassword: true,
           packageEnrollments: {
             select: {
               id: true,
@@ -193,6 +195,42 @@ router.get("/:id", async (req: Request, res: Response) => {
         : [];
 
     return res.json({ ...user, quizAttempts, assignmentSubmissions });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+// POST /api/users/:id/resend-credentials — reset to a fresh temporary
+// password and email it (admin only). Fallback for students who never
+// received (or never set) their initial password: the hash is one-way so
+// the old password can never be displayed, only replaced.
+router.post("/:id/resend-credentials", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.deletedAt) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const tempPassword = generateDummyPassword();
+    const hashed = await bcrypt.hash(tempPassword, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: hashed, mustChangePassword: true },
+    });
+
+    const sent = await emailService.sendWelcomeEmail({
+      name: user.name,
+      email: user.email,
+      credentials: { email: user.email, password: tempPassword },
+    });
+    if (!sent) {
+      return res.status(502).json({
+        error:
+          "Password was reset, but the email could not be sent. Check email configuration (BREVO_API_KEY).",
+      });
+    }
+    return res.json({ message: "Credentials resent", email: user.email });
   } catch (error) {
     return handleError(res, error);
   }

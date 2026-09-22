@@ -20,24 +20,36 @@ export function AdminPageHeader({
     <div>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-3 flex items-center gap-1 text-xs text-muted-foreground">
-          {breadcrumbs.map((crumb, index) => (
-            <span
-              key={crumb.href ?? crumb.label}
-              className="flex items-center gap-1"
-            >
-              {index > 0 && <IconChevronRight size={14} />}
-              {crumb.href ? (
-                <a
-                  href={crumb.href}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {crumb.label}
-                </a>
-              ) : (
-                <span className="text-foreground">{crumb.label}</span>
-              )}
-            </span>
-          ))}
+          {breadcrumbs.map((crumb, index) => {
+            const isActive = index === breadcrumbs.length - 1;
+            return (
+              <span
+                key={crumb.href ?? crumb.label}
+                className="flex items-center gap-1"
+              >
+                {index > 0 && <IconChevronRight size={14} />}
+                {crumb.href && !isActive ? (
+                  <a
+                    href={crumb.href}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {crumb.label}
+                  </a>
+                ) : (
+                  <span
+                    aria-current={isActive ? "page" : undefined}
+                    className={
+                      isActive
+                        ? "font-bold text-primary"
+                        : "text-foreground"
+                    }
+                  >
+                    {crumb.label}
+                  </span>
+                )}
+              </span>
+            );
+          })}
         </div>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">

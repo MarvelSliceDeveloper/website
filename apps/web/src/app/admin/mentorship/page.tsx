@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import GradientStatCard from "@/components/admin/GradientStatCard";
 import {
   Select,
   SelectContent,
@@ -155,45 +156,35 @@ export default function AdminMentorshipPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <StatCard
+        <GradientStatCard
           label="Total Requests"
           value={stats.total}
-          icon={<IconHeartHandshake size={20} stroke={1.5} />}
-          color="text-primary"
-          chip="bg-primary/15 text-primary border-primary/25"
-          hover="hover:border-primary/50"
+          icon={IconHeartHandshake}
+          tone="blue"
         />
-        <StatCard
+        <GradientStatCard
           label="Pending Review"
           value={stats.open}
-          icon={<IconUserPlus size={20} stroke={1.5} />}
-          color="text-warning"
-          chip="bg-warning/15 text-warning border-warning/25"
-          hover="hover:border-warning/50"
+          icon={IconUserPlus}
+          tone="orange"
         />
-        <StatCard
+        <GradientStatCard
           label="Mentor Assigned"
           value={stats.assigned}
-          icon={<IconUserCheck size={20} stroke={1.5} />}
-          color="text-indigo-500"
-          chip="bg-indigo-500/15 text-indigo-500 border-indigo-500/25"
-          hover="hover:border-indigo-500/50"
+          icon={IconUserCheck}
+          tone="purple"
         />
-        <StatCard
+        <GradientStatCard
           label="Scheduled"
           value={stats.scheduled}
-          icon={<IconCalendarEvent size={20} stroke={1.5} />}
-          color="text-success"
-          chip="bg-success/15 text-success border-success/25"
-          hover="hover:border-success/50"
+          icon={IconCalendarEvent}
+          tone="teal"
         />
-        <StatCard
+        <GradientStatCard
           label="Completed"
           value={stats.completed}
-          icon={<IconClipboardCheck size={20} stroke={1.5} />}
-          color="text-muted-foreground"
-          chip="bg-muted/15 text-muted-foreground border-border"
-          hover="hover:border-border/60"
+          icon={IconClipboardCheck}
+          tone="pink"
         />
       </div>
 
@@ -358,46 +349,6 @@ export default function AdminMentorshipPage() {
           onUpdate={refetchAll}
         />
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-  chip,
-  hover,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-  chip: string;
-  hover: string;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border border-border bg-card p-4 transition-all duration-300 ${hover}`}
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {label}
-          </p>
-          <p
-            className={`mt-1.5 text-2xl font-extrabold tracking-tight ${color}`}
-          >
-            {value}
-          </p>
-        </div>
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${chip}`}
-        >
-          {icon}
-        </div>
-      </div>
     </div>
   );
 }

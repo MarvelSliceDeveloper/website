@@ -24,6 +24,11 @@ paymentRouter.post(
   paymentController.createConsentEnrollment,
 );
 paymentRouter.get(
+  "/incomplete",
+  requireAuth,
+  paymentController.getIncompletePurchases,
+);
+paymentRouter.get(
   "/:paymentId/invoice",
   optionalAuth,
   paymentController.downloadInvoice,

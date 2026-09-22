@@ -31,6 +31,7 @@ import {
   IconHome,
   IconCalendar,
   IconPlus,
+  IconKey,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -49,6 +50,7 @@ type User = {
   address?: string | null;
   createdAt?: string;
   isSuspended?: boolean;
+  mustChangePassword?: boolean;
   packageEnrollments?: {
     package: { id: string; name: string };
     courses: { courseId: string; batchId: string | null }[];
@@ -255,6 +257,18 @@ export default function AdminUsersPage() {
       setDeleteUserId(null);
       toast.success("User deleted successfully");
       void usersQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const resendCredentialsMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post<{ message: string; email: string }>(
+        `/api/users/${id}/resend-credentials`,
+      ),
+    onSuccess: (result) => {
+      toast.success(`New password emailed to ${result.email}`);
+      if (viewUser) void openProfile(viewUser);
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
@@ -810,6 +824,39 @@ export default function AdminUsersPage() {
                     </span>
                   </div>
                 </div>
+              </section>
+
+              <section className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                  Access
+                </h4>
+                <div className="flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-card-hover/40 p-3">
+                  <IconKey size={16} className="shrink-0 text-muted" />
+                  {profileDetail?.mustChangePassword ? (
+                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                      Password setup pending
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md bg-success/10 text-success">
+                      Password set
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={resendCredentialsMutation.isPending}
+                    onClick={() => resendCredentialsMutation.mutate(viewUser.id)}
+                    className="ml-auto rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-all hover:bg-muted/30 disabled:opacity-50 cursor-pointer"
+                  >
+                    {resendCredentialsMutation.isPending
+                      ? "Sending…"
+                      : "Resend credentials"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Generates a fresh temporary password and emails it to the
+                  student. The current password cannot be displayed (only
+                  securely hashed copies are stored).
+                </p>
               </section>
 
               <section className="space-y-3">

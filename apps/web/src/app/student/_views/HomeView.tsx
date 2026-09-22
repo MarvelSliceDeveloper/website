@@ -43,6 +43,7 @@ import { timeAgo } from "@/lib/time-ago";
 import { NotificationIcon } from "@/lib/notifications";
 import type { NotificationItem } from "@/lib/notifications";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
+import PendingEnrollmentPrompt from "./PendingEnrollmentPrompt";
 import LiveSessionBanner from "@/components/LiveSessionBanner";
 import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
@@ -252,6 +253,12 @@ export default function HomeView({
       <LiveSessionBanner
         sessions={liveSessions}
         onJoin={(s) => handleJoinSession(s)}
+      />
+
+      {/* ── Unfinished purchases (paid but no batch selected) ─────────────── */}
+      <PendingEnrollmentPrompt
+        studentName={studentName}
+        studentEmail={studentEmail}
       />
 
       {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
