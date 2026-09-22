@@ -266,15 +266,25 @@ export default function CustomExamTest() {
 
       const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
       const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
+      const hasAnsweredQuestions = Object.keys(cached.userAnswers || {}).length > 0;
 
-      // Restore answered, visited, marked for review, and feedback state from local cache
+      // If cached session is submitted OR expired without any answers, clear stale cache and start fresh exam!
+      if (cached.activeStep === 'SUBMITTED' || (remainingSecs <= 0 && !hasAnsweredQuestions)) {
+        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
+        setTimeLeftSeconds(fullExamSecs);
+        setVisitedQuestions(initialVisited);
+        setActiveStep('QUIZ');
+        return;
+      }
+
+      // Restore active session state
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
       if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
       if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
       if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
       if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
 
-      if (remainingSecs <= 0) {
+      if (remainingSecs <= 0 && hasAnsweredQuestions) {
         setTimeLeftSeconds(0);
         setActiveStep(cached.activeStep || 'QUIZ');
         setIsSessionRestored(true);
@@ -282,7 +292,7 @@ export default function CustomExamTest() {
           triggerFeedbackOrSubmit();
         }, 500);
       } else {
-        setTimeLeftSeconds(remainingSecs);
+        setTimeLeftSeconds(remainingSecs > 0 ? remainingSecs : fullExamSecs);
         setActiveStep(cached.activeStep || 'QUIZ');
         setIsSessionRestored(true);
       }
