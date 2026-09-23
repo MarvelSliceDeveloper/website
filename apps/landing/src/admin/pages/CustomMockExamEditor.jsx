@@ -303,6 +303,16 @@ export default function CustomMockExamEditor() {
         );
         return false;
       }
+      if (fb.type === 'matrix') {
+        if (!Array.isArray(fb.matrix_rows) || fb.matrix_rows.length === 0 || fb.matrix_rows.some(r => !r || !r.trim())) {
+          showAlertModal(
+            'Matrix Statement Blank',
+            `Candidate Feedback Question #${fIdx + 1} (Likert Matrix Table) must have valid non-empty statement rows.`,
+            'error'
+          );
+          return false;
+        }
+      }
     }
 
     // Validate timing guards
@@ -444,7 +454,24 @@ export default function CustomMockExamEditor() {
   }
 
   function updateFeedbackQuestion(idx, field, val) {
-    setFeedbackQuestions(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
+    setFeedbackQuestions(prev => prev.map((item, i) => {
+      if (i !== idx) return item;
+      const updated = { ...item, [field]: val };
+      if (field === 'type' && val === 'matrix') {
+        if (!updated.matrix_columns || updated.matrix_columns.length === 0) {
+          updated.matrix_columns = ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A'];
+        }
+        if (!updated.matrix_rows || updated.matrix_rows.length === 0) {
+          updated.matrix_rows = [
+            'The online class materials were useful and accurate',
+            'The class description accurately described the class content',
+            'The technology used was appropriate for this online class',
+            'Exams were based on material covered in assignments and lectures'
+          ];
+        }
+      }
+      return updated;
+    }));
   }
 
   // AI Question Generator Handler (Generates clean, structured questions distributed across section categories)
@@ -1248,13 +1275,82 @@ export default function CustomMockExamEditor() {
                         <select
                           value={fb.type || 'rating'}
                           onChange={e => updateFeedbackQuestion(idx, 'type', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none font-bold"
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none font-bold cursor-pointer"
                         >
                           <option value="rating">5-Star Rating</option>
-                          <option value="text">Text Response</option>
+                          <option value="text">Text Response (Mandatory 5 Sentences)</option>
+                          <option value="matrix">Likert Matrix Table</option>
                         </select>
                       </div>
                     </div>
+
+                    {fb.type === 'matrix' && (
+                      <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-4">
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                            Matrix Table Column Headers (Comma-separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={(fb.matrix_columns || ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A']).join(', ')}
+                            onChange={e => {
+                              const cols = e.target.value.split(',').map(c => c.trim()).filter(Boolean);
+                              updateFeedbackQuestion(idx, 'matrix_columns', cols);
+                            }}
+                            placeholder="e.g. Strongly Agree, Agree, Disagree, Strongly Disagree, N/A"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none font-medium"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[11px] font-bold uppercase text-slate-600">
+                              Statement Rows ({fb.matrix_rows?.length || 0})
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentRows = fb.matrix_rows || [];
+                                updateFeedbackQuestion(idx, 'matrix_rows', [...currentRows, '']);
+                              }}
+                              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-brand-blue text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                            >
+                              + Add Statement Row
+                            </button>
+                          </div>
+
+                          <div className="space-y-2">
+                            {(fb.matrix_rows || []).map((rowText, rIdx) => (
+                              <div key={rIdx} className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-400 w-5 text-right">{rIdx + 1}.</span>
+                                <input
+                                  type="text"
+                                  value={rowText}
+                                  onChange={e => {
+                                    const updatedRows = [...(fb.matrix_rows || [])];
+                                    updatedRows[rIdx] = e.target.value;
+                                    updateFeedbackQuestion(idx, 'matrix_rows', updatedRows);
+                                  }}
+                                  placeholder={`Enter statement row #${rIdx + 1}...`}
+                                  className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedRows = (fb.matrix_rows || []).filter((_, i) => i !== rIdx);
+                                    updateFeedbackQuestion(idx, 'matrix_rows', updatedRows);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
+                                  title="Remove Statement Row"
+                                >
+                                  <FiTrash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

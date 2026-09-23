@@ -781,14 +781,34 @@ export default function CustomExamTest() {
     const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
       ? exam.feedback_questions
       : [
-          { id: 'fb-overall-exp', type: 'text', question_text: 'Please write your detailed feedback about the exam, question difficulty, and overall experience (Minimum 5 sentences mandatory).' },
-          { id: 'fb-rating-overall', type: 'rating', question_text: 'Rate your overall mock exam experience' }
+          {
+            id: 'fb-matrix-1',
+            type: 'matrix',
+            question_text: 'Please choose the best answer for each of the following:',
+            matrix_columns: ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A'],
+            matrix_rows: [
+              'The online class materials were useful and accurate',
+              'The class description accurately described the class content',
+              'The technology used was appropriate for this online class',
+              'Exams were based on material covered in assignments and lectures',
+              'I was technically prepared for this class',
+              'I was academically prepared for this class',
+              'The instructor was qualified to teach this class',
+              'The class size was appropriate'
+            ]
+          },
+          { id: 'fb-rating-overall', type: 'rating', question_text: 'Overall Satisfaction' },
+          { id: 'fb-overall-exp', type: 'text', question_text: 'Suggestions or Comments (Minimum 5 sentences mandatory):' }
         ];
+
+    const hasMatrixQuestion = feedbackList.some(f => f.type === 'matrix');
 
     return (
       <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-auto">
-          <div className="border-b border-slate-100 pb-4 text-center">
+        <div className={`bg-white rounded-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-auto ${
+          hasMatrixQuestion ? 'max-w-4xl max-h-[90vh] flex flex-col' : 'max-w-lg'
+        }`}>
+          <div className="border-b border-slate-100 pb-4 text-center shrink-0">
             <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-brand-blue border border-blue-100">
               Exam Experience Feedback
             </span>
@@ -800,22 +820,84 @@ export default function CustomExamTest() {
             </p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 overflow-y-auto flex-1 pr-1">
             {feedbackList.map((fb, idx) => {
-              const currentText = feedbackAnswers[fb.id] || '';
+              const currentText = typeof feedbackAnswers[fb.id] === 'string' ? feedbackAnswers[fb.id] : '';
               const sentenceCount = countSentences(currentText);
               const isSatisfied = sentenceCount >= 5;
 
               return (
-                <div key={fb.id || idx} className="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                  <label className="block text-xs font-bold text-slate-800 leading-snug">
-                    {idx + 1}. {fb.question_text} {fb.type !== 'rating' && <span className="text-rose-500">* (Min 5 Sentences)</span>}
+                <div key={fb.id || idx} className="space-y-3 p-4 bg-slate-50/90 border border-slate-200 rounded-2xl">
+                  <label className="block text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+                    {idx + 1}. {fb.question_text} {fb.type === 'text' && <span className="text-rose-500">* (Min 5 Sentences)</span>}
                   </label>
 
-                  {fb.type === 'rating' ? (
+                  {fb.type === 'matrix' ? (
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-200/80 text-slate-800 font-bold border-b border-slate-300 text-[11px]">
+                            <th className="p-3 bg-slate-200/80 font-extrabold">Statements</th>
+                            {(fb.matrix_columns || ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A']).map((col, cIdx) => (
+                              <th key={cIdx} className="p-3 text-center font-extrabold min-w-[95px]">
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 bg-white">
+                          {(fb.matrix_rows || [
+                            'The online class materials were useful and accurate',
+                            'The class description accurately described the class content',
+                            'The technology used was appropriate for this online class',
+                            'Exams were based on material covered in assignments and lectures',
+                            'I was technically prepared for this class',
+                            'I was academically prepared for this class',
+                            'The instructor was qualified to teach this class',
+                            'The class size was appropriate'
+                          ]).map((rowStatement, rIdx) => {
+                            const matrixAnsObj = feedbackAnswers[fb.id] || {};
+                            const selectedCol = matrixAnsObj[rowStatement];
+
+                            return (
+                              <tr key={rIdx} className="hover:bg-slate-50 transition-colors">
+                                <td className="p-3 text-xs font-semibold text-slate-800 leading-snug">
+                                  {rowStatement}
+                                </td>
+                                {(fb.matrix_columns || ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A']).map((col, cIdx) => {
+                                  const isChecked = selectedCol === col;
+                                  return (
+                                    <td key={cIdx} className="p-3 text-center align-middle">
+                                      <label className="inline-flex items-center justify-center p-1 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`matrix-${fb.id}-${rIdx}`}
+                                          checked={isChecked}
+                                          onChange={() => {
+                                            setFeedbackAnswers(prev => ({
+                                              ...prev,
+                                              [fb.id]: {
+                                                ...(prev[fb.id] || {}),
+                                                [rowStatement]: col
+                                              }
+                                            }));
+                                          }}
+                                          className="w-4 h-4 text-brand-blue border-slate-300 focus:ring-brand-blue cursor-pointer"
+                                        />
+                                      </label>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : fb.type === 'rating' ? (
                     <div className="flex items-center gap-2 pt-1">
                       {[1, 2, 3, 4, 5].map((starVal) => {
-                        const currentVal = feedbackAnswers[fb.id] || 0;
+                        const currentVal = typeof feedbackAnswers[fb.id] === 'number' ? feedbackAnswers[fb.id] : 0;
                         return (
                           <button
                             key={starVal}
@@ -865,13 +947,13 @@ export default function CustomExamTest() {
           </div>
 
           {feedbackError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2 shrink-0">
               <FiAlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{feedbackError}</span>
             </div>
           )}
 
-          <div className="pt-2 flex justify-center">
+          <div className="pt-2 flex justify-center shrink-0">
             <button
               type="button"
               onClick={handleFinalSubmissionWithValidation}
