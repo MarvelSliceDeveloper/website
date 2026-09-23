@@ -756,7 +756,7 @@ export default function CustomExamTest() {
               {/* RULES CONTENT (16px FONT SIZE, 2.2 LINE HEIGHT) */}
               <div className="text-[16px] text-slate-700 leading-[2.2] whitespace-pre-line">
                 {exam?.rules_text ? (
-                  exam.rules_text
+                  exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
                 ) : (
                   <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium leading-[2.2]">
                     <li>Ensure a stable internet connection throughout the test.</li>
