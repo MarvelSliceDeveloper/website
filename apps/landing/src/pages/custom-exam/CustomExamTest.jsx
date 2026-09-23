@@ -748,7 +748,7 @@ export default function CustomExamTest() {
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs text-red-600 font-semibold mt-0.5">
+                <p className="text-xs font-semibold text-red-600 !text-red-600 mt-0.5" style={{ color: '#dc2626' }}>
                   Please read all instructions carefully before starting the exam.
                 </p>
               </div>
