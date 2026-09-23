@@ -674,28 +674,27 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
-      {/* TOP HEADER */}
-      <header className="bg-white border-b border-slate-200 px-6 py-3.5 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
-        <div className="flex items-center gap-3 select-none cursor-default justify-center">
+      {/* TOP HEADER WITH EXAM TITLE */}
+      <header className="bg-white border-b border-slate-200 px-6 py-2.5 sm:py-3 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-0.5">
+        <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-9 sm:h-11 w-auto object-contain pointer-events-none" />
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-8 sm:h-10 w-auto object-contain pointer-events-none" />
           ) : (
-            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-8 sm:h-10 w-8 sm:w-10 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-7 sm:h-9 w-7 sm:w-9 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
           )}
-          <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </div>
+        {exam?.title && (
+          <h2 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight">
+            {exam.title}
+          </h2>
+        )}
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR */}
-      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-8 py-3.5 sm:py-4 shrink-0 z-10 shadow-2xs space-y-2.5">
-        <div className="text-center pb-2 border-b border-slate-200/80">
-          <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
-            {exam?.title}
-          </h2>
-        </div>
-
+      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-8 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
         <div className="flex items-center justify-between gap-3 sm:gap-6">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
