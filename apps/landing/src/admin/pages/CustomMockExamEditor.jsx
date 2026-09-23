@@ -447,30 +447,63 @@ export default function CustomMockExamEditor() {
     setFeedbackQuestions(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
   }
 
-  // AI Question Generator Handler (Generates clean, structured questions without sample banking text!)
+  // AI Question Generator Handler (Generates clean, structured questions distributed across section categories)
   function handleGenerateAIQuestions() {
     setAiGenerating(true);
     setTimeout(() => {
-      const generated = [];
       const countToGen = Number(aiCount) || 25;
+      const categories = (examCategories && examCategories.length > 0)
+        ? examCategories
+        : ['Quantitative Aptitude', 'Logical Reasoning', 'Technical Knowledge', 'Verbal Ability'];
 
-      const genericQuestionBank = [
-        { q: 'Which data structure operates on a Last-In, First-Out (LIFO) principle?', opts: ['Queue', 'Stack', 'Array', 'Linked List'], correct: 1, exp: 'A Stack follows LIFO order.' },
-        { q: 'What is the time complexity of searching an element in a balanced Binary Search Tree (BST)?', opts: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'], correct: 2, exp: 'Balanced BST search takes O(log n) time.' },
-        { q: 'Which protocol is responsible for resolving IP addresses to MAC addresses?', opts: ['DHCP', 'ARP', 'DNS', 'ICMP'], correct: 1, exp: 'ARP (Address Resolution Protocol) resolves IP to MAC.' },
-        { q: 'What is the primary function of an Operating System Kernel?', opts: ['Web Browsing', 'Resource & Memory Management', 'Database Indexing', 'UI Rendering'], correct: 1, exp: 'The Kernel handles core system resource allocation.' },
-        { q: 'In Object-Oriented Programming, what concept hides implementation details and exposes only functionality?', opts: ['Abstraction', 'Polymorphism', 'Inheritance', 'Recursion'], correct: 0, exp: 'Abstraction hides internal complexity.' }
-      ];
+      const topicLower = aiTopic.toLowerCase();
 
+      // Diverse question templates by category & topic
+      const categoryBanks = {
+        'Quantitative Aptitude': [
+          { q: 'A train 150m long passes a pole in 15 seconds. What is the speed of the train in km/h?', opts: ['36 km/h', '45 km/h', '54 km/h', '60 km/h'], correct: 0, exp: 'Speed = 150/15 = 10 m/s = 10 * (18/5) = 36 km/h.' },
+          { q: 'What is the compound interest on ₹10,000 at 10% per annum for 2 years?', opts: ['₹2,000', '₹2,100', '₹2,200', '₹2,500'], correct: 1, exp: 'CI = 10000 * (1.1)^2 - 10000 = ₹2,100.' },
+          { q: 'If 12 men can complete a work in 18 days, how many days will 9 men take to finish the same work?', opts: ['20 days', '24 days', '22 days', '26 days'], correct: 1, exp: 'M1*D1 = M2*D2 => 12*18 = 9*D2 => D2 = 24 days.' },
+          { q: 'Find the average of first 50 natural numbers.', opts: ['25', '25.5', '26', '50'], correct: 1, exp: 'Average of first n natural numbers = (n+1)/2 = 51/2 = 25.5.' },
+          { q: 'A sum doubles itself in 8 years at simple interest. What is the annual interest rate?', opts: ['10%', '12.5%', '15%', '8%'], correct: 1, exp: 'R = (100 * (2P - P)) / (P * 8) = 12.5%.' }
+        ],
+        'Logical Reasoning': [
+          { q: 'In a certain code, COMPUTER is written as RFUVQNPC. How is MEDICINE written in that code?', opts: ['EOJDEJFM', 'MFEJDJOE', 'EOJDJEFM', 'MFEDJJOE'], correct: 2, exp: 'Reverse string and shift letters (+1).' },
+          { q: 'If A is B\'s brother, C is B\'s mother, and D is C\'s father, how is A related to D?', opts: ['Grandson', 'Son', 'Grandfather', 'Uncle'], correct: 0, exp: 'A is male, son of C, grandson of D.' },
+          { q: 'Select the missing number in the series: 3, 7, 15, 31, 63, ?', opts: ['125', '127', '129', '131'], correct: 1, exp: 'Pattern: (x * 2) + 1 => (63 * 2) + 1 = 127.' },
+          { q: 'All roses are flowers. Some flowers are red. Which conclusion follows logically?', opts: ['All red things are roses', 'Some roses may be red', 'No roses are red', 'All flowers are roses'], correct: 1, exp: 'Some roses can be red based on subset overlap.' },
+          { q: 'Facing North, Rahul walks 10m, turns right and walks 15m, then turns right and walks 10m. How far is he from his starting point?', opts: ['5m', '10m', '15m', '25m'], correct: 2, exp: 'He completed a rectangle path. Net displacement is 15m East.' }
+        ],
+        'Verbal Ability': [
+          { q: 'Choose the correct synonym for "METICULOUS":', opts: ['Careless', 'Painstaking', 'Lazy', 'Hastily'], correct: 1, exp: 'Meticulous means taking great care and effort.' },
+          { q: 'Select the antonym for "CANDID":', opts: ['Frank', 'Secretive', 'Honest', 'Sincere'], correct: 1, exp: 'Candid means open/honest; secretive is the opposite.' },
+          { q: 'Identify the grammatically correct sentence:', opts: ['Neither he nor I are going.', 'Neither he nor I am going.', 'Neither he nor I is going.', 'Neither he nor I be going.'], correct: 1, exp: 'Verb agrees with closest subject (I -> am).' },
+          { q: 'Fill in the blank: "He has been living in this city _____ 2018."', opts: ['for', 'since', 'from', 'in'], correct: 1, exp: 'Use "since" for specific starting time points.' },
+          { q: 'Choose the word correctly spelled:', opts: ['Accomodate', 'Commodate', 'Accommodate', 'Acommodate'], correct: 2, exp: 'Accommodate has double c and double m.' }
+        ],
+        'Technical Knowledge': [
+          { q: `Which data structure operates on a Last-In, First-Out (LIFO) principle in ${aiTopic}?`, opts: ['Queue', 'Stack', 'Array', 'Linked List'], correct: 1, exp: 'A Stack follows LIFO order.' },
+          { q: `What is the average time complexity of QuickSort algorithm?`, opts: ['O(1)', 'O(n log n)', 'O(n^2)', 'O(log n)'], correct: 1, exp: 'Average case time complexity of QuickSort is O(n log n).' },
+          { q: `Which protocol operates at the Transport Layer of the OSI model?`, opts: ['HTTP', 'TCP', 'IP', 'Ethernet'], correct: 1, exp: 'TCP and UDP operate at the Transport Layer (Layer 4).' },
+          { q: `In relational databases, what does ACID stand for?`, opts: ['Atomicity, Consistency, Isolation, Durability', 'Access, Control, Index, Data', 'Algorithm, Code, Input, Output', 'Array, Chain, Index, Data'], correct: 0, exp: 'ACID guarantees database transaction reliability.' },
+          { q: `What is the primary function of Garbage Collection in modern runtimes?`, opts: ['Memory Allocation', 'Automatic Unreachable Object Reclamation', 'Syntax Checking', 'Thread Management'], correct: 1, exp: 'Garbage Collection frees unreferenced heap memory automatically.' }
+        ]
+      };
+
+      const generated = [];
       for (let i = 1; i <= countToGen; i++) {
-        const sample = genericQuestionBank[(i - 1) % genericQuestionBank.length];
+        const categoryName = categories[(i - 1) % categories.length];
+        const bank = categoryBanks[categoryName] || categoryBanks['Technical Knowledge'];
+        const sample = bank[(Math.floor((i - 1) / categories.length)) % bank.length];
+
         generated.push({
           id: `ai-q-${Date.now()}-${i}`,
-          question_text: `${sample.q} (Q${i})`,
+          question_text: sample.q,
           options: sample.opts,
           correct_option: sample.correct,
           explanation: sample.exp,
-          marks: 1
+          marks: 1,
+          category_name: categoryName
         });
       }
 
@@ -478,7 +511,7 @@ export default function CustomMockExamEditor() {
       setQuestionCountOption(countToGen);
       setAiGenerating(false);
       setShowAiModal(false);
-      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} questions on "${aiTopic}"!`, 'success');
+      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} questions across ${categories.length} section categories for "${aiTopic}"!`, 'success');
     }, 800);
   }
 
@@ -884,7 +917,7 @@ export default function CustomMockExamEditor() {
 
           {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
           {activeTab === 'QUESTIONS' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* EXAM CATEGORIES / SECTIONS CONFIGURATION CARD */}
               <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between">
@@ -934,24 +967,8 @@ export default function CustomMockExamEditor() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Exam Rules & Guidelines Text
-                </label>
-                <textarea
-                  rows={5}
-                  value={rulesText}
-                  onChange={e => setRulesText(e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 leading-relaxed"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
-          {activeTab === 'QUESTIONS' && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
+              {/* QUESTIONS BUILDER CONTROLS BAR */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">MCQ Questions ({questions.length} / {questionCountOption})</h3>
                   <p className="text-xs text-slate-500">Creating all {questionCountOption} questions is mandatory before saving.</p>
@@ -987,112 +1004,184 @@ export default function CustomMockExamEditor() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {questions.map((q, idx) => (
-                  <div key={q.id || idx} className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
-                    <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                        Question {idx + 1} of {questions.length}
-                      </span>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="font-bold text-slate-500">Section:</span>
-                          <select
-                            value={q.category_name || (examCategories[0] || 'General')}
-                            onChange={e => updateQuestion(idx, 'category_name', e.target.value)}
-                            className="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white"
-                          >
-                            {examCategories.map((cat, cIdx) => (
-                              <option key={cIdx} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-                        </div>
+              {/* GROUPED QUESTIONS BY SECTION CATEGORY */}
+              <div className="space-y-6">
+                {(() => {
+                  const categoriesInUse = Array.from(new Set([
+                    ...examCategories,
+                    ...questions.map(q => q.category_name).filter(Boolean)
+                  ]));
 
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="font-bold text-slate-500">Marks:</span>
-                          <input
-                            type="number"
-                            min={1}
-                            value={q.marks || 1}
-                            onChange={e => updateQuestion(idx, 'marks', e.target.value)}
-                            className="w-14 px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-center"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeQuestion(idx)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Remove Question"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                  if (categoriesInUse.length === 0) categoriesInUse.push('General');
 
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
-                        Question Statement <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={q.question_text}
-                        onChange={e => updateQuestion(idx, 'question_text', e.target.value)}
-                        placeholder="Enter question statement here (Mandatory)..."
-                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
-                      />
-                    </div>
+                  return categoriesInUse.map((catName, cIdx) => {
+                    const sectionQuestions = questions
+                      .map((q, originalIdx) => ({ ...q, originalIdx }))
+                      .filter(q => (q.category_name || examCategories[0] || 'General') === catName);
 
-                    {/* OPTIONS */}
-                    <div className="space-y-2">
-                      <label className="block text-[11px] font-bold uppercase text-slate-600">
-                        4 Options & Select Correct Answer <span className="text-red-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {q.options.map((optText, optIdx) => {
-                          const isCorrect = Number(q.correct_option) === optIdx;
-                          const optLabel = String.fromCharCode(65 + optIdx);
-                          return (
-                            <div
-                              key={optIdx}
-                              className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all ${
-                                isCorrect ? 'bg-emerald-50/80 border-emerald-300' : 'bg-slate-50 border-slate-200'
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name={`correct-opt-${idx}`}
-                                checked={isCorrect}
-                                onChange={() => updateQuestion(idx, 'correct_option', optIdx)}
-                                className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                              />
-                              <span className="font-bold text-xs text-slate-700 w-5">{optLabel}.</span>
-                              <input
-                                type="text"
-                                value={optText}
-                                onChange={e => updateOption(idx, optIdx, e.target.value)}
-                                placeholder={`Enter Option ${optLabel} (Mandatory)...`}
-                                className="w-full bg-transparent text-xs text-slate-800 outline-none font-medium"
-                              />
+                    return (
+                      <div key={cIdx} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs">
+                        {/* SECTION CATEGORY HEADER BANNER */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue font-black text-xs flex items-center justify-center border border-blue-200">
+                              S{cIdx + 1}
+                            </span>
+                            <div>
+                              <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2">
+                                <span>🏷️ Section: {catName}</span>
+                                <span className="text-[10px] font-bold text-brand-blue bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                                  {sectionQuestions.length} Questions
+                                </span>
+                              </h4>
+                              <p className="text-[11px] text-slate-500 font-medium">Questions belonging to {catName} category</p>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                          </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
-                        Explanation (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={q.explanation || ''}
-                        onChange={e => updateQuestion(idx, 'explanation', e.target.value)}
-                        placeholder="Step-by-step solution note..."
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                      />
-                    </div>
-                  </div>
-                ))}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuestions(prev => [
+                                ...prev,
+                                {
+                                  id: `q-new-${Date.now()}`,
+                                  question_text: '',
+                                  options: ['', '', '', ''],
+                                  correct_option: 0,
+                                  explanation: '',
+                                  marks: 1,
+                                  category_name: catName
+                                }
+                              ]);
+                            }}
+                            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-brand-blue border border-blue-200 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <FiPlus className="w-3.5 h-3.5" />
+                            <span>+ Add to {catName}</span>
+                          </button>
+                        </div>
+
+                        {/* QUESTIONS IN THIS SECTION */}
+                        {sectionQuestions.length === 0 ? (
+                          <div className="bg-white p-4 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-400">
+                            No questions in this section yet. Click "+ Add to {catName}" or assign a question to this section below.
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {sectionQuestions.map((q) => {
+                              const idx = q.originalIdx;
+                              return (
+                                <div key={q.id || idx} className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
+                                  <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                                    <span className="text-xs font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                                      Question {idx + 1} of {questions.length}
+                                    </span>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                      <div className="flex items-center gap-1.5 text-xs">
+                                        <span className="font-bold text-slate-500">Section:</span>
+                                        <select
+                                          value={q.category_name || (examCategories[0] || 'General')}
+                                          onChange={e => updateQuestion(idx, 'category_name', e.target.value)}
+                                          className="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white"
+                                        >
+                                          {examCategories.map((cat, optIdx) => (
+                                            <option key={optIdx} value={cat}>{cat}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 text-xs">
+                                        <span className="font-bold text-slate-500">Marks:</span>
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          value={q.marks || 1}
+                                          onChange={e => updateQuestion(idx, 'marks', e.target.value)}
+                                          className="w-14 px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-center"
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeQuestion(idx)}
+                                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Remove Question"
+                                      >
+                                        <FiTrash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                                      Question Statement <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                      rows={2}
+                                      value={q.question_text}
+                                      onChange={e => updateQuestion(idx, 'question_text', e.target.value)}
+                                      placeholder="Enter question statement here (Mandatory)..."
+                                      className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
+                                    />
+                                  </div>
+
+                                  {/* OPTIONS */}
+                                  <div className="space-y-2">
+                                    <label className="block text-[11px] font-bold uppercase text-slate-600">
+                                      4 Options & Select Correct Answer <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      {q.options.map((optText, optIdx) => {
+                                        const isCorrect = Number(q.correct_option) === optIdx;
+                                        const optLabel = String.fromCharCode(65 + optIdx);
+                                        return (
+                                          <div
+                                            key={optIdx}
+                                            className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all ${
+                                              isCorrect ? 'bg-emerald-50/80 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                                            }`}
+                                          >
+                                            <input
+                                              type="radio"
+                                              name={`correct-opt-${idx}`}
+                                              checked={isCorrect}
+                                              onChange={() => updateQuestion(idx, 'correct_option', optIdx)}
+                                              className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                            />
+                                            <span className="font-bold text-xs text-slate-700 w-5">{optLabel}.</span>
+                                            <input
+                                              type="text"
+                                              value={optText}
+                                              onChange={e => updateOption(idx, optIdx, e.target.value)}
+                                              placeholder={`Enter Option ${optLabel} (Mandatory)...`}
+                                              className="w-full bg-transparent text-xs text-slate-800 outline-none font-medium"
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                                      Explanation (Optional)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={q.explanation || ''}
+                                      onChange={e => updateQuestion(idx, 'explanation', e.target.value)}
+                                      placeholder="Step-by-step solution note..."
+                                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           )}
@@ -1168,6 +1257,28 @@ export default function CustomMockExamEditor() {
               </div>
             </div>
           )}
+
+          {/* GLOBAL BOTTOM SAVE ACTION BAR */}
+          <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl shadow-md border">
+            <div className="flex items-center gap-3">
+              <div className="px-3 py-1 bg-blue-50 border border-blue-200 text-brand-blue rounded-full text-xs font-bold">
+                {questions.length} / {questionCountOption} Questions Configured
+              </div>
+              <span className="text-xs text-slate-500 hidden sm:inline">
+                All parameters & question choices must be filled out before saving.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              <FiSave className="w-4 h-4" />
+              <span>{saving ? 'Saving...' : 'Save Exam'}</span>
+            </button>
+          </div>
         </form>
       )}
 
