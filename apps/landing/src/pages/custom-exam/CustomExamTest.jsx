@@ -722,28 +722,13 @@ export default function CustomExamTest() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-auto justify-end flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
             {activeStep === 'QUIZ' && (
-              <div className="hidden sm:flex items-center gap-2 text-xs font-bold">
-                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full shadow-2xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span>Answered: {answeredCount}</span>
-                </span>
-
-                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full shadow-2xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                  <span>Unanswered: {unansweredCount}</span>
-                </span>
-
-                <span className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full shadow-2xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                  <span>Marked: {markedCount}</span>
-                </span>
-
-                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded-full shadow-2xs flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  <span>Not Visited: {notVisitedCount}</span>
-                </span>
+              <div className="hidden sm:flex flex-col text-right text-xs font-medium text-slate-700 leading-snug space-y-0.5 border-r border-slate-200 pr-3 sm:pr-4">
+                <div><span className="text-slate-600 font-semibold">Answered:</span> <span className="font-bold text-slate-900">{answeredCount}</span></div>
+                <div><span className="text-slate-600 font-semibold">Unanswered:</span> <span className="font-bold text-slate-900">{unansweredCount}</span></div>
+                <div><span className="text-slate-600 font-semibold">Marked for Review:</span> <span className="font-bold text-slate-900">{markedCount}</span></div>
+                <div><span className="text-slate-600 font-semibold">Not Visited:</span> <span className="font-bold text-slate-900">{notVisitedCount}</span></div>
               </div>
             )}
 
