@@ -620,7 +620,7 @@ export default function CustomExamRegister() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Department / Discipline <span className="text-red-500">*</span>
+                      Department <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={userDept}
@@ -647,7 +647,7 @@ export default function CustomExamRegister() {
                         type="text"
                         value={customDept}
                         onChange={e => setCustomDept(e.target.value)}
-                        placeholder="Enter your department / discipline"
+                        placeholder="Enter your department"
                         required
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                       />
@@ -672,6 +672,58 @@ export default function CustomExamRegister() {
                     </select>
                   </div>
 
+                  {/* 1 LINE: 10th Mark, 12th Mark, CGPA */}
+                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        10th Mark (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={user10thMark}
+                        onChange={e => setUser10thMark(e.target.value)}
+                        placeholder="e.g. 88.5"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        12th / Diploma Mark (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={user12thMark}
+                        onChange={e => setUser12thMark(e.target.value)}
+                        placeholder="e.g. 92.0"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Current College CGPA
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="10"
+                        value={userCgpa}
+                        onChange={e => setUserCgpa(e.target.value)}
+                        placeholder="e.g. 8.5"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* NEXT LINE: College Name (Left) & Full Residential Address (Right) */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       College / Institute Name <span className="text-red-500">*</span>
@@ -689,62 +741,14 @@ export default function CustomExamRegister() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Current College CGPA
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="10"
-                      value={userCgpa}
-                      onChange={e => setUserCgpa(e.target.value)}
-                      placeholder="e.g. 8.5"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      10th Mark (%)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={user10thMark}
-                      onChange={e => setUser10thMark(e.target.value)}
-                      placeholder="e.g. 88.5"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      12th / Diploma Mark (%)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={user12thMark}
-                      onChange={e => setUser12thMark(e.target.value)}
-                      placeholder="e.g. 92.0"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
                       Full Residential Address
                     </label>
-                    <textarea
-                      rows={2}
+                    <input
+                      type="text"
                       value={userAddress}
                       onChange={e => setUserAddress(e.target.value)}
                       placeholder="Enter street, city, state & pincode..."
-                      className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                     />
                   </div>
                 </div>
