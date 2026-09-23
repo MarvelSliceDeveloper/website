@@ -693,11 +693,11 @@ export default function CustomExamTest() {
         )}
       </header>
 
-      {/* CANDIDATE INFO & LIVE TIMER BAR */}
-      <div className="bg-[#d1d5dc] border-b border-slate-300/80 px-4 sm:px-8 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
+      {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
         <div className="max-w-4xl w-full mx-auto flex items-center justify-between gap-3 sm:gap-6">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
@@ -722,13 +722,13 @@ export default function CustomExamTest() {
               </div>
             )}
             {activeStep === 'INSTRUCTIONS' ? (
-              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-white border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
+              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-slate-100 border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-slate-500" />
                 <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
               <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
-                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-white text-slate-900 border border-slate-300'
+                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-slate-100 text-slate-900 border border-slate-300'
               }`}>
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
                 <span>{formatTime(timeLeftSeconds)}</span>
