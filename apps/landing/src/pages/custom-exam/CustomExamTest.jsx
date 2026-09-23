@@ -741,22 +741,25 @@ export default function CustomExamTest() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
+            {/* TIMER ON LEFT SIDE */}
+            {activeStep === 'INSTRUCTIONS' ? (
+              <div className="font-mono text-sm sm:text-base font-bold text-slate-700">
+                <span className="text-slate-700 font-semibold">Time Left:</span> <span>{exam?.time_limit_mins || 20}:00</span>
+              </div>
+            ) : (
+              <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
+                <span className="text-slate-700 font-semibold">Time Left:</span>
+                <span className={timerColorClass}>{formatTime(timeLeftSeconds)}</span>
+              </div>
+            )}
+
+            {/* STATS ON RIGHT SIDE */}
             {activeStep === 'QUIZ' && (
-              <div className="hidden sm:flex flex-col text-right text-xs font-medium text-slate-700 leading-snug space-y-0.5 border-r border-slate-200 pr-3 sm:pr-4">
+              <div className="hidden sm:flex flex-col text-left text-xs font-medium text-slate-700 leading-snug space-y-0.5 border-l border-slate-200 pl-3 sm:pl-4">
                 <div><span className="text-slate-600 font-semibold">Answered:</span> <span className="font-bold text-slate-900">{answeredCount}</span></div>
                 <div><span className="text-slate-600 font-semibold">Unanswered:</span> <span className="font-bold text-slate-900">{unansweredCount}</span></div>
                 <div><span className="text-slate-600 font-semibold">Marked for Review:</span> <span className="font-bold text-slate-900">{markedCount}</span></div>
                 <div><span className="text-slate-600 font-semibold">Not Visited:</span> <span className="font-bold text-slate-900">{notVisitedCount}</span></div>
-              </div>
-            )}
-
-            {activeStep === 'INSTRUCTIONS' ? (
-              <div className="font-mono text-sm sm:text-base font-bold text-slate-700">
-                Time: {exam?.time_limit_mins || 20}:00
-              </div>
-            ) : (
-              <div className={`font-mono text-base sm:text-lg font-black tracking-tight ${timerColorClass}`}>
-                Time: {formatTime(timeLeftSeconds)}
               </div>
             )}
           </div>
