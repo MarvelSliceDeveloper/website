@@ -675,7 +675,7 @@ export default function CustomExamTest() {
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE */}
-      <header className="bg-white border-b border-slate-200 px-6 py-2.5 sm:py-3 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-0.5">
+      <header className="bg-white border-b border-slate-200 px-6 py-3 sm:py-4 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-1">
         <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
           {settings?.logo_url ? (
             <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-8 sm:h-10 w-auto object-contain pointer-events-none" />
@@ -687,7 +687,7 @@ export default function CustomExamTest() {
           </span>
         </div>
         {exam?.title && (
-          <h2 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
             {exam.title}
           </h2>
         )}
