@@ -7,8 +7,8 @@ import {
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
 
-// CONFETTI CANVAS CELEBRATION ENGINE
-function ConfettiCanvas() {
+// FIREWORKS & FIRECRACKER CELEBRATION ANIMATION ENGINE
+function FireworksCrackerCanvas() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -20,70 +20,120 @@ function ConfettiCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'];
-    const particles = [];
-    const count = 140;
-
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: canvas.width / 2 + (Math.random() - 0.5) * 350,
-        y: canvas.height * 0.35 + (Math.random() - 0.5) * 100,
-        vx: (Math.random() - 0.5) * 22,
-        vy: Math.random() * -18 - 4,
-        size: Math.random() * 9 + 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 14,
-        opacity: 1,
-        shape: Math.random() > 0.5 ? 'rect' : 'circle'
-      });
-    }
-
     const handleResize = () => {
+      if (!canvas) return;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
     window.addEventListener('resize', handleResize);
 
-    const startTime = Date.now();
+    const colors = [
+      '#ff0055', '#ff5000', '#ffcc00', '#22c55e', '#00d2ff',
+      '#9d00ff', '#ff00d0', '#ffffff', '#38ef7d', '#11998e'
+    ];
 
-    function render() {
-      const elapsed = Date.now() - startTime;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const rockets = [];
+    const particles = [];
+    let lastLaunchTime = 0;
 
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.28;
-        p.vx *= 0.98;
-        p.rotation += p.rotationSpeed;
+    function launchRocket() {
+      const startX = Math.random() * (canvas.width * 0.8) + canvas.width * 0.1;
+      const targetY = Math.random() * (canvas.height * 0.45) + canvas.height * 0.1;
+      const speed = Math.random() * 4 + 11;
 
-        if (elapsed > 3200) {
-          p.opacity = Math.max(0, p.opacity - 0.015);
-        }
-
-        ctx.save();
-        ctx.globalAlpha = p.opacity;
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-
-        if (p.shape === 'rect') {
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
-        } else {
-          ctx.beginPath();
-          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
+      rockets.push({
+        x: startX,
+        y: canvas.height + 10,
+        targetY: targetY,
+        vy: -speed,
+        color: colors[Math.floor(Math.random() * colors.length)]
       });
+    }
 
-      if (elapsed < 7000) {
-        animationFrameId = requestAnimationFrame(render);
+    function createExplosion(x, y, color) {
+      const count = Math.floor(Math.random() * 35) + 45;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.2 - 0.1);
+        const speed = Math.random() * 8 + 2;
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: color,
+          size: Math.random() * 3.5 + 2,
+          alpha: 1,
+          decay: Math.random() * 0.02 + 0.012,
+          gravity: 0.12
+        });
       }
     }
 
-    render();
+    // Launch initial batch of rockets immediately
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => launchRocket(), i * 250);
+    }
+
+    function render(timestamp) {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.28)'; // Smooth background clear
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (timestamp - lastLaunchTime > 550) {
+        launchRocket();
+        if (Math.random() > 0.4) launchRocket();
+        lastLaunchTime = timestamp;
+      }
+
+      // Update & render rockets
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.y += r.vy;
+
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = r.color;
+        ctx.fill();
+
+        // Rocket spark tail
+        ctx.beginPath();
+        ctx.arc(r.x + (Math.random() - 0.5) * 2, r.y + 6, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffaa00';
+        ctx.fill();
+
+        if (r.y <= r.targetY || r.vy >= 0) {
+          createExplosion(r.x, r.y, r.color);
+          rockets.splice(i, 1);
+        }
+      }
+
+      // Update & render particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.vx *= 0.97;
+        p.vy *= 0.97;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -974,15 +1024,25 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   if (activeStep === 'SUBMITTED') {
     const totalQCount = examQuestions.length;
-    const answeredCount = Object.keys(userAnswers).length;
-    const markedCount = Object.keys(markedForReview).filter(k => markedForReview[k]).length;
+    const answeredCount = Object.keys(userAnswers).filter(id => userAnswers[id] !== undefined).length;
     const totalSecs = (exam?.time_limit_mins || 20) * 60;
     const timeTaken = Math.max(1, totalSecs - timeLeftSeconds);
 
+    function formatTimeTaken(seconds) {
+      if (!seconds || isNaN(seconds) || seconds <= 0) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      const formattedMins = mins.toString().padStart(2, '0');
+      const formattedSecs = secs.toString().padStart(2, '0');
+      if (mins > 0 && secs > 0) return `${formattedMins}:${formattedSecs} (${mins} min${mins > 1 ? 's' : ''} ${secs} sec${secs > 1 ? 's' : ''})`;
+      if (mins > 0) return `${formattedMins}:${formattedSecs} (${mins} min${mins > 1 ? 's' : ''})`;
+      return `${formattedMins}:${formattedSecs} (${secs} sec${secs > 1 ? 's' : ''})`;
+    }
+
     return (
-      <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-        <ConfettiCanvas />
-        <div className="bg-white rounded-3xl max-w-lg w-full p-7 sm:p-9 shadow-2xl border border-slate-200 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200 my-auto relative z-10">
+      <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <FireworksCrackerCanvas />
+        <div className="bg-white rounded-3xl max-w-lg w-full p-8 sm:p-10 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative z-10 animate-in fade-in zoom-in-95 duration-200">
           
           <div className="relative w-24 h-24 mx-auto">
             <div className="w-24 h-24 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shadow-lg ring-8 ring-amber-50 animate-bounce">
@@ -993,21 +1053,27 @@ export default function CustomExamTest() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-center gap-2 mb-1">
+          <div className="space-y-3">
+            {/* BIGGER MARVEL SLICE BRAND & LOGO */}
+            <div className="flex items-center justify-center gap-3 mb-2">
               {settings?.logo_url ? (
-                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-6 sm:h-7 w-auto object-contain" />
+                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs" />
               ) : (
-                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 w-6 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-10 sm:h-12 w-10 sm:w-12 object-contain drop-shadow-xs" onError={(e) => { e.target.style.display = 'none'; }} />
               )}
-              <span className="text-sm font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                 Marvel <span className="text-brand-orange">Slice</span>
               </span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-200">
-              🎉 Congratulations!
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+
+            {/* BIGGER CONGRATULATIONS BADGE */}
+            <div className="flex justify-center">
+              <span className="inline-flex items-center gap-2 px-6 py-2 rounded-full text-sm sm:text-base font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border-2 border-emerald-300 shadow-sm animate-pulse">
+                🎉 Congratulations!
+              </span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Exam Submitted Successfully!
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
@@ -1015,32 +1081,23 @@ export default function CustomExamTest() {
             </p>
           </div>
 
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-2 text-slate-700">
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
+          {/* SUMMARY DETAILS CARD - ONLY SHOW EXAM TITLE, CANDIDATE NAME, ANSWERED & TIME TAKEN */}
+          <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-3 text-slate-700 shadow-2xs">
+            <div className="flex justify-between border-b border-slate-200/80 pb-2">
               <span className="font-bold text-slate-500">Exam Title:</span>
-              <span className="font-semibold text-slate-900 truncate max-w-[200px]">{exam?.title}</span>
+              <span className="font-semibold text-slate-900 truncate max-w-[220px]">{exam?.title}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
+            <div className="flex justify-between border-b border-slate-200/80 pb-2">
               <span className="font-bold text-slate-500">Candidate Name:</span>
               <span className="font-semibold text-slate-900">{candidate?.user_name}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
+            <div className="flex justify-between border-b border-slate-200/80 pb-2">
               <span className="font-bold text-slate-500">Questions Attempted:</span>
               <span className="font-bold text-brand-blue">{answeredCount} of {totalQCount} MCQs</span>
             </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
-              <span className="font-bold text-slate-500">Marked for Review:</span>
-              <span className="font-bold text-purple-600">{markedCount} Questions</span>
-            </div>
-            <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
+            <div className="flex justify-between">
               <span className="font-bold text-slate-500">Time Taken:</span>
-              <span className="font-semibold text-slate-900">{formatTime(timeTaken)}</span>
-            </div>
-            <div className="flex justify-between pt-0.5">
-              <span className="font-bold text-slate-500">Submission Status:</span>
-              <span className="font-bold text-emerald-600 flex items-center gap-1">
-                <FiCheck className="w-3.5 h-3.5" /> Received by Admin
-              </span>
+              <span className="font-bold text-emerald-700">{formatTimeTaken(timeTaken)}</span>
             </div>
           </div>
 
@@ -1048,7 +1105,7 @@ export default function CustomExamTest() {
             <button
               type="button"
               onClick={handleClosePortal}
-              className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md cursor-pointer"
+              className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Exit & Close Portal
             </button>

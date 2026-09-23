@@ -488,8 +488,8 @@ export default function CustomExamRegister() {
       <main className="flex-1 py-6 sm:py-8 px-4 flex flex-col justify-center items-center">
         <div className="max-w-2xl w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh]">
-            <div className="border-b border-slate-100 pb-4 text-center shrink-0">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh] overflow-hidden">
+            <div className="bg-slate-100/90 p-5 sm:p-6 border-b border-slate-200 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2">
               <h1 className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
                 Candidate Exam Registration
               </h1>
@@ -857,8 +857,8 @@ export default function CustomExamRegister() {
 
                 </div>
 
-                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD */}
-                <div className="pt-3 mt-3 border-t border-slate-100 flex justify-center shrink-0 bg-white">
+                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD WITH LIGHT GREY BG */}
+                <div className="p-4 bg-slate-100/90 border-t border-slate-200 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3">
                   <button
                     type="submit"
                     disabled={submitting}

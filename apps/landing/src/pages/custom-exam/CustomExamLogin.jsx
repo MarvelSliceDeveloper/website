@@ -172,18 +172,13 @@ export default function CustomExamLogin() {
           </div>
 
           {/* Exam Title Below Brand Name */}
-          <p className="text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-wider max-w-sm mx-auto">
+          <p className="text-xs sm:text-sm font-bold text-slate-600 tracking-wider max-w-sm mx-auto">
             {exam?.title ? exam.title : 'Exam Portal Candidate Login'}
           </p>
         </div>
 
         {/* LOGIN CARD */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-          <div className="border-b border-slate-100 pb-4 text-center">
-            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-brand-blue border border-blue-100">
-              Exam Access Guard
-            </span>
-          </div>
 
           {isExamEnded() && (
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3">
