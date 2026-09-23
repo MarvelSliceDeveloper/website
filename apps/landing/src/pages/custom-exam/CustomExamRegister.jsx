@@ -604,21 +604,21 @@ export default function CustomExamRegister() {
                       <option value="Post Graduate">Post Graduate</option>
                     </select>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    College / Institute Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={userCollege}
-                    onChange={e => setUserCollege(e.target.value)}
-                    placeholder="e.g. Marvel Institute of Technology"
-                    required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                  />
-                  {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      College / Institute Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={userCollege}
+                      onChange={e => setUserCollege(e.target.value)}
+                      placeholder="e.g. Marvel Institute of Technology"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex justify-center">
