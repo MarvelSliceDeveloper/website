@@ -714,26 +714,6 @@ export default function CustomExamTest() {
                 </p>
               </div>
 
-              {/* EXAM STATS SUMMARY */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Time Limit</p>
-                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{exam?.time_limit_mins || 20} Mins</p>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Questions</p>
-                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{examQuestions.length} MCQs</p>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Marks</p>
-                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{exam?.total_marks || examQuestions.length} Marks</p>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Marking Scheme</p>
-                  <p className="text-sm sm:text-base font-black text-emerald-600 mt-0.5">+1 / -0.25</p>
-                </div>
-              </div>
-
               {/* RULES CONTENT FROM ADMIN */}
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -782,15 +762,14 @@ export default function CustomExamTest() {
                   </span>
                 </label>
 
-                <div className="pt-2">
+                <div className="pt-3 flex justify-center">
                   <button
                     type="button"
                     disabled={!agreeInstructions || !agreeTerms}
                     onClick={handleStartExam}
-                    className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 sm:px-7 sm:py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <span>Start Exam</span>
-                    <FiArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
