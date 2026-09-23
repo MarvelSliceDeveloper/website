@@ -672,6 +672,14 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   // STEP: ACTIVE TIMED MOCK EXAM INTERFACE (ALL CIRCLES)
   // -------------------------------------------------------------
+  // Calculate live question status counts
+  const totalQCount = examQuestions.length;
+  const answeredCount = Object.keys(userAnswers).filter(id => userAnswers[id] !== undefined).length;
+  const markedCount = Object.keys(markedForReview).filter(id => markedForReview[id] === true).length;
+  const visitedCount = Object.keys(visitedQuestions).filter(id => visitedQuestions[id] === true).length;
+  const unansweredCount = Object.keys(visitedQuestions).filter(id => visitedQuestions[id] === true && userAnswers[id] === undefined).length;
+  const notVisitedCount = Math.max(0, totalQCount - visitedCount);
+
   return (
     <div className="fixed inset-0 z-50 bg-[#d1d5dc] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
@@ -714,20 +722,38 @@ export default function CustomExamTest() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-            {isSessionRestored && activeStep === 'QUIZ' && (
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-brand-blue border border-blue-200/80 rounded-full text-xs font-semibold shadow-2xs">
-                <FiRefreshCw className="w-3.5 h-3.5" />
-                <span>Session Restored</span>
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-auto justify-end flex-wrap">
+            {activeStep === 'QUIZ' && (
+              <div className="hidden sm:flex items-center gap-2 text-xs font-bold">
+                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full shadow-2xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Answered: {answeredCount}</span>
+                </span>
+
+                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full shadow-2xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                  <span>Unanswered: {unansweredCount}</span>
+                </span>
+
+                <span className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full shadow-2xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  <span>Marked: {markedCount}</span>
+                </span>
+
+                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded-full shadow-2xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                  <span>Not Visited: {notVisitedCount}</span>
+                </span>
               </div>
             )}
+
             {activeStep === 'INSTRUCTIONS' ? (
               <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-slate-100 border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-slate-500" />
                 <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
-              <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
+              <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
                 timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-slate-100 text-slate-900 border border-slate-300'
               }`}>
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
