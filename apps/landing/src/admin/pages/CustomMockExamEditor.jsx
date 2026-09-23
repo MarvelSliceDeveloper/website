@@ -37,6 +37,34 @@ export default function CustomMockExamEditor() {
   const [importTab, setImportTab] = useState('json'); // 'json' | 'csv'
   const [importText, setImportText] = useState('');
 
+  const DEFAULT_DEGREES = [
+    'B.E (Computer Science & Engineering)',
+    'B.E (Electronics & Communication Engineering)',
+    'B.E (Electrical & Electronics Engineering)',
+    'B.E (Mechanical Engineering)',
+    'B.E (Civil Engineering)',
+    'B.Tech (Information Technology)',
+    'B.Tech (Artificial Intelligence & Data Science)',
+    'M.E (Software Engineering)',
+    'M.Tech (Data Science)',
+    'MCA (Master of Computer Applications)',
+    'B.Sc (Computer Science)',
+    'BCA (Bachelor of Computer Applications)',
+    'MBA (Master of Business Administration)'
+  ];
+
+  const DEFAULT_CATEGORIES = [
+    'Quantitative Aptitude',
+    'Logical Reasoning',
+    'Verbal Ability',
+    'Technical Knowledge'
+  ];
+
+  const [allowedDegrees, setAllowedDegrees] = useState(DEFAULT_DEGREES);
+  const [newDegreeInput, setNewDegreeInput] = useState('');
+  const [examCategories, setExamCategories] = useState(DEFAULT_CATEGORIES);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+
   // Exam Form State
   const [searchParams] = useSearchParams();
   const modeParam = searchParams.get('mode');
@@ -62,8 +90,7 @@ export default function CustomMockExamEditor() {
     { id: 'fb2', question_text: 'Share your feedback or suggestions for improving future tests:', type: 'text' }
   ]);
 
-  // Questions Builder State [{ id, question_text, options: ['', '', '', ''], correct_option: 0, explanation: '', marks: 1 }]
-  // ALL QUESTIONS AND OPTIONS ARE KEPT BLANK BY DEFAULT!
+  // Questions Builder State [{ id, question_text, options: ['', '', '', ''], correct_option: 0, explanation: '', marks: 1, category_name: 'Quantitative Aptitude' }]
   const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
@@ -84,23 +111,25 @@ export default function CustomMockExamEditor() {
     });
   }
 
-  // GENERATE BLANK QUESTION TEMPLATES (NO PRE-FILLED BANKING TEXT!)
+  // GENERATE BLANK QUESTION TEMPLATES
   function generateInitialQuestions(count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
+      const defaultCat = examCategories[ (i - 1) % examCategories.length ] || 'General';
       list.push({
         id: `q-${i}`,
         question_text: '',
         options: ['', '', '', ''],
         correct_option: 0,
         explanation: '',
-        marks: 1
+        marks: 1,
+        category_name: defaultCat
       });
     }
     setQuestions(list);
   }
 
-  // Handle Question Count Option Change (keeps newly added slots blank)
+  // Handle Question Count Option Change
   function handleCountOptionChange(newCount) {
     const countNum = Number(newCount);
     setQuestionCountOption(countNum);
@@ -108,13 +137,15 @@ export default function CustomMockExamEditor() {
     if (questions.length < countNum) {
       const extra = [];
       for (let i = questions.length + 1; i <= countNum; i++) {
+        const defaultCat = examCategories[ (i - 1) % examCategories.length ] || 'General';
         extra.push({
           id: `q-${i}`,
           question_text: '',
           options: ['', '', '', ''],
           correct_option: 0,
           explanation: '',
-          marks: 1
+          marks: 1,
+          category_name: defaultCat
         });
       }
       setQuestions(prev => [...prev, ...extra]);
@@ -150,6 +181,12 @@ export default function CustomMockExamEditor() {
       setTotalMarks(examData.total_marks || 100);
       setQuestionCountOption(examData.question_count_option || 25);
       setRulesText(examData.rules_text || '');
+      if (Array.isArray(examData.allowed_degrees) && examData.allowed_degrees.length > 0) {
+        setAllowedDegrees(examData.allowed_degrees);
+      }
+      if (Array.isArray(examData.exam_categories) && examData.exam_categories.length > 0) {
+        setExamCategories(examData.exam_categories);
+      }
       if (Array.isArray(examData.feedback_questions) && examData.feedback_questions.length > 0) {
         setFeedbackQuestions(examData.feedback_questions);
       }
@@ -172,13 +209,14 @@ export default function CustomMockExamEditor() {
         .order('order_index', { ascending: true });
 
       if (qData && qData.length > 0) {
-        setQuestions(qData.map(q => ({
+        setQuestions(qData.map((q, qIdx) => ({
           id: q.id,
           question_text: q.question_text || '',
           options: Array.isArray(q.options) && q.options.length >= 4 ? q.options : ['', '', '', ''],
           correct_option: q.correct_option ?? 0,
           explanation: q.explanation || '',
-          marks: q.marks || 1
+          marks: q.marks || 1,
+          category_name: q.category_name || (examCategories[qIdx % examCategories.length] || 'General')
         })));
       } else {
         generateInitialQuestions(examData.question_count_option || 25);
@@ -306,6 +344,8 @@ export default function CustomMockExamEditor() {
       exam_end_time: examEndTime ? new Date(examEndTime).toISOString() : null,
       rules_text: rulesText.trim(),
       feedback_questions: feedbackQuestions,
+      allowed_degrees: allowedDegrees,
+      exam_categories: examCategories,
       updated_at: new Date().toISOString()
     };
 
@@ -342,6 +382,7 @@ export default function CustomMockExamEditor() {
         correct_option: Number(q.correct_option),
         explanation: (q.explanation || '').trim(),
         marks: Number(q.marks || 1),
+        category_name: q.category_name || (examCategories[0] || 'General'),
         order_index: idx
       }));
 
@@ -741,6 +782,109 @@ export default function CustomMockExamEditor() {
                 </div>
               )}
 
+              {/* ALLOWED DEGREES CONFIGURATION CARD */}
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                      🎓 Allowed Candidate Degrees (Registration Options)
+                    </label>
+                    <p className="text-[11px] text-slate-500">Configure degree options shown during candidate registration for this exam.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAllowedDegrees(DEFAULT_DEGREES)}
+                    className="text-xs font-bold text-brand-blue hover:underline cursor-pointer"
+                  >
+                    Reset Defaults
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {allowedDegrees.map((deg, dIdx) => (
+                    <span key={dIdx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-300 text-slate-800 font-semibold text-xs rounded-full shadow-2xs">
+                      <span>{deg}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAllowedDegrees(prev => prev.filter((_, i) => i !== dIdx))}
+                        className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                      >
+                        <FiX className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newDegreeInput}
+                    onChange={e => setNewDegreeInput(e.target.value)}
+                    placeholder="Add degree option (e.g. B.E (Civil), B.Tech (ECE), MBA)..."
+                    className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
+                        setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
+                        setNewDegreeInput('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    + Add Degree Option
+                  </button>
+                </div>
+              </div>
+
+              {/* EXAM CATEGORIES / SECTIONS CONFIGURATION CARD */}
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                      🏷️ Question Sections / Categories
+                    </label>
+                    <p className="text-[11px] text-slate-500">Divide this exam into distinct categories (e.g., Quantitative Aptitude, Logical Reasoning, Technical).</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {examCategories.map((cat, cIdx) => (
+                    <span key={cIdx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 text-brand-blue font-bold text-xs rounded-full shadow-2xs">
+                      <span>{cat}</span>
+                      {examCategories.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setExamCategories(prev => prev.filter((_, i) => i !== cIdx))}
+                          className="text-brand-blue/60 hover:text-rose-600 cursor-pointer"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryInput}
+                    onChange={e => setNewCategoryInput(e.target.value)}
+                    placeholder="Add new section category (e.g., Quantitative Aptitude, Technical)..."
+                    className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newCategoryInput.trim() && !examCategories.includes(newCategoryInput.trim())) {
+                        setExamCategories(prev => [...prev, newCategoryInput.trim()]);
+                        setNewCategoryInput('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs rounded-xl cursor-pointer"
+                  >
+                    + Add Section Category
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Exam Rules & Guidelines Text
@@ -797,11 +941,24 @@ export default function CustomMockExamEditor() {
               <div className="space-y-4">
                 {questions.map((q, idx) => (
                   <div key={q.id || idx} className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
                       <span className="text-xs font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                         Question {idx + 1} of {questions.length}
                       </span>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="font-bold text-slate-500">Section:</span>
+                          <select
+                            value={q.category_name || (examCategories[0] || 'General')}
+                            onChange={e => updateQuestion(idx, 'category_name', e.target.value)}
+                            className="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none focus:bg-white"
+                          >
+                            {examCategories.map((cat, cIdx) => (
+                              <option key={cIdx} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+
                         <div className="flex items-center gap-1.5 text-xs">
                           <span className="font-bold text-slate-500">Marks:</span>
                           <input

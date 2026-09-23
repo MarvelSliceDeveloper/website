@@ -186,13 +186,14 @@ export default function CustomExamTest() {
         .order('order_index', { ascending: true });
 
       if (qData && qData.length > 0) {
-        questions = qData.map(q => ({
+        questions = qData.map((q, qIdx) => ({
           id: q.id,
           question_text: q.question_text,
           options: Array.isArray(q.options) ? q.options : [],
           correct_option: q.correct_option ?? 0,
           explanation: q.explanation || '',
-          marks: q.marks || 1
+          marks: q.marks || 1,
+          category_name: q.category_name || (currentExam.exam_categories?.[qIdx % (currentExam.exam_categories?.length || 1)] || 'General')
         }));
       }
     }
@@ -200,6 +201,10 @@ export default function CustomExamTest() {
     if (questions.length === 0) {
       // Fallback demo questions generator
       const count = currentExam.question_count_option || 25;
+      const configuredCats = (Array.isArray(currentExam.exam_categories) && currentExam.exam_categories.length > 0)
+        ? currentExam.exam_categories
+        : ['Quantitative Aptitude', 'Logical Reasoning', 'Technical Knowledge'];
+
       for (let i = 1; i <= count; i++) {
         questions.push({
           id: `q-${i}`,
@@ -207,7 +212,8 @@ export default function CustomExamTest() {
           options: ['10%', '12.5%', '15%', '8%'],
           correct_option: 1,
           explanation: 'Simple Interest SI = P. P = (P * R * 8)/100 => R = 12.5%.',
-          marks: 1
+          marks: 1,
+          category_name: configuredCats[(i - 1) % configuredCats.length]
         });
       }
     }
@@ -250,6 +256,22 @@ export default function CustomExamTest() {
     const initialVisited = examQuestions[0]?.id ? { [examQuestions[0].id]: true } : {};
     setVisitedQuestions(initialVisited);
     setActiveStep('QUIZ');
+
+    // Immediately persist QUIZ activeStep so browser refresh never shows instructions
+    const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
+    const sessionData = {
+      activeStep: 'QUIZ',
+      currentQIndex: 0,
+      userAnswers: {},
+      markedForReview: {},
+      visitedQuestions: initialVisited,
+      feedbackAnswers: {},
+      timeLeftSeconds: timeLeftSeconds || fullExamSecs,
+      savedAtTimestampMs: Date.now()
+    };
+    try {
+      localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
+    } catch (e) {}
   }
 
   function restoreSessionFromCache(currentExam, questions) {
@@ -258,7 +280,6 @@ export default function CustomExamTest() {
       const endMs = new Date(currentExam.exam_end_time).getTime();
       fullExamSecs = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
     }
-    const initialVisited = questions[0]?.id ? { [questions[0].id]: true } : {};
 
     try {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
@@ -275,17 +296,16 @@ export default function CustomExamTest() {
         return;
       }
 
-      const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
-      const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
-      const hasAnsweredQuestions = cached.userAnswers && typeof cached.userAnswers === 'object' && Object.keys(cached.userAnswers).length > 0;
-
-      // If cached session has no answered questions OR is marked SUBMITTED, clear stale cache and start fresh exam instructions!
-      if (cached.activeStep === 'SUBMITTED' || !hasAnsweredQuestions) {
+      // If already submitted, clear session and reset to instructions
+      if (cached.activeStep === 'SUBMITTED') {
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         setTimeLeftSeconds(fullExamSecs);
         setActiveStep('INSTRUCTIONS');
         return;
       }
+
+      const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
+      const remainingSecs = Math.max(0, (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs);
 
       // Restore active session state
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
@@ -298,16 +318,14 @@ export default function CustomExamTest() {
         setTimeLeftSeconds(remainingSecs);
         setActiveStep(cached.activeStep || 'QUIZ');
         setIsSessionRestored(true);
-      } else if (hasAnsweredQuestions) {
+      } else {
+        // Time expired during refresh -> trigger submit
         setTimeLeftSeconds(0);
-        setActiveStep(cached.activeStep || 'QUIZ');
+        setActiveStep('QUIZ');
         setIsSessionRestored(true);
         setTimeout(() => {
           triggerFeedbackOrSubmit();
         }, 500);
-      } else {
-        setTimeLeftSeconds(fullExamSecs);
-        setActiveStep('INSTRUCTIONS');
       }
     } catch (e) {
       setTimeLeftSeconds(fullExamSecs);
@@ -397,19 +415,27 @@ export default function CustomExamTest() {
     if (timerRef.current) clearInterval(timerRef.current);
 
     // Calculate score
-    let score = 0;
-    let correctCount = 0;
-    let wrongCount = 0;
-
+    const categoryScores = {};
     examQuestions.forEach((q) => {
+      const catName = q.category_name || 'General';
+      if (!categoryScores[catName]) {
+        categoryScores[catName] = { correct: 0, wrong: 0, unanswered: 0, total: 0, score: 0 };
+      }
+      categoryScores[catName].total += 1;
       const userAns = userAnswers[q.id];
       if (userAns !== undefined && userAns !== null) {
         if (Number(userAns) === Number(q.correct_option)) {
           score += (q.marks || 1);
           correctCount++;
+          categoryScores[catName].correct += 1;
+          categoryScores[catName].score += (q.marks || 1);
         } else {
           wrongCount++;
+          categoryScores[catName].wrong += 1;
+          categoryScores[catName].score -= 0.25;
         }
+      } else {
+        categoryScores[catName].unanswered += 1;
       }
     });
 
@@ -426,6 +452,11 @@ export default function CustomExamTest() {
         user_phone: candidate?.user_phone || '',
         user_dob: candidate?.user_dob || null,
         user_department: candidate?.user_department || '',
+        user_degree: candidate?.user_degree || '',
+        user_address: candidate?.user_address || '',
+        user_10th_mark: candidate?.user_10th_mark || null,
+        user_12th_mark: candidate?.user_12th_mark || null,
+        user_cgpa: candidate?.user_cgpa || null,
         user_year: candidate?.user_year || '',
         user_college: candidate?.user_college || '',
         candidate_photo: candidate?.candidate_photo || null,
@@ -434,6 +465,7 @@ export default function CustomExamTest() {
         correct_answers: correctCount,
         wrong_answers: wrongCount,
         answers: userAnswers,
+        category_scores: categoryScores,
         feedback_answers: feedbackAnswers,
         time_taken_seconds: Math.max(timeTaken, 1)
       });
@@ -702,9 +734,9 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-white">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INTEGRATED INSTRUCTIONS VIEW (100% WIDTH, NO PALETTE SIDEBAR) */
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-8 bg-white">
-            <div className="max-w-3xl mx-auto space-y-6">
+          /* INTEGRATED INSTRUCTIONS VIEW (CLEAN CONTINUOUS WHITE BG, NO SEPARATE CONTAINERS) */
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 sm:p-10 bg-white">
+            <div className="max-w-3xl mx-auto space-y-8 bg-white">
               <div className="border-b border-slate-200 pb-4">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
@@ -715,12 +747,12 @@ export default function CustomExamTest() {
               </div>
 
               {/* RULES CONTENT FROM ADMIN */}
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <div className="space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
                   <FiShield className="w-4 h-4 text-brand-blue" />
                   Candidate Rules & Regulations
                 </h3>
-                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line pl-1">
                   {exam?.rules_text ? (
                     exam.rules_text
                   ) : (
@@ -736,8 +768,8 @@ export default function CustomExamTest() {
                 </div>
               </div>
 
-              {/* AGREEMENT CHECKBOXES & START BUTTON */}
-              <div className="p-5 bg-blue-50/60 border border-blue-100 rounded-2xl space-y-4">
+              {/* AGREEMENT CHECKBOXES */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -761,17 +793,18 @@ export default function CustomExamTest() {
                     I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
                   </span>
                 </label>
+              </div>
 
-                <div className="pt-3 flex justify-center">
-                  <button
-                    type="button"
-                    disabled={!agreeInstructions || !agreeTerms}
-                    onClick={handleStartExam}
-                    className="px-6 py-2.5 sm:px-7 sm:py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <span>Start Exam</span>
-                  </button>
-                </div>
+              {/* CENTERED START EXAM BUTTON */}
+              <div className="pt-2 flex justify-center">
+                <button
+                  type="button"
+                  disabled={!agreeInstructions || !agreeTerms}
+                  onClick={handleStartExam}
+                  className="px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span>Start Exam</span>
+                </button>
               </div>
             </div>
           </div>
@@ -781,10 +814,55 @@ export default function CustomExamTest() {
             <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
             <div className="flex-1 min-h-0 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white">
+              {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
+              {(() => {
+                const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
+                  ? exam.exam_categories
+                  : Array.from(new Set(examQuestions.map(q => q.category_name).filter(Boolean)));
+
+                if (categoriesList.length <= 1) return null;
+
+                const currentCat = examQuestions[currentQIndex]?.category_name || categoriesList[0];
+
+                return (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-slate-200 no-scrollbar shrink-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Sections:</span>
+                    {categoriesList.map((cat, cIdx) => {
+                      const catQCount = examQuestions.filter(q => (q.category_name || categoriesList[0]) === cat).length;
+                      const isActive = currentCat === cat;
+                      return (
+                        <button
+                          key={cIdx}
+                          type="button"
+                          onClick={() => {
+                            const firstQIndex = examQuestions.findIndex(q => (q.category_name || categoriesList[0]) === cat);
+                            if (firstQIndex !== -1) setCurrentQIndex(firstQIndex);
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0 border ${
+                            isActive
+                              ? 'bg-brand-blue text-white border-brand-blue shadow-xs ring-2 ring-blue-200'
+                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {cat} ({catQCount})
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
               <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5 mb-4 sm:mb-6 shrink-0">
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
-                  Question {currentQIndex + 1} of {examQuestions.length}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
+                    Question {currentQIndex + 1} of {examQuestions.length}
+                  </span>
+                  {examQuestions[currentQIndex]?.category_name && (
+                    <span className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full uppercase">
+                      {examQuestions[currentQIndex].category_name}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
                   +{examQuestions[currentQIndex]?.marks || 1} Mark
                 </span>

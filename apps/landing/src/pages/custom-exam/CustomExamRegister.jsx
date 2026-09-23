@@ -236,6 +236,22 @@ export default function CustomExamRegister() {
   const [serverOffsetMs, setServerOffsetMs] = useState(0);
   const [regCountdownSecs, setRegCountdownSecs] = useState(0);
 
+  const DEFAULT_DEGREES = [
+    'B.E (Computer Science & Engineering)',
+    'B.E (Electronics & Communication Engineering)',
+    'B.E (Electrical & Electronics Engineering)',
+    'B.E (Mechanical Engineering)',
+    'B.E (Civil Engineering)',
+    'B.Tech (Information Technology)',
+    'B.Tech (Artificial Intelligence & Data Science)',
+    'M.E (Software Engineering)',
+    'M.Tech (Data Science)',
+    'MCA (Master of Computer Applications)',
+    'B.Sc (Computer Science)',
+    'BCA (Bachelor of Computer Applications)',
+    'MBA (Master of Business Administration)'
+  ];
+
   // Form State
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -244,6 +260,12 @@ export default function CustomExamRegister() {
   const [userDob, setUserDob] = useState('');
   const [userDept, setUserDept] = useState('Computer Science & Engineering');
   const [customDept, setCustomDept] = useState('');
+  const [userDegree, setUserDegree] = useState(DEFAULT_DEGREES[0]);
+  const [customDegree, setCustomDegree] = useState('');
+  const [userAddress, setUserAddress] = useState('');
+  const [user10thMark, setUser10thMark] = useState('');
+  const [user12thMark, setUser12thMark] = useState('');
+  const [userCgpa, setUserCgpa] = useState('');
   const [userYear, setUserYear] = useState('3rd Year');
   const [userCollege, setUserCollege] = useState('');
   const [candidatePhoto, setCandidatePhoto] = useState('');
@@ -345,19 +367,31 @@ export default function CustomExamRegister() {
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const finalDept = userDept === 'Other' ? customDept.trim() : userDept.trim();
+    const finalDegree = userDegree === 'Other' ? customDegree.trim() : userDegree.trim();
+
+    const registrationPayload = {
+      custom_mock_exam_id: exam?.id,
+      user_name: fullName,
+      user_email: userEmail.trim().toLowerCase(),
+      user_phone: userPhone.trim(),
+      user_dob: userDob,
+      user_department: finalDept,
+      user_degree: finalDegree,
+      user_address: userAddress.trim(),
+      user_10th_mark: user10thMark ? Number(user10thMark) : null,
+      user_12th_mark: user12thMark ? Number(user12thMark) : null,
+      user_cgpa: userCgpa ? Number(userCgpa) : null,
+      user_year: userYear.trim(),
+      user_college: userCollege.trim(),
+      candidate_photo: candidatePhoto
+    };
+
+    try {
+      localStorage.setItem(`custom_exam_reg_${slug}`, JSON.stringify(registrationPayload));
+    } catch (e) {}
 
     if (exam && !exam.id.startsWith('demo-')) {
-      const { error } = await supabase.from('custom_mock_exam_registrations').insert({
-        custom_mock_exam_id: exam.id,
-        user_name: fullName,
-        user_email: userEmail.trim().toLowerCase(),
-        user_phone: userPhone.trim(),
-        user_dob: userDob,
-        user_department: finalDept,
-        user_year: userYear.trim(),
-        user_college: userCollege.trim(),
-        candidate_photo: candidatePhoto
-      });
+      const { error } = await supabase.from('custom_mock_exam_registrations').insert(registrationPayload);
 
       if (error && error.code === '23505') {
         alert('You are already registered for this exam! Use your email and DOB to log in.');
@@ -551,6 +585,39 @@ export default function CustomExamRegister() {
                   </div>
 
 
+                  {/* DEGREE SELECTION DROPDOWN */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Degree / Qualification <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={userDegree}
+                      onChange={e => setUserDegree(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
+                    >
+                      {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
+                        <option key={idx} value={deg}>{deg}</option>
+                      ))}
+                      <option value="Other">Other Degree</option>
+                    </select>
+                  </div>
+
+                  {userDegree === 'Other' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Specify Degree <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={customDegree}
+                        onChange={e => setCustomDegree(e.target.value)}
+                        placeholder="e.g. B.E (Robotics), MBA..."
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       Department / Discipline <span className="text-red-500">*</span>
@@ -618,6 +685,68 @@ export default function CustomExamRegister() {
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                     />
                     {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
+                  </div>
+
+                  {/* MARKS & ADDRESS ACADEMIC DETAILS */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      10th Mark (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={user10thMark}
+                      onChange={e => setUser10thMark(e.target.value)}
+                      placeholder="e.g. 88.5"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      12th / Diploma Mark (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={user12thMark}
+                      onChange={e => setUser12thMark(e.target.value)}
+                      placeholder="e.g. 92.0"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Current College CGPA
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="10"
+                      value={userCgpa}
+                      onChange={e => setUserCgpa(e.target.value)}
+                      placeholder="e.g. 8.5"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Full Residential Address
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={userAddress}
+                      onChange={e => setUserAddress(e.target.value)}
+                      placeholder="Enter street, city, state & pincode..."
+                      className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
+                    />
                   </div>
                 </div>
 
