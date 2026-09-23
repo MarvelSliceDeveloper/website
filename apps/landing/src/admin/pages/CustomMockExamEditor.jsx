@@ -610,19 +610,6 @@ export default function CustomMockExamEditor() {
         </h1>
       </div>
 
-      {/* SKEWED FOLDER TABS MATCHING COURSE WIZARD */}
-      <div className="pt-2">
-        <FolderTabs
-          tabs={[
-            { id: 'DETAILS', title: '1. Exam Parameters & Timings', icon: FiFileText },
-            { id: 'QUESTIONS', title: `2. MCQ Questions (${questions.length})`, icon: FiList },
-            { id: 'FEEDBACK', title: `3. Candidate Feedback Questions (${feedbackQuestions.length})`, icon: FiMessageSquare }
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-      </div>
-
       {loading ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
           <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
@@ -630,9 +617,21 @@ export default function CustomMockExamEditor() {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
-          {/* TAB 1: EXAM PARAMETERS & TIMING GUARDS */}
-          {activeTab === 'DETAILS' && (
-            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
+          {/* FOLDER TABS & TAB CONTENT CONTAINER */}
+          <div>
+            <FolderTabs
+              tabs={[
+                { id: 'DETAILS', title: '1. Exam Parameters & Timings', icon: FiFileText },
+                { id: 'QUESTIONS', title: `2. MCQ Questions (${questions.length})`, icon: FiList },
+                { id: 'FEEDBACK', title: `3. Candidate Feedback Questions (${feedbackQuestions.length})`, icon: FiMessageSquare }
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
+
+            {/* TAB 1: EXAM PARAMETERS & TIMING GUARDS */}
+            {activeTab === 'DETAILS' && (
+              <div className="bg-white p-6 sm:p-8 rounded-b-[20px] rounded-tr-[20px] border border-gray-300 shadow-sm space-y-6 relative z-30 -mt-[2px]">
               {/* EXAM CREATION TYPE DROPDOWN */}
               <div className="p-4 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1.5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-brand-blue">
@@ -916,7 +915,7 @@ export default function CustomMockExamEditor() {
 
           {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
           {activeTab === 'QUESTIONS' && (
-            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
+            <div className="bg-white p-6 sm:p-8 rounded-b-[20px] rounded-tr-[20px] border border-gray-300 shadow-sm space-y-6 relative z-30 -mt-[2px]">
               {/* EXAM CATEGORIES / SECTIONS CONFIGURATION CARD */}
               <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between">
