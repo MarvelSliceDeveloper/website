@@ -154,19 +154,26 @@ export default function CustomExamLogin() {
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-10 px-4">
       <div className="max-w-md w-full mx-auto space-y-6">
         {/* LOGO HEADER */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2.5 justify-center">
+        <div className="text-center space-y-3">
+          {/* Bigger Centered Logo Image */}
+          <div className="flex justify-center">
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-9 sm:h-10 w-auto object-contain pointer-events-none" />
+              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-14 sm:h-16 w-auto object-contain pointer-events-none" />
             ) : (
-              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-12 sm:h-14 w-12 sm:w-14 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
             )}
-            <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          </div>
+
+          {/* Centered Marvel Slice Brand Name */}
+          <div>
+            <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif] block">
               Marvel <span className="text-brand-orange">Slice</span>
             </span>
           </div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Exam Portal Candidate Login
+
+          {/* Exam Title Below Brand Name */}
+          <p className="text-xs sm:text-sm font-bold text-slate-600 uppercase tracking-wider max-w-sm mx-auto">
+            {exam?.title ? exam.title : 'Exam Portal Candidate Login'}
           </p>
         </div>
 
