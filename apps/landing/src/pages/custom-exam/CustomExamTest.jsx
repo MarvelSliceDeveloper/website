@@ -673,7 +673,7 @@ export default function CustomExamTest() {
   // STEP: ACTIVE TIMED MOCK EXAM INTERFACE (ALL CIRCLES)
   // -------------------------------------------------------------
   return (
-    <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#d1d5dc] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
       <header className="bg-white border-b border-slate-200 px-6 pt-1.5 pb-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
         <div className="flex items-center gap-2 select-none cursor-default justify-center">
@@ -694,8 +694,8 @@ export default function CustomExamTest() {
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR */}
-      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-8 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
-        <div className="flex items-center justify-between gap-3 sm:gap-6">
+      <div className="bg-[#d1d5dc] border-b border-slate-300/80 px-4 sm:px-8 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
+        <div className="max-w-4xl w-full mx-auto flex items-center justify-between gap-3 sm:gap-6">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
               {candidate?.candidate_photo ? (
@@ -704,12 +704,12 @@ export default function CustomExamTest() {
                 <FiUser className="w-10 h-10 text-slate-400" />
               )}
             </div>
-            <div className="text-xs sm:text-sm leading-relaxed text-slate-700 font-semibold space-y-0.5 min-w-0">
-              <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
-              <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
-              <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
+            <div className="text-xs sm:text-sm leading-relaxed text-slate-800 font-semibold space-y-0.5 min-w-0">
+              <div className="truncate"><span className="font-semibold text-slate-600">Name:</span> {candidate?.user_name}</div>
+              <div className="truncate"><span className="font-semibold text-slate-600">Dept:</span> {candidate?.user_department}</div>
+              <div className="truncate"><span className="font-semibold text-slate-600">Year:</span> {candidate?.user_year}</div>
               {candidate?.user_college && (
-                <div className="truncate"><span className="font-semibold text-slate-500">College:</span> {candidate?.user_college}</div>
+                <div className="truncate"><span className="font-semibold text-slate-600">College:</span> {candidate?.user_college}</div>
               )}
             </div>
           </div>
@@ -722,13 +722,13 @@ export default function CustomExamTest() {
               </div>
             )}
             {activeStep === 'INSTRUCTIONS' ? (
-              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-slate-100 border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
+              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-white border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-slate-500" />
                 <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
               <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
-                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50/80 text-amber-900 border border-amber-200/80'
+                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-white text-slate-900 border border-slate-300'
               }`}>
                 <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
                 <span>{formatTime(timeLeftSeconds)}</span>
@@ -739,10 +739,10 @@ export default function CustomExamTest() {
       </div>
 
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-white">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#d1d5dc]">
         {activeStep === 'INSTRUCTIONS' ? (
           /* INSTRUCTIONS CARD VIEW MATCHING DESIGN */
-          <div className="flex-1 min-h-0 overflow-y-auto pt-2 px-4 pb-6 bg-slate-50/80 flex justify-center items-start">
+          <div className="flex-1 min-h-0 overflow-y-auto pt-2 px-4 pb-6 bg-[#d1d5dc] flex justify-center items-start">
             <div className="max-w-4xl w-full mx-auto space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs mt-1">
               <div className="border-b border-slate-200 pb-3">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
@@ -753,12 +753,12 @@ export default function CustomExamTest() {
                 </p>
               </div>
 
-              {/* RULES CONTENT (16px FONT SIZE, 2.5 LINE HEIGHT) */}
-              <div className="text-[16px] text-slate-700 leading-[2.5] whitespace-pre-line">
+              {/* RULES CONTENT (16px FONT SIZE, 2.2 LINE HEIGHT) */}
+              <div className="text-[16px] text-slate-700 leading-[2.2] whitespace-pre-line">
                 {exam?.rules_text ? (
                   exam.rules_text
                 ) : (
-                  <ol className="list-decimal list-inside space-y-2.5 text-slate-700 font-medium leading-[2.5]">
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium leading-[2.2]">
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
