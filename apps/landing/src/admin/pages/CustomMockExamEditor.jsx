@@ -583,16 +583,6 @@ export default function CustomMockExamEditor() {
             <p className="text-xs text-slate-500">Configure parameters, MCQs, timing guards & candidate feedback</p>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-        >
-          <FiSave className="w-4 h-4" />
-          <span>{saving ? 'Saving...' : 'Save Exam'}</span>
-        </button>
       </div>
 
       {/* NAVIGATION TABS */}
@@ -832,22 +822,9 @@ export default function CustomMockExamEditor() {
                     Reset Defaults
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {allowedDegrees.map((deg, dIdx) => (
-                    <span key={dIdx} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-300 text-slate-800 font-semibold text-xs rounded-full shadow-2xs">
-                      <span>{deg}</span>
-                      <button
-                        type="button"
-                        onClick={() => setAllowedDegrees(prev => prev.filter((_, i) => i !== dIdx))}
-                        className="text-slate-400 hover:text-rose-600 cursor-pointer"
-                      >
-                        <FiX className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Select Preset Degree Dropdown */}
+                  {/* Left Column: Select Preset Degree Dropdown */}
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
                       Select Preset Degree
@@ -860,7 +837,7 @@ export default function CustomMockExamEditor() {
                           setAllowedDegrees(prev => [...prev, val]);
                         }
                       }}
-                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer font-medium"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer font-medium"
                     >
                       <option value="" disabled>-- Select Degree from Dropdown --</option>
                       {DEFAULT_DEGREES.map((d, idx) => (
@@ -871,32 +848,58 @@ export default function CustomMockExamEditor() {
                     </select>
                   </div>
 
-                  {/* Custom Degree Input */}
+                  {/* Right Column: Added Degrees Dropdown */}
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                      Add Custom Degree
+                      Added Degrees ({allowedDegrees.length} Selected)
                     </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newDegreeInput}
-                        onChange={e => setNewDegreeInput(e.target.value)}
-                        placeholder="e.g. B.Arch, M.Sc (Phy)..."
-                        className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
-                            setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
-                            setNewDegreeInput('');
-                          }
-                        }}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
-                      >
-                        + Add Degree
-                      </button>
-                    </div>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const valToRemove = e.target.value;
+                        if (valToRemove) {
+                          setAllowedDegrees(prev => prev.filter(d => d !== valToRemove));
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-brand-blue outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        🎓 Click to View Added Degrees ({allowedDegrees.length} total)
+                      </option>
+                      {allowedDegrees.map((deg, dIdx) => (
+                        <option key={dIdx} value={deg}>
+                          ❌ Remove "{deg}"
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Custom Degree Input Row */}
+                <div className="pt-2 border-t border-slate-200/80">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Add Custom Degree Option
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newDegreeInput}
+                      onChange={e => setNewDegreeInput(e.target.value)}
+                      placeholder="e.g. B.Arch, M.Sc (Phy), Diploma in AI..."
+                      className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
+                          setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
+                          setNewDegreeInput('');
+                        }
+                      }}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+                    >
+                      + Add Degree
+                    </button>
                   </div>
                 </div>
               </div>
