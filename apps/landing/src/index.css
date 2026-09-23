@@ -166,7 +166,7 @@ li {
   border-color: var(--color-admin-500);
 }
 
-label { cursor: pointer; }
+label { cursor: default; }
 button:not(:disabled) { cursor: pointer; }
 
 /* Custom scrollbar for admin panels */
