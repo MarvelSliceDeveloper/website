@@ -1224,8 +1224,8 @@ export default function CustomExamTest() {
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs font-bold text-red-600 mt-0.5">
-                  (Please read all instructions carefully before starting the exam.)
+                <p className="text-xs font-bold text-slate-800 mt-0.5">
+                  (<span className="text-red-600">Please read all instructions carefully before starting the exam.</span>)
                 </p>
               </div>
 
