@@ -680,6 +680,24 @@ export default function CustomExamTest() {
   const unansweredCount = Object.keys(visitedQuestions).filter(id => visitedQuestions[id] === true && userAnswers[id] === undefined).length;
   const notVisitedCount = Math.max(0, totalQCount - visitedCount);
 
+  // Dynamic timer text color logic:
+  // Green from start down to 50% time left
+  // Yellow from 50% time left down to last 7 mins (420s)
+  // Red in last 7 mins (<= 420s)
+  const totalMins = exam?.time_limit_mins || 20;
+  const totalSeconds = totalMins * 60;
+  const halfTimeSeconds = totalSeconds / 2;
+  const sevenMinsSeconds = 420;
+
+  let timerColorClass = "text-emerald-600";
+  if (timeLeftSeconds <= sevenMinsSeconds) {
+    timerColorClass = "text-rose-600 animate-pulse";
+  } else if (timeLeftSeconds <= halfTimeSeconds) {
+    timerColorClass = "text-amber-500";
+  } else {
+    timerColorClass = "text-emerald-600";
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-[#d1d5dc] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
@@ -733,16 +751,12 @@ export default function CustomExamTest() {
             )}
 
             {activeStep === 'INSTRUCTIONS' ? (
-              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-slate-100 border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
-                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-slate-500" />
-                <span>{exam?.time_limit_mins || 20} Mins</span>
+              <div className="font-mono text-sm sm:text-base font-bold text-slate-700">
+                Time: {exam?.time_limit_mins || 20}:00
               </div>
             ) : (
-              <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
-                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-slate-100 text-slate-900 border border-slate-300'
-              }`}>
-                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
-                <span>{formatTime(timeLeftSeconds)}</span>
+              <div className={`font-mono text-base sm:text-lg font-black tracking-tight ${timerColorClass}`}>
+                Time: {formatTime(timeLeftSeconds)}
               </div>
             )}
           </div>
