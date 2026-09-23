@@ -694,7 +694,7 @@ export default function CustomExamTest() {
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
-      <div className="bg-white border-b border-slate-200 px-[10px] py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
+      <div className="bg-white border-b border-slate-200 px-6 sm:px-10 lg:px-12 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-4xl w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
@@ -813,7 +813,7 @@ export default function CustomExamTest() {
             {/* 80% QUESTION AREA */}
             <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
-            <div className="flex-1 min-h-0 flex flex-col w-full px-[10px] py-4 sm:py-6 bg-white">
+            <div className="flex-1 min-h-0 flex flex-col w-full px-6 sm:px-10 lg:px-12 py-4 sm:py-6 bg-white">
               {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
               {(() => {
                 const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
@@ -906,7 +906,7 @@ export default function CustomExamTest() {
 
               {/* ACTION BUTTONS BAR */}
               <div className="pt-3 sm:pt-4 mt-3 border-t border-slate-200 shrink-0 bg-white">
-                <div className="flex items-center justify-between gap-1.5 sm:gap-3 overflow-x-auto py-1 no-scrollbar w-full">
+                <div className="flex items-center justify-between gap-3 sm:gap-6 lg:gap-8 overflow-x-auto py-2 no-scrollbar w-full">
                   <button
                     type="button"
                     onClick={() => {
