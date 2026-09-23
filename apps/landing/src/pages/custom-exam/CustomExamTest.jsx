@@ -1215,12 +1215,12 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INSTRUCTIONS CARD VIEW WITH COMPACT PADDING ON #e3e3e3 BG */
-          <div className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4 bg-[#e3e3e3] flex justify-center items-start overflow-y-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto space-y-4">
+          /* INSTRUCTIONS CARD VIEW WITH SCROLLABLE CONTENT & PINNED BOTTOM BUTTON ON #e3e3e3 BG */
+          <div className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4 bg-[#e3e3e3] flex flex-col justify-center items-center overflow-hidden">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto flex-1 min-h-0 max-h-full overflow-hidden space-y-4">
               
-              {/* TITLE & RED SUBTITLE */}
-              <div>
+              {/* TITLE & RED SUBTITLE (FIXED TOP) */}
+              <div className="shrink-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
@@ -1229,8 +1229,8 @@ export default function CustomExamTest() {
                 </p>
               </div>
 
-              {/* RULES & INSTRUCTIONS CONTENT AREA */}
-              <div className="space-y-3 text-slate-700">
+              {/* RULES & INSTRUCTIONS CONTENT AREA (SCROLLABLE IF OVERFLOW) */}
+              <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-3 text-slate-700">
                 {exam?.rules_text ? (
                   <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium">
                     {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
@@ -1278,8 +1278,8 @@ export default function CustomExamTest() {
                 </div>
               </div>
 
-              {/* START EXAM BUTTON */}
-              <div className="pt-2 flex justify-center">
+              {/* START EXAM BUTTON (PINNED AT BOTTOM) */}
+              <div className="shrink-0 pt-3 border-t border-slate-100 flex justify-center bg-white">
                 <button
                   type="button"
                   disabled={!agreeInstructions || !agreeTerms}
