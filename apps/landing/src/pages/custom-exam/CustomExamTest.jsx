@@ -617,7 +617,9 @@ export default function CustomExamTest() {
     });
 
     const totalSecs = (exam?.time_limit_mins || 20) * 60;
-    const timeTaken = totalSecs - timeLeftSeconds;
+    const timeTaken = examStartedAtMs
+      ? Math.max(1, Math.floor((Date.now() - examStartedAtMs) / 1000))
+      : Math.max(1, totalSecs - timeLeftSeconds);
 
     // Record submission to Supabase
     if (exam && !exam.id.startsWith('demo-')) {
@@ -1032,10 +1034,12 @@ export default function CustomExamTest() {
     const totalQCount = examQuestions.length;
     const answeredCount = Object.keys(userAnswers).filter(id => userAnswers[id] !== undefined).length;
     const totalSecs = (exam?.time_limit_mins || 20) * 60;
-    const timeTaken = Math.max(1, totalSecs - timeLeftSeconds);
+    const timeTaken = examStartedAtMs
+      ? Math.max(1, Math.floor((Date.now() - examStartedAtMs) / 1000))
+      : Math.max(1, totalSecs - timeLeftSeconds);
 
     function formatTimeTaken(seconds) {
-      if (!seconds || isNaN(seconds) || seconds <= 0) return '00:00';
+      if (!seconds || isNaN(seconds) || seconds <= 0) return '00:00 (0 secs)';
       const mins = Math.floor(seconds / 60);
       const secs = Math.floor(seconds % 60);
       const formattedMins = mins.toString().padStart(2, '0');
@@ -1060,21 +1064,21 @@ export default function CustomExamTest() {
           </div>
 
           <div className="space-y-3">
-            {/* BIGGER MARVEL SLICE BRAND & LOGO */}
-            <div className="flex items-center justify-center gap-3 mb-2">
+            {/* MARVEL SLICE BRAND & LARGER LOGO */}
+            <div className="flex items-center justify-center gap-3 mb-1">
               {settings?.logo_url ? (
-                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs" />
+                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-12 sm:h-14 w-auto object-contain drop-shadow-xs" />
               ) : (
-                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-10 sm:h-12 w-10 sm:w-12 object-contain drop-shadow-xs" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-12 sm:h-14 w-12 sm:w-14 object-contain drop-shadow-xs" onError={(e) => { e.target.style.display = 'none'; }} />
               )}
               <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
                 Marvel <span className="text-brand-orange">Slice</span>
               </span>
             </div>
 
-            {/* BIGGER CONGRATULATIONS BADGE */}
+            {/* COMPACT CONGRATULATIONS BADGE */}
             <div className="flex justify-center">
-              <span className="inline-flex items-center gap-2 px-6 py-2 rounded-full text-sm sm:text-base font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border-2 border-emerald-300 shadow-sm animate-pulse">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
                 🎉 Congratulations!
               </span>
             </div>
@@ -1107,11 +1111,11 @@ export default function CustomExamTest() {
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 flex justify-center">
             <button
               type="button"
               onClick={handleClosePortal}
-              className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+              className="px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center"
             >
               Exit & Close Portal
             </button>
