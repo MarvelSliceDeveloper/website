@@ -141,7 +141,7 @@ function FireworksCrackerCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-50 w-full h-full" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0 w-full h-full" />;
 }
 
 export default function CustomExamTest() {
@@ -1042,7 +1042,7 @@ export default function CustomExamTest() {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
         <FireworksCrackerCanvas />
-        <div className="bg-white rounded-3xl max-w-lg w-full p-8 sm:p-10 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl max-w-lg w-full p-8 sm:p-10 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative z-20 animate-in fade-in zoom-in-95 duration-200">
           
           <div className="relative w-24 h-24 mx-auto">
             <div className="w-24 h-24 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shadow-lg ring-8 ring-amber-50 animate-bounce">
