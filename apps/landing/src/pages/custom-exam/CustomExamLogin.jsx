@@ -197,8 +197,8 @@ export default function CustomExamLogin() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Username (Registered Email) <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Email Address <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <FiMail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -215,8 +215,8 @@ export default function CustomExamLogin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Password (Date of Birth) <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Date of Birth <span className="text-red-500">*</span>
               </label>
               <div className="relative flex items-center">
                 <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />

@@ -645,29 +645,29 @@ export default function CustomExamTest() {
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR */}
-      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-8 py-3 sm:py-3.5 shrink-0 z-10 shadow-2xs space-y-2">
-        <div className="text-center pb-1.5 border-b border-slate-200/60">
-          <h2 className="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">
+      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-8 py-3.5 sm:py-4 shrink-0 z-10 shadow-2xs space-y-2.5">
+        <div className="text-center pb-2 border-b border-slate-200/80">
+          <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
             {exam?.title}
           </h2>
         </div>
 
         <div className="flex items-center justify-between gap-3 sm:gap-6">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
-                <FiUser className="w-8 h-8 text-slate-400" />
+                <FiUser className="w-10 h-10 text-slate-400" />
               )}
             </div>
-            <div className="text-xs sm:text-sm leading-normal text-slate-800 font-medium space-y-0.5 min-w-0">
-              <div className="truncate text-sm sm:text-base font-extrabold text-slate-900">
-                <span className="font-bold text-slate-500 text-xs sm:text-sm">Name:</span> {candidate?.user_name}
-              </div>
-              <div className="truncate text-xs sm:text-sm font-semibold text-slate-600">
-                <span className="font-bold text-slate-500">Dept:</span> {candidate?.user_department} ({candidate?.user_year})
-              </div>
+            <div className="text-xs sm:text-sm leading-relaxed text-slate-700 font-semibold space-y-0.5 min-w-0">
+              <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
+              <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
+              <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
+              {candidate?.user_college && (
+                <div className="truncate"><span className="font-semibold text-slate-500">College:</span> {candidate?.user_college}</div>
+              )}
             </div>
           </div>
 
@@ -678,7 +678,7 @@ export default function CustomExamTest() {
                 <span>Session Restored</span>
               </div>
             )}
-            <div className={`flex items-center gap-2 sm:gap-2.5 px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
+            <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
               timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50/80 text-amber-900 border border-amber-200/80'
             }`}>
               <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
