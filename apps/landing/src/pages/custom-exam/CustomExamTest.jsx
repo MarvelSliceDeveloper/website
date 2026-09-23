@@ -741,42 +741,36 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-white">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INTEGRATED INSTRUCTIONS VIEW (CLEAN CONTINUOUS WHITE BG, NO SEPARATE CONTAINERS) */
-          <div className="flex-1 min-h-0 overflow-y-auto p-6 sm:p-10 bg-white">
-            <div className="max-w-3xl mx-auto space-y-8 bg-white">
-              <div className="border-b border-slate-200 pb-4">
+          /* INTEGRATED INSTRUCTIONS VIEW WITH COMPACT SPACING AND CLEAN HEADING */
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-white">
+            <div className="max-w-3xl mx-auto space-y-5 bg-white">
+              <div className="border-b border-slate-200 pb-3">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs text-slate-500 font-medium mt-1">
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Please read all instructions carefully before starting the exam.
                 </p>
               </div>
 
-              {/* RULES CONTENT FROM ADMIN */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  <FiShield className="w-4 h-4 text-brand-blue" />
-                  Candidate Rules & Regulations
-                </h3>
-                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line pl-1">
-                  {exam?.rules_text ? (
-                    exam.rules_text
-                  ) : (
-                    <ul className="list-disc list-inside space-y-2 text-slate-700">
-                      <li>Ensure a stable internet connection throughout the duration of the test.</li>
-                      <li>Do not refresh the page or switch browser tabs during the examination.</li>
-                      <li>Each question carries 1 mark. Select your answer using the option choices.</li>
-                      <li>Negative marking of 0.25 marks applies for each incorrect attempt.</li>
-                      <li>You can navigate between questions using the Question Palette on the right.</li>
-                      <li>The exam will automatically submit when the timer expires.</li>
-                    </ul>
-                  )}
-                </div>
+              {/* RULES LIST CONTENT */}
+              <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {exam?.rules_text ? (
+                  exam.rules_text
+                ) : (
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
+                    <li>Ensure a stable internet connection throughout the duration of the test.</li>
+                    <li>Do not refresh the page or switch browser tabs during the examination.</li>
+                    <li>Each question carries 1 mark. Select your answer using the option choices.</li>
+                    <li>Negative marking of 0.25 marks applies for each incorrect attempt.</li>
+                    <li>You can navigate between questions using the Question Palette on the right.</li>
+                    <li>The exam will automatically submit when the timer expires.</li>
+                  </ol>
+                )}
               </div>
 
               {/* AGREEMENT CHECKBOXES */}
-              <div className="space-y-4 pt-6 border-t border-slate-100">
+              <div className="space-y-3 pt-4 border-t border-slate-100">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -808,7 +802,7 @@ export default function CustomExamTest() {
                   type="button"
                   disabled={!agreeInstructions || !agreeTerms}
                   onClick={handleStartExam}
-                  className="px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Start Exam</span>
                 </button>
