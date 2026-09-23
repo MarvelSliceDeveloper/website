@@ -138,8 +138,8 @@ export default function CustomExamLogin() {
       console.warn('Could not save auth session:', err);
     }
 
-    // Navigate to Instructions Page (NOT popup modal!)
-    navigate(`/custom-exam/instructions/${slug}`);
+    // Navigate to Test Page (which handles integrated Instructions -> Test flow)
+    navigate(`/custom-exam/test/${slug}`);
   }
 
   if (loading) {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiClock, FiCheckCircle, FiX, FiCheck, FiAward, FiShield, FiUser,
   FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight
@@ -104,9 +104,11 @@ export default function CustomExamTest() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Active Flow Step: 'QUIZ' | 'FEEDBACK' | 'SUBMITTED'
-  const [activeStep, setActiveStep] = useState('QUIZ');
+  // Active Flow Step: 'INSTRUCTIONS' | 'QUIZ' | 'FEEDBACK' | 'SUBMITTED'
+  const [activeStep, setActiveStep] = useState('INSTRUCTIONS');
   const [isSessionRestored, setIsSessionRestored] = useState(false);
+  const [agreeInstructions, setAgreeInstructions] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Quiz State
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -243,6 +245,13 @@ export default function CustomExamTest() {
     restoreSessionFromCache(currentExam, questions);
   }
 
+  function handleStartExam() {
+    if (!agreeInstructions || !agreeTerms) return;
+    const initialVisited = examQuestions[0]?.id ? { [examQuestions[0].id]: true } : {};
+    setVisitedQuestions(initialVisited);
+    setActiveStep('QUIZ');
+  }
+
   function restoreSessionFromCache(currentExam, questions) {
     let fullExamSecs = (currentExam.time_limit_mins || 20) * 60;
     if (currentExam.exam_end_time) {
@@ -255,16 +264,14 @@ export default function CustomExamTest() {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
       if (!raw) {
         setTimeLeftSeconds(fullExamSecs);
-        setVisitedQuestions(initialVisited);
-        setActiveStep('QUIZ');
+        setActiveStep('INSTRUCTIONS');
         return;
       }
 
       const cached = JSON.parse(raw);
-      if (!cached) {
+      if (!cached || !cached.activeStep || cached.activeStep === 'INSTRUCTIONS') {
         setTimeLeftSeconds(fullExamSecs);
-        setVisitedQuestions(initialVisited);
-        setActiveStep('QUIZ');
+        setActiveStep('INSTRUCTIONS');
         return;
       }
 
@@ -272,12 +279,11 @@ export default function CustomExamTest() {
       const remainingSecs = (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs;
       const hasAnsweredQuestions = cached.userAnswers && typeof cached.userAnswers === 'object' && Object.keys(cached.userAnswers).length > 0;
 
-      // If cached session has no answered questions OR is marked SUBMITTED, clear stale cache and start fresh exam!
+      // If cached session has no answered questions OR is marked SUBMITTED, clear stale cache and start fresh exam instructions!
       if (cached.activeStep === 'SUBMITTED' || !hasAnsweredQuestions) {
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         setTimeLeftSeconds(fullExamSecs);
-        setVisitedQuestions(initialVisited);
-        setActiveStep('QUIZ');
+        setActiveStep('INSTRUCTIONS');
         return;
       }
 
@@ -301,13 +307,11 @@ export default function CustomExamTest() {
         }, 500);
       } else {
         setTimeLeftSeconds(fullExamSecs);
-        setVisitedQuestions(initialVisited);
-        setActiveStep('QUIZ');
+        setActiveStep('INSTRUCTIONS');
       }
     } catch (e) {
       setTimeLeftSeconds(fullExamSecs);
-      setVisitedQuestions(initialVisited);
-      setActiveStep('QUIZ');
+      setActiveStep('INSTRUCTIONS');
     }
   }
 
@@ -631,14 +635,14 @@ export default function CustomExamTest() {
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER */}
-      <header className="bg-white border-b border-slate-200 px-6 py-3 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
-        <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
+      <header className="bg-white border-b border-slate-200 px-6 py-3.5 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
+        <div className="flex items-center gap-3 select-none cursor-default justify-center">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-8 sm:h-9 w-auto object-contain pointer-events-none" />
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-9 sm:h-11 w-auto object-contain pointer-events-none" />
           ) : (
-            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-7 sm:h-8 w-7 sm:w-8 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-8 sm:h-10 w-8 sm:w-10 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
           )}
-          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </div>
@@ -672,26 +676,130 @@ export default function CustomExamTest() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-            {isSessionRestored && (
+            {isSessionRestored && activeStep === 'QUIZ' && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-brand-blue border border-blue-200/80 rounded-full text-xs font-semibold shadow-2xs">
                 <FiRefreshCw className="w-3.5 h-3.5" />
                 <span>Session Restored</span>
               </div>
             )}
-            <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
-              timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50/80 text-amber-900 border border-amber-200/80'
-            }`}>
-              <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
-              <span>{formatTime(timeLeftSeconds)}</span>
-            </div>
+            {activeStep === 'INSTRUCTIONS' ? (
+              <div className="flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2 rounded-full bg-slate-100 border border-slate-300 font-mono text-xs sm:text-base font-bold text-slate-700 shadow-2xs">
+                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-slate-500" />
+                <span>{exam?.time_limit_mins || 20} Mins</span>
+              </div>
+            ) : (
+              <div className={`flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-mono text-xs sm:text-base font-bold shadow-2xs ${
+                timeLeftSeconds < 120 ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-amber-50/80 text-amber-900 border border-amber-200/80'
+              }`}>
+                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-amber-600" />
+                <span>{formatTime(timeLeftSeconds)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* QUIZ MAIN BODY: 80% QUESTION AREA / 20% SIDEBAR */}
+      {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-white">
-        {/* 80% QUESTION AREA */}
-        <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
+        {activeStep === 'INSTRUCTIONS' ? (
+          /* INTEGRATED INSTRUCTIONS VIEW (100% WIDTH, NO PALETTE SIDEBAR) */
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-8 bg-white">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="border-b border-slate-200 pb-4">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+                  Exam Instructions & Guidelines
+                </h1>
+                <p className="text-xs text-slate-500 font-medium mt-1">
+                  Please read all instructions carefully before starting the exam.
+                </p>
+              </div>
+
+              {/* EXAM STATS SUMMARY */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Time Limit</p>
+                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{exam?.time_limit_mins || 20} Mins</p>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Questions</p>
+                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{examQuestions.length} MCQs</p>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Marks</p>
+                  <p className="text-sm sm:text-base font-black text-brand-blue mt-0.5">{exam?.total_marks || examQuestions.length} Marks</p>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Marking Scheme</p>
+                  <p className="text-sm sm:text-base font-black text-emerald-600 mt-0.5">+1 / -0.25</p>
+                </div>
+              </div>
+
+              {/* RULES CONTENT FROM ADMIN */}
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <FiShield className="w-4 h-4 text-brand-blue" />
+                  Candidate Rules & Regulations
+                </h3>
+                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                  {exam?.rules_text ? (
+                    exam.rules_text
+                  ) : (
+                    <ul className="list-disc list-inside space-y-2 text-slate-700">
+                      <li>Ensure a stable internet connection throughout the duration of the test.</li>
+                      <li>Do not refresh the page or switch browser tabs during the examination.</li>
+                      <li>Each question carries 1 mark. Select your answer using the option choices.</li>
+                      <li>Negative marking of 0.25 marks applies for each incorrect attempt.</li>
+                      <li>You can navigate between questions using the Question Palette on the right.</li>
+                      <li>The exam will automatically submit when the timer expires.</li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {/* AGREEMENT CHECKBOXES & START BUTTON */}
+              <div className="p-5 bg-blue-50/60 border border-blue-100 rounded-2xl space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreeInstructions}
+                    onChange={e => setAgreeInstructions(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                  />
+                  <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                    I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={e => setAgreeTerms(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                  />
+                  <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                    I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
+                  </span>
+                </label>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    disabled={!agreeInstructions || !agreeTerms}
+                    onClick={handleStartExam}
+                    className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span>Start Exam</span>
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 80% QUESTION AREA */}
+            <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
             <div className="flex-1 min-h-0 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white">
               <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5 mb-4 sm:mb-6 shrink-0">
@@ -947,7 +1055,6 @@ export default function CustomExamTest() {
                   );
                 })}
               </div>
-            </div>
 
             {/* LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
             <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-4">
@@ -982,6 +1089,9 @@ export default function CustomExamTest() {
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      </>
+    )}
+  </div>
+</div>
+);
+}

@@ -18,8 +18,7 @@ export default function CustomExamInstructions() {
   const [countdownSecs, setCountdownSecs] = useState(0);
 
   useEffect(() => {
-    checkAuthAndFetchExam();
-    syncServerTime();
+    navigate(`/custom-exam/test/${slug}`, { replace: true });
   }, [slug]);
 
   async function syncServerTime() {
