@@ -1216,12 +1216,12 @@ export default function CustomExamTest() {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
           /* INSTRUCTIONS CARD VIEW WITH SCROLLABLE CONTENT & PINNED BOTTOM BUTTON ON #e3e3e3 BG */
-          <div className="flex-1 min-h-0 px-4 sm:px-6 py-4 sm:py-6 bg-[#e3e3e3] flex flex-col justify-center items-center overflow-y-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto my-auto max-h-full space-y-4">
+          <div className="flex-1 min-h-0 px-3 sm:px-6 py-2 sm:py-3 bg-[#e3e3e3] flex flex-col items-center overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto max-h-full space-y-3">
               
               {/* TITLE & RED SUBTITLE (FIXED TOP) */}
               <div className="shrink-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
                 <p className="text-xs font-bold text-slate-800 mt-0.5">
