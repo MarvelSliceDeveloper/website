@@ -753,12 +753,12 @@ export default function CustomExamTest() {
                 </p>
               </div>
 
-              {/* RULES CONTENT */}
-              <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+              {/* RULES CONTENT (16px FONT SIZE, 2.5 LINE HEIGHT) */}
+              <div className="text-[16px] text-slate-700 leading-[2.5] whitespace-pre-line">
                 {exam?.rules_text ? (
                   exam.rules_text
                 ) : (
-                  <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
+                  <ol className="list-decimal list-inside space-y-2.5 text-slate-700 font-medium leading-[2.5]">
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
