@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiClock, FiCheckCircle, FiX, FiCheck, FiAward, FiShield, FiUser,
-  FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight
+  FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight, FiAlertCircle, FiBookmark
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -120,6 +120,7 @@ export default function CustomExamTest() {
 
   // Feedback State { [fbId]: ratingOrText }
   const [feedbackAnswers, setFeedbackAnswers] = useState({});
+  const [feedbackError, setFeedbackError] = useState('');
 
   const timerRef = useRef(null);
   const hasRestoredSessionRef = useRef(false);
@@ -408,12 +409,45 @@ export default function CustomExamTest() {
     setUserAnswers(prev => ({ ...prev, [qId]: optIdx }));
   }
 
+  function countSentences(text) {
+    if (!text || typeof text !== 'string') return 0;
+    const trimmed = text.trim();
+    if (!trimmed) return 0;
+    const segments = trimmed
+      .split(/[.!?\n]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 2);
+    return segments.length;
+  }
+
   function triggerFeedbackOrSubmit() {
-    if (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0) {
-      setActiveStep('FEEDBACK');
+    const markedQList = examQuestions.filter(q => markedForReview[q.id] === true);
+    if (markedQList.length > 0) {
+      setActiveStep('REVIEW_MARKED');
     } else {
-      executeFinalSubmission();
+      setActiveStep('FEEDBACK');
     }
+  }
+
+  function handleFinalSubmissionWithValidation() {
+    setFeedbackError('');
+    const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
+      ? exam.feedback_questions
+      : [
+          { id: 'fb-overall-exp', type: 'text', question_text: 'Please write your detailed feedback about the exam, question difficulty, and overall experience (Minimum 5 sentences mandatory).' }
+        ];
+
+    for (const fb of feedbackList) {
+      if (fb.type !== 'rating') {
+        const val = feedbackAnswers[fb.id] || '';
+        const sentenceCount = countSentences(val);
+        if (sentenceCount < 5) {
+          setFeedbackError(`Please write at least 5 complete sentences for: "${fb.question_text}". Current count: ${sentenceCount} / 5 sentences.`);
+          return;
+        }
+      }
+    }
+    executeFinalSubmission();
   }
 
   async function executeFinalSubmission() {
@@ -510,9 +544,152 @@ export default function CustomExamTest() {
   }
 
   // -------------------------------------------------------------
+  // STEP: REVIEW MARKED QUESTIONS (BEFORE FEEDBACK)
+  // -------------------------------------------------------------
+  if (activeStep === 'REVIEW_MARKED') {
+    const markedQList = examQuestions.filter(q => markedForReview[q.id] === true);
+
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-auto max-h-[90vh] flex flex-col">
+          <div className="border-b border-slate-100 pb-4 text-center shrink-0">
+            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-purple-50 text-purple-600 border border-purple-100 inline-flex items-center gap-1">
+              <FiBookmark className="w-3 h-3 text-purple-600" />
+              Review Marked Questions ({markedQList.length})
+            </span>
+            <h2 className="text-lg font-bold text-slate-900 mt-2">
+              Review Questions Marked for Review
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              You marked {markedQList.length} question(s) for review. You can change options, keep current answers, or unmark questions before submitting.
+            </p>
+          </div>
+
+          <div className="overflow-y-auto flex-1 space-y-6 pr-1">
+            {markedQList.length === 0 ? (
+              <div className="text-center py-8 space-y-3">
+                <FiCheckCircle className="w-12 h-12 text-emerald-500 mx-auto" />
+                <p className="text-sm font-bold text-slate-700">No questions marked for review!</p>
+                <p className="text-xs text-slate-500">All marked questions have been reviewed or unmarked.</p>
+              </div>
+            ) : (
+              markedQList.map((q) => {
+                const originalIndex = examQuestions.findIndex(item => item.id === q.id);
+                const currentAns = userAnswers[q.id];
+
+                return (
+                  <div key={q.id} className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                    <div className="flex items-start justify-between gap-3 border-b border-slate-200/60 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-brand-blue text-white text-xs font-bold flex items-center justify-center shrink-0">
+                          {originalIndex + 1}
+                        </span>
+                        <div>
+                          <span className="text-[11px] font-semibold text-slate-500 block">Question #{originalIndex + 1}</span>
+                          {q.category_name && (
+                            <span className="text-[10px] font-medium text-slate-400">{q.category_name}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setMarkedForReview(prev => ({ ...prev, [q.id]: false }))}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <FiBookmark className="w-3 h-3 fill-rose-600" />
+                        <span>Unmark</span>
+                      </button>
+                    </div>
+
+                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed">
+                      {q.question_text}
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      {q.options.map((opt, optIdx) => {
+                        const isSelected = currentAns === optIdx;
+                        const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
+                        const label = optionLabels[optIdx] || String(optIdx + 1);
+
+                        return (
+                          <button
+                            key={optIdx}
+                            type="button"
+                            onClick={() => handleOptionSelect(q.id, optIdx)}
+                            className={`p-3 rounded-xl border text-left text-xs font-medium transition-all flex items-center justify-between cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-50 border-brand-blue text-brand-blue font-bold shadow-sm'
+                                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <span className={`w-6 h-6 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 ${
+                                isSelected ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {label}
+                              </span>
+                              <span>{opt}</span>
+                            </div>
+                            {isSelected && (
+                              <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-brand-blue/10 text-brand-blue">
+                                Selected
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs">
+                      <span className="text-slate-500 font-medium">
+                        {currentAns !== undefined ? (
+                          <span className="text-emerald-600 font-bold flex items-center gap-1">
+                            <FiCheck className="w-3.5 h-3.5" /> Answered (Option {['A','B','C','D','E','F'][currentAns]})
+                          </span>
+                        ) : (
+                          <span className="text-amber-600 font-medium">Not Answered Yet</span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setMarkedForReview(prev => ({ ...prev, [q.id]: false }))}
+                        className="text-xs font-bold text-slate-600 hover:text-brand-blue transition-colors cursor-pointer"
+                      >
+                        Keep Current Answer & Confirm
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveStep('FEEDBACK')}
+              className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            >
+              <span>Proceed to Feedback</span>
+              <FiArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
   // STEP: FEEDBACK STEP (BEFORE FINAL SUBMISSION)
   // -------------------------------------------------------------
   if (activeStep === 'FEEDBACK') {
+    const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
+      ? exam.feedback_questions
+      : [
+          { id: 'fb-overall-exp', type: 'text', question_text: 'Please write your detailed feedback about the exam, question difficulty, and overall experience (Minimum 5 sentences mandatory).' },
+          { id: 'fb-rating-overall', type: 'rating', question_text: 'Rate your overall mock exam experience' }
+        ];
+
     return (
       <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
         <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-auto">
@@ -523,51 +700,84 @@ export default function CustomExamTest() {
             <h2 className="text-lg font-bold text-slate-900 mt-2">
               Share Your Feedback
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Please answer the questions below before finalizing your test submission.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Mandatory: Minimum 5 sentences required for text feedback before completing submission.</p>
           </div>
 
           <div className="space-y-5">
-            {exam?.feedback_questions?.map((fb, idx) => (
-              <div key={fb.id || idx} className="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                <label className="block text-xs font-bold text-slate-800 leading-snug">
-                  {idx + 1}. {fb.question_text}
-                </label>
+            {feedbackList.map((fb, idx) => {
+              const currentText = feedbackAnswers[fb.id] || '';
+              const sentenceCount = countSentences(currentText);
+              const isSatisfied = sentenceCount >= 5;
 
-                {fb.type === 'rating' ? (
-                  <div className="flex items-center gap-2 pt-1">
-                    {[1, 2, 3, 4, 5].map((starVal) => {
-                      const currentVal = feedbackAnswers[fb.id] || 0;
-                      return (
-                        <button
-                          key={starVal}
-                          type="button"
-                          onClick={() => setFeedbackAnswers(prev => ({ ...prev, [fb.id]: starVal }))}
-                          className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                            currentVal >= starVal ? 'bg-amber-100 border-amber-300 text-amber-500 scale-105' : 'bg-white border-slate-200 text-slate-300'
-                          }`}
-                        >
-                          <FiStar className="w-5 h-5 fill-current" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <textarea
-                    rows={3}
-                    value={feedbackAnswers[fb.id] || ''}
-                    onChange={e => setFeedbackAnswers(prev => ({ ...prev, [fb.id]: e.target.value }))}
-                    placeholder="Type your response here..."
-                    className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
-                  />
-                )}
-              </div>
-            ))}
+              return (
+                <div key={fb.id || idx} className="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <label className="block text-xs font-bold text-slate-800 leading-snug">
+                    {idx + 1}. {fb.question_text} {fb.type !== 'rating' && <span className="text-rose-500">* (Min 5 Sentences)</span>}
+                  </label>
+
+                  {fb.type === 'rating' ? (
+                    <div className="flex items-center gap-2 pt-1">
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const currentVal = feedbackAnswers[fb.id] || 0;
+                        return (
+                          <button
+                            key={starVal}
+                            type="button"
+                            onClick={() => setFeedbackAnswers(prev => ({ ...prev, [fb.id]: starVal }))}
+                            className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                              currentVal >= starVal ? 'bg-amber-100 border-amber-300 text-amber-500 scale-105' : 'bg-white border-slate-200 text-slate-300'
+                            }`}
+                          >
+                            <FiStar className="w-5 h-5 fill-current" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <textarea
+                        rows={4}
+                        value={currentText}
+                        onChange={e => {
+                          setFeedbackError('');
+                          setFeedbackAnswers(prev => ({ ...prev, [fb.id]: e.target.value }));
+                        }}
+                        placeholder="Write at least 5 complete sentences here..."
+                        className={`w-full p-3 bg-white border rounded-xl text-xs text-slate-800 outline-none transition-all ${
+                          isSatisfied ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20'
+                        }`}
+                      />
+                      <div className="flex items-center justify-between text-[11px] font-semibold">
+                        <span className={isSatisfied ? 'text-emerald-600 font-bold flex items-center gap-1' : 'text-amber-600 font-medium'}>
+                          {isSatisfied ? (
+                            <>
+                              <FiCheckCircle className="w-3.5 h-3.5 inline text-emerald-600" />
+                              <span>✓ Sentence requirement met ({sentenceCount} sentences)</span>
+                            </>
+                          ) : (
+                            <span>Sentence count: {sentenceCount} / 5 (Mandatory 5 sentences)</span>
+                          )}
+                        </span>
+                        <span className="text-slate-400 text-[10px]">Min 5 sentences</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
+
+          {feedbackError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{feedbackError}</span>
+            </div>
+          )}
 
           <div className="pt-2">
             <button
               type="button"
-              onClick={executeFinalSubmission}
+              onClick={handleFinalSubmissionWithValidation}
               disabled={isSubmitting}
               className="w-full py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
             >
@@ -744,7 +954,7 @@ export default function CustomExamTest() {
             {/* TIMER ON LEFT SIDE */}
             {activeStep === 'INSTRUCTIONS' ? (
               <div className="font-mono text-sm sm:text-base font-bold text-slate-700">
-                <span className="text-slate-700 font-semibold">Time Left:</span> <span>{exam?.time_limit_mins || 20}:00</span>
+                <span className="text-slate-700 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
               <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
@@ -777,7 +987,7 @@ export default function CustomExamTest() {
                   Exam Instructions & Guidelines
                 </h1>
                 <p className="text-xs font-semibold text-red-600 !text-red-600 mt-0.5" style={{ color: '#dc2626' }}>
-                  Please read all instructions carefully before starting the exam.
+                  (Please read all instructions carefully before starting the exam.)
                 </p>
               </div>
 
