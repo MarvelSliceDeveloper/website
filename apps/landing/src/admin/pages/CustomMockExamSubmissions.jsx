@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   FiClipboard, FiSearch, FiDownload, FiFileText, FiUser, FiCheckCircle,
-  FiClock, FiMessageSquare, FiX, FiAward, FiEye, FiCheck, FiAlertCircle
+  FiClock, FiMessageSquare, FiX, FiAward, FiEye, FiCheck, FiAlertCircle,
+  FiRotateCcw, FiMonitor
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
@@ -21,6 +22,8 @@ export default function CustomMockExamSubmissions() {
   // Modals
   const [activeFeedbackModal, setActiveFeedbackModal] = useState(null);
   const [activeReviewModal, setActiveReviewModal] = useState(null); // Submissions object for review
+  const [activeTabSwitchModal, setActiveTabSwitchModal] = useState(null); // Submission object for tab switch audit
+  const [resettingSubId, setResettingSubId] = useState(null);
   const [reviewQuestions, setReviewQuestions] = useState([]);
   const [loadingReviewQuestions, setLoadingReviewQuestions] = useState(false);
 
@@ -139,6 +142,44 @@ export default function CustomMockExamSubmissions() {
       ]);
     }
     setLoadingReviewQuestions(false);
+  }
+
+  async function handleResetSubmission(sub) {
+    if (!window.confirm(`Are you sure you want to RESET the exam submission for "${sub.user_name}" (${sub.user_email})?\n\nThis will completely delete their attempt data from the database and allow them to log in and RETAKE the exam from scratch.`)) {
+      return;
+    }
+
+    setResettingSubId(sub.id);
+
+    try {
+      if (sub.id && !sub.id.startsWith('sub-demo-')) {
+        // Delete submission from custom_mock_exam_submissions
+        const { error } = await supabase
+          .from('custom_mock_exam_submissions')
+          .delete()
+          .eq('id', sub.id);
+
+        if (error) {
+          console.error('Error resetting submission in DB:', error);
+        }
+
+        // Delete tab switch logs from custom_mock_exam_tab_switches
+        try {
+          await supabase
+            .from('custom_mock_exam_tab_switches')
+            .delete()
+            .eq('submission_id', sub.id);
+        } catch (e) {}
+      }
+
+      setSubmissions(prev => prev.filter(s => s.id !== sub.id));
+      alert(`Submission for "${sub.user_name}" has been reset successfully! The candidate can now log in and retake the test.`);
+    } catch (err) {
+      console.error('Reset error:', err);
+      alert('Failed to reset submission. Please try again.');
+    } finally {
+      setResettingSubId(null);
+    }
   }
 
   const filteredSubmissions = submissions.filter(s => {
@@ -379,6 +420,7 @@ export default function CustomMockExamSubmissions() {
                   <th className="p-3.5">Academics (10th/12th/CGPA)</th>
                   <th className="p-3.5">Overall Score</th>
                   <th className="p-3.5">Section Breakdown</th>
+                  <th className="p-3.5">Tab Switches</th>
                   <th className="p-3.5">Time Taken</th>
                   <th className="p-3.5 text-center">Actions & Review</th>
                 </tr>
@@ -387,6 +429,7 @@ export default function CustomMockExamSubmissions() {
                 {filteredSubmissions.map((sub) => {
                   const hasFeedback = sub.feedback_answers && Object.keys(sub.feedback_answers).length > 0;
                   const catScores = sub.category_scores || {};
+                  const switchCount = sub.tab_switch_count || sub.tab_switch_logs?.length || 0;
 
                   return (
                     <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
@@ -446,6 +489,29 @@ export default function CustomMockExamSubmissions() {
                         </div>
                       </td>
 
+                      <td className="p-3.5">
+                        {switchCount > 0 ? (
+                          <div className="space-y-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1">
+                              <FiMonitor className="w-3 h-3 text-amber-700" />
+                              {switchCount} Switches
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTabSwitchModal(sub)}
+                              className="text-[10px] text-brand-blue font-bold hover:underline block cursor-pointer"
+                            >
+                              View Logs
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                            <FiCheckCircle className="w-3 h-3 text-emerald-600" />
+                            0 Switches
+                          </span>
+                        )}
+                      </td>
+
                       <td className="p-3.5 font-mono text-[11px] text-slate-800">
                         {formatTime(sub.time_taken_seconds)}
                       </td>
@@ -458,7 +524,7 @@ export default function CustomMockExamSubmissions() {
                             className="px-3 py-1.5 rounded-lg bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                           >
                             <FiEye className="w-3.5 h-3.5" />
-                            <span>Review Attempt</span>
+                            <span>Review</span>
                           </button>
 
                           {hasFeedback && (
@@ -471,6 +537,17 @@ export default function CustomMockExamSubmissions() {
                               <FiMessageSquare className="w-3.5 h-3.5" />
                             </button>
                           )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleResetSubmission(sub)}
+                            disabled={resettingSubId === sub.id}
+                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] flex items-center gap-1 transition-colors border border-rose-200 cursor-pointer disabled:opacity-50"
+                            title="Reset submission and permit candidate to retake exam"
+                          >
+                            <FiRotateCcw className="w-3.5 h-3.5 text-rose-600" />
+                            <span>{resettingSubId === sub.id ? 'Resetting...' : 'Reset'}</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -848,6 +925,93 @@ export default function CustomMockExamSubmissions() {
               >
                 <FiDownload className="w-4 h-4" />
                 <span>Generate & Download</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB SWITCH AUDIT LOG MODAL */}
+      {activeTabSwitchModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-auto max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                  <FiMonitor className="w-3 h-3 text-amber-700" />
+                  Tab Switch Audit Logs ({activeTabSwitchModal.tab_switch_count || activeTabSwitchModal.tab_switch_logs?.length || 0})
+                </span>
+                <h3 className="text-base font-bold text-slate-900 mt-1">
+                  {activeTabSwitchModal.user_name} ({activeTabSwitchModal.user_email})
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Detailed log of tab & window switches captured silently during the exam.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTabSwitchModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
+              >
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-3 pr-1">
+              {(!activeTabSwitchModal.tab_switch_logs || activeTabSwitchModal.tab_switch_logs.length === 0) ? (
+                <div className="text-center py-8 space-y-2">
+                  <FiCheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700">No Tab Switch Logs Captured</p>
+                  <p className="text-[11px] text-slate-500">Candidate remained on the exam tab throughout the test duration.</p>
+                </div>
+              ) : (
+                <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px]">
+                        <th className="p-2.5">#</th>
+                        <th className="p-2.5">Event Type</th>
+                        <th className="p-2.5">Time & Date</th>
+                        <th className="p-2.5">Exam Time Left</th>
+                        <th className="p-2.5">Question At Moment</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                      {activeTabSwitchModal.tab_switch_logs.map((log, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="p-2.5 font-bold text-slate-900">{log.switch_number || idx + 1}</td>
+                          <td className="p-2.5">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              log.event_type === 'tab_hidden' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {log.event_type === 'tab_hidden' ? 'Tab Hidden / Switched' : 'Window Focus Lost'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 font-mono text-[11px] text-slate-600">
+                            {new Date(log.timestamp).toLocaleTimeString()} ({new Date(log.timestamp).toLocaleDateString()})
+                          </td>
+                          <td className="p-2.5 font-mono text-slate-900 font-bold">
+                            {log.time_left_formatted || `${log.time_left_seconds}s`}
+                          </td>
+                          <td className="p-2.5">
+                            <span className="font-semibold text-slate-800">Q#{log.question_number}</span>
+                            <span className="text-[10px] text-slate-400 block">{log.question_category}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTabSwitchModal(null)}
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>
