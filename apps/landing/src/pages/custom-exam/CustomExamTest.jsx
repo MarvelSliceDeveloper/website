@@ -813,7 +813,7 @@ export default function CustomExamTest() {
             {/* 80% QUESTION AREA */}
             <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
-            <div className="flex-1 min-h-0 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 bg-white">
+            <div className="flex-1 min-h-0 flex flex-col w-full p-4 sm:p-6 lg:p-8 bg-white">
               {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
               {(() => {
                 const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
