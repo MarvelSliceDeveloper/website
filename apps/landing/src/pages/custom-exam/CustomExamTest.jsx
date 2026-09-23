@@ -1215,38 +1215,43 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INSTRUCTIONS CARD VIEW MATCHING REGISTRATION FORM DESIGN & FIT TO SCREEN */
-          <div className="flex-1 min-h-0 p-4 sm:p-6 bg-[#e3e3e3] flex justify-center items-center overflow-hidden">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[82vh] sm:max-h-[78vh] max-w-[1000px] w-full mx-auto overflow-hidden">
+          /* INSTRUCTIONS CARD VIEW MATCHING ORIGINAL CLEAN DESIGN ON #e3e3e3 BG */
+          <div className="flex-1 min-h-0 p-4 sm:p-6 bg-[#e3e3e3] flex justify-center items-start overflow-y-auto">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto my-auto space-y-6">
               
-              {/* METALLIC SILVER HEADER */}
-              <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 py-3 px-5 sm:py-3.5 sm:px-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
-                <h1 className="text-lg sm:text-xl font-black text-brand-blue tracking-tight">
+              {/* TITLE & RED SUBTITLE */}
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
+                <p className="text-xs sm:text-sm font-bold text-red-600 mt-1">
                   (Please read all instructions carefully before starting the exam.)
                 </p>
               </div>
 
-              {/* SCROLLABLE RULES & INSTRUCTIONS CONTENT AREA */}
-              <div className="flex-1 overflow-y-auto pr-2 py-3 space-y-4 min-h-0 text-slate-700">
-                <div className="text-[15px] sm:text-[16px] text-slate-700 leading-[2.1] whitespace-pre-line font-medium">
-                  {exam?.rules_text ? (
-                    exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
-                  ) : (
-                    <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium leading-[2.1]">
-                      <li>Ensure a stable internet connection throughout the test.</li>
-                      <li>Do not refresh the page or switch browser tabs during the exam.</li>
-                      <li>Each question carries 1 mark. Select the correct option.</li>
-                      <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
-                      <li>The exam will auto-submit when the timer expires.</li>
-                    </ol>
-                  )}
-                </div>
+              {/* RULES & INSTRUCTIONS CONTENT AREA */}
+              <div className="space-y-4 text-slate-700">
+                {exam?.rules_text ? (
+                  <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line font-medium">
+                    {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
+                  </div>
+                ) : (
+                  <ol className="list-decimal list-inside space-y-2.5 text-sm sm:text-base text-slate-700 font-medium leading-relaxed">
+                    <li>Ensure a stable internet connection throughout the test.</li>
+                    <li>Do not refresh the page or switch browser tabs during the exam.</li>
+                    <li>Each question carries 1 mark. Select the correct option.</li>
+                    <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
+                    <li>The exam will auto-submit when the timer expires.</li>
+                    <li>Read each question carefully before selecting your answer.</li>
+                    <li>Once an answer is submitted, ensure it is your final choice before proceeding.</li>
+                    <li>Do not use unauthorized materials, devices, or external assistance during the exam.</li>
+                    <li>Manage your time effectively and ensure all questions are attempted within the given duration.</li>
+                    <li>Submit the exam only after reviewing your answers, if time permits.</li>
+                  </ol>
+                )}
 
                 {/* AGREEMENT CHECKBOXES */}
-                <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="space-y-3 pt-4 border-t border-slate-100">
                   <label className="flex items-start gap-3 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -1273,13 +1278,13 @@ export default function CustomExamTest() {
                 </div>
               </div>
 
-              {/* STICKY FOOTER WITH SILVER BG FOR START EXAM BUTTON */}
-              <div className="py-2.5 px-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
+              {/* START EXAM BUTTON */}
+              <div className="pt-2 flex justify-center">
                 <button
                   type="button"
                   disabled={!agreeInstructions || !agreeTerms}
                   onClick={handleStartExam}
-                  className="px-8 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-10 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm sm:text-base rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Start Exam</span>
                 </button>
