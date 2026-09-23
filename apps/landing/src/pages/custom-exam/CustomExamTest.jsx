@@ -1216,8 +1216,8 @@ export default function CustomExamTest() {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
           /* INSTRUCTIONS CARD VIEW WITH SCROLLABLE CONTENT & PINNED BOTTOM BUTTON ON #e3e3e3 BG */
-          <div className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4 bg-[#e3e3e3] flex flex-col justify-center items-center overflow-hidden">
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto flex-1 min-h-0 max-h-full overflow-hidden space-y-4">
+          <div className="flex-1 min-h-0 px-4 sm:px-6 py-4 sm:py-6 bg-[#e3e3e3] flex flex-col justify-center items-center overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto my-auto max-h-full space-y-4">
               
               {/* TITLE & RED SUBTITLE (FIXED TOP) */}
               <div className="shrink-0">
@@ -1230,7 +1230,7 @@ export default function CustomExamTest() {
               </div>
 
               {/* RULES & INSTRUCTIONS CONTENT AREA (SCROLLABLE IF OVERFLOW) */}
-              <div className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-3 text-slate-700">
+              <div className="overflow-y-auto pr-2 space-y-3 text-slate-700 min-h-0">
                 {exam?.rules_text ? (
                   <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium">
                     {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
