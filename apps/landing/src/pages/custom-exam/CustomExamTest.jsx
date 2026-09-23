@@ -166,6 +166,7 @@ export default function CustomExamTest() {
   const [markedForReview, setMarkedForReview] = useState({}); // { [qId]: boolean }
   const [visitedQuestions, setVisitedQuestions] = useState({}); // { [qId]: boolean }
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(0);
+  const [examStartedAtMs, setExamStartedAtMs] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Tab Switch Tracking State (Silent Background Logger)
@@ -325,8 +326,10 @@ export default function CustomExamTest() {
 
   function handleStartExam() {
     if (!agreeInstructions || !agreeTerms) return;
+    const nowMs = Date.now();
     const initialVisited = examQuestions[0]?.id ? { [examQuestions[0].id]: true } : {};
     setVisitedQuestions(initialVisited);
+    setExamStartedAtMs(nowMs);
     setActiveStep('QUIZ');
     hasRestoredSessionRef.current = true;
 
@@ -340,7 +343,8 @@ export default function CustomExamTest() {
       visitedQuestions: initialVisited,
       feedbackAnswers: {},
       timeLeftSeconds: timeLeftSeconds || fullExamSecs,
-      savedAtTimestampMs: Date.now()
+      examStartedAtMs: nowMs,
+      savedAtTimestampMs: nowMs
     };
     try {
       localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
@@ -381,6 +385,7 @@ export default function CustomExamTest() {
       const remainingSecs = Math.max(0, (cached.timeLeftSeconds ?? fullExamSecs) - elapsedSecs);
 
       // Restore active session state
+      if (cached.examStartedAtMs) setExamStartedAtMs(cached.examStartedAtMs);
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
       if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
       if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
@@ -427,6 +432,7 @@ export default function CustomExamTest() {
       visitedQuestions,
       feedbackAnswers,
       timeLeftSeconds,
+      examStartedAtMs,
       tabSwitchCount,
       tabSwitchLogs,
       savedAtTimestampMs: Date.now()
@@ -435,7 +441,7 @@ export default function CustomExamTest() {
     try {
       localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
     } catch (e) {}
-  }, [activeStep, currentQIndex, userAnswers, markedForReview, visitedQuestions, feedbackAnswers, timeLeftSeconds, tabSwitchCount, tabSwitchLogs, exam]);
+  }, [activeStep, currentQIndex, userAnswers, markedForReview, visitedQuestions, feedbackAnswers, timeLeftSeconds, examStartedAtMs, tabSwitchCount, tabSwitchLogs, exam]);
 
   // Auto-mark active question as visited
   useEffect(() => {
