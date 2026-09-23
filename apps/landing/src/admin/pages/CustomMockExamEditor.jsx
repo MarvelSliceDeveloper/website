@@ -813,31 +813,80 @@ export default function CustomMockExamEditor() {
                     </span>
                   ))}
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newDegreeInput}
-                    onChange={e => setNewDegreeInput(e.target.value)}
-                    placeholder="Add degree option (e.g. B.E (Civil), B.Tech (ECE), MBA)..."
-                    className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
-                        setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
-                        setNewDegreeInput('');
-                      }
-                    }}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer"
-                  >
-                    + Add Degree Option
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Select Preset Degree Dropdown */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Select Preset Degree
+                    </label>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val && !allowedDegrees.includes(val)) {
+                          setAllowedDegrees(prev => [...prev, val]);
+                        }
+                      }}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer font-medium"
+                    >
+                      <option value="" disabled>-- Select Degree from Dropdown --</option>
+                      {DEFAULT_DEGREES.map((d, idx) => (
+                        <option key={idx} value={d} disabled={allowedDegrees.includes(d)}>
+                          {d} {allowedDegrees.includes(d) ? ' (Added)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom Degree Input */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Add Custom Degree
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newDegreeInput}
+                        onChange={e => setNewDegreeInput(e.target.value)}
+                        placeholder="e.g. B.Arch, M.Sc (Phy)..."
+                        className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
+                            setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
+                            setNewDegreeInput('');
+                          }
+                        }}
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+                      >
+                        + Add Degree
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Exam Rules & Guidelines Text
+                </label>
+                <textarea
+                  rows={5}
+                  value={rulesText}
+                  onChange={e => setRulesText(e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 leading-relaxed"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
+          {activeTab === 'QUESTIONS' && (
+            <div className="space-y-4">
               {/* EXAM CATEGORIES / SECTIONS CONFIGURATION CARD */}
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+              <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
@@ -868,7 +917,7 @@ export default function CustomMockExamEditor() {
                     value={newCategoryInput}
                     onChange={e => setNewCategoryInput(e.target.value)}
                     placeholder="Add new section category (e.g., Quantitative Aptitude, Technical)..."
-                    className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
+                    className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
                   />
                   <button
                     type="button"

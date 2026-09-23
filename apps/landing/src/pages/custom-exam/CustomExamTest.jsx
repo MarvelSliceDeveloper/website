@@ -122,6 +122,7 @@ export default function CustomExamTest() {
   const [feedbackAnswers, setFeedbackAnswers] = useState({});
 
   const timerRef = useRef(null);
+  const hasRestoredSessionRef = useRef(false);
 
   useEffect(() => {
     initExam();
@@ -240,15 +241,17 @@ export default function CustomExamTest() {
         setUserAnswers(existingSub.answers || {});
         setFeedbackAnswers(existingSub.feedback_answers || {});
         setActiveStep('SUBMITTED');
+        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
+        hasRestoredSessionRef.current = true;
         setLoading(false);
         return;
       }
     }
 
-    setLoading(false);
-
     // Restore cached exam session if page was refreshed
     restoreSessionFromCache(currentExam, questions);
+    hasRestoredSessionRef.current = true;
+    setLoading(false);
   }
 
   function handleStartExam() {
@@ -256,6 +259,7 @@ export default function CustomExamTest() {
     const initialVisited = examQuestions[0]?.id ? { [examQuestions[0].id]: true } : {};
     setVisitedQuestions(initialVisited);
     setActiveStep('QUIZ');
+    hasRestoredSessionRef.current = true;
 
     // Immediately persist QUIZ activeStep so browser refresh never shows instructions
     const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
@@ -305,7 +309,7 @@ export default function CustomExamTest() {
       }
 
       const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
-      const remainingSecs = Math.max(0, (cached.timeLeftSeconds || fullExamSecs) - elapsedSecs);
+      const remainingSecs = Math.max(0, (cached.timeLeftSeconds ?? fullExamSecs) - elapsedSecs);
 
       // Restore active session state
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
@@ -333,12 +337,16 @@ export default function CustomExamTest() {
     }
   }
 
-  // Persist session to localStorage across page reloads
+  // Persist session to localStorage across page reloads (Only after session initialization and in QUIZ/FEEDBACK mode)
   useEffect(() => {
-    if (!exam || activeStep === 'SUBMITTED') {
+    if (!hasRestoredSessionRef.current || !exam) return;
+
+    if (activeStep === 'SUBMITTED') {
       try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
       return;
     }
+
+    if (activeStep === 'INSTRUCTIONS') return;
 
     const sessionData = {
       activeStep,
