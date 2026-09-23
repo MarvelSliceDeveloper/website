@@ -363,17 +363,6 @@ export default function CustomExamRegister() {
             ) : (
               /* REGISTRATION FORM */
               <form onSubmit={handleSubmit} className="space-y-4">
-                <PhotoCapture
-                  photoUrl={candidatePhoto}
-                  onPhotoCaptured={url => {
-                    setCandidatePhoto(url);
-                    if (url && formErrors.photo) {
-                      setFormErrors(prev => ({ ...prev, photo: undefined }));
-                    }
-                  }}
-                  error={formErrors.photo}
-                />
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -435,20 +424,39 @@ export default function CustomExamRegister() {
                     {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
                   </div>
 
+                  <div className="sm:col-span-2 py-1">
+                    <PhotoCapture
+                      photoUrl={candidatePhoto}
+                      onPhotoCaptured={url => {
+                        setCandidatePhoto(url);
+                        if (url && formErrors.photo) {
+                          setFormErrors(prev => ({ ...prev, photo: undefined }));
+                        }
+                      }}
+                      error={formErrors.photo}
+                    />
+                  </div>
+
+
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       Date of Birth (Password) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="date"
-                      value={userDob}
-                      onChange={e => setUserDob(e.target.value)}
-                      required
-                      style={{ colorScheme: 'light' }}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
-                    />
+                    <div className="relative flex items-center">
+                      <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
+                      <input
+                        type="date"
+                        value={userDob}
+                        onChange={e => setUserDob(e.target.value)}
+                        onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
+                        required
+                        style={{ colorScheme: 'light' }}
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                      />
+                    </div>
                     {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
                   </div>
+
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
