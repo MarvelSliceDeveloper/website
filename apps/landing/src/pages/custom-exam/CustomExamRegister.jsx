@@ -723,8 +723,8 @@ export default function CustomExamRegister() {
                     </div>
                   </div>
 
-                  {/* NEXT LINE: College Name (Left) & Full Residential Address (Right) */}
-                  <div>
+                  {/* COLLEGE NAME: Full width on 1st line after marks */}
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       College / Institute Name <span className="text-red-500">*</span>
                     </label>
@@ -739,16 +739,17 @@ export default function CustomExamRegister() {
                     {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
                   </div>
 
-                  <div>
+                  {/* FULL RESIDENTIAL ADDRESS: Full width larger textarea on 2nd line */}
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 mb-1">
                       Full Residential Address
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={3}
                       value={userAddress}
                       onChange={e => setUserAddress(e.target.value)}
                       placeholder="Enter street, city, state & pincode..."
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
                     />
                   </div>
                 </div>
