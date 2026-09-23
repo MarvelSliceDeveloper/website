@@ -674,20 +674,20 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
-      {/* TOP HEADER WITH EXAM TITLE (16px) */}
-      <header className="bg-white border-b border-slate-200 px-6 py-2 sm:py-2.5 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-0.5">
-        <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
+      {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
+      <header className="bg-white border-b border-slate-200 px-6 pt-1.5 pb-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
+        <div className="flex items-center gap-2 select-none cursor-default justify-center">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-7 sm:h-9 w-auto object-contain pointer-events-none" />
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-7 sm:h-8 w-auto object-contain pointer-events-none" />
           ) : (
-            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 sm:h-8 w-6 sm:w-8 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 sm:h-7 w-6 sm:w-7 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
           )}
           <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </div>
         {exam?.title && (
-          <h2 className="text-[16px] font-bold text-slate-900 tracking-tight">
+          <h2 className="text-[16px] font-bold text-slate-900 tracking-tight mt-0.5">
             {exam.title}
           </h2>
         )}
