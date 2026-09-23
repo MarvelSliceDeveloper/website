@@ -489,12 +489,12 @@ export default function CustomExamRegister() {
         <div className="max-w-2xl w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh] overflow-hidden">
-            <div className="bg-slate-100/90 p-5 sm:p-6 border-b border-slate-200 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2">
+            <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 p-5 sm:p-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
               <h1 className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
                 Candidate Exam Registration
               </h1>
-              <p className="text-xs text-slate-500 font-medium mt-1">
-                Fill in your details to register for <span className="font-semibold text-slate-700">{exam?.title || 'Mock Exam'}</span>
+              <p className="text-xs text-slate-600 font-medium mt-1">
+                Fill in your details to register for <span className="font-semibold text-slate-800">{exam?.title || 'Mock Exam'}</span>
               </p>
             </div>
 
@@ -857,8 +857,8 @@ export default function CustomExamRegister() {
 
                 </div>
 
-                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD WITH LIGHT GREY BG */}
-                <div className="p-4 bg-slate-100/90 border-t border-slate-200 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3">
+                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD WITH SILVER BG */}
+                <div className="p-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
                   <button
                     type="submit"
                     disabled={submitting}
