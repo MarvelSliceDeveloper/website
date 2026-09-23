@@ -810,8 +810,8 @@ export default function CustomExamTest() {
           </div>
         ) : (
           <>
-            {/* 80% QUESTION AREA */}
-            <div className="flex-1 lg:w-[80%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
+            {/* 76% QUESTION AREA */}
+            <div className="flex-1 lg:w-[76%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
             <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-4 sm:py-6 bg-white">
               {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
@@ -964,13 +964,15 @@ export default function CustomExamTest() {
           )}
         </div>
 
-        {/* 20% SIDEBAR PALETTE (ALL CIRCLES) */}
-        <div className="w-full lg:w-[20%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-4 sm:p-5 shrink-0 overflow-y-auto flex flex-col justify-between order-2 lg:order-2">
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Question Palette ({examQuestions.length})
-            </h3>
+        {/* 24% SIDEBAR PALETTE (ALL CIRCLES) */}
+        <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-4 sm:p-5 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
+          {/* TOP HEADER */}
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mb-3">
+            Question Palette ({examQuestions.length})
+          </h3>
 
+          {/* SCROLLABLE QUESTION NUMBERS GRID */}
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 no-scrollbar sm:custom-scrollbar">
             <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-2">
               {examQuestions.map((q, idx) => {
                 const isAnswered = userAnswers[q.id] !== undefined;
@@ -1108,41 +1110,41 @@ export default function CustomExamTest() {
                           {idx + 1}
                         </text>
                       </svg>
-                    </button>
-                  );
-                })}
-              </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
-            <div className="pt-4 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-4">
-              <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#22c55e" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
-                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
-                </svg>
-                <span className="font-medium">Answered</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#ef4444" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
-                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
-                </svg>
-                <span className="font-medium">Not Answered</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#a855f7" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
-                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
-                </svg>
-                <span className="font-medium">Marked for Review</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
-                  <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
-                  <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.5" />
-                </svg>
-                <span className="font-medium">Not Visited</span>
-              </div>
+          {/* STILL / FIXED LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
+          <div className="pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-3 shrink-0 bg-slate-100">
+            <div className="flex items-center gap-2.5">
+              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#22c55e" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+              </svg>
+              <span className="font-medium">Answered</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#ef4444" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+              </svg>
+              <span className="font-medium">Not Answered</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#a855f7" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+              </svg>
+              <span className="font-medium">Marked for Review</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+                <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.5" />
+              </svg>
+              <span className="font-medium">Not Visited</span>
             </div>
           </div>
         </div>
