@@ -118,12 +118,27 @@ export default function CustomExamTest() {
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Tab Switch Tracking State (Silent Background Logger)
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [tabSwitchLogs, setTabSwitchLogs] = useState([]);
+
   // Feedback State { [fbId]: ratingOrText }
   const [feedbackAnswers, setFeedbackAnswers] = useState({});
   const [feedbackError, setFeedbackError] = useState('');
 
   const timerRef = useRef(null);
   const hasRestoredSessionRef = useRef(false);
+
+  const currentQIndexRef = useRef(currentQIndex);
+  const timeLeftRef = useRef(timeLeftSeconds);
+  const examQuestionsRef = useRef(examQuestions);
+  const tabSwitchLogsRef = useRef(tabSwitchLogs);
+  const lastSwitchTimeRef = useRef(0);
+
+  useEffect(() => { currentQIndexRef.current = currentQIndex; }, [currentQIndex]);
+  useEffect(() => { timeLeftRef.current = timeLeftSeconds; }, [timeLeftSeconds]);
+  useEffect(() => { examQuestionsRef.current = examQuestions; }, [examQuestions]);
+  useEffect(() => { tabSwitchLogsRef.current = tabSwitchLogs; }, [tabSwitchLogs]);
 
   useEffect(() => {
     initExam();
@@ -246,6 +261,9 @@ export default function CustomExamTest() {
         hasRestoredSessionRef.current = true;
         setLoading(false);
         return;
+      } else {
+        // No submission in DB (Admin reset or first attempt). Clear any stale local cached session to allow retake!
+        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
       }
     }
 
@@ -318,6 +336,8 @@ export default function CustomExamTest() {
       if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
       if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
       if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
+      if (cached.tabSwitchCount !== undefined) setTabSwitchCount(cached.tabSwitchCount);
+      if (cached.tabSwitchLogs) setTabSwitchLogs(cached.tabSwitchLogs);
 
       if (remainingSecs > 0) {
         setTimeLeftSeconds(remainingSecs);
@@ -357,13 +377,15 @@ export default function CustomExamTest() {
       visitedQuestions,
       feedbackAnswers,
       timeLeftSeconds,
+      tabSwitchCount,
+      tabSwitchLogs,
       savedAtTimestampMs: Date.now()
     };
 
     try {
       localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
     } catch (e) {}
-  }, [activeStep, currentQIndex, userAnswers, markedForReview, visitedQuestions, feedbackAnswers, timeLeftSeconds, exam]);
+  }, [activeStep, currentQIndex, userAnswers, markedForReview, visitedQuestions, feedbackAnswers, timeLeftSeconds, tabSwitchCount, tabSwitchLogs, exam]);
 
   // Auto-mark active question as visited
   useEffect(() => {
@@ -394,6 +416,60 @@ export default function CustomExamTest() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [activeStep, timeLeftSeconds]);
+
+  // SILENT TAB SWITCH DETECTION & TRACKING ENGINE (NO USER ALERTS)
+  useEffect(() => {
+    if (activeStep !== 'QUIZ') return;
+
+    function recordTabSwitch(eventType) {
+      const now = Date.now();
+      if (now - lastSwitchTimeRef.current < 800) return; // Debounce rapid focus/blur events
+      lastSwitchTimeRef.current = now;
+
+      const qIndex = currentQIndexRef.current || 0;
+      const secs = timeLeftRef.current || 0;
+      const currentQ = examQuestionsRef.current?.[qIndex];
+
+      const mins = Math.floor(secs / 60);
+      const remainingSecs = secs % 60;
+      const formattedTime = `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+
+      const logEntry = {
+        switch_number: (tabSwitchLogsRef.current?.length || 0) + 1,
+        timestamp: new Date().toISOString(),
+        event_type: eventType, // 'tab_hidden' or 'window_blur'
+        question_number: qIndex + 1,
+        question_id: currentQ?.id || `q-${qIndex + 1}`,
+        question_category: currentQ?.category_name || 'General',
+        time_left_formatted: formattedTime,
+        time_left_seconds: secs,
+        document_hidden: document.hidden,
+        window_title: document.title,
+        referrer: document.referrer || 'Direct'
+      };
+
+      setTabSwitchCount(prev => prev + 1);
+      setTabSwitchLogs(prev => [...prev, logEntry]);
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        recordTabSwitch('tab_hidden');
+      }
+    }
+
+    function handleWindowBlur() {
+      recordTabSwitch('window_blur');
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [activeStep]);
 
   // Prevent scrolling
   useEffect(() => {
@@ -489,7 +565,7 @@ export default function CustomExamTest() {
 
     // Record submission to Supabase
     if (exam && !exam.id.startsWith('demo-')) {
-      const { error } = await supabase.from('custom_mock_exam_submissions').insert({
+      const submissionData = {
         custom_mock_exam_id: exam.id,
         registration_id: candidate?.id || null,
         user_name: candidate?.user_name || '',
@@ -512,12 +588,28 @@ export default function CustomExamTest() {
         answers: userAnswers,
         category_scores: categoryScores,
         feedback_answers: feedbackAnswers,
-        time_taken_seconds: Math.max(timeTaken, 1)
-      });
+        time_taken_seconds: Math.max(timeTaken, 1),
+        tab_switch_count: tabSwitchCount,
+        tab_switch_logs: tabSwitchLogs
+      };
+
+      const { data: subResp, error } = await supabase.from('custom_mock_exam_submissions').insert(submissionData).select().single();
 
       if (error) {
         console.error('Error inserting custom_mock_exam_submission:', error);
       }
+
+      // Record into dedicated custom_mock_exam_tab_switches table
+      try {
+        await supabase.from('custom_mock_exam_tab_switches').insert({
+          submission_id: subResp?.id || null,
+          custom_mock_exam_id: exam.id,
+          user_name: candidate?.user_name || '',
+          user_email: candidate?.user_email || '',
+          tab_switch_count: tabSwitchCount,
+          switch_logs: tabSwitchLogs
+        });
+      } catch (e) {}
     }
 
     setIsSubmitting(false);
