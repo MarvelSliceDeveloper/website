@@ -305,17 +305,19 @@ export default function CustomExamRegister() {
   const [userEmail, setUserEmail] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userDob, setUserDob] = useState('');
-  const [userDept, setUserDept] = useState('Computer Science & Engineering');
-  const [customDept, setCustomDept] = useState('');
+  const [userAddress, setUserAddress] = useState('');
+  const [candidatePhoto, setCandidatePhoto] = useState('');
+  const [user10thSchool, setUser10thSchool] = useState('');
+  const [user10thMark, setUser10thMark] = useState('');
+  const [user12thSchool, setUser12thSchool] = useState('');
+  const [user12thMark, setUser12thMark] = useState('');
+  const [userCollege, setUserCollege] = useState('');
   const [userDegree, setUserDegree] = useState(DEFAULT_DEGREES[0]);
   const [customDegree, setCustomDegree] = useState('');
-  const [userAddress, setUserAddress] = useState('');
-  const [user10thMark, setUser10thMark] = useState('');
-  const [user12thMark, setUser12thMark] = useState('');
-  const [userCgpa, setUserCgpa] = useState('');
+  const [userDept, setUserDept] = useState('Computer Science & Engineering');
+  const [customDept, setCustomDept] = useState('');
   const [userYear, setUserYear] = useState('3rd Year');
-  const [userCollege, setUserCollege] = useState('');
-  const [candidatePhoto, setCandidatePhoto] = useState('');
+  const [userCgpa, setUserCgpa] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -398,14 +400,15 @@ export default function CustomExamRegister() {
     const errs = {};
     if (!firstName.trim()) errs.firstName = 'First name is required';
     if (!lastName.trim()) errs.lastName = 'Last name is required';
-    if (!candidatePhoto) errs.photo = 'Candidate photo is mandatory';
     if (!userEmail.trim()) errs.email = 'Email address is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) errs.email = 'Valid email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) errs.email = 'Valid email address is required';
     if (!userPhone.trim()) errs.phone = 'Phone number is required';
     const dobParts = (userDob || '').split('-').filter(Boolean);
     if (!userDob || dobParts.length < 3) errs.dob = 'Complete Date of Birth selection is required';
-    if (userDept === 'Other' && !customDept.trim()) errs.customDept = 'Department name is required';
+    if (!candidatePhoto) errs.photo = 'Candidate identity photo is mandatory';
     if (!userCollege.trim()) errs.college = 'College/Institute name is required';
+    if (userDegree === 'Other' && !customDegree.trim()) errs.customDegree = 'Degree qualification is required';
+    if (userDept === 'Other' && !customDept.trim()) errs.customDept = 'Department name is required';
 
     setFormErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -425,7 +428,9 @@ export default function CustomExamRegister() {
       user_department: finalDept,
       user_degree: finalDegree,
       user_address: userAddress.trim(),
+      user_10th_school: user10thSchool.trim(),
       user_10th_mark: user10thMark ? Number(user10thMark) : null,
+      user_12th_school: user12thSchool.trim(),
       user_12th_mark: user12thMark ? Number(user12thMark) : null,
       user_cgpa: userCgpa ? Number(userCgpa) : null,
       user_year: userYear.trim(),
@@ -438,7 +443,12 @@ export default function CustomExamRegister() {
     } catch (e) {}
 
     if (exam && !exam.id.startsWith('demo-')) {
-      const { error } = await supabase.from('custom_mock_exam_registrations').insert(registrationPayload);
+      // Create db payload omit fields if not present in schema to prevent query failure
+      const dbPayload = { ...registrationPayload };
+      delete dbPayload.user_10th_school;
+      delete dbPayload.user_12th_school;
+
+      const { error } = await supabase.from('custom_mock_exam_registrations').insert(dbPayload);
 
       if (error && error.code === '23505') {
         alert('You are already registered for this exam! Use your email and DOB to log in.');
@@ -537,191 +547,143 @@ export default function CustomExamRegister() {
             ) : (
               /* REGISTRATION FORM WITH INDEPENDENT INTERNAL SCROLL */
               <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 mt-4">
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
-                        placeholder="Enter first name"
-                        required
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
-                    </div>
+                <div className="flex-1 overflow-y-auto pr-2 space-y-5">
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
-                        placeholder="Enter last name"
-                        required
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Email Address <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={userEmail}
-                        onChange={e => setUserEmail(e.target.value)}
-                        placeholder="name@example.com"
-                        required
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Phone Number <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        value={userPhone}
-                        onChange={e => setUserPhone(e.target.value)}
-                        placeholder="+91 98765 43210"
-                        required
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
-                    </div>
-
-                    <div className="sm:col-span-2 py-1">
-                      <PhotoCapture
-                        photoUrl={candidatePhoto}
-                        onPhotoCaptured={url => {
-                          setCandidatePhoto(url);
-                          if (url && formErrors.photo) {
-                            setFormErrors(prev => ({ ...prev, photo: undefined }));
-                          }
-                        }}
-                        error={formErrors.photo}
-                      />
-                    </div>
-
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Date of Birth <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative flex items-center">
-                        <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
-                        <input
-                          type="date"
-                          value={userDob}
-                          onChange={e => setUserDob(e.target.value)}
-                          onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
-                          required
-                          style={{ colorScheme: 'light' }}
-                          className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                        />
-                      </div>
-                      {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
-                    </div>
-
-
-                    {/* DEGREE SELECTION DROPDOWN */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Degree / Qualification <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={userDegree}
-                        onChange={e => setUserDegree(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
-                      >
-                        {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
-                          <option key={idx} value={deg}>{deg}</option>
-                        ))}
-                        <option value="Other">Other Degree</option>
-                      </select>
-                    </div>
-
-                    {userDegree === 'Other' && (
+                  {/* SECTION ABOVE PHOTO: PERSONAL DETAILS */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-brand-blue border-b border-slate-100 pb-1">
+                      Personal Details
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Specify Degree <span className="text-red-500">*</span>
+                          First Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={customDegree}
-                          onChange={e => setCustomDegree(e.target.value)}
-                          placeholder="e.g. B.E (Robotics), MBA..."
+                          value={firstName}
+                          onChange={e => setFirstName(e.target.value)}
+                          placeholder="Enter first name"
                           required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
                       </div>
-                    )}
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Department <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={userDept}
-                        onChange={e => setUserDept(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                      >
-                        <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                        <option value="Information Technology">Information Technology</option>
-                        <option value="Electronics & Communication">Electronics & Communication</option>
-                        <option value="Electrical Engineering">Electrical Engineering</option>
-                        <option value="Mechanical Engineering">Mechanical Engineering</option>
-                        <option value="Commerce & Finance">Commerce & Finance</option>
-                        <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-
-                    {userDept === 'Other' && (
-                      <div className="sm:col-span-2">
+                      <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Specify Department <span className="text-red-500">*</span>
+                          Last Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={customDept}
-                          onChange={e => setCustomDept(e.target.value)}
-                          placeholder="Enter your department"
+                          value={lastName}
+                          onChange={e => setLastName(e.target.value)}
+                          placeholder="Enter last name"
                           required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
-                        {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
+                        {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
                       </div>
-                    )}
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Year of Study <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={userYear}
-                        onChange={e => setUserYear(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                      >
-                        <option value="1st Year">1st Year</option>
-                        <option value="2nd Year">2nd Year</option>
-                        <option value="3rd Year">3rd Year</option>
-                        <option value="4th Year">4th Year</option>
-                        <option value="Post Graduate">Post Graduate</option>
-                      </select>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Email Address <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={userEmail}
+                          onChange={e => setUserEmail(e.target.value)}
+                          placeholder="name@example.com"
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                        {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={userPhone}
+                          onChange={e => setUserPhone(e.target.value)}
+                          placeholder="+91 98765 43210"
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                        {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Date of Birth <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative flex items-center">
+                          <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
+                          <input
+                            type="date"
+                            value={userDob}
+                            onChange={e => setUserDob(e.target.value)}
+                            onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
+                            required
+                            style={{ colorScheme: 'light' }}
+                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          />
+                        </div>
+                        {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Full Residential Address
+                        </label>
+                        <input
+                          type="text"
+                          value={userAddress}
+                          onChange={e => setUserAddress(e.target.value)}
+                          placeholder="Street, City, State & Pincode"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
                     </div>
+                  </div>
 
-                    {/* 1 LINE: 10th Mark, 12th Mark, CGPA */}
-                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* PHOTO CAPTURE SECTION */}
+                  <div className="py-1">
+                    <PhotoCapture
+                      photoUrl={candidatePhoto}
+                      onPhotoCaptured={url => {
+                        setCandidatePhoto(url);
+                        if (url && formErrors.photo) {
+                          setFormErrors(prev => ({ ...prev, photo: undefined }));
+                        }
+                      }}
+                      error={formErrors.photo}
+                    />
+                  </div>
+
+                  {/* SECTION BELOW PHOTO: EDUCATIONAL DETAILS */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-brand-blue border-b border-slate-100 pb-1">
+                      Educational Details
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      
+                      {/* 10th School Name & Mark */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          10th School Name
+                        </label>
+                        <input
+                          type="text"
+                          value={user10thSchool}
+                          onChange={e => setUser10thSchool(e.target.value)}
+                          placeholder="e.g. Govt Higher Sec School"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
                           10th Mark (%)
@@ -734,6 +696,20 @@ export default function CustomExamRegister() {
                           value={user10thMark}
                           onChange={e => setUser10thMark(e.target.value)}
                           placeholder="e.g. 88.5"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+
+                      {/* 12th School Name & Mark */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          12th / Diploma School Name
+                        </label>
+                        <input
+                          type="text"
+                          value={user12thSchool}
+                          onChange={e => setUser12thSchool(e.target.value)}
+                          placeholder="e.g. St. Joseph Higher Sec School"
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
                       </div>
@@ -754,6 +730,113 @@ export default function CustomExamRegister() {
                         />
                       </div>
 
+                      {/* College Name */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          College / Institute Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={userCollege}
+                          onChange={e => setUserCollege(e.target.value)}
+                          placeholder="e.g. Marvel Institute of Technology"
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                        {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
+                      </div>
+
+                      {/* Degree Selection */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Degree / Qualification <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={userDegree}
+                          onChange={e => setUserDegree(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
+                        >
+                          {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
+                            <option key={idx} value={deg}>{deg}</option>
+                          ))}
+                          <option value="Other">Other Degree</option>
+                        </select>
+                      </div>
+
+                      {userDegree === 'Other' && (
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Specify Degree <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={customDegree}
+                            onChange={e => setCustomDegree(e.target.value)}
+                            placeholder="e.g. B.E (Robotics), B.Tech..."
+                            required
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                          />
+                          {formErrors.customDegree && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDegree}</p>}
+                        </div>
+                      )}
+
+                      {/* Department */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Department <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={userDept}
+                          onChange={e => setUserDept(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                        >
+                          <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                          <option value="Information Technology">Information Technology</option>
+                          <option value="Electronics & Communication">Electronics & Communication</option>
+                          <option value="Electrical Engineering">Electrical Engineering</option>
+                          <option value="Mechanical Engineering">Mechanical Engineering</option>
+                          <option value="Commerce & Finance">Commerce & Finance</option>
+                          <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      {userDept === 'Other' && (
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Specify Department <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={customDept}
+                            onChange={e => setCustomDept(e.target.value)}
+                            placeholder="Enter your department"
+                            required
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                          />
+                          {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
+                        </div>
+                      )}
+
+                      {/* Year of Study */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Year of Study <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={userYear}
+                          onChange={e => setUserYear(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                        >
+                          <option value="1st Year">1st Year</option>
+                          <option value="2nd Year">2nd Year</option>
+                          <option value="3rd Year">3rd Year</option>
+                          <option value="4th Year">4th Year</option>
+                          <option value="Post Graduate">Post Graduate</option>
+                        </select>
+                      </div>
+
+                      {/* Current CGPA */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
                           Current College CGPA
@@ -770,37 +853,8 @@ export default function CustomExamRegister() {
                         />
                       </div>
                     </div>
-
-                    {/* COLLEGE NAME: Full width on 1st line after marks */}
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        College / Institute Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={userCollege}
-                        onChange={e => setUserCollege(e.target.value)}
-                        placeholder="e.g. Marvel Institute of Technology"
-                        required
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                      {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
-                    </div>
-
-                    {/* FULL RESIDENTIAL ADDRESS: Full width larger textarea on 2nd line */}
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Full Residential Address
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={userAddress}
-                        onChange={e => setUserAddress(e.target.value)}
-                        placeholder="Enter street, city, state & pincode..."
-                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
-                      />
-                    </div>
                   </div>
+
                 </div>
 
                 {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD */}
