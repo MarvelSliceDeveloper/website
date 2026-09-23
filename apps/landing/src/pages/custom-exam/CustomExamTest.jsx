@@ -457,6 +457,9 @@ export default function CustomExamTest() {
     if (timerRef.current) clearInterval(timerRef.current);
 
     // Calculate score
+    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
     const categoryScores = {};
     examQuestions.forEach((q) => {
       const catName = q.category_name || 'General';
@@ -700,7 +703,9 @@ export default function CustomExamTest() {
             <h2 className="text-lg font-bold text-slate-900 mt-2">
               Share Your Feedback
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Mandatory: Minimum 5 sentences required for text feedback before completing submission.</p>
+            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              Mandatory: Minimum 5 sentences required for text feedback. <span className="text-slate-900 font-bold">(</span><span className="text-red-600 font-semibold">Only when feedback is submitted, your exam will be submitted</span><span className="text-slate-900 font-bold">)</span>
+            </p>
           </div>
 
           <div className="space-y-5">
@@ -774,14 +779,14 @@ export default function CustomExamTest() {
             </div>
           )}
 
-          <div className="pt-2">
+          <div className="pt-2 flex justify-center">
             <button
               type="button"
               onClick={handleFinalSubmissionWithValidation}
               disabled={isSubmitting}
-              className="w-full py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+              className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:hover:scale-100"
             >
-              <span>{isSubmitting ? 'Submitting...' : 'Complete & Submit Exam'}</span>
+              <span>{isSubmitting ? 'Submitting...' : 'Submit'}</span>
               <FiCheckCircle className="w-4 h-4" />
             </button>
           </div>
@@ -986,8 +991,8 @@ export default function CustomExamTest() {
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs font-semibold text-red-600 !text-red-600 mt-0.5" style={{ color: '#dc2626' }}>
-                  (Please read all instructions carefully before starting the exam.)
+                <p className="text-xs mt-0.5">
+                  <span className="text-slate-900 font-bold">(</span><span className="text-red-600 font-semibold" style={{ color: '#dc2626' }}>Please read all instructions carefully before starting the exam.</span><span className="text-slate-900 font-bold">)</span>
                 </p>
               </div>
 
