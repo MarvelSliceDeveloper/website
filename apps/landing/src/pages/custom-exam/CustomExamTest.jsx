@@ -674,20 +674,20 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col text-slate-800 overflow-hidden">
-      {/* TOP HEADER WITH EXAM TITLE */}
-      <header className="bg-white border-b border-slate-200 px-6 py-3 sm:py-4 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-1">
+      {/* TOP HEADER WITH EXAM TITLE (16px) */}
+      <header className="bg-white border-b border-slate-200 px-6 py-2 sm:py-2.5 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center space-y-0.5">
         <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-8 sm:h-10 w-auto object-contain pointer-events-none" />
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-7 sm:h-9 w-auto object-contain pointer-events-none" />
           ) : (
-            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-7 sm:h-9 w-7 sm:w-9 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 sm:h-8 w-6 sm:w-8 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
           )}
-          <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </div>
         {exam?.title && (
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-[16px] font-bold text-slate-900 tracking-tight">
             {exam.title}
           </h2>
         )}
@@ -742,8 +742,8 @@ export default function CustomExamTest() {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-white">
         {activeStep === 'INSTRUCTIONS' ? (
           /* INSTRUCTIONS CARD VIEW MATCHING DESIGN */
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-8 bg-slate-50/80 flex justify-center items-start">
-            <div className="max-w-4xl w-full mx-auto space-y-5 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs my-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto pt-2 px-4 pb-6 bg-slate-50/80 flex justify-center items-start">
+            <div className="max-w-4xl w-full mx-auto space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs mt-1">
               <div className="border-b border-slate-200 pb-3">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
@@ -754,24 +754,18 @@ export default function CustomExamTest() {
               </div>
 
               {/* RULES CONTENT */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  <FiShield className="w-4 h-4 text-brand-blue" />
-                  Candidate Rules & Regulations
-                </h3>
-                <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                  {exam?.rules_text ? (
-                    exam.rules_text
-                  ) : (
-                    <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
-                      <li>Ensure a stable internet connection throughout the test.</li>
-                      <li>Do not refresh the page or switch browser tabs during the exam.</li>
-                      <li>Each question carries 1 mark. Select the correct option.</li>
-                      <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
-                      <li>The exam will auto-submit when the timer expires.</li>
-                    </ol>
-                  )}
-                </div>
+              <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {exam?.rules_text ? (
+                  exam.rules_text
+                ) : (
+                  <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium">
+                    <li>Ensure a stable internet connection throughout the test.</li>
+                    <li>Do not refresh the page or switch browser tabs during the exam.</li>
+                    <li>Each question carries 1 mark. Select the correct option.</li>
+                    <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
+                    <li>The exam will auto-submit when the timer expires.</li>
+                  </ol>
+                )}
               </div>
 
               {/* AGREEMENT CHECKBOXES DIRECTLY BELOW ITEM 5 */}
