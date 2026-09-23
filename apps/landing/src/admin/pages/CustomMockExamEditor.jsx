@@ -1186,7 +1186,7 @@ export default function CustomMockExamEditor() {
 
           {/* TAB 3: CANDIDATE FEEDBACK QUESTIONS BUILDER (MINIMUM 2 MANDATORY) */}
           {activeTab === 'FEEDBACK' && (
-            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
+            <div className="bg-white p-6 sm:p-8 rounded-b-[20px] rounded-tr-[20px] border border-gray-300 shadow-sm space-y-6 relative z-30 -mt-[2px]">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -1324,6 +1324,7 @@ export default function CustomMockExamEditor() {
               </div>
             </div>
           )}
+          </div>
 
           {/* GLOBAL BOTTOM SAVE & CANCEL BAR MATCHING COURSE CREATION WIZARD */}
           <SaveCancelBar

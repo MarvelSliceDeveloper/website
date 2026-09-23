@@ -92,7 +92,7 @@ const navGroups = [
   {
     label: "Custom Mock Exams", icon: FiCheckSquare, items: [
       { to: "/admin/custom-mock-exams/new", label: "Add Custom Exam", icon: FiPlusCircle },
-      { to: "/admin/custom-mock-exams", label: "View Custom Exams", icon: FiCheckSquare, catchSubRoutes: true, siblingRoutes: ["/admin/custom-mock-exams/new"] },
+      { to: "/admin/custom-mock-exams", label: "View Custom Exams", icon: FiCheckSquare, catchSubRoutes: true, siblingRoutes: ["/admin/custom-mock-exams/new", "/admin/custom-mock-exams/registrations", "/admin/custom-mock-exams/submissions"] },
       { to: "/admin/custom-mock-exams/registrations", label: "Registered Candidates", icon: FiUsers },
       { to: "/admin/custom-mock-exams/submissions", label: "Exam Submissions", icon: FiClipboard }
     ],
@@ -137,7 +137,7 @@ function isActive(pathname, item) {
   const itemSearch = item.to.includes("?") ? item.to.split("?").slice(1).join("?") : "";
 
   if (fullPath.replace(/\/$/, "") === itemPath) {
-    if (!fullSearch && !itemSearch) return true;
+    if (!itemSearch) return true;
     if (fullSearch && itemSearch) {
       const fullParams = new URLSearchParams(fullSearch);
       const itemParams = new URLSearchParams(itemSearch);
