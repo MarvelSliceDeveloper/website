@@ -1147,41 +1147,41 @@ export default function CustomExamTest() {
   return (
     <div className="fixed inset-0 z-50 bg-[#e3e3e3] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
-      <header className="bg-white border-b border-slate-200 px-6 pt-1.5 pb-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
+      <header className="bg-white border-b border-slate-200 px-4 py-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
         <div className="flex items-center gap-2 select-none cursor-default justify-center">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-7 sm:h-8 w-auto object-contain pointer-events-none" />
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-6 sm:h-7 w-auto object-contain pointer-events-none" />
           ) : (
-            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 sm:h-7 w-6 sm:w-7 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-5 sm:h-6 w-5 sm:w-6 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
           )}
-          <span className="text-lg sm:text-xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+          <span className="text-base sm:text-lg font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>
         </div>
         {exam?.title && (
-          <h2 className="text-[16px] font-bold text-slate-900 tracking-tight mt-0.5">
+          <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight mt-0.5">
             {exam.title}
           </h2>
         )}
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
-      <div className="bg-white border-b border-slate-200 px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs">
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
-                <FiUser className="w-10 h-10 text-slate-400" />
+                <FiUser className="w-7 h-7 text-slate-400" />
               )}
             </div>
-            <div className="text-xs sm:text-sm leading-relaxed text-slate-800 font-semibold space-y-0.5 min-w-0">
-              <div className="truncate"><span className="font-semibold text-slate-600">Name:</span> {candidate?.user_name}</div>
-              <div className="truncate"><span className="font-semibold text-slate-600">Dept:</span> {candidate?.user_department}</div>
-              <div className="truncate"><span className="font-semibold text-slate-600">Year:</span> {candidate?.user_year}</div>
+            <div className="text-xs leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
+              <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
+              <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
+              <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
               {candidate?.user_college && (
-                <div className="truncate"><span className="font-semibold text-slate-600">College:</span> {candidate?.user_college}</div>
+                <div className="truncate"><span className="font-semibold text-slate-500">College:</span> {candidate?.user_college}</div>
               )}
             </div>
           </div>
@@ -1189,8 +1189,8 @@ export default function CustomExamTest() {
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
             {/* TIMER ON LEFT SIDE */}
             {activeStep === 'INSTRUCTIONS' ? (
-              <div className="font-mono text-sm sm:text-base font-bold text-slate-700">
-                <span className="text-slate-700 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
+              <div className="font-mono text-xs sm:text-sm font-bold text-slate-700">
+                <span className="text-slate-600 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
               <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
@@ -1215,28 +1215,28 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INSTRUCTIONS CARD VIEW MATCHING ORIGINAL CLEAN DESIGN ON #e3e3e3 BG */
-          <div className="flex-1 min-h-0 p-4 sm:p-6 bg-[#e3e3e3] flex justify-center items-start overflow-y-auto">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto my-auto space-y-6">
+          /* INSTRUCTIONS CARD VIEW WITH COMPACT PADDING ON #e3e3e3 BG */
+          <div className="flex-1 min-h-0 px-4 sm:px-6 py-3 sm:py-4 bg-[#e3e3e3] flex justify-center items-start overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto space-y-4">
               
               {/* TITLE & RED SUBTITLE */}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs sm:text-sm font-bold text-red-600 mt-1">
+                <p className="text-xs font-bold text-red-600 mt-0.5">
                   (Please read all instructions carefully before starting the exam.)
                 </p>
               </div>
 
               {/* RULES & INSTRUCTIONS CONTENT AREA */}
-              <div className="space-y-4 text-slate-700">
+              <div className="space-y-3 text-slate-700">
                 {exam?.rules_text ? (
-                  <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-line font-medium">
+                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium">
                     {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
                   </div>
                 ) : (
-                  <ol className="list-decimal list-inside space-y-2.5 text-sm sm:text-base text-slate-700 font-medium leading-relaxed">
+                  <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
@@ -1251,27 +1251,27 @@ export default function CustomExamTest() {
                 )}
 
                 {/* AGREEMENT CHECKBOXES */}
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div className="space-y-2 pt-3 border-t border-slate-100">
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={agreeInstructions}
                       onChange={e => setAgreeInstructions(e.target.checked)}
                       className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
                     />
-                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                    <span className="text-xs text-slate-800 font-semibold leading-snug">
                       I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
                     </span>
                   </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={agreeTerms}
                       onChange={e => setAgreeTerms(e.target.checked)}
                       className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
                     />
-                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                    <span className="text-xs text-slate-800 font-semibold leading-snug">
                       I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
                     </span>
                   </label>
@@ -1284,7 +1284,7 @@ export default function CustomExamTest() {
                   type="button"
                   disabled={!agreeInstructions || !agreeTerms}
                   onClick={handleStartExam}
-                  className="px-10 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm sm:text-base rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Start Exam</span>
                 </button>
