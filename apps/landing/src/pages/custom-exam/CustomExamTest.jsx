@@ -744,11 +744,11 @@ export default function CustomExamTest() {
           /* INSTRUCTIONS CARD VIEW MATCHING DESIGN */
           <div className="flex-1 min-h-0 overflow-y-auto pt-2 px-4 pb-6 bg-[#d1d5dc] flex justify-center items-start">
             <div className="max-w-4xl w-full mx-auto space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs mt-1">
-              <div className="border-b border-slate-200 pb-3">
+              <div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                <p className="text-xs text-red-600 font-semibold mt-0.5">
                   Please read all instructions carefully before starting the exam.
                 </p>
               </div>
@@ -769,7 +769,7 @@ export default function CustomExamTest() {
               </div>
 
               {/* AGREEMENT CHECKBOXES DIRECTLY BELOW ITEM 5 */}
-              <div className="space-y-3 pt-4 border-t border-slate-200">
+              <div className="space-y-3 pt-2">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
