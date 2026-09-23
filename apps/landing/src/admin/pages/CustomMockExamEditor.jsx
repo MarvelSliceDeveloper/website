@@ -7,6 +7,8 @@ import {
 } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi2';
 import { supabase } from '../../lib/supabaseClient';
+import FolderTabs from '../components/ui/FolderTabs';
+import SaveCancelBar from '../components/SaveCancelBar';
 
 export default function CustomMockExamEditor() {
   const { id } = useParams();
@@ -593,65 +595,32 @@ export default function CustomMockExamEditor() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      {/* TOP NAV BAR */}
-      <div className="flex items-center justify-between bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/admin/custom-mock-exams"
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-          >
-            <FiArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900">
-              {isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
-            </h1>
-            <p className="text-xs text-slate-500">Configure parameters, MCQs, timing guards & candidate feedback</p>
-          </div>
+    <div className="space-y-4 max-w-5xl mx-auto pb-12">
+      {/* BREADCRUMBS & PAGE HEADING */}
+      <div className="space-y-1">
+        <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-1.5">
+          <Link to="/admin" className="hover:text-brand-blue">Dashboard</Link>
+          <span>/</span>
+          <Link to="/admin/custom-mock-exams" className="hover:text-brand-blue">Custom Mock Exams</Link>
+          <span>/</span>
+          <span className="text-slate-900 font-medium">{isEditing ? 'Edit Exam' : 'New Custom Exam'}</span>
         </div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          {isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
+        </h1>
       </div>
 
-      {/* NAVIGATION TABS */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab('DETAILS')}
-          className={`px-5 py-2.5 font-bold text-xs sm:text-sm rounded-t-xl transition-colors flex items-center gap-2 cursor-pointer ${
-            activeTab === 'DETAILS'
-              ? 'bg-white text-brand-blue border-t-2 border-x border-slate-200 -mb-px'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <FiFileText className="w-4 h-4" />
-          <span>1. Exam Parameters & Timings</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('QUESTIONS')}
-          className={`px-5 py-2.5 font-bold text-xs sm:text-sm rounded-t-xl transition-colors flex items-center gap-2 cursor-pointer ${
-            activeTab === 'QUESTIONS'
-              ? 'bg-white text-brand-blue border-t-2 border-x border-slate-200 -mb-px'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <FiList className="w-4 h-4" />
-          <span>2. MCQ Questions ({questions.length})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('FEEDBACK')}
-          className={`px-5 py-2.5 font-bold text-xs sm:text-sm rounded-t-xl transition-colors flex items-center gap-2 cursor-pointer ${
-            activeTab === 'FEEDBACK'
-              ? 'bg-white text-brand-blue border-t-2 border-x border-slate-200 -mb-px'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <FiMessageSquare className="w-4 h-4" />
-          <span>3. Candidate Feedback Questions ({feedbackQuestions.length})</span>
-        </button>
+      {/* SKEWED FOLDER TABS MATCHING COURSE WIZARD */}
+      <div className="pt-2">
+        <FolderTabs
+          tabs={[
+            { id: 'DETAILS', title: '1. Exam Parameters & Timings', icon: FiFileText },
+            { id: 'QUESTIONS', title: `2. MCQ Questions (${questions.length})`, icon: FiList },
+            { id: 'FEEDBACK', title: `3. Candidate Feedback Questions (${feedbackQuestions.length})`, icon: FiMessageSquare }
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
       {loading ? (
@@ -663,7 +632,7 @@ export default function CustomMockExamEditor() {
         <form onSubmit={handleSave} className="space-y-6">
           {/* TAB 1: EXAM PARAMETERS & TIMING GUARDS */}
           {activeTab === 'DETAILS' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-2xs">
+            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
               {/* EXAM CREATION TYPE DROPDOWN */}
               <div className="p-4 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1.5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-brand-blue">
@@ -947,7 +916,7 @@ export default function CustomMockExamEditor() {
 
           {/* TAB 2: MCQ QUESTIONS BUILDER WITH AI & IMPORT */}
           {activeTab === 'QUESTIONS' && (
-            <div className="space-y-6">
+            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
               {/* EXAM CATEGORIES / SECTIONS CONFIGURATION CARD */}
               <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between">
@@ -1218,7 +1187,7 @@ export default function CustomMockExamEditor() {
 
           {/* TAB 3: CANDIDATE FEEDBACK QUESTIONS BUILDER (MINIMUM 2 MANDATORY) */}
           {activeTab === 'FEEDBACK' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-2xs">
+            <div className="bg-white p-6 sm:p-8 rounded-b-2xl rounded-tr-2xl border border-slate-200 space-y-6 shadow-2xs -mt-[1px] relative z-10">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -1357,27 +1326,14 @@ export default function CustomMockExamEditor() {
             </div>
           )}
 
-          {/* GLOBAL BOTTOM SAVE ACTION BAR */}
-          <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl shadow-md border">
-            <div className="flex items-center gap-3">
-              <div className="px-3 py-1 bg-blue-50 border border-blue-200 text-brand-blue rounded-full text-xs font-bold">
-                {questions.length} / {questionCountOption} Questions Configured
-              </div>
-              <span className="text-xs text-slate-500 hidden sm:inline">
-                All parameters & question choices must be filled out before saving.
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="inline-flex items-center gap-2 px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-            >
-              <FiSave className="w-4 h-4" />
-              <span>{saving ? 'Saving...' : 'Save Exam'}</span>
-            </button>
-          </div>
+          {/* GLOBAL BOTTOM SAVE & CANCEL BAR MATCHING COURSE CREATION WIZARD */}
+          <SaveCancelBar
+            saving={saving}
+            onSave={handleSave}
+            onDiscard={() => navigate('/admin/custom-mock-exams')}
+            submitLabel={isEditing ? 'Update Exam' : 'Submit'}
+            savingLabel={isEditing ? 'Updating...' : 'Submitting...'}
+          />
         </form>
       )}
 

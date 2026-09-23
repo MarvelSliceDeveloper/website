@@ -405,8 +405,14 @@ export default function CustomExamRegister() {
     if (!userPhone.trim()) errs.phone = 'Phone number is required';
     const dobParts = (userDob || '').split('-').filter(Boolean);
     if (!userDob || dobParts.length < 3) errs.dob = 'Complete Date of Birth selection is required';
+    if (!userAddress.trim()) errs.address = 'Full residential address is required';
     if (!candidatePhoto) errs.photo = 'Candidate identity photo is mandatory';
+    if (!user10thSchool.trim()) errs.user10thSchool = '10th school name is required';
+    if (!user10thMark || isNaN(Number(user10thMark))) errs.user10thMark = '10th mark (%) is required';
+    if (!user12thSchool.trim()) errs.user12thSchool = '12th/Diploma school name is required';
+    if (!user12thMark || isNaN(Number(user12thMark))) errs.user12thMark = '12th/Diploma mark (%) is required';
     if (!userCollege.trim()) errs.college = 'College/Institute name is required';
+    if (!userCgpa || isNaN(Number(userCgpa))) errs.cgpa = 'Current CGPA is required';
     if (userDegree === 'Other' && !customDegree.trim()) errs.customDegree = 'Degree qualification is required';
     if (userDept === 'Other' && !customDept.trim()) errs.customDept = 'Department name is required';
 
@@ -636,15 +642,17 @@ export default function CustomExamRegister() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Full Residential Address
+                          Full Residential Address <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={userAddress}
                           onChange={e => setUserAddress(e.target.value)}
                           placeholder="Street, City, State & Pincode"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.address && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.address}</p>}
                       </div>
                     </div>
                   </div>
@@ -673,20 +681,22 @@ export default function CustomExamRegister() {
                       {/* 10th School Name & Mark */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          10th School Name
+                          10th School Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={user10thSchool}
                           onChange={e => setUser10thSchool(e.target.value)}
                           placeholder="e.g. Govt Higher Sec School"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.user10thSchool && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user10thSchool}</p>}
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          10th Mark (%)
+                          10th Mark (%) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -696,27 +706,31 @@ export default function CustomExamRegister() {
                           value={user10thMark}
                           onChange={e => setUser10thMark(e.target.value)}
                           placeholder="e.g. 88.5"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.user10thMark && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user10thMark}</p>}
                       </div>
 
                       {/* 12th School Name & Mark */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          12th / Diploma School Name
+                          12th / Diploma School Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={user12thSchool}
                           onChange={e => setUser12thSchool(e.target.value)}
                           placeholder="e.g. St. Joseph Higher Sec School"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.user12thSchool && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user12thSchool}</p>}
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          12th / Diploma Mark (%)
+                          12th / Diploma Mark (%) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -726,8 +740,10 @@ export default function CustomExamRegister() {
                           value={user12thMark}
                           onChange={e => setUser12thMark(e.target.value)}
                           placeholder="e.g. 92.0"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.user12thMark && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user12thMark}</p>}
                       </div>
 
                       {/* College Name */}
@@ -839,7 +855,7 @@ export default function CustomExamRegister() {
                       {/* Current CGPA */}
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Current College CGPA
+                          Current College CGPA <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -849,8 +865,10 @@ export default function CustomExamRegister() {
                           value={userCgpa}
                           onChange={e => setUserCgpa(e.target.value)}
                           placeholder="e.g. 8.5"
+                          required
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
+                        {formErrors.cgpa && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.cgpa}</p>}
                       </div>
                     </div>
                   </div>
