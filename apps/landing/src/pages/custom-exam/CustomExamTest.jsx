@@ -561,6 +561,16 @@ export default function CustomExamTest() {
           </div>
 
           <div className="space-y-2">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              {settings?.logo_url ? (
+                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-6 sm:h-7 w-auto object-contain" />
+              ) : (
+                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 w-6 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+              )}
+              <span className="text-sm font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                Marvel <span className="text-brand-orange">Slice</span>
+              </span>
+            </div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-200">
               🎉 Congratulations!
             </span>
@@ -623,6 +633,11 @@ export default function CustomExamTest() {
       {/* TOP HEADER */}
       <header className="bg-white border-b border-slate-200 px-6 py-3 shrink-0 shadow-2xs z-20 flex items-center justify-center text-center">
         <div className="flex items-center gap-2.5 select-none cursor-default justify-center">
+          {settings?.logo_url ? (
+            <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-8 sm:h-9 w-auto object-contain pointer-events-none" />
+          ) : (
+            <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-7 sm:h-8 w-7 sm:w-8 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+          )}
           <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
             Marvel <span className="text-brand-orange">Slice</span>
           </span>

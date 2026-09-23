@@ -145,9 +145,16 @@ export default function CustomExamInstructions() {
       <div className="max-w-3xl w-full mx-auto space-y-6">
         {/* LOGO HEADER */}
         <div className="text-center space-y-2">
-          <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-            Marvel <span className="text-brand-orange">Slice</span>
-          </span>
+          <div className="inline-flex items-center gap-2.5 justify-center">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-9 sm:h-10 w-auto object-contain pointer-events-none" />
+            ) : (
+              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+            <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
+          </div>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
             Exam Instructions & Candidate Rules
           </p>

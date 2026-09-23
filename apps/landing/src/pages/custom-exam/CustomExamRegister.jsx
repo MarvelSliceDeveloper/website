@@ -6,8 +6,11 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import TopBar from '../../components/layout/TopBar';
+import Header from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
 
-function PhotoCapture({ photoUrl, onPhotoCaptured }) {
+function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
   const [mode, setMode] = useState('camera');
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef(null);
@@ -71,8 +74,8 @@ function PhotoCapture({ photoUrl, onPhotoCaptured }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-          Candidate Identity Photo <span className="text-slate-400 font-normal">(Optional)</span>
+        <label className="block text-xs font-bold text-slate-700">
+          Candidate Identity Photo <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-1">
           <button
@@ -125,80 +128,7 @@ function PhotoCapture({ photoUrl, onPhotoCaptured }) {
           className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
         />
       )}
-    </div>
-  );
-}
-
-function EasyDobInput({ value, onChange, disabled }) {
-  const parts = (value || '').split('-');
-  const selectedYear = parts[0] || '';
-  const selectedMonth = parts[1] || '';
-  const selectedDay = parts[2] || '';
-
-  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
-  const months = [
-    { num: '01', name: '01 - Jan' },
-    { num: '02', name: '02 - Feb' },
-    { num: '03', name: '03 - Mar' },
-    { num: '04', name: '04 - Apr' },
-    { num: '05', name: '05 - May' },
-    { num: '06', name: '06 - Jun' },
-    { num: '07', name: '07 - Jul' },
-    { num: '08', name: '08 - Aug' },
-    { num: '09', name: '09 - Sep' },
-    { num: '10', name: '10 - Oct' },
-    { num: '11', name: '11 - Nov' },
-    { num: '12', name: '12 - Dec' },
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 70 }, (_, i) => String(currentYear - 10 - i));
-
-  function updateDob(d, m, y) {
-    if (d && m && y) {
-      onChange(`${y}-${m}-${d}`);
-    } else {
-      onChange(`${y || ''}-${m || ''}-${d || ''}`);
-    }
-  }
-
-  return (
-    <div className="grid grid-cols-3 gap-1.5">
-      <select
-        value={selectedDay}
-        disabled={disabled}
-        onChange={e => updateDob(e.target.value, selectedMonth, selectedYear)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Day</option>
-        {days.map(d => (
-          <option key={d} value={d}>{d}</option>
-        ))}
-      </select>
-
-      <select
-        value={selectedMonth}
-        disabled={disabled}
-        onChange={e => updateDob(selectedDay, e.target.value, selectedYear)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Month</option>
-        {months.map(m => (
-          <option key={m.num} value={m.num}>{m.name}</option>
-        ))}
-      </select>
-
-      <select
-        value={selectedYear}
-        disabled={disabled}
-        onChange={e => updateDob(selectedDay, selectedMonth, e.target.value)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Year</option>
-        {years.map(y => (
-          <option key={y} value={y}>{y}</option>
-        ))}
-      </select>
+      {error && <p className="text-[10px] text-rose-600 font-semibold text-center mt-1">{error}</p>}
     </div>
   );
 }
@@ -214,11 +144,13 @@ export default function CustomExamRegister() {
   const [regCountdownSecs, setRegCountdownSecs] = useState(0);
 
   // Form State
-  const [userName, setUserName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userDob, setUserDob] = useState('');
   const [userDept, setUserDept] = useState('Computer Science & Engineering');
+  const [customDept, setCustomDept] = useState('');
   const [userYear, setUserYear] = useState('3rd Year');
   const [userCollege, setUserCollege] = useState('');
   const [candidatePhoto, setCandidatePhoto] = useState('');
@@ -302,12 +234,15 @@ export default function CustomExamRegister() {
     }
 
     const errs = {};
-    if (!userName.trim()) errs.name = 'Full name is required';
+    if (!firstName.trim()) errs.firstName = 'First name is required';
+    if (!lastName.trim()) errs.lastName = 'Last name is required';
+    if (!candidatePhoto) errs.photo = 'Candidate photo is mandatory';
     if (!userEmail.trim()) errs.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) errs.email = 'Valid email is required';
     if (!userPhone.trim()) errs.phone = 'Phone number is required';
     const dobParts = (userDob || '').split('-').filter(Boolean);
     if (!userDob || dobParts.length < 3) errs.dob = 'Complete Date of Birth selection is required';
+    if (userDept === 'Other' && !customDept.trim()) errs.customDept = 'Department name is required';
     if (!userCollege.trim()) errs.college = 'College/Institute name is required';
 
     setFormErrors(errs);
@@ -315,14 +250,17 @@ export default function CustomExamRegister() {
 
     setSubmitting(true);
 
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const finalDept = userDept === 'Other' ? customDept.trim() : userDept.trim();
+
     if (exam && !exam.id.startsWith('demo-')) {
       const { error } = await supabase.from('custom_mock_exam_registrations').insert({
         custom_mock_exam_id: exam.id,
-        user_name: userName.trim(),
+        user_name: fullName,
         user_email: userEmail.trim().toLowerCase(),
         user_phone: userPhone.trim(),
         user_dob: userDob,
-        user_department: userDept.trim(),
+        user_department: finalDept,
         user_year: userYear.trim(),
         user_college: userCollege.trim(),
         candidate_photo: candidatePhoto
@@ -359,194 +297,247 @@ export default function CustomExamRegister() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-10 px-4">
-      <div className="max-w-xl w-full mx-auto space-y-6">
-        {/* LOGO HEADER */}
-        <div className="text-center space-y-2">
-          <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-            Marvel <span className="text-brand-orange">Slice</span>
-          </span>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Official Candidate Registration Portal
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+      <TopBar />
+      <Header />
 
-        {/* REGISTRATION CARD */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-          <div className="border-b border-slate-100 pb-4 text-center">
-            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-brand-blue border border-blue-100">
-              Exam Registration
-            </span>
-          </div>
-
-          {/* TIMING GUARD CLOSED STATE */}
-          {!isRegistrationOpen() ? (
-            <div className="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-3">
-              <FiLock className="w-8 h-8 text-amber-600 mx-auto animate-bounce" />
-              <h3 className="font-bold text-sm text-amber-900">Registration Opens Soon</h3>
-              <p className="text-xs text-amber-800">
-                Registration for this exam opens at{' '}
-                <span className="font-bold">{new Date(exam.registration_start_time).toLocaleString()}</span>.
+      <main className="flex-1 py-10 px-4 flex flex-col justify-center items-center">
+        <div className="max-w-2xl w-full mx-auto space-y-6">
+          {/* REGISTRATION CARD */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+            <div className="border-b border-slate-100 pb-4 text-center">
+              <h1 className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
+                Candidate Exam Registration
+              </h1>
+              <p className="text-xs text-slate-500 font-medium mt-1">
+                Fill in your details to register for <span className="font-semibold text-slate-700">{exam?.title || 'Mock Exam'}</span>
               </p>
-              <div className="px-4 py-2 bg-amber-600 text-white font-mono font-bold text-sm rounded-xl inline-block shadow-xs">
-                Starts in {formatCountdown(regCountdownSecs)}
-              </div>
             </div>
-          ) : isRegistered ? (
-            /* SUCCESS CONFIRMATION */
-            <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
-                <FiCheckCircle className="w-8 h-8" />
-              </div>
 
-              <div className="space-y-2">
-                <h2 className="text-xl font-extrabold text-slate-900">Registration Completed! 🎉</h2>
-                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-                  Your candidate details have been successfully recorded. You will be able to log in to the exam portal using your registered email address and Date of Birth once the exam commences.
+            {/* TIMING GUARD CLOSED STATE */}
+            {!isRegistrationOpen() ? (
+              <div className="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-3">
+                <FiLock className="w-8 h-8 text-amber-600 mx-auto animate-bounce" />
+                <h3 className="font-bold text-sm text-amber-900">Registration Opens Soon</h3>
+                <p className="text-xs text-amber-800">
+                  Registration for this exam opens at{' '}
+                  <span className="font-bold">{new Date(exam.registration_start_time).toLocaleString()}</span>.
                 </p>
+                <div className="px-4 py-2 bg-amber-600 text-white font-mono font-bold text-sm rounded-xl inline-block shadow-xs">
+                  Starts in {formatCountdown(regCountdownSecs)}
+                </div>
               </div>
+            ) : isRegistered ? (
+              /* SUCCESS CONFIRMATION */
+              <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
+                  <FiCheckCircle className="w-8 h-8" />
+                </div>
 
-              <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl text-center space-y-1">
-                <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
-                  Registration Details Saved
-                </p>
-                <p className="text-xs text-emerald-700">
-                  <span className="font-semibold">{userEmail}</span>
-                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    {settings?.logo_url ? (
+                      <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-6 sm:h-7 w-auto object-contain" />
+                    ) : (
+                      <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 w-6 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                    )}
+                    <span className="text-sm font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+                      Marvel <span className="text-brand-orange">Slice</span>
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Registration Completed! 🎉</h2>
+                  <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                    Your candidate details have been successfully recorded. You will be able to log in to the exam portal using your registered email address and Date of Birth once the exam commences.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl text-center space-y-1">
+                  <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
+                    Registration Details Saved
+                  </p>
+                  <p className="text-xs text-emerald-700">
+                    <span className="font-semibold">{userEmail}</span>
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            /* REGISTRATION FORM */
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <PhotoCapture
-                photoUrl={candidatePhoto}
-                onPhotoCaptured={url => setCandidatePhoto(url)}
-              />
+            ) : (
+              /* REGISTRATION FORM */
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <PhotoCapture
+                  photoUrl={candidatePhoto}
+                  onPhotoCaptured={url => {
+                    setCandidatePhoto(url);
+                    if (url && formErrors.photo) {
+                      setFormErrors(prev => ({ ...prev, photo: undefined }));
+                    }
+                  }}
+                  error={formErrors.photo}
+                />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={e => setFirstName(e.target.value)}
+                      placeholder="Enter first name"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={e => setLastName(e.target.value)}
+                      placeholder="Enter last name"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Email Address (Username) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={userEmail}
+                      onChange={e => setUserEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={userPhone}
+                      onChange={e => setUserPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                    {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Date of Birth (Password) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={userDob}
+                      onChange={e => setUserDob(e.target.value)}
+                      required
+                      style={{ colorScheme: 'light' }}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
+                    />
+                    {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Department / Discipline <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={userDept}
+                      onChange={e => setUserDept(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                    >
+                      <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                      <option value="Information Technology">Information Technology</option>
+                      <option value="Electronics & Communication">Electronics & Communication</option>
+                      <option value="Electrical Engineering">Electrical Engineering</option>
+                      <option value="Mechanical Engineering">Mechanical Engineering</option>
+                      <option value="Commerce & Finance">Commerce & Finance</option>
+                      <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {userDept === 'Other' && (
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Specify Department <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={customDept}
+                        onChange={e => setCustomDept(e.target.value)}
+                        placeholder="Enter your department / discipline"
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                      {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Year of Study <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={userYear}
+                      onChange={e => setUserYear(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                    >
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                      <option value="Post Graduate">Post Graduate</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Full Name <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    College / Institute Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={userName}
-                    onChange={e => setUserName(e.target.value)}
-                    placeholder="Enter full name"
+                    value={userCollege}
+                    onChange={e => setUserCollege(e.target.value)}
+                    placeholder="e.g. Marvel Institute of Technology"
                     required
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
-                  {formErrors.name && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.name}</p>}
+                  {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Email Address (Username) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={userEmail}
-                    onChange={e => setUserEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                  />
-                  {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={userPhone}
-                    onChange={e => setUserPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                  />
-                  {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Date of Birth (Password) <span className="text-red-500">*</span>
-                  </label>
-                  <EasyDobInput
-                    value={userDob}
-                    onChange={setUserDob}
-                  />
-                  {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Department / Discipline <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={userDept}
-                    onChange={e => setUserDept(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                <div className="pt-3 border-t border-slate-100 flex justify-center">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                   >
-                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Electronics & Communication">Electronics & Communication</option>
-                    <option value="Electrical Engineering">Electrical Engineering</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                    <option value="Commerce & Finance">Commerce & Finance</option>
-                    <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    <span>{submitting ? 'Submitting...' : 'Submit'}</span>
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Year of Study <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={userYear}
-                    onChange={e => setUserYear(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                  >
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                    <option value="Post Graduate">Post Graduate</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                  College / Institute Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={userCollege}
-                  onChange={e => setUserCollege(e.target.value)}
-                  placeholder="e.g. Marvel Institute of Technology"
-                  required
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                />
-                {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex justify-center">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  <span>{submitting ? 'Submitting...' : 'Submit'}</span>
-                  <FiArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }
+

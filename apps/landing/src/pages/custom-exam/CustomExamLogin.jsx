@@ -6,79 +6,7 @@ import {
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
 
-function EasyDobInput({ value, onChange, disabled }) {
-  const parts = (value || '').split('-');
-  const selectedYear = parts[0] || '';
-  const selectedMonth = parts[1] || '';
-  const selectedDay = parts[2] || '';
 
-  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
-  const months = [
-    { num: '01', name: '01 - Jan' },
-    { num: '02', name: '02 - Feb' },
-    { num: '03', name: '03 - Mar' },
-    { num: '04', name: '04 - Apr' },
-    { num: '05', name: '05 - May' },
-    { num: '06', name: '06 - Jun' },
-    { num: '07', name: '07 - Jul' },
-    { num: '08', name: '08 - Aug' },
-    { num: '09', name: '09 - Sep' },
-    { num: '10', name: '10 - Oct' },
-    { num: '11', name: '11 - Nov' },
-    { num: '12', name: '12 - Dec' },
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 70 }, (_, i) => String(currentYear - 10 - i));
-
-  function updateDob(d, m, y) {
-    if (d && m && y) {
-      onChange(`${y}-${m}-${d}`);
-    } else {
-      onChange(`${y || ''}-${m || ''}-${d || ''}`);
-    }
-  }
-
-  return (
-    <div className="grid grid-cols-3 gap-1.5">
-      <select
-        value={selectedDay}
-        disabled={disabled}
-        onChange={e => updateDob(e.target.value, selectedMonth, selectedYear)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Day</option>
-        {days.map(d => (
-          <option key={d} value={d}>{d}</option>
-        ))}
-      </select>
-
-      <select
-        value={selectedMonth}
-        disabled={disabled}
-        onChange={e => updateDob(selectedDay, e.target.value, selectedYear)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Month</option>
-        {months.map(m => (
-          <option key={m.num} value={m.num}>{m.name}</option>
-        ))}
-      </select>
-
-      <select
-        value={selectedYear}
-        disabled={disabled}
-        onChange={e => updateDob(selectedDay, selectedMonth, e.target.value)}
-        className="px-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
-      >
-        <option value="">Year</option>
-        {years.map(y => (
-          <option key={y} value={y}>{y}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
 
 export default function CustomExamLogin() {
   const { slug } = useParams();
@@ -227,9 +155,16 @@ export default function CustomExamLogin() {
       <div className="max-w-md w-full mx-auto space-y-6">
         {/* LOGO HEADER */}
         <div className="text-center space-y-2">
-          <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-            Marvel <span className="text-brand-orange">Slice</span>
-          </span>
+          <div className="inline-flex items-center gap-2.5 justify-center">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-9 sm:h-10 w-auto object-contain pointer-events-none" />
+            ) : (
+              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-8 sm:h-9 w-8 sm:w-9 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+            <span className="text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
+          </div>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
             Exam Portal Candidate Login
           </p>
@@ -283,11 +218,18 @@ export default function CustomExamLogin() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Password (Date of Birth) <span className="text-red-500">*</span>
               </label>
-                <EasyDobInput
+              <div className="relative">
+                <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none z-10" />
+                <input
+                  type="date"
                   value={dob}
-                  onChange={setDob}
+                  onChange={e => setDob(e.target.value)}
+                  required
                   disabled={isExamEnded()}
+                  style={{ colorScheme: 'light' }}
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
                 />
+              </div>
             </div>
 
             <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-[11px] text-brand-blue flex items-center gap-2">
