@@ -158,9 +158,9 @@ export default function CustomExamLogin() {
           {/* Bigger Centered Logo Image */}
           <div className="flex justify-center">
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-14 sm:h-16 w-auto object-contain pointer-events-none" />
+              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-24 sm:h-28 w-auto object-contain pointer-events-none drop-shadow-sm" />
             ) : (
-              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-12 sm:h-14 w-12 sm:w-14 object-contain pointer-events-none" onError={(e) => { e.target.style.display = 'none'; }} />
+              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-20 sm:h-24 w-20 sm:w-24 object-contain pointer-events-none drop-shadow-sm" onError={(e) => { e.target.style.display = 'none'; }} />
             )}
           </div>
 

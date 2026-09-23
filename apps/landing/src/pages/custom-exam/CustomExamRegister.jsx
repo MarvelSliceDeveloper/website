@@ -13,6 +13,7 @@ import Footer from '../../components/layout/Footer';
 function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
   const [mode, setMode] = useState('camera'); // 'camera' | 'upload'
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -29,20 +30,41 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
   }, [mode, photoUrl]);
 
   async function startCamera() {
+    setCameraError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 320 }, height: { ideal: 320 }, facingMode: 'user' }
-      });
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Webcam is not supported on this browser or requires HTTPS connection.');
+      }
+      stopCamera();
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+      } catch (e1) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
       streamRef.current = stream;
+      setCameraActive(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.play().catch(() => {});
       }
-      setCameraActive(true);
     } catch (err) {
-      setMode('upload');
+      console.error('Camera access error:', err);
+      setCameraActive(false);
+      setCameraError(err.message || 'Camera permission denied or camera not found.');
     }
   }
+
+  // Ensure stream stays bound to video ref when component re-renders
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraActive, mode]);
 
   function stopCamera() {
     if (streamRef.current) {
@@ -104,7 +126,7 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
           <div className="inline-flex p-0.5 bg-slate-200/70 rounded-lg">
             <button
               type="button"
-              onClick={() => { setMode('camera'); onPhotoCaptured(''); }}
+              onClick={() => { setMode('camera'); onPhotoCaptured(''); startCamera(); }}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                 mode === 'camera' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -157,34 +179,59 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
       ) : mode === 'camera' ? (
         /* Live Webcam Capture Container */
         <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-center space-y-3">
-          <div className="relative w-full max-w-[220px] aspect-square rounded-xl bg-slate-900 overflow-hidden flex flex-col items-center justify-center border-2 border-slate-300 shadow-xs">
-            <video ref={videoRef} playsInline autoPlay muted className="w-full h-full object-cover" />
-            <canvas ref={canvasRef} className="hidden" />
-
-            {/* Corner Face Target Guide Overlay */}
-            <div className="absolute inset-4 border border-dashed border-white/40 rounded-full pointer-events-none" />
-
-            {cameraActive ? (
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold rounded-full flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Live Camera</span>
+          {cameraError ? (
+            <div className="text-center p-4 space-y-2">
+              <FiAlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+              <p className="text-xs text-rose-700 font-semibold">{cameraError}</p>
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="px-3 py-1.5 bg-brand-blue text-white text-xs font-bold rounded-lg shadow-xs hover:bg-brand-blue/90"
+                >
+                  Retry Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode('upload'); stopCamera(); }}
+                  className="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-200"
+                >
+                  Upload File Instead
+                </button>
               </div>
-            ) : (
-              <div className="text-center p-4 text-slate-400 text-xs">
-                Starting camera...
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="relative w-full max-w-[220px] aspect-square rounded-xl bg-slate-900 overflow-hidden flex flex-col items-center justify-center border-2 border-slate-300 shadow-xs">
+                <video ref={videoRef} playsInline autoPlay muted className="w-full h-full object-cover" />
+                <canvas ref={canvasRef} className="hidden" />
 
-          {cameraActive && (
-            <button
-              type="button"
-              onClick={takeSnapshot}
-              className="px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer active:scale-95"
-            >
-              <FiCamera className="w-4 h-4" />
-              <span>Capture Photo</span>
-            </button>
+                {/* Corner Face Target Guide Overlay */}
+                <div className="absolute inset-4 border border-dashed border-white/40 rounded-full pointer-events-none" />
+
+                {cameraActive ? (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold rounded-full flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Camera</span>
+                  </div>
+                ) : (
+                  <div className="text-center p-4 text-slate-400 text-xs">
+                    Starting camera...
+                  </div>
+                )}
+              </div>
+
+              {cameraActive && (
+                <button
+                  type="button"
+                  onClick={takeSnapshot}
+                  className="px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <FiCamera className="w-4 h-4" />
+                  <span>Capture Photo</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -428,11 +475,11 @@ export default function CustomExamRegister() {
       <TopBar />
       <Header />
 
-      <main className="flex-1 py-10 px-4 flex flex-col justify-center items-center">
-        <div className="max-w-2xl w-full mx-auto space-y-6">
-          {/* REGISTRATION CARD */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-            <div className="border-b border-slate-100 pb-4 text-center">
+      <main className="flex-1 py-6 sm:py-8 px-4 flex flex-col justify-center items-center">
+        <div className="max-w-2xl w-full mx-auto">
+          {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh]">
+            <div className="border-b border-slate-100 pb-4 text-center shrink-0">
               <h1 className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
                 Candidate Exam Registration
               </h1>
@@ -443,7 +490,7 @@ export default function CustomExamRegister() {
 
             {/* TIMING GUARD CLOSED STATE */}
             {!isRegistrationOpen() ? (
-              <div className="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-3">
+              <div className="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-3 my-auto">
                 <FiLock className="w-8 h-8 text-amber-600 mx-auto animate-bounce" />
                 <h3 className="font-bold text-sm text-amber-900">Registration Opens Soon</h3>
                 <p className="text-xs text-amber-800">
@@ -456,7 +503,7 @@ export default function CustomExamRegister() {
               </div>
             ) : isRegistered ? (
               /* SUCCESS CONFIRMATION */
-              <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-4">
+              <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-6 my-auto">
                 <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
                   <FiCheckCircle className="w-8 h-8" />
                 </div>
@@ -488,277 +535,280 @@ export default function CustomExamRegister() {
                 </div>
               </div>
             ) : (
-              /* REGISTRATION FORM */
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={e => setFirstName(e.target.value)}
-                      placeholder="Enter first name"
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={lastName}
-                      onChange={e => setLastName(e.target.value)}
-                      placeholder="Enter last name"
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={userEmail}
-                      onChange={e => setUserEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={userPhone}
-                      onChange={e => setUserPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
-                  </div>
-
-                  <div className="sm:col-span-2 py-1">
-                    <PhotoCapture
-                      photoUrl={candidatePhoto}
-                      onPhotoCaptured={url => {
-                        setCandidatePhoto(url);
-                        if (url && formErrors.photo) {
-                          setFormErrors(prev => ({ ...prev, photo: undefined }));
-                        }
-                      }}
-                      error={formErrors.photo}
-                    />
-                  </div>
-
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Date of Birth <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative flex items-center">
-                      <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
-                      <input
-                        type="date"
-                        value={userDob}
-                        onChange={e => setUserDob(e.target.value)}
-                        onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
-                        required
-                        style={{ colorScheme: 'light' }}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                      />
-                    </div>
-                    {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
-                  </div>
-
-
-                  {/* DEGREE SELECTION DROPDOWN */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Degree / Qualification <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={userDegree}
-                      onChange={e => setUserDegree(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
-                    >
-                      {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
-                        <option key={idx} value={deg}>{deg}</option>
-                      ))}
-                      <option value="Other">Other Degree</option>
-                    </select>
-                  </div>
-
-                  {userDegree === 'Other' && (
+              /* REGISTRATION FORM WITH INDEPENDENT INTERNAL SCROLL */
+              <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 mt-4">
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Specify Degree <span className="text-red-500">*</span>
+                        First Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        value={customDegree}
-                        onChange={e => setCustomDegree(e.target.value)}
-                        placeholder="e.g. B.E (Robotics), MBA..."
+                        value={firstName}
+                        onChange={e => setFirstName(e.target.value)}
+                        placeholder="Enter first name"
                         required
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                       />
+                      {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Department <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={userDept}
-                      onChange={e => setUserDept(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                    >
-                      <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                      <option value="Information Technology">Information Technology</option>
-                      <option value="Electronics & Communication">Electronics & Communication</option>
-                      <option value="Electrical Engineering">Electrical Engineering</option>
-                      <option value="Mechanical Engineering">Mechanical Engineering</option>
-                      <option value="Commerce & Finance">Commerce & Finance</option>
-                      <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={e => setLastName(e.target.value)}
+                        placeholder="Enter last name"
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                      {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
+                    </div>
 
-                  {userDept === 'Other' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={userEmail}
+                        onChange={e => setUserEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                      {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={userPhone}
+                        onChange={e => setUserPhone(e.target.value)}
+                        placeholder="+91 98765 43210"
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      />
+                      {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
+                    </div>
+
+                    <div className="sm:col-span-2 py-1">
+                      <PhotoCapture
+                        photoUrl={candidatePhoto}
+                        onPhotoCaptured={url => {
+                          setCandidatePhoto(url);
+                          if (url && formErrors.photo) {
+                            setFormErrors(prev => ({ ...prev, photo: undefined }));
+                          }
+                        }}
+                        error={formErrors.photo}
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Date of Birth <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative flex items-center">
+                        <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
+                        <input
+                          type="date"
+                          value={userDob}
+                          onChange={e => setUserDob(e.target.value)}
+                          onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
+                          required
+                          style={{ colorScheme: 'light' }}
+                          className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                      </div>
+                      {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
+                    </div>
+
+
+                    {/* DEGREE SELECTION DROPDOWN */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Degree / Qualification <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={userDegree}
+                        onChange={e => setUserDegree(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
+                      >
+                        {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
+                          <option key={idx} value={deg}>{deg}</option>
+                        ))}
+                        <option value="Other">Other Degree</option>
+                      </select>
+                    </div>
+
+                    {userDegree === 'Other' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Specify Degree <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customDegree}
+                          onChange={e => setCustomDegree(e.target.value)}
+                          placeholder="e.g. B.E (Robotics), MBA..."
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Department <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={userDept}
+                        onChange={e => setUserDept(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                      >
+                        <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics & Communication">Electronics & Communication</option>
+                        <option value="Electrical Engineering">Electrical Engineering</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Commerce & Finance">Commerce & Finance</option>
+                        <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {userDept === 'Other' && (
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Specify Department <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customDept}
+                          onChange={e => setCustomDept(e.target.value)}
+                          placeholder="Enter your department"
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                        {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Year of Study <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={userYear}
+                        onChange={e => setUserYear(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
+                      >
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="Post Graduate">Post Graduate</option>
+                      </select>
+                    </div>
+
+                    {/* 1 LINE: 10th Mark, 12th Mark, CGPA */}
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          10th Mark (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          value={user10thMark}
+                          onChange={e => setUser10thMark(e.target.value)}
+                          placeholder="e.g. 88.5"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          12th / Diploma Mark (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          value={user12thMark}
+                          onChange={e => setUser12thMark(e.target.value)}
+                          placeholder="e.g. 92.0"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Current College CGPA
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="10"
+                          value={userCgpa}
+                          onChange={e => setUserCgpa(e.target.value)}
+                          placeholder="e.g. 8.5"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                        />
+                      </div>
+                    </div>
+
+                    {/* COLLEGE NAME: Full width on 1st line after marks */}
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Specify Department <span className="text-red-500">*</span>
+                        College / Institute Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        value={customDept}
-                        onChange={e => setCustomDept(e.target.value)}
-                        placeholder="Enter your department"
+                        value={userCollege}
+                        onChange={e => setUserCollege(e.target.value)}
+                        placeholder="e.g. Marvel Institute of Technology"
                         required
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                       />
-                      {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
+                      {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Year of Study <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={userYear}
-                      onChange={e => setUserYear(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                    >
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                      <option value="Post Graduate">Post Graduate</option>
-                    </select>
-                  </div>
-
-                  {/* 1 LINE: 10th Mark, 12th Mark, CGPA */}
-                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
+                    {/* FULL RESIDENTIAL ADDRESS: Full width larger textarea on 2nd line */}
+                    <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        10th Mark (%)
+                        Full Residential Address
                       </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        value={user10thMark}
-                        onChange={e => setUser10thMark(e.target.value)}
-                        placeholder="e.g. 88.5"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      <textarea
+                        rows={3}
+                        value={userAddress}
+                        onChange={e => setUserAddress(e.target.value)}
+                        placeholder="Enter street, city, state & pincode..."
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        12th / Diploma Mark (%)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        value={user12thMark}
-                        onChange={e => setUser12thMark(e.target.value)}
-                        placeholder="e.g. 92.0"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Current College CGPA
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="10"
-                        value={userCgpa}
-                        onChange={e => setUserCgpa(e.target.value)}
-                        placeholder="e.g. 8.5"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                      />
-                    </div>
-                  </div>
-
-                  {/* COLLEGE NAME: Full width on 1st line after marks */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      College / Institute Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={userCollege}
-                      onChange={e => setUserCollege(e.target.value)}
-                      placeholder="e.g. Marvel Institute of Technology"
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
-                  </div>
-
-                  {/* FULL RESIDENTIAL ADDRESS: Full width larger textarea on 2nd line */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Residential Address
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={userAddress}
-                      onChange={e => setUserAddress(e.target.value)}
-                      placeholder="Enter street, city, state & pincode..."
-                      className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-medium"
-                    />
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex justify-center">
+                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD */}
+                <div className="pt-3 mt-3 border-t border-slate-100 flex justify-center shrink-0 bg-white">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+                    className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
                   >
                     <span>{submitting ? 'Submitting...' : 'Submit'}</span>
                   </button>
