@@ -1145,7 +1145,7 @@ export default function CustomExamTest() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#d1d5dc] flex flex-col text-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#e3e3e3] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
       <header className="bg-white border-b border-slate-200 px-6 pt-1.5 pb-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
         <div className="flex items-center gap-2 select-none cursor-default justify-center">
@@ -1167,7 +1167,7 @@ export default function CustomExamTest() {
 
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
       <div className="bg-white border-b border-slate-200 px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3 shrink-0 z-10 shadow-2xs">
-        <div className={activeStep === 'INSTRUCTIONS' ? "max-w-4xl w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
+        <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
               {candidate?.candidate_photo ? (
@@ -1213,69 +1213,73 @@ export default function CustomExamTest() {
       </div>
 
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#d1d5dc]">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INSTRUCTIONS CARD VIEW MATCHING DESIGN */
-          <div className="flex-1 min-h-0 overflow-y-auto pt-2 px-4 pb-6 bg-[#d1d5dc] flex justify-center items-start">
-            <div className="max-w-4xl w-full mx-auto space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs mt-1">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+          /* INSTRUCTIONS CARD VIEW MATCHING REGISTRATION FORM DESIGN & FIT TO SCREEN */
+          <div className="flex-1 min-h-0 p-4 sm:p-6 bg-[#e3e3e3] flex justify-center items-center overflow-hidden">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[82vh] sm:max-h-[78vh] max-w-[1000px] w-full mx-auto overflow-hidden">
+              
+              {/* METALLIC SILVER HEADER */}
+              <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 py-3 px-5 sm:py-3.5 sm:px-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
+                <h1 className="text-lg sm:text-xl font-black text-brand-blue tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs mt-0.5">
-                  <span className="text-slate-900 font-bold">(</span><span className="text-red-600 font-semibold" style={{ color: '#dc2626' }}>Please read all instructions carefully before starting the exam.</span><span className="text-slate-900 font-bold">)</span>
+                <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
+                  (Please read all instructions carefully before starting the exam.)
                 </p>
               </div>
 
-              {/* RULES CONTENT (16px FONT SIZE, 2.2 LINE HEIGHT) */}
-              <div className="text-[16px] text-slate-700 leading-[2.2] whitespace-pre-line">
-                {exam?.rules_text ? (
-                  exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
-                ) : (
-                  <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium leading-[2.2]">
-                    <li>Ensure a stable internet connection throughout the test.</li>
-                    <li>Do not refresh the page or switch browser tabs during the exam.</li>
-                    <li>Each question carries 1 mark. Select the correct option.</li>
-                    <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
-                    <li>The exam will auto-submit when the timer expires.</li>
-                  </ol>
-                )}
+              {/* SCROLLABLE RULES & INSTRUCTIONS CONTENT AREA */}
+              <div className="flex-1 overflow-y-auto pr-2 py-3 space-y-4 min-h-0 text-slate-700">
+                <div className="text-[15px] sm:text-[16px] text-slate-700 leading-[2.1] whitespace-pre-line font-medium">
+                  {exam?.rules_text ? (
+                    exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
+                  ) : (
+                    <ol className="list-decimal list-inside space-y-2 text-slate-700 font-medium leading-[2.1]">
+                      <li>Ensure a stable internet connection throughout the test.</li>
+                      <li>Do not refresh the page or switch browser tabs during the exam.</li>
+                      <li>Each question carries 1 mark. Select the correct option.</li>
+                      <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
+                      <li>The exam will auto-submit when the timer expires.</li>
+                    </ol>
+                  )}
+                </div>
+
+                {/* AGREEMENT CHECKBOXES */}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreeInstructions}
+                      onChange={e => setAgreeInstructions(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                      I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={e => setAgreeTerms(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                      I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
-              {/* AGREEMENT CHECKBOXES DIRECTLY BELOW ITEM 5 */}
-              <div className="space-y-3 pt-2">
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={agreeInstructions}
-                    onChange={e => setAgreeInstructions(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
-                  />
-                  <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
-                    I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
-                  </span>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={agreeTerms}
-                    onChange={e => setAgreeTerms(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
-                  />
-                  <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
-                    I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
-                  </span>
-                </label>
-              </div>
-
-              {/* CENTERED START EXAM BUTTON */}
-              <div className="pt-2 flex justify-center">
+              {/* STICKY FOOTER WITH SILVER BG FOR START EXAM BUTTON */}
+              <div className="py-2.5 px-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
                 <button
                   type="button"
                   disabled={!agreeInstructions || !agreeTerms}
                   onClick={handleStartExam}
-                  className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-8 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Start Exam</span>
                 </button>

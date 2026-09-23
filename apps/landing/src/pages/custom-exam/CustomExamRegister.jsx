@@ -11,7 +11,7 @@ import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 
 function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
-  const [mode, setMode] = useState('camera'); // 'camera' | 'upload'
+  const [mode, setMode] = useState('upload'); // 'upload' | 'camera'
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -126,16 +126,6 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
           <div className="inline-flex p-0.5 bg-slate-200/70 rounded-lg">
             <button
               type="button"
-              onClick={() => { setMode('camera'); onPhotoCaptured(''); startCamera(); }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                mode === 'camera' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <FiCamera className="w-3.5 h-3.5" />
-              <span>Webcam</span>
-            </button>
-            <button
-              type="button"
               onClick={() => { setMode('upload'); stopCamera(); }}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                 mode === 'upload' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
@@ -143,6 +133,16 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
             >
               <FiUpload className="w-3.5 h-3.5" />
               <span>Upload / Drag</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('camera'); onPhotoCaptured(''); startCamera(); }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                mode === 'camera' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FiCamera className="w-3.5 h-3.5" />
+              <span>Webcam</span>
             </button>
           </div>
         )}
@@ -489,11 +489,11 @@ export default function CustomExamRegister() {
         <div className="max-w-2xl w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 p-5 sm:p-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
-              <h1 className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight">
+            <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 py-3 px-5 sm:py-3.5 sm:px-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
+              <h1 className="text-lg sm:text-xl font-black text-brand-blue tracking-tight">
                 Candidate Exam Registration
               </h1>
-              <p className="text-xs text-slate-600 font-medium mt-1">
+              <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
                 Fill in your details to register for <span className="font-semibold text-slate-800">{exam?.title || 'Mock Exam'}</span>
               </p>
             </div>
@@ -858,11 +858,11 @@ export default function CustomExamRegister() {
                 </div>
 
                 {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD WITH SILVER BG */}
-                <div className="p-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
+                <div className="py-2.5 px-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+                    className="px-8 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
                   >
                     <span>{submitting ? 'Submitting...' : 'Submit'}</span>
                   </button>

@@ -414,7 +414,7 @@ export default function CustomMockExamSubmissions() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-brand-blue text-white uppercase tracking-wider font-bold text-[10px]">
+                <tr className="bg-slate-50 text-slate-700 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
                   <th className="p-3.5">Candidate & Contact</th>
                   <th className="p-3.5">Degree & College</th>
                   <th className="p-3.5">Academics (10th/12th/CGPA)</th>
