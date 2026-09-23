@@ -218,16 +218,17 @@ export default function CustomExamLogin() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Password (Date of Birth) <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none z-10" />
+              <div className="relative flex items-center">
+                <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
                 <input
                   type="date"
                   value={dob}
                   onChange={e => setDob(e.target.value)}
+                  onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
                   required
                   disabled={isExamEnded()}
                   style={{ colorScheme: 'light' }}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer disabled:opacity-60 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
             </div>

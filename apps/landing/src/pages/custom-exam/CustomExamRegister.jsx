@@ -11,11 +11,13 @@ import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 
 function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
-  const [mode, setMode] = useState('camera');
+  const [mode, setMode] = useState('camera'); // 'camera' | 'upload'
   const [cameraActive, setCameraActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (mode === 'camera' && !photoUrl) {
@@ -63,72 +65,163 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
     onPhotoCaptured(dataUrl);
   }
 
-  function handleFileUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function processFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
     reader.onload = (event) => onPhotoCaptured(event.target.result);
     reader.readAsDataURL(file);
   }
 
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    processFile(file);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    setIsDragging(false);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  }
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-slate-700">
-          Candidate Identity Photo <span className="text-red-500">*</span>
+    <div className="space-y-2 bg-slate-50/80 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80">
+      <div className="flex items-center justify-between gap-2">
+        <label className="block text-xs font-bold text-slate-800">
+          Candidate Identity Photo <span className="text-rose-500">*</span>
         </label>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => { setMode('camera'); onPhotoCaptured(''); }}
-            className={`px-2 py-0.5 rounded text-[11px] font-bold ${mode === 'camera' ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600'}`}
-          >
-            Webcam
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('upload'); stopCamera(); }}
-            className={`px-2 py-0.5 rounded text-[11px] font-bold ${mode === 'upload' ? 'bg-brand-blue text-white' : 'bg-slate-100 text-slate-600'}`}
-          >
-            Upload
-          </button>
-        </div>
+        {!photoUrl && (
+          <div className="inline-flex p-0.5 bg-slate-200/70 rounded-lg">
+            <button
+              type="button"
+              onClick={() => { setMode('camera'); onPhotoCaptured(''); }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                mode === 'camera' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FiCamera className="w-3.5 h-3.5" />
+              <span>Webcam</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('upload'); stopCamera(); }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                mode === 'upload' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FiUpload className="w-3.5 h-3.5" />
+              <span>Upload / Drag</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {photoUrl ? (
-        <div className="relative w-28 h-28 mx-auto rounded-xl border-2 border-brand-blue overflow-hidden shadow-xs group">
-          <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
+        /* Photo Captured / Uploaded Preview */
+        <div className="bg-white p-3 rounded-xl border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="relative w-16 h-16 rounded-xl border-2 border-emerald-500 overflow-hidden shrink-0 shadow-xs">
+              <img src={photoUrl} alt="Candidate Preview" className="w-full h-full object-cover" />
+              <div className="absolute top-0.5 right-0.5 bg-emerald-500 text-white rounded-full p-0.5">
+                <FiCheckCircle className="w-3 h-3" />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Photo Verified & Attached</span>
+              </p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Your identity photo is ready for registration submission.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
-            onClick={() => onPhotoCaptured('')}
-            className="absolute inset-0 bg-slate-900/60 text-white font-bold text-[11px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+            onClick={() => { onPhotoCaptured(''); setMode('camera'); }}
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
           >
-            Retake Photo
+            Retake / Change Photo
           </button>
         </div>
       ) : mode === 'camera' ? (
-        <div className="relative w-full max-w-[200px] aspect-square mx-auto rounded-xl bg-slate-900 overflow-hidden flex flex-col items-center justify-center border border-slate-300">
-          <video ref={videoRef} playsInline autoPlay muted className="w-full h-full object-cover" />
-          <canvas ref={canvasRef} className="hidden" />
+        /* Live Webcam Capture Container */
+        <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-center space-y-3">
+          <div className="relative w-full max-w-[220px] aspect-square rounded-xl bg-slate-900 overflow-hidden flex flex-col items-center justify-center border-2 border-slate-300 shadow-xs">
+            <video ref={videoRef} playsInline autoPlay muted className="w-full h-full object-cover" />
+            <canvas ref={canvasRef} className="hidden" />
+
+            {/* Corner Face Target Guide Overlay */}
+            <div className="absolute inset-4 border border-dashed border-white/40 rounded-full pointer-events-none" />
+
+            {cameraActive ? (
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold rounded-full flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live Camera</span>
+              </div>
+            ) : (
+              <div className="text-center p-4 text-slate-400 text-xs">
+                Starting camera...
+              </div>
+            )}
+          </div>
+
           {cameraActive && (
             <button
               type="button"
               onClick={takeSnapshot}
-              className="absolute bottom-2 px-3 py-1 bg-brand-orange text-white font-bold text-[11px] rounded-full shadow-md cursor-pointer"
+              className="px-4 py-2 bg-brand-orange hover:bg-brand-orange/90 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              Capture
+              <FiCamera className="w-4 h-4" />
+              <span>Capture Photo</span>
             </button>
           )}
         </div>
       ) : (
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
-        />
+        /* Drag & Drop Upload Zone */
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`bg-white border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 ${
+            isDragging
+              ? 'border-brand-blue bg-blue-50/50 scale-[1.01]'
+              : 'border-slate-300 hover:border-brand-blue/60 hover:bg-slate-50/60'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <div className="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
+            <FiUpload className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-800">
+              Drag & drop photo here, or <span className="text-brand-blue underline">browse</span>
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Supports JPG, PNG or WEBP (Max 5MB)
+            </p>
+          </div>
+        </div>
       )}
-      {error && <p className="text-[10px] text-rose-600 font-semibold text-center mt-1">{error}</p>}
+
+      {error && <p className="text-[11px] text-rose-600 font-semibold text-center mt-1">{error}</p>}
     </div>
   );
 }
