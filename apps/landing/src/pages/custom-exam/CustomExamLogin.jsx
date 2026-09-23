@@ -249,10 +249,9 @@ export default function CustomExamLogin() {
               <button
                 type="submit"
                 disabled={loggingIn || isExamEnded()}
-                className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
               >
                 <span>{isExamEnded() ? 'Exam Ended' : loggingIn ? 'Logging in...' : 'Login'}</span>
-                <FiArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
