@@ -314,7 +314,7 @@ export default function CustomMockExamSubmissions() {
               <button
                 type="button"
                 onClick={() => setActiveFeedbackModal(sub)}
-                className="p-1.5 bg-admin-100 hover:bg-admin-200 text-admin-600 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors cursor-pointer"
                 title="View Feedback"
               >
                 <FiMessageSquare className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export default function CustomMockExamSubmissions() {
               type="button"
               onClick={() => handleResetSubmission(sub)}
               disabled={resettingSubId === sub.id}
-              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 cursor-pointer disabled:opacity-50"
+              className="p-1.5 text-red-500 hover:text-white hover:bg-red-600 rounded transition-colors cursor-pointer disabled:opacity-50"
               title="Reset submission and permit candidate to retake exam"
             >
               <FiRotateCcw className="w-3.5 h-3.5" />

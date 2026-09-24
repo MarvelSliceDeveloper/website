@@ -201,12 +201,12 @@ export default function CustomMockExamRegistrations() {
       header: 'Actions',
       className: 'text-right',
       cell: (reg) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
             onClick={() => setSelectedCandidate(reg)}
             title="View Full Profile Dossier"
-            className="p-1.5 bg-admin-100 hover:bg-admin-600 hover:text-white text-admin-600 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors cursor-pointer"
           >
             <FiEye className="w-3.5 h-3.5" />
           </button>
@@ -214,7 +214,7 @@ export default function CustomMockExamRegistrations() {
             type="button"
             onClick={() => openEmailComposer(reg)}
             title="Send Email / Reply"
-            className="p-1.5 bg-success-50 hover:bg-green-600 text-green-700 hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-emerald-500 hover:text-white hover:bg-emerald-600 rounded transition-colors cursor-pointer"
           >
             <FiMail className="w-3.5 h-3.5" />
           </button>

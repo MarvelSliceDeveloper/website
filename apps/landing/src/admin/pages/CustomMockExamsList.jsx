@@ -123,26 +123,10 @@ export default function CustomMockExamsList() {
       ),
     },
     {
-      header: 'Login Open',
-      cell: (exam) => (
-        <span className="text-xs text-neutral-700 whitespace-nowrap">
-          {exam.registration_start_time ? formatDateTime(exam.registration_start_time) : 'Immediate'}
-        </span>
-      ),
-    },
-    {
       header: 'Exam Start',
       cell: (exam) => (
         <span className="text-xs font-medium text-admin-600 whitespace-nowrap">
           {exam.exam_start_time ? formatDateTime(exam.exam_start_time) : 'Immediate'}
-        </span>
-      ),
-    },
-    {
-      header: 'Login Close',
-      cell: (exam) => (
-        <span className="text-xs text-neutral-700 whitespace-nowrap">
-          {exam.exam_end_time ? formatDateTime(exam.exam_end_time) : 'No Limit'}
         </span>
       ),
     },
@@ -210,25 +194,25 @@ export default function CustomMockExamsList() {
       header: 'Actions',
       className: 'text-right',
       cell: (exam) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
             onClick={() => navigate(`/admin/custom-mock-exams/${exam.id}/edit`)}
-            className="p-1.5 text-neutral-500 hover:text-admin-600 hover:bg-admin-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors cursor-pointer"
             title="Edit Exam"
           >
             <FiEdit2 className="w-4 h-4" />
           </button>
           <Link
             to={`/admin/custom-mock-exams/registrations?examId=${exam.id}`}
-            className="p-1.5 text-neutral-500 hover:text-admin-600 hover:bg-admin-100 rounded-lg transition-colors"
+            className="p-1.5 text-emerald-500 hover:text-white hover:bg-emerald-600 rounded transition-colors"
             title="View Candidates"
           >
             <FiUsers className="w-4 h-4" />
           </Link>
           <Link
             to={`/admin/custom-mock-exams/submissions?examId=${exam.id}`}
-            className="p-1.5 text-neutral-500 hover:text-admin-600 hover:bg-admin-100 rounded-lg transition-colors"
+            className="p-1.5 text-purple-500 hover:text-white hover:bg-purple-600 rounded transition-colors"
             title="View Results"
           >
             <FiClipboard className="w-4 h-4" />
@@ -236,7 +220,7 @@ export default function CustomMockExamsList() {
           <button
             type="button"
             onClick={() => handleDeleteExam(exam.id, exam.title)}
-            className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-red-500 hover:text-white hover:bg-red-600 rounded transition-colors cursor-pointer"
             title="Delete Exam"
           >
             <FiTrash2 className="w-4 h-4" />
