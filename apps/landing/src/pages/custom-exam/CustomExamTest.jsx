@@ -1733,7 +1733,12 @@ export default function CustomExamTest() {
                     <li>Do not refresh, close, or leave the exam page while the test is running.</li>
                     <li>Do not switch browser tabs or windows — tab switches are tracked and reported.</li>
                     <li>Do not leak, share, screenshot, or distribute any exam questions or content.</li>
-                    <li>Each question carries 1 mark with no negative marking; the exam auto-submits when the timer expires.</li>
+                    <li>Do not use unauthorized materials, devices, or external assistance during the exam.</li>
+                    <li>Each question carries 1 mark with no negative marking.</li>
+                    <li>Read each question carefully before selecting your answer.</li>
+                    <li>Manage your time effectively and attempt all questions within the given duration.</li>
+                    <li>Review your answers and marked questions before final submit, if time permits.</li>
+                    <li>The exam auto-submits when the timer expires; once submitted, answers cannot be changed.</li>
                   </ol>
                 )}
 
