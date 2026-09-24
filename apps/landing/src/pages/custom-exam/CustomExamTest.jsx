@@ -563,6 +563,26 @@ export default function CustomExamTest() {
 
   function handleFinalSubmissionWithValidation() {
     setFeedbackError('');
+    const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
+      ? exam.feedback_questions
+      : [];
+
+    for (const fb of feedbackList) {
+      if (fb.type === 'matrix') {
+        const val = feedbackAnswers[fb.id];
+        if (!val || typeof val !== 'object' || Object.keys(val).length === 0) {
+          setFeedbackError(`Please select at least one option for: "${fb.question_text || 'Feedback Statement'}"`);
+          return;
+        }
+      } else if (fb.type === 'radio' || fb.type === 'rating' || fb.type === 'choice') {
+        const val = feedbackAnswers[fb.id];
+        if (val === undefined || val === null || val === '') {
+          setFeedbackError(`Please select an option for: "${fb.question_text || 'Feedback Question'}"`);
+          return;
+        }
+      }
+    }
+
     executeFinalSubmission();
   }
 
@@ -1415,15 +1435,15 @@ export default function CustomExamTest() {
         </div>
 
         {/* 24% SIDEBAR PALETTE (ALL CIRCLES) */}
-        <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-4 sm:p-5 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
+        <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-3 sm:p-4 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
           {/* TOP HEADER */}
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mb-2">
             Question Palette ({examQuestions.length})
           </h3>
 
           {/* SCROLLABLE QUESTION NUMBERS GRID */}
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 no-scrollbar sm:custom-scrollbar">
-            <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-2">
+            <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-1.5">
               {examQuestions.map((q, idx) => {
                 const isAnswered = userAnswers[q.id] !== undefined;
                 const isMarked = markedForReview[q.id];
@@ -1463,9 +1483,9 @@ export default function CustomExamTest() {
                           </linearGradient>
                           <linearGradient id={`sq-bg-dual-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#22c55e" />
-                            <stop offset="48%" stopColor="#15803d" />
-                            <stop offset="52%" stopColor="#a855f7" />
-                            <stop offset="100%" stopColor="#7e22ce" />
+                            <stop offset="49.9%" stopColor="#22c55e" />
+                            <stop offset="50.1%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#a855f7" />
                           </linearGradient>
                           <linearGradient id={`sq-bg-red-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#f87171" />
@@ -1567,34 +1587,49 @@ export default function CustomExamTest() {
           </div>
 
           {/* STILL / FIXED LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
-          <div className="pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-2 mt-3 shrink-0 bg-slate-100">
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+          <div className="p-3.5 sm:p-4 border-t border-slate-200 text-xs sm:text-sm text-slate-800 space-y-2.5 mt-3 shrink-0 bg-slate-100/90 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                 <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#22c55e" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
               </svg>
-              <span className="font-medium">Answered</span>
+              <span className="font-semibold text-slate-800">Answered</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                 <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#ef4444" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
               </svg>
-              <span className="font-medium">Not Answered</span>
+              <span className="font-semibold text-slate-800">Not Answered</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                 <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#a855f7" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
               </svg>
-              <span className="font-medium">Marked for Review</span>
+              <span className="font-semibold text-slate-800">Marked for Review</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 shrink-0">
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
+                <defs>
+                  <linearGradient id="legend-sq-bg-dual" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="49.9%" stopColor="#22c55e" />
+                    <stop offset="50.1%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="url(#legend-sq-bg-dual)" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
+              </svg>
+              <span className="font-semibold text-slate-800">Answered & Marked for Review</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                 <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.5" />
               </svg>
-              <span className="font-medium">Not Visited</span>
+              <span className="font-semibold text-slate-800">Not Visited</span>
             </div>
           </div>
         </div>
