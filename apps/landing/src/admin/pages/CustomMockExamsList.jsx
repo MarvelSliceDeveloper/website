@@ -8,12 +8,10 @@ import { supabase } from '../../lib/supabaseClient';
 import { formatDateTime } from '../../lib/datetime';
 import PageShell from '../components/ui/PageShell';
 import DataTable from '../components/ui/DataTable';
-import AddButton from '../components/AddButton';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
 import useConfirm from '../hooks/useConfirm';
 import CustomMockExamReportModal from './CustomMockExamReportModal';
-import CustomMockExamsOverallReportModal from './CustomMockExamsOverallReportModal';
 
 export default function CustomMockExamsList() {
   const navigate = useNavigate();
@@ -22,7 +20,6 @@ export default function CustomMockExamsList() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null); // { slug, type: 'reg' | 'login' }
   const [reportExam, setReportExam] = useState(null);
-  const [showOverallReport, setShowOverallReport] = useState(false);
 
   useEffect(() => {
     fetchExams();
@@ -253,33 +250,6 @@ export default function CustomMockExamsList() {
     <PageShell
       title="Custom Mock Exams"
       subtitle="Standalone timed mock exams (25, 50, 75, 100 MCQs) accessible via shareable registration & login links."
-      actions={
-        <>
-          <button
-            type="button"
-            onClick={() => setShowOverallReport(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
-          >
-            <FiBarChart2 className="w-4 h-4 text-admin-600" />
-            Overall Report
-          </button>
-          <Link
-            to="/admin/custom-mock-exams/registrations"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
-          >
-            <FiUsers className="w-4 h-4 text-admin-600" />
-            Candidates
-          </Link>
-          <Link
-            to="/admin/custom-mock-exams/submissions"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
-          >
-            <FiClipboard className="w-4 h-4 text-admin-600" />
-            Submissions
-          </Link>
-          <AddButton to="/admin/custom-mock-exams/new" label="Create Custom Exam" size="md" />
-        </>
-      }
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-admin-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">
@@ -338,9 +308,6 @@ export default function CustomMockExamsList() {
       {confirmDialog}
       {reportExam && (
         <CustomMockExamReportModal exam={reportExam} onClose={() => setReportExam(null)} />
-      )}
-      {showOverallReport && (
-        <CustomMockExamsOverallReportModal onClose={() => setShowOverallReport(false)} />
       )}
     </PageShell>
   );

@@ -48,11 +48,6 @@ export default function CustomExamLogin() {
     return getSyncedNow() < new Date(exam.registration_start_time).getTime();
   };
 
-  const isExamEnded = () => {
-    if (!exam?.exam_end_time) return false;
-    return getSyncedNow() >= new Date(exam.exam_end_time).getTime();
-  };
-
   async function fetchExam() {
     setLoading(true);
     const { data, error } = await supabase
@@ -128,6 +123,7 @@ export default function CustomExamLogin() {
     }
 
     let alreadySubmitted = false;
+    let hasPriorAttempt = false;
     if (exam && !exam.id.startsWith('demo-') && candidate) {
       const { data: subRows } = await supabase
         .from('custom_mock_exam_submissions')
@@ -137,8 +133,26 @@ export default function CustomExamLogin() {
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (subRows && subRows.length > 0 && subRows[0].status === 'SUBMITTED') {
-        alreadySubmitted = true;
+      if (subRows && subRows.length > 0) {
+        hasPriorAttempt = true;
+        if (subRows[0].status === 'SUBMITTED') {
+          alreadySubmitted = true;
+        }
+      }
+    }
+
+    // Login window closed: only already-joined candidates may rejoin.
+    // Fresh candidates (no prior attempt row, no same-tab session) are blocked.
+    if (exam && !exam.id.startsWith('demo-') && exam.exam_end_time && getSyncedNow() >= new Date(exam.exam_end_time).getTime()) {
+      let sameUserRejoin = false;
+      try {
+        const priorAuth = JSON.parse(sessionStorage.getItem(`custom_exam_auth_${slug}`) || 'null');
+        sameUserRejoin = priorAuth?.candidate?.user_email?.toLowerCase() === cleanEmail;
+      } catch (err) {}
+      if (!sameUserRejoin && !hasPriorAttempt) {
+        setLoggingIn(false);
+        setLoginError('Login window closed: only candidates who already started this exam can rejoin. New logins are no longer permitted.');
+        return;
       }
     }
 

@@ -191,12 +191,29 @@ export default function CustomExamTest() {
   const timeLeftRef = useRef(timeLeftSeconds);
   const examQuestionsRef = useRef(examQuestions);
   const tabSwitchLogsRef = useRef(tabSwitchLogs);
+  const userAnswersRef = useRef(userAnswers);
+  const visitedQuestionsRef = useRef(visitedQuestions);
+  const tabSwitchCountRef = useRef(tabSwitchCount);
   const lastSwitchTimeRef = useRef(0);
 
   useEffect(() => { currentQIndexRef.current = currentQIndex; }, [currentQIndex]);
   useEffect(() => { timeLeftRef.current = timeLeftSeconds; }, [timeLeftSeconds]);
   useEffect(() => { examQuestionsRef.current = examQuestions; }, [examQuestions]);
   useEffect(() => { tabSwitchLogsRef.current = tabSwitchLogs; }, [tabSwitchLogs]);
+  useEffect(() => { userAnswersRef.current = userAnswers; }, [userAnswers]);
+  useEffect(() => { visitedQuestionsRef.current = visitedQuestions; }, [visitedQuestions]);
+  useEffect(() => { tabSwitchCountRef.current = tabSwitchCount; }, [tabSwitchCount]);
+
+  // Email of the logged-in candidate, read from the auth session on every call
+  // so cached test sessions can always be matched to their owner.
+  function getSessionEmail() {
+    try {
+      const auth = JSON.parse(sessionStorage.getItem(`custom_exam_auth_${slug}`) || 'null');
+      return (auth?.candidate?.user_email || '').toLowerCase();
+    } catch (e) {
+      return '';
+    }
+  }
 
   useEffect(() => {
     initExam();
@@ -344,14 +361,21 @@ export default function CustomExamTest() {
       return;
     }
 
-    // Check if candidate already has an active local or DB session / auth credentials
+    // Check if candidate already has an active local or DB session.
+    // The cached session must belong to THIS candidate (email match) so one
+    // candidate can never inherit another candidate's answers on a shared machine.
     const rawSession = localStorage.getItem(`custom_exam_test_session_${slug}`);
     let cachedSession = null;
     try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
+    const ownEmail = (authCand?.user_email || '').toLowerCase();
+    const cachedEmail = (cachedSession?.candidateEmail || '').toLowerCase();
+    if (cachedSession && cachedEmail && ownEmail && cachedEmail !== ownEmail) {
+      cachedSession = null;
+    }
 
-    const isAlreadyLoggedIn = Boolean(authCand || cachedSession || dbDraftAnswers);
+    const isAlreadyLoggedIn = Boolean(cachedSession || dbDraftAnswers);
 
-    // Gate 2: Login Window Closed - ONLY BLOCK NEW / UNAUTHENTICATED CANDIDATES
+    // Gate 2: Login Window Closed - ONLY BLOCK NEW / NEVER-JOINED CANDIDATES
     if (!isAlreadyLoggedIn && loginEndMs && now > loginEndMs) {
       setActiveStep('GATE_BLOCKED');
       setGateReason('EXAM_ENDED');
@@ -414,6 +438,7 @@ export default function CustomExamTest() {
     const sessionData = {
       activeStep: 'QUIZ',
       currentQIndex: 0,
+      candidateEmail: getSessionEmail(),
       userAnswers: {},
       markedForReview: {},
       visitedQuestions: initialVisited,
@@ -432,9 +457,22 @@ export default function CustomExamTest() {
   function restoreSessionFromCache(currentExam, questions, dbDraftAnswers, dbDraftVisited) {
     let fullExamSecs = (currentExam.time_limit_mins || 20) * 60;
 
+    // Email of the currently logged-in candidate (state may not have flushed yet,
+    // so read the same sessionStorage auth that initExam used).
+    let ownEmail = '';
+    try {
+      const auth = JSON.parse(sessionStorage.getItem(`custom_exam_auth_${slug}`) || 'null');
+      ownEmail = (auth?.candidate?.user_email || '').toLowerCase();
+    } catch (e) {}
+
     try {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
-      const cached = raw ? JSON.parse(raw) : null;
+      let cached = raw ? JSON.parse(raw) : null;
+      // Never restore another candidate's cached answers on a shared machine.
+      const cachedEmail = (cached?.candidateEmail || '').toLowerCase();
+      if (cached && cachedEmail && ownEmail && cachedEmail !== ownEmail) {
+        cached = null;
+      }
 
       // Merge DB draft and localStorage draft so filled options are never lost
       const mergedAnswers = {
@@ -508,6 +546,7 @@ export default function CustomExamTest() {
     const sessionData = {
       activeStep: 'QUIZ',
       currentQIndex,
+      candidateEmail: getSessionEmail(),
       userAnswers,
       markedForReview,
       visitedQuestions,
@@ -538,7 +577,7 @@ export default function CustomExamTest() {
   }, [activeStep, currentQIndex, examQuestions]);
 
   // Background Auto-Save Draft to Supabase
-  async function autoSaveDraftToSupabase(answersToSave, visitedToSave, timeRemaining) {
+  async function autoSaveDraftToSupabase(answersToSave, visitedToSave, timeRemaining, switchCountToSave, switchLogsToSave) {
     if (!exam || exam.id.startsWith('demo-') || !candidate?.user_email) return;
 
     try {
@@ -567,8 +606,8 @@ export default function CustomExamTest() {
         answers: answersToSave || userAnswers,
         visited_questions: visitedToSave || visitedQuestions,
         time_taken_seconds: timeTaken,
-        tab_switch_count: tabSwitchCount,
-        tab_switch_logs: tabSwitchLogs,
+        tab_switch_count: switchCountToSave ?? tabSwitchCount,
+        tab_switch_logs: switchLogsToSave ?? tabSwitchLogs,
         updated_at: new Date().toISOString()
       };
 
@@ -619,11 +658,28 @@ export default function CustomExamTest() {
     };
   }, [activeStep, timeLeftSeconds]);
 
+  // Periodic DB draft backup (every 30s while answering) so an idle or
+  // crashed candidate still has a fresh server-side draft to rejoin from.
+  useEffect(() => {
+    if (activeStep !== 'QUIZ') return;
+    const backupId = setInterval(() => {
+      autoSaveDraftToSupabase(
+        userAnswersRef.current,
+        visitedQuestionsRef.current,
+        timeLeftRef.current,
+        tabSwitchCountRef.current,
+        tabSwitchLogsRef.current
+      );
+    }, 30000);
+    return () => clearInterval(backupId);
+  }, [activeStep]);
+
   function saveImmediateSession(answers, visited, index, switchCount, switchLogs) {
     const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
     const sessionData = {
       activeStep: 'QUIZ',
       currentQIndex: index !== undefined ? index : currentQIndex,
+      candidateEmail: getSessionEmail(),
       userAnswers: answers || userAnswers,
       markedForReview,
       visitedQuestions: visited || visitedQuestions,
@@ -1442,14 +1498,6 @@ export default function CustomExamTest() {
           <div className="pt-2 flex items-center justify-center gap-3 shrink-0">
             <button
               type="button"
-              onClick={() => setActiveStep('QUIZ')}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
-            >
-              Back to Questions
-            </button>
-
-            <button
-              type="button"
               onClick={handleFinalSubmissionWithValidation}
               disabled={isSubmitting}
               className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:hover:scale-100"
@@ -1831,11 +1879,13 @@ export default function CustomExamTest() {
                 <div className="flex items-center justify-between gap-3 sm:gap-6 lg:gap-8 overflow-x-auto py-2 no-scrollbar w-full">
                   <button
                     type="button"
+                    disabled={timeLeftSeconds <= 0}
                     onClick={() => {
+                      if (timeLeftSeconds <= 0) return; // Locked after time expires: submit only
                       const qId = examQuestions[currentQIndex]?.id;
                       if (qId) setMarkedForReview(prev => ({ ...prev, [qId]: !prev[qId] }));
                     }}
-                    className={`px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-xs text-white transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0 ${
+                    className={`px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-xs text-white transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0 disabled:opacity-40 ${
                       markedForReview[examQuestions[currentQIndex]?.id] ? 'bg-brand-orange ring-2 ring-amber-400' : 'bg-brand-orange'
                     }`}
                   >

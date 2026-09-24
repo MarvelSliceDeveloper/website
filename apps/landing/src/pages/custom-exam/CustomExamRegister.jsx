@@ -398,6 +398,11 @@ export default function CustomExamRegister() {
       return;
     }
 
+    if (exam?.exam_end_time && getSyncedNow() >= new Date(exam.exam_end_time).getTime()) {
+      alert('Registrations are closed for this exam. The login window has ended.');
+      return;
+    }
+
     const errs = {};
     if (!firstName.trim()) errs.firstName = 'First name is required';
     if (!lastName.trim()) errs.lastName = 'Last name is required';

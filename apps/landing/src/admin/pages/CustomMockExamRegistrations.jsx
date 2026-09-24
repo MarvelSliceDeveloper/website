@@ -7,17 +7,20 @@ import {
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import PageShell from '../components/ui/PageShell';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
 
-// Shared CSV download via Blob (data-URI + encodeURI breaks on large
-// datasets and on cells containing '#', so use an object URL instead).
-function downloadCSV(filename, headers, rows) {
-  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+// Shared Excel (.xlsx) download via SheetJS + Blob object URL.
+function downloadExcel(filename, sheetName, headers, rows) {
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map((h) => ({ wch: Math.min(40, Math.max(12, String(h).length + 2)) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -36,6 +39,7 @@ export default function CustomMockExamRegistrations() {
   const [selectedExamId, setSelectedExamId] = useState(initialExamId);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState('newest'); // 'newest' | 'cgpa' | 'quiz' | 'name'
 
   // Modals
   const [selectedCandidate, setSelectedCandidate] = useState(null); // Detail Popup Modal
@@ -82,7 +86,7 @@ export default function CustomMockExamRegistrations() {
       try {
         const { data: subData } = await supabase
           .from('custom_mock_exam_submissions')
-          .select('custom_mock_exam_id, user_email, status, score, total_questions, tab_switch_count');
+          .select('custom_mock_exam_id, user_email, status, score, total_questions, correct_answers, wrong_answers, time_taken_seconds, category_scores, tab_switch_count');
 
         if (subData) {
           const map = {};
@@ -219,59 +223,125 @@ export default function CustomMockExamRegistrations() {
     },
   ];
 
-  // Export All CSV
-  function exportCSV() {
-    if (examFilteredRegistrations.length === 0) return;
-    const headers = ['Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Register / Roll No', 'Department', 'Degree', 'Year', '10th Mark', '12th Mark', 'CGPA', 'Address', 'Exam Title', 'Registration Date'];
-    const rows = examFilteredRegistrations.map(r => [
-      r.user_name || '',
-      r.user_email || '',
-      r.user_dob || '',
-      r.user_phone || '',
-      r.user_college || '',
-      r.user_reg_num || '',
-      r.user_department || '',
-      r.user_degree || '',
-      r.user_year || '',
-      r.user_10th_mark || '',
-      r.user_12th_mark || '',
-      r.user_cgpa || '',
-      r.user_address || '',
-      r.custom_mock_exams?.title || '',
-      r.created_at ? new Date(r.created_at).toLocaleString() : ''
-    ]);
-
-    downloadCSV(`custom_exam_candidates_${Date.now()}.csv`, headers, rows);
+  function getSub(reg) {
+    if (!reg?.user_email) return null;
+    return submissionsMap[`${reg.custom_mock_exam_id}_${reg.user_email.toLowerCase()}`] || null;
   }
 
-  // Export All PDF
+  function formatDuration(seconds) {
+    const s = Number(seconds) || 0;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
+  }
+
+  function subStatusLabel(sub) {
+    if (!sub) return 'Registered Only';
+    return sub.status === 'SUBMITTED' ? 'Completed' : 'In Progress';
+  }
+
+  function subScoreText(sub) {
+    if (!sub || sub.status !== 'SUBMITTED') return '—';
+    return `${sub.score ?? 0} / ${sub.total_questions ?? 0}`;
+  }
+
+  // Display order: newest (default), CGPA desc, quiz score desc, name A–Z.
+  // Missing values sort last. Exports follow the same order.
+  const sortedRegistrations = [...examFilteredRegistrations].sort((a, b) => {
+    if (sortKey === 'cgpa') {
+      const ca = a.user_cgpa != null && a.user_cgpa !== '' ? Number(a.user_cgpa) : -1;
+      const cb = b.user_cgpa != null && b.user_cgpa !== '' ? Number(b.user_cgpa) : -1;
+      return cb - ca;
+    }
+    if (sortKey === 'quiz') {
+      const sa = getSub(a);
+      const sb = getSub(b);
+      const qa = sa && sa.status === 'SUBMITTED' ? Number(sa.score) || 0 : -1;
+      const qb = sb && sb.status === 'SUBMITTED' ? Number(sb.score) || 0 : -1;
+      return qb - qa;
+    }
+    if (sortKey === 'name') {
+      return (a.user_name || '').localeCompare(b.user_name || '');
+    }
+    return 0; // 'newest' — already ordered by created_at desc from the query
+  });
+
+  // Export All Excel (.xlsx) — candidate profile + merged quiz result, in display order
+  function exportExcel() {
+    if (sortedRegistrations.length === 0) return;
+    const headers = ['S.No', 'Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Register / Roll No', 'Department', 'Degree', 'Year', '10th Mark (%)', '12th Mark (%)', 'CGPA', 'Exam Title', 'Attempt Status', 'Score', 'Total Questions', 'Correct', 'Wrong', 'Time Taken', 'Category Breakdown', 'Residential Address', 'Registration Date'];
+    const rows = sortedRegistrations.map((r, i) => {
+      const sub = getSub(r);
+      const catText = sub?.category_scores
+        ? Object.entries(sub.category_scores)
+            .map(([cat, st]) => `${cat}: ${st.correct || 0}/${st.total || 0} (${st.score ?? 0}pts)`)
+            .join(' | ')
+        : 'N/A';
+      return [
+        i + 1,
+        r.user_name || '',
+        r.user_email || '',
+        r.user_dob || '',
+        r.user_phone || '',
+        r.user_college || '',
+        r.user_reg_num || '',
+        r.user_department || '',
+        r.user_degree || '',
+        r.user_year || '',
+        r.user_10th_mark ?? '',
+        r.user_12th_mark ?? '',
+        r.user_cgpa ?? '',
+        r.custom_mock_exams?.title || '',
+        subStatusLabel(sub),
+        sub && sub.status === 'SUBMITTED' ? (sub.score ?? 0) : '',
+        sub?.total_questions ?? '',
+        sub?.correct_answers ?? '',
+        sub?.wrong_answers ?? '',
+        sub ? formatDuration(sub.time_taken_seconds) : '',
+        catText,
+        r.user_address || '',
+        r.created_at ? new Date(r.created_at).toLocaleString() : ''
+      ];
+    });
+
+    downloadExcel(`custom_exam_candidates_${Date.now()}.xlsx`, 'Candidates', headers, rows);
+  }
+
+  // Export All PDF — candidate profile + merged quiz result, in display order
   function exportPDF() {
-    if (examFilteredRegistrations.length === 0) return;
+    if (sortedRegistrations.length === 0) return;
     const doc = new jsPDF('landscape');
     doc.setFontSize(16);
     doc.text('Custom Mock Exam Registered Candidates Report', 14, 15);
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${examFilteredRegistrations.length}`, 14, 22);
+    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${sortedRegistrations.length}`, 14, 22);
 
-    const tableData = examFilteredRegistrations.map((r, i) => [
-      i + 1,
-      r.user_name || '',
-      r.user_email || '',
-      r.user_dob || '',
-      r.user_phone || '',
-      r.user_college || '',
-      r.user_reg_num || 'N/A',
-      r.user_department || '',
-      r.user_year || '',
-      r.custom_mock_exams?.title || ''
-    ]);
+    const tableData = sortedRegistrations.map((r, i) => {
+      const sub = getSub(r);
+      return [
+        i + 1,
+        r.user_name || '',
+        r.user_email || '',
+        r.user_phone || '',
+        r.user_college || '',
+        r.user_reg_num || 'N/A',
+        r.user_department || '',
+        r.user_degree || '',
+        r.user_10th_mark != null && r.user_10th_mark !== '' ? `${r.user_10th_mark}%` : 'N/A',
+        r.user_12th_mark != null && r.user_12th_mark !== '' ? `${r.user_12th_mark}%` : 'N/A',
+        r.user_cgpa ?? 'N/A',
+        r.custom_mock_exams?.title || '',
+        subStatusLabel(sub),
+        subScoreText(sub),
+        sub && sub.status === 'SUBMITTED' ? `${sub.correct_answers || 0}C / ${sub.wrong_answers || 0}W` : '—',
+        sub ? formatDuration(sub.time_taken_seconds) : '—'
+      ];
+    });
 
     autoTable(doc, {
       startY: 28,
-      head: [['#', 'Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Reg No', 'Department', 'Year', 'Exam']],
+      head: [['#', 'Name', 'Email', 'Phone', 'College', 'Reg No', 'Department', 'Degree', '10th', '12th', 'CGPA', 'Exam', 'Status', 'Score', 'C / W', 'Time']],
       body: tableData,
       theme: 'grid',
-      styles: { fontSize: 8 }
+      styles: { fontSize: 7 }
     });
 
     doc.save(`custom_exam_candidates_${Date.now()}.pdf`);
@@ -329,12 +399,34 @@ export default function CustomMockExamRegistrations() {
       styles: { fontSize: 9, cellPadding: 3 }
     });
 
+    // Merged quiz result for the attended exam
+    const sub = getSub(candidate);
+    const catText = sub?.category_scores
+      ? Object.entries(sub.category_scores)
+          .map(([cat, st]) => `${cat}: ${st.correct || 0}/${st.total || 0}`)
+          .join(' | ')
+      : 'N/A';
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 8,
+      head: [['Quiz Result', 'Detail', 'Quiz Result', 'Detail']],
+      body: [
+        ['Attempt Status', subStatusLabel(sub), 'Score', subScoreText(sub)],
+        ['Correct Answers', sub?.correct_answers ?? 'N/A', 'Wrong Answers', sub?.wrong_answers ?? 'N/A'],
+        ['Time Taken', sub ? formatDuration(sub.time_taken_seconds) : 'N/A', 'Tab Switches', sub?.tab_switch_count ?? 'N/A'],
+        ['Section Breakdown', catText, '', ''],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 3 }
+    });
+
     doc.save(`${(candidate.user_name || 'candidate').replace(/[^a-z0-9]/gi, '_')}_profile.pdf`);
   }
 
-  // Export Single Candidate CSV
-  function exportSingleCandidateCSV(candidate) {
+  // Export Single Candidate Excel (.xlsx) — profile + merged quiz result
+  function exportSingleCandidateExcel(candidate) {
     if (!candidate) return;
+    const sub = getSub(candidate);
     const headers = ['Field', 'Value'];
     const rows = [
       ['Candidate Name', candidate.user_name || ''],
@@ -346,15 +438,24 @@ export default function CustomMockExamRegistrations() {
       ['Department', candidate.user_department || ''],
       ['Degree', candidate.user_degree || ''],
       ['Year', candidate.user_year || ''],
-      ['10th Mark', candidate.user_10th_mark || ''],
-      ['12th Mark', candidate.user_12th_mark || ''],
-      ['CGPA', candidate.user_cgpa || ''],
-      ['Address', candidate.user_address || ''],
+      ['10th Mark (%)', candidate.user_10th_mark ?? ''],
+      ['12th Mark (%)', candidate.user_12th_mark ?? ''],
+      ['CGPA', candidate.user_cgpa ?? ''],
+      ['Residential Address', candidate.user_address || ''],
       ['Registered Exam', candidate.custom_mock_exams?.title || ''],
-      ['Registration Date', candidate.created_at ? new Date(candidate.created_at).toLocaleString() : '']
+      ['Registration Date', candidate.created_at ? new Date(candidate.created_at).toLocaleString() : ''],
+      ['Attempt Status', subStatusLabel(sub)],
+      ['Score', subScoreText(sub)],
+      ['Correct Answers', sub?.correct_answers ?? ''],
+      ['Wrong Answers', sub?.wrong_answers ?? ''],
+      ['Time Taken', sub ? formatDuration(sub.time_taken_seconds) : ''],
+      ['Tab Switches', sub?.tab_switch_count ?? ''],
+      ['Section Breakdown', sub?.category_scores
+        ? Object.entries(sub.category_scores).map(([cat, st]) => `${cat}: ${st.correct || 0}/${st.total || 0}`).join(' | ')
+        : 'N/A'],
     ];
 
-    downloadCSV(`${(candidate.user_name || 'candidate').replace(/[^a-z0-9]/gi, '_')}_details.csv`, headers, rows);
+    downloadExcel(`${(candidate.user_name || 'candidate').replace(/[^a-z0-9]/gi, '_')}_details.xlsx`, 'Candidate', headers, rows);
   }
 
   // Email Composer Opener
@@ -398,16 +499,16 @@ Marvel Slice LMS Team`;
   return (
     <PageShell
       title="Custom Exam Registered Candidates"
-      subtitle="Click any candidate row to view full profile dossier, download individual PDF/CSV reports, or send credentials via email."
+      subtitle="Click any candidate row to view full profile dossier, download individual PDF/Excel reports, or send credentials via email."
       actions={
         <>
           <button
             type="button"
-            onClick={exportCSV}
+            onClick={exportExcel}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
           >
             <FiDownload className="w-4 h-4 text-admin-600" />
-            Export CSV
+            Export Excel
           </button>
           <button
             type="button"
@@ -420,7 +521,7 @@ Marvel Slice LMS Team`;
         </>
       }
     >
-      <div className="bg-white border border-admin-200 rounded-xl p-4">
+      <div className="bg-white border border-admin-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Filter Exam:</label>
           <select
@@ -434,9 +535,22 @@ Marvel Slice LMS Team`;
             ))}
           </select>
         </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
+          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Order By:</label>
+          <select
+            value={sortKey}
+            onChange={e => setSortKey(e.target.value)}
+            className="h-9 px-3 pr-8 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 rounded-lg w-full sm:w-56 cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="cgpa">CGPA (High → Low)</option>
+            <option value="quiz">Quiz Score (High → Low)</option>
+            <option value="name">Name (A → Z)</option>
+          </select>
+        </div>
       </div>
 
-      {examFilteredRegistrations.length === 0 && !loading ? (
+      {sortedRegistrations.length === 0 && !loading ? (
         <div className="border border-admin-200 rounded-xl">
           <EmptyState
             icon={FiUsers}
@@ -447,7 +561,7 @@ Marvel Slice LMS Team`;
       ) : (
         <DataTable
           columns={columns}
-          data={examFilteredRegistrations}
+          data={sortedRegistrations}
           isLoading={loading}
           searchPlaceholder="Search by name, email, phone..."
           onRowClick={(reg) => setSelectedCandidate(reg)}
@@ -512,11 +626,11 @@ Marvel Slice LMS Team`;
 
                 <button
                   type="button"
-                  onClick={() => exportSingleCandidateCSV(selectedCandidate)}
+                  onClick={() => exportSingleCandidateExcel(selectedCandidate)}
                   className="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <FiDownload className="w-3.5 h-3.5" />
-                  <span>CSV / Excel</span>
+                  <span>Excel</span>
                 </button>
 
                 <button
