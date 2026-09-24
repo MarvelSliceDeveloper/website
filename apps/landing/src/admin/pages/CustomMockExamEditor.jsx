@@ -495,21 +495,6 @@ export default function CustomMockExamEditor() {
   }
 
   // Question manipulation helpers
-  function addQuestion() {
-    setQuestions(prev => [
-      ...prev,
-      {
-        id: `q-new-${Date.now()}`,
-        question_text: '',
-        options: ['', '', '', ''],
-        correct_option: 0,
-        explanation: '',
-        marks: 1,
-        category_name: examCategories[0] || 'General'
-      }
-    ]);
-  }
-
   function removeQuestion(index) {
     setQuestions(prev => prev.filter((_, i) => i !== index));
   }
@@ -888,7 +873,7 @@ export default function CustomMockExamEditor() {
                                 <span className="flex-1 truncate">
                                   {deg}
                                   {isCustom && (
-                                    <span className="ml-1.5 text-[10px] font-semibold text-admin-500 uppercase">custom</span>
+                                    <span className="ml-1.5 text-[10px] font-semibold text-admin-500">custom</span>
                                   )}
                                 </span>
                               </label>
@@ -979,7 +964,7 @@ export default function CustomMockExamEditor() {
               <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                    <label className="block text-xs font-bold tracking-wider text-slate-800">
                       🏷️ Question Sections / Categories
                     </label>
                     <p className="text-[11px] text-slate-500">Divide this exam into distinct categories (e.g., Quantitative Aptitude, Logical Reasoning, Technical).</p>
@@ -1049,15 +1034,6 @@ export default function CustomMockExamEditor() {
                     <FiUpload className="w-3.5 h-3.5" />
                     <span>Import JSON / CSV</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={addQuestion}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <FiPlus className="w-3.5 h-3.5" />
-                    <span>Add Question</span>
-                  </button>
                 </div>
               </div>
 
@@ -1085,7 +1061,7 @@ export default function CustomMockExamEditor() {
                               S{cIdx + 1}
                             </span>
                             <div>
-                              <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2">
+                              <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm tracking-wide flex items-center gap-2">
                                 <span>🏷️ Section: {catName}</span>
                                 <span className="text-[10px] font-bold text-brand-blue bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
                                   {sectionQuestions.length} Questions
@@ -1130,7 +1106,7 @@ export default function CustomMockExamEditor() {
                               return (
                                 <div key={q.id || idx} className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
                                   <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
-                                    <span className="text-xs font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                                    <span className="text-xs font-extrabold tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                       Question {idx + 1} of {questions.length}
                                     </span>
                                     <div className="flex flex-wrap items-center gap-3">
@@ -1169,7 +1145,7 @@ export default function CustomMockExamEditor() {
                                   </div>
 
                                   <div>
-                                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
                                       Question Statement <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
@@ -1183,7 +1159,7 @@ export default function CustomMockExamEditor() {
 
                                   {/* OPTIONS */}
                                   <div className="space-y-2">
-                                    <label className="block text-[11px] font-bold uppercase text-slate-600">
+                                    <label className="block text-[11px] font-bold text-slate-600">
                                       4 Options & Select Correct Answer <span className="text-red-500">*</span>
                                     </label>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1219,7 +1195,7 @@ export default function CustomMockExamEditor() {
                                   </div>
 
                                   <div>
-                                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
                                       Explanation (Optional)
                                     </label>
                                     <input
@@ -1271,7 +1247,7 @@ export default function CustomMockExamEditor() {
                   <div key={fb.id || idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-700">
-                        Feedback Question #{idx + 1} {idx < 2 && <span className="text-red-500 text-[10px] uppercase font-bold ml-1">(Mandatory)</span>}
+                        Feedback Question #{idx + 1} {idx < 2 && <span className="text-red-500 text-[10px] font-bold ml-1">(Mandatory)</span>}
                       </span>
                       <button
                         type="button"
@@ -1285,7 +1261,7 @@ export default function CustomMockExamEditor() {
                     <div className={fb.type === 'matrix' ? 'flex justify-end' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
                       {fb.type !== 'matrix' && (
                         <div className="sm:col-span-2">
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">
                             Question Prompt <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -1298,7 +1274,7 @@ export default function CustomMockExamEditor() {
                         </div>
                       )}
                       <div className={fb.type === 'matrix' ? 'w-full sm:w-1/3' : ''}>
-                        <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
                           Response Type
                         </label>
                         <select
@@ -1322,7 +1298,7 @@ export default function CustomMockExamEditor() {
                     {fb.type === 'matrix' && (
                       <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-4">
                         <div>
-                          <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">
                             Matrix Table Column Headers (Comma-separated)
                           </label>
                           <input
@@ -1339,7 +1315,7 @@ export default function CustomMockExamEditor() {
 
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <label className="block text-[11px] font-bold uppercase text-slate-600">
+                            <label className="block text-[11px] font-bold text-slate-600">
                               Statement Rows ({fb.matrix_rows?.length || 0})
                             </label>
                             <button
@@ -1455,7 +1431,7 @@ export default function CustomMockExamEditor() {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Exam Topic / Subject
                 </label>
                 <input
@@ -1469,7 +1445,7 @@ export default function CustomMockExamEditor() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Difficulty Level
                   </label>
                   <select
@@ -1484,7 +1460,7 @@ export default function CustomMockExamEditor() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Questions Count
                   </label>
                   <select
@@ -1508,7 +1484,7 @@ export default function CustomMockExamEditor() {
                 return (
                   <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      <span className="text-xs font-bold tracking-wider text-slate-700">
                         Even Split Plan ({plan.length} Sections)
                       </span>
                       {needsTopUp && (

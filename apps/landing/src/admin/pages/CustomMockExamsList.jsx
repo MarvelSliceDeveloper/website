@@ -241,7 +241,7 @@ export default function CustomMockExamsList() {
             <FiCheckSquare className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">Total Custom Exams</span>
+            <span className="text-[11px] font-semibold tracking-wider text-neutral-400 block">Total Custom Exams</span>
             <span className="text-lg font-bold text-neutral-900">{exams.length}</span>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function CustomMockExamsList() {
             <FiUsers className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">Active Links</span>
+            <span className="text-[11px] font-semibold tracking-wider text-neutral-400 block">Active Links</span>
             <span className="text-lg font-bold text-neutral-900">{exams.filter((e) => e.is_active).length} Active</span>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function CustomMockExamsList() {
             <FiLock className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">Access Model</span>
+            <span className="text-[11px] font-semibold tracking-wider text-neutral-400 block">Access Model</span>
             <span className="text-xs font-semibold text-neutral-800">Unique Link + Candidate Login</span>
           </div>
         </div>

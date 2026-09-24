@@ -17,7 +17,7 @@ function StatCard({ icon: Icon, label, value, sub, tint }) {
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">{label}</span>
+        <span className="text-[11px] font-semibold tracking-wider text-neutral-400 block">{label}</span>
         <span className="text-lg font-bold text-neutral-900">{value}</span>
         {sub && <span className="text-xs text-neutral-500 block">{sub}</span>}
       </div>
@@ -178,12 +178,12 @@ export default function CustomMockExamsOverallReportModal({ onClose }) {
                   <table className="admin-table min-w-[640px] w-full">
                     <thead>
                       <tr className="border-b border-admin-100 bg-brand-blue">
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">#</th>
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Exam Title</th>
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Registered</th>
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Attended</th>
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Attendance %</th>
-                        <th className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Avg Score %</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">#</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Exam Title</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Registered</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Attended</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Attendance %</th>
+                        <th className="text-left text-xs font-bold tracking-wider px-4 py-3.5 whitespace-nowrap text-white">Avg Score %</th>
                       </tr>
                     </thead>
                     <tbody>

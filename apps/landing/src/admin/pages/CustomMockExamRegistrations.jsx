@@ -523,7 +523,7 @@ Marvel Slice LMS Team`;
     >
       <div className="bg-white border border-admin-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Filter Exam:</label>
+          <label className="text-xs font-semibold text-neutral-600 shrink-0">Filter Exam:</label>
           <select
             value={selectedExamId}
             onChange={e => setSelectedExamId(e.target.value)}
@@ -536,7 +536,7 @@ Marvel Slice LMS Team`;
           </select>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
-          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Order By:</label>
+          <label className="text-xs font-semibold text-neutral-600 shrink-0">Order By:</label>
           <select
             value={sortKey}
             onChange={e => setSortKey(e.target.value)}
@@ -603,7 +603,7 @@ Marvel Slice LMS Team`;
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-slate-900">{selectedCandidate.user_name}</h2>
                   <p className="text-xs text-slate-500 font-medium">{selectedCandidate.user_degree || selectedCandidate.user_department || 'Candidate'} • {selectedCandidate.user_year || 'Registered'}</p>
-                  <span className="inline-block mt-1 px-2.5 py-0.5 bg-blue-50 text-brand-blue border border-blue-200 rounded-full text-[10px] font-bold uppercase">
+                  <span className="inline-block mt-1 px-2.5 py-0.5 bg-blue-50 text-brand-blue border border-blue-200 rounded-full text-[10px] font-bold">
                     {selectedCandidate.custom_mock_exams?.title || 'Custom Exam'}
                   </span>
                 </div>
@@ -612,7 +612,7 @@ Marvel Slice LMS Team`;
 
             {/* ACTION TOOLBAR: EXPORT PDF, EXPORT EXCEL, SEND EMAIL */}
             <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-2xl shrink-0">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider pl-1">Extract & Reply Actions:</span>
+              <span className="text-xs font-bold text-slate-700 tracking-wider pl-1">Extract & Reply Actions:</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -653,7 +653,7 @@ Marvel Slice LMS Team`;
               {/* LOGIN CREDENTIALS BOX */}
               <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-blue flex items-center gap-1.5">
+                  <span className="text-[11px] font-extrabold tracking-wider text-brand-blue flex items-center gap-1.5">
                     <FiShield className="w-4 h-4 text-brand-blue" />
                     Portal Login Credentials
                   </span>
@@ -663,7 +663,7 @@ Marvel Slice LMS Team`;
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-white p-3 rounded-xl border border-blue-100 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Username (Email):</span>
+                      <span className="text-[10px] font-bold text-slate-400 block">Username (Email):</span>
                       <span className="font-mono text-xs font-bold text-slate-900 truncate block max-w-[200px]">{selectedCandidate.user_email}</span>
                     </div>
                     <button
@@ -678,7 +678,7 @@ Marvel Slice LMS Team`;
 
                   <div className="bg-white p-3 rounded-xl border border-blue-100 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">Password (DOB):</span>
+                      <span className="text-[10px] font-bold text-slate-400 block">Password (DOB):</span>
                       <span className="font-mono text-xs font-bold text-brand-blue block">{selectedCandidate.user_dob || 'N/A'}</span>
                     </div>
                     <button
@@ -695,7 +695,7 @@ Marvel Slice LMS Team`;
 
               {/* ACADEMIC & INSTITUTION INFORMATION */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <span className="text-[11px] font-extrabold tracking-wider text-slate-800 flex items-center gap-1.5">
                   <FiBookOpen className="w-4 h-4 text-slate-600" />
                   Academic & Institution Information
                 </span>
@@ -726,22 +726,22 @@ Marvel Slice LMS Team`;
 
               {/* ACADEMIC MARKS & PERCENTAGES */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <span className="text-[11px] font-extrabold tracking-wider text-slate-800 flex items-center gap-1.5">
                   <FiAward className="w-4 h-4 text-emerald-600" />
                   Academic Marks & CGPA
                 </span>
 
                 <div className="grid grid-cols-3 gap-2.5 text-center">
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block">10th Mark / %</span>
+                    <span className="text-[10px] font-bold text-slate-400 block">10th Mark / %</span>
                     <span className="text-sm font-black text-slate-900">{selectedCandidate.user_10th_mark ? `${selectedCandidate.user_10th_mark}%` : 'N/A'}</span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block">12th / Diploma %</span>
+                    <span className="text-[10px] font-bold text-slate-400 block">12th / Diploma %</span>
                     <span className="text-sm font-black text-slate-900">{selectedCandidate.user_12th_mark ? `${selectedCandidate.user_12th_mark}%` : 'N/A'}</span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block">College CGPA</span>
+                    <span className="text-[10px] font-bold text-slate-400 block">College CGPA</span>
                     <span className="text-sm font-black text-brand-blue">{selectedCandidate.user_cgpa ? `${selectedCandidate.user_cgpa}` : 'N/A'}</span>
                   </div>
                 </div>
@@ -749,7 +749,7 @@ Marvel Slice LMS Team`;
 
               {/* CONTACT & PERSONAL DETAILS */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <span className="text-[11px] font-extrabold tracking-wider text-slate-800 flex items-center gap-1.5">
                   <FiUser className="w-4 h-4 text-slate-600" />
                   Contact & Personal Details
                 </span>
@@ -797,7 +797,7 @@ Marvel Slice LMS Team`;
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">To (Candidate Email):</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">To (Candidate Email):</label>
                 <input
                   type="text"
                   value={emailModalCandidate.user_email}
@@ -807,7 +807,7 @@ Marvel Slice LMS Team`;
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Subject:</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Subject:</label>
                 <input
                   type="text"
                   value={emailSubject}
@@ -817,7 +817,7 @@ Marvel Slice LMS Team`;
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Email Body Content:</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Email Body Content:</label>
                 <textarea
                   rows={8}
                   value={emailBody}

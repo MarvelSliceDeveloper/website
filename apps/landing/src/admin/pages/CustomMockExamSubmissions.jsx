@@ -492,7 +492,7 @@ export default function CustomMockExamSubmissions() {
     >
       <div className="bg-white border border-admin-200 rounded-xl p-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Filter Exam:</label>
+          <label className="text-xs font-semibold text-neutral-600 shrink-0">Filter Exam:</label>
           <select
             value={selectedExamId}
             onChange={e => setSelectedExamId(e.target.value)}
@@ -569,28 +569,28 @@ export default function CustomMockExamSubmissions() {
               {/* CANDIDATE ACADEMIC & CONTACT SUMMARY */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email & Phone</span>
+                  <span className="text-[10px] font-bold text-slate-400 tracking-wider block">Email & Phone</span>
                   <span className="text-xs font-bold text-slate-800 block truncate">{activeReviewModal.user_email}</span>
                   <span className="text-[11px] text-slate-600 font-mono block">{activeReviewModal.user_phone}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Academic Marks</span>
+                  <span className="text-[10px] font-bold text-slate-400 tracking-wider block">Academic Marks</span>
                   <span className="text-xs font-bold text-slate-800 block">10th: {activeReviewModal.user_10th_mark ? `${activeReviewModal.user_10th_mark}%` : 'N/A'}</span>
                   <span className="text-xs font-bold text-slate-800 block">12th: {activeReviewModal.user_12th_mark ? `${activeReviewModal.user_12th_mark}%` : 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">CGPA & Year</span>
+                  <span className="text-[10px] font-bold text-slate-400 tracking-wider block">CGPA & Year</span>
                   <span className="text-xs font-bold text-emerald-700 block">CGPA: {activeReviewModal.user_cgpa ?? 'N/A'}</span>
                   <span className="text-xs font-semibold text-slate-600 block">{activeReviewModal.user_year}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Score</span>
+                  <span className="text-[10px] font-bold text-slate-400 tracking-wider block">Total Score</span>
                   <span className="text-sm font-black text-emerald-600 block">{activeReviewModal.score ?? 0} Marks</span>
                   <span className="text-[11px] font-mono text-slate-500 block">Time: {formatTime(activeReviewModal.time_taken_seconds)}</span>
                 </div>
                 {activeReviewModal.user_address && (
                   <div className="col-span-2 sm:col-span-4 pt-2 border-t border-blue-100/80">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Residential Address:</span>
+                    <span className="text-[10px] font-bold text-slate-400 tracking-wider block">Residential Address:</span>
                     <span className="text-xs text-slate-700 font-medium">{activeReviewModal.user_address}</span>
                   </div>
                 )}
@@ -599,7 +599,7 @@ export default function CustomMockExamSubmissions() {
               {/* SECTION CATEGORY BREAKDOWN CARDS */}
               {activeReviewModal.category_scores && Object.keys(activeReviewModal.category_scores).length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                  <h4 className="text-xs font-extrabold tracking-wider text-slate-700">
                     Category Performance Breakdown
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -623,7 +623,7 @@ export default function CustomMockExamSubmissions() {
 
               {/* QUESTION BY QUESTION ITEMIZATION REVIEW */}
               <div className="space-y-4">
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center justify-between">
+                <h4 className="text-xs font-extrabold tracking-wider text-slate-700 flex items-center justify-between">
                   <span>Itemized Question Response Review</span>
                   <span className="text-[11px] text-slate-500 font-normal">
                     {reviewQuestions.length} Total Questions
@@ -661,7 +661,7 @@ export default function CustomMockExamSubmissions() {
                             <div className="flex items-center gap-2">
                               <span className="font-extrabold text-slate-900">Q{idx + 1}.</span>
                               {q.category_name && (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-200 uppercase">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-200">
                                   {q.category_name}
                                 </span>
                               )}
@@ -788,7 +788,7 @@ export default function CustomMockExamSubmissions() {
             <div className="space-y-4">
               {/* EXPORT FORMAT CHOICE */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label className="block text-xs font-bold tracking-wider text-slate-700">
                   1. Select Export Format
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -821,7 +821,7 @@ export default function CustomMockExamSubmissions() {
 
               {/* EXPORT DETAIL LEVEL CHOICE */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label className="block text-xs font-bold tracking-wider text-slate-700">
                   2. Select Report Scope & Detail Level
                 </label>
                 <div className="space-y-2">
@@ -894,7 +894,7 @@ export default function CustomMockExamSubmissions() {
             </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
               <div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
                   <FiMonitor className="w-3 h-3 text-amber-700" />
                   Tab Switch Audit Logs ({activeTabSwitchModal.tab_switch_count || activeTabSwitchModal.tab_switch_logs?.length || 0})
                 </span>
