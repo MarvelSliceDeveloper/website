@@ -190,7 +190,7 @@ export default function CustomMockExamReportModal({ exam, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="relative max-w-4xl w-full max-h-[90vh] my-auto">
+      <div className="relative bg-neutral-50 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-admin-200 my-auto">
         <button
           type="button"
           onClick={onClose}
@@ -199,8 +199,7 @@ export default function CustomMockExamReportModal({ exam, onClose }) {
         >
           <FiX className="w-5 h-5 text-red-600" />
         </button>
-      <div className="bg-neutral-50 rounded-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-admin-200 overflow-hidden">
-        <div className="p-5 border-b border-admin-200 bg-white flex items-start justify-between gap-3 shrink-0">
+        <div className="p-5 border-b border-admin-200 bg-white rounded-t-2xl flex items-start justify-between gap-3 shrink-0">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-neutral-900 text-base">Exam Report</h3>
@@ -312,7 +311,6 @@ export default function CustomMockExamReportModal({ exam, onClose }) {
             Export PDF
           </button>
         </div>
-      </div>
       </div>
     </div>
   );
