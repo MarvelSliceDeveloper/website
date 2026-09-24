@@ -1290,7 +1290,7 @@ export default function CustomExamTest() {
             {/* 76% QUESTION AREA */}
             <div className="flex-1 lg:w-[76%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
-            <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-4 sm:py-6 bg-white">
+            <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3.5 bg-white">
               {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
               {(() => {
                 const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
@@ -1302,7 +1302,7 @@ export default function CustomExamTest() {
                 const currentCat = examQuestions[currentQIndex]?.category_name || categoriesList[0];
 
                 return (
-                  <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-slate-200 no-scrollbar shrink-0">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-2 border-b border-slate-200 no-scrollbar shrink-0">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Sections:</span>
                     {categoriesList.map((cat, cIdx) => {
                       const catQCount = examQuestions.filter(q => (q.category_name || categoriesList[0]) === cat).length;
@@ -1329,7 +1329,7 @@ export default function CustomExamTest() {
                 );
               })()}
 
-              <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5 mb-4 sm:mb-6 shrink-0">
+              <div className="flex items-center justify-between border-b border-slate-200/80 pb-2 mb-2.5 shrink-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
                     Question {currentQIndex + 1} of {examQuestions.length}
@@ -1345,7 +1345,7 @@ export default function CustomExamTest() {
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-1 sm:px-2 py-1 space-y-4 sm:space-y-5 min-h-0 bg-white">
+              <div className="flex-1 overflow-y-auto px-1 sm:px-2 py-0.5 space-y-3 sm:space-y-4 min-h-0 bg-white">
                 <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-900 whitespace-pre-line">
                   {examQuestions[currentQIndex]?.question_text}
                 </p>
