@@ -13,33 +13,37 @@ import { emailService } from "../../services/email.service";
 
 // --- Zod Schemas ---
 
-export const CreateCourseSchema = z.object({
-  title: z.string().min(3).max(200),
-  description: z.string().min(10),
-  category: z.string().max(100).optional(),
-  categoryId: z.string().uuid().optional(),
-  tags: z.array(z.string()).optional(),
-  tagIds: z.array(z.string().uuid()).optional(),
-  learningObjectives: z.array(z.string()).optional(),
-  thumbnailUrl: z.string().url().optional(),
-  coverImageUrl: z.string().url().optional(),
-  isCatalog: z.boolean().optional().default(false),
-  price: z.number().int().min(0).nullable().optional(),
-});
+export const CreateCourseSchema = z
+  .object({
+    title: z.string().min(3).max(200),
+    description: z.string().min(10),
+    category: z.string().max(100).optional(),
+    categoryId: z.string().uuid().optional(),
+    tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+    tagIds: z.array(z.string().uuid()).max(20).optional(),
+    learningObjectives: z.array(z.string().trim().min(1).max(200)).max(30).optional(),
+    thumbnailUrl: z.string().url().optional(),
+    coverImageUrl: z.string().url().optional(),
+    isCatalog: z.boolean().optional().default(false),
+    price: z.number().int().min(0).nullable().optional(),
+  })
+  .strict();
 
-export const UpdateCourseSchema = z.object({
-  title: z.string().min(3).max(200).optional(),
-  description: z.string().min(10).optional(),
-  category: z.string().max(100).nullable().optional(),
-  categoryId: z.string().uuid().nullable().optional(),
-  tags: z.array(z.string()).optional(),
-  tagIds: z.array(z.string().uuid()).optional(),
-  learningObjectives: z.array(z.string()).optional(),
-  thumbnailUrl: z.string().url().nullable().optional(),
-  coverImageUrl: z.string().url().nullable().optional(),
-  isCatalog: z.boolean().optional(),
-  price: z.number().int().min(0).nullable().optional(),
-});
+export const UpdateCourseSchema = z
+  .object({
+    title: z.string().min(3).max(200).optional(),
+    description: z.string().min(10).optional(),
+    category: z.string().max(100).nullable().optional(),
+    categoryId: z.string().uuid().nullable().optional(),
+    tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+    tagIds: z.array(z.string().uuid()).max(20).optional(),
+    learningObjectives: z.array(z.string().trim().min(1).max(200)).max(30).optional(),
+    thumbnailUrl: z.string().url().nullable().optional(),
+    coverImageUrl: z.string().url().nullable().optional(),
+    isCatalog: z.boolean().optional(),
+    price: z.number().int().min(0).nullable().optional(),
+  })
+  .strict();
 
 // --- Helpers ---
 

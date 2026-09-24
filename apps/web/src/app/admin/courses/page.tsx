@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
+import { CreateCourseModal } from "@/components/admin/CreateCourseModal";
 import PublishChecklistModal, {
   type PublishChecklistItem,
   extractPublishChecklist,
@@ -78,6 +79,7 @@ function CoursesPageContent() {
   const [page, setPage] = useState(1);
   const [failedChecklist, setFailedChecklist] =
     useState<PublishChecklistItem[] | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const confirmDelete = useConfirmDialog();
   const queryClient = useQueryClient();
   const refreshCatalogue = () =>
@@ -325,11 +327,12 @@ function CoursesPageContent() {
         description={`${total} course${total !== 1 ? "s" : ""} total`}
         breadcrumbs={[{ label: "Courses", href: "/admin/courses" }]}
         action={
-          <Link href="/admin/courses/new">
-            <Button leftIcon={<IconPlus size={16} />}>
-              Add Course
-            </Button>
-          </Link>
+          <Button
+            leftIcon={<IconPlus size={16} />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Add Course
+          </Button>
         }
       />
 
@@ -364,9 +367,13 @@ function CoursesPageContent() {
           title="No courses yet"
           description="Add your first course to get started."
           action={
-            <Link href="/admin/courses/new" className="mt-4 inline-flex">
-              <Button leftIcon={<IconPlus size={16} />}>Add Course</Button>
-            </Link>
+            <Button
+              leftIcon={<IconPlus size={16} />}
+              onClick={() => setCreateOpen(true)}
+              className="mt-4"
+            >
+              Add Course
+            </Button>
           }
         />
       ) : (
@@ -384,6 +391,13 @@ function CoursesPageContent() {
       <PublishChecklistModal
         checklist={failedChecklist}
         onClose={() => setFailedChecklist(null)}
+      />
+      <CreateCourseModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => {
+          void coursesQuery.refetch();
+        }}
       />
     </div>
   );

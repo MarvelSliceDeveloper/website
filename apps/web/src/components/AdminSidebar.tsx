@@ -98,7 +98,7 @@ function ChildNavLink({
           className={`h-1.5 w-1.5 rounded-full transition-transform ${
             isChildActive
               ? "bg-primary scale-125 shadow-sm shadow-primary/40"
-              : "bg-slate-400/40 dark:bg-slate-600 group-hover:bg-slate-500"
+              : "bg-slate-500 group-hover:bg-primary"
           }`}
         />
         <span className="flex-1 truncate">{child.label}</span>
@@ -173,7 +173,7 @@ function NavGroup({
   return (
     <div className="space-y-1">
       <div
-        className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${
+        className={`flex items-center gap-2 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#4b5563] ${
           collapsed ? "hidden" : "flex"
         }`}
       >
@@ -253,7 +253,7 @@ function NavGroup({
                       <IconChevronDown
                         size={15}
                         stroke={1.8}
-                        className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
+                        className={`shrink-0 text-[#4b5563] transition-transform duration-200 ${
                           isExpanded ? "rotate-180" : ""
                         }`}
                       />
