@@ -1070,10 +1070,11 @@ export default function CustomExamTest() {
             </span>
           </div>
 
-          {/* SINGLE LINE: EXAM SUBMITTED SUCCESSFULLY! */}
+          {/* SINGLE LINE: EXAM SUBMITTED SUCCESSFULLY! WITH GREEN TICK */}
           <div className="space-y-1">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">
-              Exam Submitted Successfully! 🎉
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap inline-flex items-center justify-center gap-2">
+              <FiCheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-500 shrink-0" />
+              <span>Exam Submitted Successfully! 🎉</span>
             </h2>
             <p className="text-xs text-slate-600 max-w-md mx-auto">
               Great job, <span className="font-bold text-slate-900">{candidate?.user_name}</span>! Your exam attempt and feedback have been securely recorded.
