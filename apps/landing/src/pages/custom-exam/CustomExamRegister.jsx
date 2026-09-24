@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiCheckCircle, FiLock, FiClock, FiArrowRight, FiUser, FiCamera,
-  FiUpload, FiShield, FiAlertCircle, FiCheck, FiCalendar, FiMail, FiPhone
+  FiUpload, FiShield, FiAlertCircle, FiCheck, FiCalendar, FiMail, FiPhone,
+  FiMapPin, FiHome, FiPercent, FiBriefcase, FiStar, FiSend, FiAward, FiBookOpen, FiArrowUp
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -117,18 +118,18 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
   }
 
   return (
-    <div className="space-y-2 bg-slate-50/80 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <label className="block text-xs font-bold text-slate-800">
-          Candidate Identity Photo <span className="text-rose-500">*</span>
+        <label className="block text-[13px] font-bold text-slate-800">
+          Candidate Identity Photo <span className="text-red-500">*</span>
         </label>
         {!photoUrl && (
-          <div className="inline-flex p-0.5 bg-slate-200/70 rounded-lg">
+          <div className="inline-flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => { setMode('upload'); stopCamera(); }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                mode === 'upload' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                mode === 'upload' ? 'bg-white text-brand-blue border-brand-blue/40 shadow-xs' : 'bg-white text-slate-500 border-slate-200 hover:text-slate-800'
               }`}
             >
               <FiUpload className="w-3.5 h-3.5" />
@@ -137,8 +138,8 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
             <button
               type="button"
               onClick={() => { setMode('camera'); onPhotoCaptured(''); startCamera(); }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                mode === 'camera' ? 'bg-white text-brand-blue shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                mode === 'camera' ? 'bg-white text-brand-blue border-brand-blue/40 shadow-xs' : 'bg-white text-slate-500 border-slate-200 hover:text-slate-800'
               }`}
             >
               <FiCamera className="w-3.5 h-3.5" />
@@ -254,14 +255,14 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
             onChange={handleFileUpload}
             className="hidden"
           />
-          <div className="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
-            <FiUpload className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
+            <FiArrowUp className="w-5 h-5" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-800">
+            <p className="text-sm font-bold text-slate-800">
               Drag & drop photo here, or <span className="text-brand-blue underline">browse</span>
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               Supports JPG, PNG or WEBP (Max 5MB)
             </p>
           </div>
@@ -273,8 +274,51 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
   );
 }
 
-export default function CustomExamRegister() {
-  const { slug } = useParams();
+// Shared field styles matching the reference registration design
+const fieldInputCls =
+  'w-full h-11 pl-10 pr-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium';
+const fieldSelectCls =
+  'w-full h-11 pl-10 pr-8 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium appearance-none cursor-pointer';
+
+function Field({ label, error, children, className = '' }) {
+  return (
+    <div className={className}>
+      <label className="block text-[13px] font-bold text-slate-800 mb-1.5">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      {children}
+      {error && <p className="text-[11px] text-rose-600 font-semibold mt-1">{error}</p>}
+    </div>
+  );
+}
+
+function FieldIcon({ children }) {
+  return (
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none [&>svg]:w-[18px] [&>svg]:h-[18px]">
+      {children}
+    </span>
+  );
+}
+
+function SectionHead({ icon, title, subtitle, tint }) {
+  const tones =
+    tint === 'amber'
+      ? { bar: 'bg-orange-50/80', badge: 'bg-orange-100 text-orange-500', text: 'text-orange-600' }
+      : { bar: 'bg-blue-50/80', badge: 'bg-blue-100 text-brand-blue', text: 'text-brand-blue' };
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${tones.bar}`}>
+      <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${tones.badge}`}>
+        {icon}
+      </span>
+      <span>
+        <span className={`block text-[15px] font-extrabold leading-tight ${tones.text}`}>{title}</span>
+        <span className="block text-xs text-slate-500 font-medium">{subtitle}</span>
+      </span>
+    </div>
+  );
+}
+
+export default function CustomExamRegister() {  const { slug } = useParams();
   const navigate = useNavigate();
   const { data: settings } = useSiteSettings();
 
@@ -500,15 +544,15 @@ export default function CustomExamRegister() {
       <Header />
 
       <main className="flex-1 py-6 sm:py-8 px-4 flex flex-col justify-center items-center">
-        <div className="max-w-2xl w-full mx-auto">
+        <div className="max-w-3xl w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 flex flex-col max-h-[80vh] sm:max-h-[75vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 py-3 px-5 sm:py-3.5 sm:px-6 border-b border-slate-300 text-center shrink-0 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-2 shadow-2xs">
-              <h1 className="text-lg sm:text-xl font-black text-brand-blue tracking-tight">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200/80 flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden">
+            <div className="text-center shrink-0 mb-4">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Candidate Exam Registration
               </h1>
-              <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5">
-                Fill in your details to register for <span className="font-semibold text-slate-800">{exam?.title || 'Mock Exam'}</span>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                Fill in your details to register for <span className="font-bold text-brand-blue">{exam?.title || 'Mock Exam'}</span>
               </p>
             </div>
 
@@ -564,77 +608,72 @@ export default function CustomExamRegister() {
                 <div className="flex-1 overflow-y-auto pr-2 space-y-5">
 
                   {/* SECTION ABOVE PHOTO: PERSONAL DETAILS */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-brand-blue border-b border-slate-100 pb-1">
-                      Personal Details
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          First Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={e => setFirstName(e.target.value)}
-                          placeholder="Enter first name"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.firstName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.firstName}</p>}
-                      </div>
+                  <div className="space-y-4">
+                    <SectionHead
+                      icon={<FiUser className="w-5 h-5" />}
+                      title="Personal Details"
+                      subtitle="Enter your basic information to get started"
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+                      <Field label="First Name" error={formErrors.firstName}>
+                        <div className="relative">
+                          <FieldIcon><FiUser /></FieldIcon>
+                          <input
+                            type="text"
+                            value={firstName}
+                            onChange={e => setFirstName(e.target.value)}
+                            placeholder="Enter your first name"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Last Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={lastName}
-                          onChange={e => setLastName(e.target.value)}
-                          placeholder="Enter last name"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.lastName && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.lastName}</p>}
-                      </div>
+                      <Field label="Last Name" error={formErrors.lastName}>
+                        <div className="relative">
+                          <FieldIcon><FiUser /></FieldIcon>
+                          <input
+                            type="text"
+                            value={lastName}
+                            onChange={e => setLastName(e.target.value)}
+                            placeholder="Enter your last name"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Email Address <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={userEmail}
-                          onChange={e => setUserEmail(e.target.value)}
-                          placeholder="name@example.com"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.email && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.email}</p>}
-                      </div>
+                      <Field label="Email Address" error={formErrors.email}>
+                        <div className="relative">
+                          <FieldIcon><FiMail /></FieldIcon>
+                          <input
+                            type="email"
+                            value={userEmail}
+                            onChange={e => setUserEmail(e.target.value)}
+                            placeholder="name@example.com"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Phone Number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          value={userPhone}
-                          onChange={e => setUserPhone(e.target.value)}
-                          placeholder="+91 98765 43210"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.phone && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.phone}</p>}
-                      </div>
+                      <Field label="Phone Number" error={formErrors.phone}>
+                        <div className="relative">
+                          <FieldIcon><FiPhone /></FieldIcon>
+                          <input
+                            type="tel"
+                            value={userPhone}
+                            onChange={e => setUserPhone(e.target.value)}
+                            placeholder="+91 98765 43210"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Date of Birth <span className="text-red-500">*</span>
-                        </label>
+                      <Field label="Date of Birth" error={formErrors.dob}>
                         <div className="relative flex items-center">
-                          <FiCalendar className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none z-10" />
+                          <FieldIcon><FiCalendar /></FieldIcon>
                           <input
                             type="date"
                             value={userDob}
@@ -642,26 +681,24 @@ export default function CustomExamRegister() {
                             onClick={e => { try { e.target.showPicker?.(); } catch (err) {} }}
                             required
                             style={{ colorScheme: 'light' }}
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                            className={`${fieldInputCls} font-bold cursor-pointer [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:left-2 [&::-webkit-calendar-picker-indicator]:w-6 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                           />
                         </div>
-                        {formErrors.dob && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.dob}</p>}
-                      </div>
+                      </Field>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Full Residential Address <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={userAddress}
-                          onChange={e => setUserAddress(e.target.value)}
-                          placeholder="Street, City, State & Pincode"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.address && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.address}</p>}
-                      </div>
+                      <Field label="Full Residential Address" error={formErrors.address}>
+                        <div className="relative">
+                          <FieldIcon><FiMapPin /></FieldIcon>
+                          <input
+                            type="text"
+                            value={userAddress}
+                            onChange={e => setUserAddress(e.target.value)}
+                            placeholder="Street, City, State & Pincode"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
                     </div>
                   </div>
 
@@ -680,232 +717,227 @@ export default function CustomExamRegister() {
                   </div>
 
                   {/* SECTION BELOW PHOTO: EDUCATIONAL DETAILS */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-brand-blue border-b border-slate-100 pb-1">
-                      Educational Details
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      
+                  <div className="space-y-4">
+                    <SectionHead
+                      tint="amber"
+                      icon={<FiAward className="w-5 h-5" />}
+                      title="Educational Details"
+                      subtitle="Enter your academic information"
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+
                       {/* 10th School Name & Mark */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          10th School Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={user10thSchool}
-                          onChange={e => setUser10thSchool(e.target.value)}
-                          placeholder="e.g. Govt Higher Sec School"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.user10thSchool && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user10thSchool}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          10th Mark (%) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          value={user10thMark}
-                          onChange={e => setUser10thMark(e.target.value)}
-                          placeholder="e.g. 88.5"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.user10thMark && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user10thMark}</p>}
-                      </div>
-
-                      {/* 12th School Name & Mark */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          12th / Diploma School Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={user12thSchool}
-                          onChange={e => setUser12thSchool(e.target.value)}
-                          placeholder="e.g. St. Joseph Higher Sec School"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.user12thSchool && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user12thSchool}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          12th / Diploma Mark (%) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          value={user12thMark}
-                          onChange={e => setUser12thMark(e.target.value)}
-                          placeholder="e.g. 92.0"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.user12thMark && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user12thMark}</p>}
-                      </div>
-
-                      {/* College Name & Register / Roll Number */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          College / Institute Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={userCollege}
-                          onChange={e => setUserCollege(e.target.value)}
-                          placeholder="e.g. Marvel Institute of Technology"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          College Register / Roll Number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={userRegNum}
-                          onChange={e => setUserRegNum(e.target.value)}
-                          placeholder="e.g. 711221104015"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 uppercase"
-                        />
-                        {formErrors.regNum && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.regNum}</p>}
-                      </div>
-
-                      {/* Degree Selection */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Degree / Qualification <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={userDegree}
-                          onChange={e => setUserDegree(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:bg-white"
-                        >
-                          {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
-                            <option key={idx} value={deg}>{deg}</option>
-                          ))}
-                          <option value="Other">Other Degree</option>
-                        </select>
-                      </div>
-
-                      {userDegree === 'Other' && (
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Specify Degree <span className="text-red-500">*</span>
-                          </label>
+                      <Field label="10th School Name" error={formErrors.user10thSchool}>
+                        <div className="relative">
+                          <FieldIcon><FiHome /></FieldIcon>
                           <input
                             type="text"
-                            value={customDegree}
-                            onChange={e => setCustomDegree(e.target.value)}
-                            placeholder="e.g. B.E (Robotics), B.Tech..."
+                            value={user10thSchool}
+                            onChange={e => setUser10thSchool(e.target.value)}
+                            placeholder="e.g. Govt Higher Sec School"
                             required
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                            className={fieldInputCls}
                           />
-                          {formErrors.customDegree && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDegree}</p>}
                         </div>
+                      </Field>
+
+                      <Field label="10th Mark (%)" error={formErrors.user10thMark}>
+                        <div className="relative">
+                          <FieldIcon><FiPercent /></FieldIcon>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={user10thMark}
+                            onChange={e => setUser10thMark(e.target.value)}
+                            placeholder="e.g. 88.5"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
+
+                      {/* 12th School Name & Mark */}
+                      <Field label="12th / Diploma School Name" error={formErrors.user12thSchool}>
+                        <div className="relative">
+                          <FieldIcon><FiHome /></FieldIcon>
+                          <input
+                            type="text"
+                            value={user12thSchool}
+                            onChange={e => setUser12thSchool(e.target.value)}
+                            placeholder="e.g. St. Joseph Higher Sec School"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
+
+                      <Field label="12th / Diploma Mark (%)" error={formErrors.user12thMark}>
+                        <div className="relative">
+                          <FieldIcon><FiPercent /></FieldIcon>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={user12thMark}
+                            onChange={e => setUser12thMark(e.target.value)}
+                            placeholder="e.g. 92.0"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
+
+                      {/* College Name & Register / Roll Number */}
+                      <Field label="College / Institute Name" error={formErrors.college}>
+                        <div className="relative">
+                          <FieldIcon><FiBookOpen /></FieldIcon>
+                          <input
+                            type="text"
+                            value={userCollege}
+                            onChange={e => setUserCollege(e.target.value)}
+                            placeholder="e.g. Marvel Institute of Technology"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
+
+                      <Field label="College Register / Roll Number" error={formErrors.regNum}>
+                        <div className="relative">
+                          <FieldIcon><FiUser /></FieldIcon>
+                          <input
+                            type="text"
+                            value={userRegNum}
+                            onChange={e => setUserRegNum(e.target.value)}
+                            placeholder="e.g. 711221104015"
+                            required
+                            className={`${fieldInputCls} uppercase`}
+                          />
+                        </div>
+                      </Field>
+
+                      {/* Degree Selection */}
+                      <Field label="Degree / Qualification" error={undefined} className={userDegree === 'Other' ? '' : 'sm:col-span-2'}>
+                        <div className="relative">
+                          <FieldIcon><FiAward /></FieldIcon>
+                          <select
+                            value={userDegree}
+                            onChange={e => setUserDegree(e.target.value)}
+                            className={fieldSelectCls}
+                          >
+                            {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
+                              <option key={idx} value={deg}>{deg}</option>
+                            ))}
+                            <option value="Other">Other Degree</option>
+                          </select>
+                        </div>
+                      </Field>
+
+                      {userDegree === 'Other' && (
+                        <Field label="Specify Degree" error={formErrors.customDegree}>
+                          <div className="relative">
+                            <FieldIcon><FiAward /></FieldIcon>
+                            <input
+                              type="text"
+                              value={customDegree}
+                              onChange={e => setCustomDegree(e.target.value)}
+                              placeholder="e.g. B.E (Robotics), B.Tech..."
+                              required
+                              className={fieldInputCls}
+                            />
+                          </div>
+                        </Field>
                       )}
+                    </div>
 
-                      {/* Department */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Department <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={userDept}
-                          onChange={e => setUserDept(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                        >
-                          <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                          <option value="Information Technology">Information Technology</option>
-                          <option value="Electronics & Communication">Electronics & Communication</option>
-                          <option value="Electrical Engineering">Electrical Engineering</option>
-                          <option value="Mechanical Engineering">Mechanical Engineering</option>
-                          <option value="Commerce & Finance">Commerce & Finance</option>
-                          <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
+                    {/* Department / Year / CGPA row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4">
+                      <Field label="Department" error={undefined}>
+                        <div className="relative">
+                          <FieldIcon><FiBriefcase /></FieldIcon>
+                          <select
+                            value={userDept}
+                            onChange={e => setUserDept(e.target.value)}
+                            className={fieldSelectCls}
+                          >
+                            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Communication">Electronics & Communication</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Commerce & Finance">Commerce & Finance</option>
+                            <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </Field>
 
-                      {userDept === 'Other' && (
-                        <div className="sm:col-span-2">
-                          <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Specify Department <span className="text-red-500">*</span>
-                          </label>
+                      <Field label="Year of Study" error={undefined}>
+                        <div className="relative">
+                          <FieldIcon><FiCalendar /></FieldIcon>
+                          <select
+                            value={userYear}
+                            onChange={e => setUserYear(e.target.value)}
+                            className={fieldSelectCls}
+                          >
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                            <option value="Post Graduate">Post Graduate</option>
+                          </select>
+                        </div>
+                      </Field>
+
+                      <Field label="Current College CGPA" error={formErrors.cgpa}>
+                        <div className="relative">
+                          <FieldIcon><FiStar /></FieldIcon>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="10"
+                            value={userCgpa}
+                            onChange={e => setUserCgpa(e.target.value)}
+                            placeholder="e.g. 7.5"
+                            required
+                            className={fieldInputCls}
+                          />
+                        </div>
+                      </Field>
+                    </div>
+
+                    {userDept === 'Other' && (
+                      <Field label="Specify Department" error={formErrors.customDept}>
+                        <div className="relative">
+                          <FieldIcon><FiBriefcase /></FieldIcon>
                           <input
                             type="text"
                             value={customDept}
                             onChange={e => setCustomDept(e.target.value)}
                             placeholder="Enter your department"
                             required
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                            className={fieldInputCls}
                           />
-                          {formErrors.customDept && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.customDept}</p>}
                         </div>
-                      )}
-
-                      {/* Year of Study */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Year of Study <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={userYear}
-                          onChange={e => setUserYear(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-                        >
-                          <option value="1st Year">1st Year</option>
-                          <option value="2nd Year">2nd Year</option>
-                          <option value="3rd Year">3rd Year</option>
-                          <option value="4th Year">4th Year</option>
-                          <option value="Post Graduate">Post Graduate</option>
-                        </select>
-                      </div>
-
-                      {/* Current CGPA */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Current College CGPA <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="10"
-                          value={userCgpa}
-                          onChange={e => setUserCgpa(e.target.value)}
-                          placeholder="e.g. 8.5"
-                          required
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                        />
-                        {formErrors.cgpa && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.cgpa}</p>}
-                      </div>
-                    </div>
+                      </Field>
+                    )}
                   </div>
 
                 </div>
 
-                {/* STICKY SUBMIT FOOTER AT BOTTOM OF CARD WITH SILVER BG */}
-                <div className="py-2.5 px-4 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 border-t border-slate-300 flex justify-center shrink-0 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 mt-3 shadow-2xs">
+                {/* FULL-WIDTH SUBMIT */}
+                <div className="pt-1 shrink-0">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-8 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+                    className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm sm:text-base rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-50"
                   >
-                    <span>{submitting ? 'Submitting...' : 'Submit'}</span>
+                    <FiSend className="w-4 h-4" />
+                    <span>{submitting ? 'Submitting...' : 'Submit Registration'}</span>
                   </button>
                 </div>
               </form>
