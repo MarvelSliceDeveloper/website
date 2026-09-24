@@ -951,15 +951,14 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
                 </div>
 
-                {/* FULL-WIDTH SUBMIT */}
-                <div className="pt-1 shrink-0">
+                {/* SUBMIT */}
+                <div className="pt-1 shrink-0 flex justify-center">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm sm:text-base rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-50"
+                    className="px-10 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm sm:text-base rounded-2xl shadow-md transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50"
                   >
-                    <FiSend className="w-4 h-4" />
-                    <span>{submitting ? 'Submitting...' : 'Submit Registration'}</span>
+                    <span>{submitting ? 'Submitting...' : 'Submit'}</span>
                   </button>
                 </div>
               </form>
