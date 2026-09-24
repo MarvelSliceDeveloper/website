@@ -299,6 +299,9 @@ export default function CustomExamTest() {
     setExamQuestions(questions);
 
     // Check existing DB submission status
+    let dbDraftAnswers = null;
+    let dbDraftVisited = null;
+
     if (currentExam.id && !currentExam.id.startsWith('demo-') && authCand?.user_email) {
       const { data: existingSub } = await supabase
         .from('custom_mock_exam_submissions')
@@ -317,9 +320,9 @@ export default function CustomExamTest() {
         hasRestoredSessionRef.current = true;
         setLoading(false);
         return;
-      } else if (existingSub && existingSub.status === 'DRAFT' && existingSub.answers) {
-        setUserAnswers(existingSub.answers || {});
-        if (existingSub.visited_questions) setVisitedQuestions(existingSub.visited_questions);
+      } else if (existingSub && existingSub.status === 'DRAFT') {
+        dbDraftAnswers = existingSub.answers || null;
+        dbDraftVisited = existingSub.visited_questions || null;
       }
     }
 
@@ -348,8 +351,8 @@ export default function CustomExamTest() {
     let cachedSession = null;
     try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
 
-    if (cachedSession && (cachedSession.activeStep === 'QUIZ' || cachedSession.activeStep === 'FEEDBACK' || cachedSession.activeStep === 'REVIEW_MARKED')) {
-      restoreSessionFromCache(currentExam, questions);
+    if (cachedSession || dbDraftAnswers) {
+      restoreSessionFromCache(currentExam, questions, dbDraftAnswers, dbDraftVisited);
       hasRestoredSessionRef.current = true;
       setLoading(false);
       return;
@@ -365,7 +368,7 @@ export default function CustomExamTest() {
     }
 
     // Restore cached exam session if page was refreshed during active exam
-    restoreSessionFromCache(currentExam, questions);
+    restoreSessionFromCache(currentExam, questions, dbDraftAnswers, dbDraftVisited);
     hasRestoredSessionRef.current = true;
     setLoading(false);
   }
@@ -418,25 +421,34 @@ export default function CustomExamTest() {
     autoSaveDraftToSupabase({}, initialVisited, fullExamSecs);
   }
 
-  function restoreSessionFromCache(currentExam, questions) {
+  function restoreSessionFromCache(currentExam, questions, dbDraftAnswers, dbDraftVisited) {
     let fullExamSecs = (currentExam.time_limit_mins || 20) * 60;
 
     try {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
-      if (!raw) {
+      const cached = raw ? JSON.parse(raw) : null;
+
+      // Merge DB draft and localStorage draft so filled options are never lost
+      const mergedAnswers = {
+        ...(dbDraftAnswers || {}),
+        ...(cached?.userAnswers || {})
+      };
+
+      const mergedVisited = {
+        ...(dbDraftVisited || {}),
+        ...(cached?.visitedQuestions || {})
+      };
+
+      setUserAnswers(mergedAnswers);
+      setVisitedQuestions(mergedVisited);
+
+      if (!cached && !dbDraftAnswers) {
         setTimeLeftSeconds(fullExamSecs);
         setActiveStep('INSTRUCTIONS');
         return;
       }
 
-      const cached = JSON.parse(raw);
-      if (!cached || !cached.activeStep || cached.activeStep === 'INSTRUCTIONS') {
-        setTimeLeftSeconds(fullExamSecs);
-        setActiveStep('INSTRUCTIONS');
-        return;
-      }
-
-      if (cached.activeStep === 'SUBMITTED') {
+      if (cached && cached.activeStep === 'SUBMITTED') {
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         setTimeLeftSeconds(fullExamSecs);
         setActiveStep('INSTRUCTIONS');
@@ -445,22 +457,20 @@ export default function CustomExamTest() {
 
       // Calculate exact remaining time based on exam start timestamp
       let remainingSecs = fullExamSecs;
-      if (cached.examStartedAtMs) {
+      if (cached?.examStartedAtMs) {
         const elapsedSecs = Math.floor((Date.now() - cached.examStartedAtMs) / 1000);
         remainingSecs = Math.max(0, fullExamSecs - elapsedSecs);
-      } else if (cached.timeLeftSeconds !== undefined && cached.savedAtTimestampMs) {
+      } else if (cached?.timeLeftSeconds !== undefined && cached?.savedAtTimestampMs) {
         const elapsedSecs = Math.floor((Date.now() - cached.savedAtTimestampMs) / 1000);
         remainingSecs = Math.max(0, cached.timeLeftSeconds - elapsedSecs);
       }
 
-      if (cached.examStartedAtMs) setExamStartedAtMs(cached.examStartedAtMs);
-      if (cached.userAnswers) setUserAnswers(cached.userAnswers);
-      if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
-      if (cached.visitedQuestions) setVisitedQuestions(cached.visitedQuestions);
-      if (cached.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
-      if (cached.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
-      if (cached.tabSwitchCount !== undefined) setTabSwitchCount(cached.tabSwitchCount);
-      if (cached.tabSwitchLogs) setTabSwitchLogs(cached.tabSwitchLogs);
+      if (cached?.examStartedAtMs) setExamStartedAtMs(cached.examStartedAtMs);
+      if (cached?.markedForReview) setMarkedForReview(cached.markedForReview);
+      if (cached?.feedbackAnswers) setFeedbackAnswers(cached.feedbackAnswers);
+      if (cached?.currentQIndex !== undefined) setCurrentQIndex(cached.currentQIndex);
+      if (cached?.tabSwitchCount !== undefined) setTabSwitchCount(cached.tabSwitchCount);
+      if (cached?.tabSwitchLogs) setTabSwitchLogs(cached.tabSwitchLogs);
 
       if (remainingSecs > 0) {
         setTimeLeftSeconds(remainingSecs);
@@ -667,6 +677,26 @@ export default function CustomExamTest() {
     };
   }, []);
 
+  function saveImmediateSession(answers, visited, index) {
+    const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
+    const sessionData = {
+      activeStep: 'QUIZ',
+      currentQIndex: index !== undefined ? index : currentQIndex,
+      userAnswers: answers || userAnswers,
+      markedForReview,
+      visitedQuestions: visited || visitedQuestions,
+      feedbackAnswers,
+      timeLeftSeconds,
+      examStartedAtMs: examStartedAtMs || Date.now(),
+      tabSwitchCount,
+      tabSwitchLogs,
+      savedAtTimestampMs: Date.now()
+    };
+    try {
+      localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
+    } catch (e) {}
+  }
+
   function handleOptionSelect(qId, optIdx) {
     setUserAnswers(prev => {
       let updated;
@@ -676,9 +706,24 @@ export default function CustomExamTest() {
       } else {
         updated = { ...prev, [qId]: optIdx };
       }
-      autoSaveDraftToSupabase(updated, visitedQuestions, timeLeftSeconds);
+      const updatedVisited = { ...visitedQuestions, [qId]: true };
+      setVisitedQuestions(updatedVisited);
+      saveImmediateSession(updated, updatedVisited, currentQIndex);
+      autoSaveDraftToSupabase(updated, updatedVisited, timeLeftSeconds);
       return updated;
     });
+  }
+
+  function handleSaveAndNext() {
+    const qId = examQuestions[currentQIndex]?.id;
+    const nextIdx = Math.min(currentQIndex + 1, examQuestions.length - 1);
+    const updatedVisited = qId ? { ...visitedQuestions, [qId]: true } : visitedQuestions;
+    if (qId && !visitedQuestions[qId]) {
+      setVisitedQuestions(updatedVisited);
+    }
+    saveImmediateSession(userAnswers, updatedVisited, nextIdx);
+    autoSaveDraftToSupabase(userAnswers, updatedVisited, timeLeftSeconds);
+    setCurrentQIndex(nextIdx);
   }
 
   function triggerFeedbackOrSubmit() {
@@ -1774,7 +1819,7 @@ export default function CustomExamTest() {
                     <button
                       type="button"
                       disabled={currentQIndex === examQuestions.length - 1}
-                      onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
+                      onClick={handleSaveAndNext}
                       className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-r-full bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] sm:text-xs disabled:opacity-40 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
                     >
                       Save & Next
