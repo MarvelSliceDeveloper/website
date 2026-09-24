@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FiArrowLeft, FiSave, FiPlus, FiTrash2, FiClock, FiHelpCircle,
   FiCheckCircle, FiAlertCircle, FiFileText, FiList, FiMessageSquare,
-  FiUpload, FiDownload, FiCode, FiX, FiCheck
+  FiUpload, FiDownload, FiCode, FiX, FiCheck, FiChevronDown, FiSearch
 } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi2';
 import { supabase } from '../../lib/supabaseClient';
@@ -68,6 +68,30 @@ export default function CustomMockExamEditor() {
 
   const [allowedDegrees, setAllowedDegrees] = useState(DEFAULT_DEGREES);
   const [newDegreeInput, setNewDegreeInput] = useState('');
+  const [degreeOpen, setDegreeOpen] = useState(false);
+  const [degreeSearch, setDegreeSearch] = useState('');
+  const degreeRef = useRef(null);
+
+  useEffect(() => {
+    if (!degreeOpen) return;
+    function handleClickOutside(e) {
+      if (degreeRef.current && !degreeRef.current.contains(e.target)) setDegreeOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [degreeOpen]);
+
+  function toggleDegree(deg) {
+    setAllowedDegrees((prev) => (prev.includes(deg) ? prev.filter((d) => d !== deg) : [...prev, deg]));
+  }
+
+  function addCustomDegree() {
+    const val = newDegreeInput.trim();
+    if (val && !allowedDegrees.includes(val)) {
+      setAllowedDegrees((prev) => [...prev, val]);
+    }
+    setNewDegreeInput('');
+  }
   const [examCategories, setExamCategories] = useState(DEFAULT_CATEGORIES);
   const [newCategoryInput, setNewCategoryInput] = useState('');
 
@@ -309,19 +333,23 @@ export default function CustomMockExamEditor() {
 
     for (let fIdx = 0; fIdx < feedbackQuestions.length; fIdx++) {
       const fb = feedbackQuestions[fIdx];
-      if (!fb || !fb.question_text || !fb.question_text.trim()) {
-        showAlertModal(
-          'Feedback Prompt Blank',
-          `Candidate Feedback Question #${fIdx + 1} prompt cannot be empty.`,
-          'error'
-        );
-        return false;
-      }
       if (fb.type === 'matrix') {
+        if (!fb.question_text || !fb.question_text.trim()) {
+          fb.question_text = 'Please choose the best answer for each statement:';
+        }
         if (!Array.isArray(fb.matrix_rows) || fb.matrix_rows.length === 0 || fb.matrix_rows.some(r => !r || !r.trim())) {
           showAlertModal(
             'Matrix Statement Blank',
             `Candidate Feedback Question #${fIdx + 1} (Likert Matrix Table) must have valid non-empty statement rows.`,
+            'error'
+          );
+          return false;
+        }
+      } else {
+        if (!fb || !fb.question_text || !fb.question_text.trim()) {
+          showAlertModal(
+            'Feedback Prompt Blank',
+            `Candidate Feedback Question #${fIdx + 1} prompt cannot be empty.`,
             'error'
           );
           return false;
@@ -733,90 +761,135 @@ export default function CustomMockExamEditor() {
                 </FormRow>
               </div>
 
-              {/* ALLOWED DEGREES CONFIGURATION CARD */}
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
-                      🎓 Allowed Candidate Degrees (Registration Options)
-                    </label>
-                    <p className="text-[11px] text-slate-500">Configure degree options shown during candidate registration for this exam.</p>
-                  </div>
+              {/* ALLOWED DEGREES MULTI-SELECT */}
+              <FormRow
+                label="Allowed Candidate Degrees"
+                hint="Degree options shown during candidate registration. Uncheck all to allow every degree."
+              >
+                <div ref={degreeRef} className="relative">
                   <button
                     type="button"
-                    onClick={() => setAllowedDegrees(DEFAULT_DEGREES)}
-                    className="text-xs font-bold text-brand-blue hover:underline cursor-pointer"
+                    onClick={() => setDegreeOpen((o) => !o)}
+                    className="w-full h-10 lg:h-9 px-3 rounded-lg border border-admin-300 bg-neutral-50 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all flex items-center justify-between gap-2 cursor-pointer"
                   >
-                    Reset Defaults
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Left Column: Select Preset Degree Dropdown */}
-                  <FormRow label="Select Preset Degree" hint="Pick a degree to add it to this exam.">
-                    <Select
-                      value=""
-                      onChange={e => {
-                        const val = e.target.value;
-                        if (val && !allowedDegrees.includes(val)) {
-                          setAllowedDegrees(prev => [...prev, val]);
-                        }
-                        e.target.value = '';
-                      }}
-                    >
-                      <option value="">-- Select degree to add --</option>
-                      {DEFAULT_DEGREES.filter(d => !allowedDegrees.includes(d)).map((d, idx) => (
-                        <option key={idx} value={d}>{d}</option>
-                      ))}
-                    </Select>
-                  </FormRow>
-
-                  {/* Right Column: Custom Degree Input */}
-                  <FormRow label="Add Custom Degree Option">
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        value={newDegreeInput}
-                        onChange={e => setNewDegreeInput(e.target.value)}
-                        placeholder="e.g. B.Arch, M.Sc (Phy), Diploma in AI..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
-                            setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
-                            setNewDegreeInput('');
-                          }
-                        }}
-                        className="px-4 h-10 lg:h-9 bg-admin-600 hover:bg-admin-700 text-white font-medium text-sm rounded-lg cursor-pointer shrink-0 transition-colors"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </FormRow>
-                </div>
-
-                {/* Added Degrees Chips */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-xs font-medium text-neutral-500 w-full">Added Degrees ({allowedDegrees.length})</span>
-                  {allowedDegrees.length === 0 && (
-                    <span className="text-xs text-neutral-400">No degrees added yet.</span>
-                  )}
-                  {allowedDegrees.map((deg, dIdx) => (
-                    <span key={dIdx} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-admin-100 text-admin-700 font-medium text-xs rounded-full">
-                      {deg}
-                      <button
-                        type="button"
-                        onClick={() => setAllowedDegrees(prev => prev.filter(d => d !== deg))}
-                        className="text-admin-400 hover:text-red-600 cursor-pointer"
-                        title={`Remove ${deg}`}
-                      >
-                        <FiX className="w-3 h-3" />
-                      </button>
+                    <span className="truncate">
+                      {allowedDegrees.length === 0 ? (
+                        <span className="text-neutral-400">All degrees allowed</span>
+                      ) : (
+                        `${allowedDegrees.length} degree${allowedDegrees.length > 1 ? 's' : ''} selected`
+                      )}
                     </span>
-                  ))}
+                    <FiChevronDown className={`w-4 h-4 text-neutral-400 shrink-0 transition-transform ${degreeOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {degreeOpen && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-admin-200 rounded-xl shadow-lg overflow-hidden">
+                      <div className="p-2 border-b border-admin-100">
+                        <div className="relative">
+                          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={degreeSearch}
+                            onChange={(e) => setDegreeSearch(e.target.value)}
+                            placeholder="Search degrees..."
+                            className="w-full h-9 pl-9 pr-3 rounded-lg border border-admin-200 bg-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="max-h-56 overflow-y-auto admin-scrollbar p-1">
+                        {[...DEFAULT_DEGREES, ...allowedDegrees.filter((d) => !DEFAULT_DEGREES.includes(d))]
+                          .filter((d) => d.toLowerCase().includes(degreeSearch.trim().toLowerCase()))
+                          .map((deg) => {
+                            const checked = allowedDegrees.includes(deg);
+                            const isCustom = !DEFAULT_DEGREES.includes(deg);
+                            return (
+                              <label
+                                key={deg}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-neutral-700 hover:bg-admin-50 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleDegree(deg)}
+                                  className="w-4 h-4 rounded accent-admin-600 shrink-0 cursor-pointer"
+                                />
+                                <span className="flex-1 truncate">
+                                  {deg}
+                                  {isCustom && (
+                                    <span className="ml-1.5 text-[10px] font-semibold text-admin-500 uppercase">custom</span>
+                                  )}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        {[...DEFAULT_DEGREES, ...allowedDegrees.filter((d) => !DEFAULT_DEGREES.includes(d))].filter((d) =>
+                          d.toLowerCase().includes(degreeSearch.trim().toLowerCase())
+                        ).length === 0 && (
+                          <p className="px-3 py-4 text-center text-xs text-neutral-400">No degrees match.</p>
+                        )}
+                      </div>
+
+                      <div className="p-2 border-t border-admin-100 flex gap-2">
+                        <Input
+                          type="text"
+                          value={newDegreeInput}
+                          onChange={(e) => setNewDegreeInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomDegree(); } }}
+                          placeholder="Add custom degree..."
+                        />
+                        <button
+                          type="button"
+                          onClick={addCustomDegree}
+                          className="px-3 h-10 lg:h-9 bg-admin-600 hover:bg-admin-700 text-white font-medium text-sm rounded-lg cursor-pointer shrink-0 transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+
+                      <div className="px-3 py-2 border-t border-admin-100 bg-neutral-50/60 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setAllowedDegrees(DEFAULT_DEGREES)}
+                          className="text-xs font-medium text-admin-600 hover:text-admin-700 hover:underline cursor-pointer"
+                        >
+                          Reset defaults
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDegreeOpen(false)}
+                          className="px-4 h-8 rounded-lg text-sm font-semibold bg-admin-600 text-white hover:bg-admin-700 cursor-pointer"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {allowedDegrees.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {allowedDegrees.slice(0, 6).map((deg) => (
+                      <span key={deg} className="inline-flex items-center gap-1 px-2 py-0.5 bg-admin-100 text-admin-700 font-medium text-xs rounded-full">
+                        <span className="max-w-[180px] truncate">{deg}</span>
+                        <button
+                          type="button"
+                          onClick={() => toggleDegree(deg)}
+                          className="text-admin-400 hover:text-red-600 cursor-pointer"
+                          title={`Remove ${deg}`}
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    {allowedDegrees.length > 6 && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-neutral-100 text-neutral-500 font-medium text-xs rounded-full">
+                        +{allowedDegrees.length - 6} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </FormRow>
 
               <FormRow label="Exam Rules & Guidelines Text">
                 <Textarea
@@ -1138,26 +1211,34 @@ export default function CustomMockExamEditor() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                          Question Prompt <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={fb.question_text}
-                          onChange={e => updateFeedbackQuestion(idx, 'question_text', e.target.value)}
-                          placeholder="e.g. How satisfied are you with the exam layout?"
-                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"
-                        />
-                      </div>
-                      <div>
+                    <div className={fb.type === 'matrix' ? 'flex justify-end' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
+                      {fb.type !== 'matrix' && (
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                            Question Prompt <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={fb.question_text}
+                            onChange={e => updateFeedbackQuestion(idx, 'question_text', e.target.value)}
+                            placeholder="e.g. How satisfied are you with the exam layout?"
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none"
+                          />
+                        </div>
+                      )}
+                      <div className={fb.type === 'matrix' ? 'w-full sm:w-1/3' : ''}>
                         <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
                           Response Type
                         </label>
                         <select
                           value={fb.type || 'rating'}
-                          onChange={e => updateFeedbackQuestion(idx, 'type', e.target.value)}
+                          onChange={e => {
+                            const newType = e.target.value;
+                            updateFeedbackQuestion(idx, 'type', newType);
+                            if (newType === 'matrix' && (!fb.question_text || !fb.question_text.trim())) {
+                              updateFeedbackQuestion(idx, 'question_text', 'Please choose the best answer for each statement:');
+                            }
+                          }}
                           className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none font-bold cursor-pointer"
                         >
                           <option value="rating">5-Star Rating</option>

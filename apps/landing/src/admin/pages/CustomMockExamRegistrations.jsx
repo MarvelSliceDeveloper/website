@@ -6,11 +6,27 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import PageShell from '../components/ui/PageShell';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
+
+// Shared CSV download via Blob (data-URI + encodeURI breaks on large
+// datasets and on cells containing '#', so use an object URL instead).
+function downloadCSV(filename, headers, rows) {
+  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export default function CustomMockExamRegistrations() {
   const [searchParams] = useSearchParams();
@@ -208,31 +224,24 @@ export default function CustomMockExamRegistrations() {
     if (examFilteredRegistrations.length === 0) return;
     const headers = ['Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Register / Roll No', 'Department', 'Degree', 'Year', '10th Mark', '12th Mark', 'CGPA', 'Address', 'Exam Title', 'Registration Date'];
     const rows = examFilteredRegistrations.map(r => [
-      `"${r.user_name || ''}"`,
-      `"${r.user_email || ''}"`,
-      `"${r.user_dob || ''}"`,
-      `"${r.user_phone || ''}"`,
-      `"${r.user_college || ''}"`,
-      `"${r.user_reg_num || ''}"`,
-      `"${r.user_department || ''}"`,
-      `"${r.user_degree || ''}"`,
-      `"${r.user_year || ''}"`,
-      `"${r.user_10th_mark || ''}"`,
-      `"${r.user_12th_mark || ''}"`,
-      `"${r.user_cgpa || ''}"`,
-      `"${r.user_address || ''}"`,
-      `"${r.custom_mock_exams?.title || ''}"`,
-      `"${r.created_at ? new Date(r.created_at).toLocaleString() : ''}"`
+      r.user_name || '',
+      r.user_email || '',
+      r.user_dob || '',
+      r.user_phone || '',
+      r.user_college || '',
+      r.user_reg_num || '',
+      r.user_department || '',
+      r.user_degree || '',
+      r.user_year || '',
+      r.user_10th_mark || '',
+      r.user_12th_mark || '',
+      r.user_cgpa || '',
+      r.user_address || '',
+      r.custom_mock_exams?.title || '',
+      r.created_at ? new Date(r.created_at).toLocaleString() : ''
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `custom_exam_candidates_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(`custom_exam_candidates_${Date.now()}.csv`, headers, rows);
   }
 
   // Export All PDF
@@ -257,7 +266,7 @@ export default function CustomMockExamRegistrations() {
       r.custom_mock_exams?.title || ''
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 28,
       head: [['#', 'Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Reg No', 'Department', 'Year', 'Exam']],
       body: tableData,
@@ -311,7 +320,7 @@ export default function CustomMockExamRegistrations() {
       ['Residential Address', candidate.user_address || 'N/A', '', '']
     ];
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 84,
       head: [['Field', 'Detail', 'Field', 'Detail']],
       body: profileDetails,
@@ -328,31 +337,24 @@ export default function CustomMockExamRegistrations() {
     if (!candidate) return;
     const headers = ['Field', 'Value'];
     const rows = [
-      ['Candidate Name', `"${candidate.user_name || ''}"`],
-      ['Email (Username)', `"${candidate.user_email || ''}"`],
-      ['DOB (Password)', `"${candidate.user_dob || ''}"`],
-      ['Phone', `"${candidate.user_phone || ''}"`],
-      ['College', `"${candidate.user_college || ''}"`],
-      ['Register / Roll No', `"${candidate.user_reg_num || ''}"`],
-      ['Department', `"${candidate.user_department || ''}"`],
-      ['Degree', `"${candidate.user_degree || ''}"`],
-      ['Year', `"${candidate.user_year || ''}"`],
-      ['10th Mark', `"${candidate.user_10th_mark || ''}"`],
-      ['12th Mark', `"${candidate.user_12th_mark || ''}"`],
-      ['CGPA', `"${candidate.user_cgpa || ''}"`],
-      ['Address', `"${candidate.user_address || ''}"`],
-      ['Registered Exam', `"${candidate.custom_mock_exams?.title || ''}"`],
-      ['Registration Date', `"${candidate.created_at ? new Date(candidate.created_at).toLocaleString() : ''}"`]
+      ['Candidate Name', candidate.user_name || ''],
+      ['Email (Username)', candidate.user_email || ''],
+      ['DOB (Password)', candidate.user_dob || ''],
+      ['Phone', candidate.user_phone || ''],
+      ['College', candidate.user_college || ''],
+      ['Register / Roll No', candidate.user_reg_num || ''],
+      ['Department', candidate.user_department || ''],
+      ['Degree', candidate.user_degree || ''],
+      ['Year', candidate.user_year || ''],
+      ['10th Mark', candidate.user_10th_mark || ''],
+      ['12th Mark', candidate.user_12th_mark || ''],
+      ['CGPA', candidate.user_cgpa || ''],
+      ['Address', candidate.user_address || ''],
+      ['Registered Exam', candidate.custom_mock_exams?.title || ''],
+      ['Registration Date', candidate.created_at ? new Date(candidate.created_at).toLocaleString() : '']
     ];
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${(candidate.user_name || 'candidate').replace(/[^a-z0-9]/gi, '_')}_details.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(`${(candidate.user_name || 'candidate').replace(/[^a-z0-9]/gi, '_')}_details.csv`, headers, rows);
   }
 
   // Email Composer Opener

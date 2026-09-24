@@ -7,11 +7,27 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import PageShell from '../components/ui/PageShell';
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
+
+// Shared CSV download via Blob (data-URI + encodeURI breaks on large
+// datasets and on cells containing '#', so use an object URL instead).
+function downloadCSV(filename, headers, rows) {
+  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export default function CustomMockExamSubmissions() {
   const [searchParams] = useSearchParams();
@@ -353,43 +369,36 @@ export default function CustomMockExamSubmissions() {
         : 'N/A';
 
       const baseRow = [
-        `"${s.user_name || ''}"`,
-        `"${s.user_email || ''}"`,
-        `"${s.user_phone || ''}"`,
-        `"${s.user_dob || ''}"`,
-        `"${s.user_degree || ''}"`,
-        `"${s.user_department || ''}"`,
-        `"${s.user_year || ''}"`,
-        `"${s.user_college || ''}"`,
-        `"${s.user_reg_num || ''}"`,
-        `"${(s.user_address || '').replace(/"/g, '""')}"`,
-        `"${s.user_10th_mark ?? 'N/A'}"`,
-        `"${s.user_12th_mark ?? 'N/A'}"`,
-        `"${s.user_cgpa ?? 'N/A'}"`,
-        `"${s.score ?? 0}"`,
-        `"${s.total_questions ?? 0}"`,
-        `"${s.correct_answers ?? 0}"`,
-        `"${s.wrong_answers ?? 0}"`,
-        `"${formatTime(s.time_taken_seconds)}"`,
-        `"${s.custom_mock_exams?.title || ''}"`,
-        `"${s.created_at ? new Date(s.created_at).toLocaleString() : ''}"`
+        s.user_name || '',
+        s.user_email || '',
+        s.user_phone || '',
+        s.user_dob || '',
+        s.user_degree || '',
+        s.user_department || '',
+        s.user_year || '',
+        s.user_college || '',
+        s.user_reg_num || '',
+        s.user_address || '',
+        s.user_10th_mark ?? 'N/A',
+        s.user_12th_mark ?? 'N/A',
+        s.user_cgpa ?? 'N/A',
+        s.score ?? 0,
+        s.total_questions ?? 0,
+        s.correct_answers ?? 0,
+        s.wrong_answers ?? 0,
+        formatTime(s.time_taken_seconds),
+        s.custom_mock_exams?.title || '',
+        s.created_at ? new Date(s.created_at).toLocaleString() : ''
       ];
 
       if (isDetailed) {
-        baseRow.push(`"${catText}"`, `"${fbText}"`);
+        baseRow.push(catText, fbText);
       }
 
       return baseRow;
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `custom_exam_submissions_${isDetailed ? 'detailed' : 'summary'}_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(`custom_exam_submissions_${isDetailed ? 'detailed' : 'summary'}_${Date.now()}.csv`, headers, rows);
   }
 
   // EXPORT PDF FUNCTION (SUMMARY VS DETAILED REPORT)
@@ -416,7 +425,7 @@ export default function CustomMockExamSubmissions() {
         s.custom_mock_exams?.title || ''
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 28,
         head: [['#', 'Name', 'Degree / Dept', 'College & Reg No', 'CGPA', 'Score', 'Accuracy', 'Time Taken', 'Exam Title']],
         body: tableData,
@@ -445,7 +454,7 @@ export default function CustomMockExamSubmissions() {
         ];
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 28,
         head: [['#', 'Candidate Profile', 'Degree, College & Reg No', 'Academics', 'Residential Address', 'Total Score', 'Category Scores', 'Time Taken', 'Exam Title']],
         body: tableData,

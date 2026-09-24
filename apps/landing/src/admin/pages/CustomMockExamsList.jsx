@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiEdit2, FiTrash2, FiClock, FiCopy, FiCheck,
-  FiExternalLink, FiUsers, FiClipboard, FiCheckSquare, FiLock
+  FiExternalLink, FiUsers, FiClipboard, FiCheckSquare, FiLock, FiBarChart2
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { formatDateTime } from '../../lib/datetime';
@@ -12,6 +12,8 @@ import AddButton from '../components/AddButton';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
 import useConfirm from '../hooks/useConfirm';
+import CustomMockExamReportModal from './CustomMockExamReportModal';
+import CustomMockExamsOverallReportModal from './CustomMockExamsOverallReportModal';
 
 export default function CustomMockExamsList() {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ export default function CustomMockExamsList() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null); // { slug, type: 'reg' | 'login' }
+  const [reportExam, setReportExam] = useState(null);
+  const [showOverallReport, setShowOverallReport] = useState(false);
 
   useEffect(() => {
     fetchExams();
@@ -192,6 +196,20 @@ export default function CustomMockExamsList() {
       },
     },
     {
+      header: 'Report',
+      cell: (exam) => (
+        <button
+          type="button"
+          onClick={() => setReportExam(exam)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-admin-100 text-admin-600 hover:bg-admin-600 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+          title="View registration & attendance report with graphs"
+        >
+          <FiBarChart2 className="w-3.5 h-3.5" />
+          Report
+        </button>
+      ),
+    },
+    {
       header: 'Actions',
       className: 'text-right',
       cell: (exam) => (
@@ -237,6 +255,14 @@ export default function CustomMockExamsList() {
       subtitle="Standalone timed mock exams (25, 50, 75, 100 MCQs) accessible via shareable registration & login links."
       actions={
         <>
+          <button
+            type="button"
+            onClick={() => setShowOverallReport(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
+          >
+            <FiBarChart2 className="w-4 h-4 text-admin-600" />
+            Overall Report
+          </button>
           <Link
             to="/admin/custom-mock-exams/registrations"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
@@ -310,6 +336,12 @@ export default function CustomMockExamsList() {
         />
       )}
       {confirmDialog}
+      {reportExam && (
+        <CustomMockExamReportModal exam={reportExam} onClose={() => setReportExam(null)} />
+      )}
+      {showOverallReport && (
+        <CustomMockExamsOverallReportModal onClose={() => setShowOverallReport(false)} />
+      )}
     </PageShell>
   );
 }
