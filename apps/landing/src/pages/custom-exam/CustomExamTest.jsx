@@ -1163,7 +1163,7 @@ export default function CustomExamTest() {
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs">
+      <div className={activeStep === 'INSTRUCTIONS' ? "bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs" : "bg-white border-b border-slate-200 px-8 sm:px-16 lg:px-28 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs"}>
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
@@ -1441,8 +1441,8 @@ export default function CustomExamTest() {
             Question Palette ({examQuestions.length})
           </h3>
 
-          {/* SCROLLABLE QUESTION NUMBERS GRID */}
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 no-scrollbar sm:custom-scrollbar">
+          {/* SCROLLABLE QUESTION NUMBERS GRID (EXACTLY 5 VERTICAL ROWS / 25 SQUARES VISIBLE ON NON-MOBILE) */}
+          <div className="w-full sm:aspect-square overflow-y-auto pr-1 max-h-60 sm:max-h-none no-scrollbar sm:custom-scrollbar">
             <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-1.5">
               {examQuestions.map((q, idx) => {
                 const isAnswered = userAnswers[q.id] !== undefined;
@@ -1469,7 +1469,7 @@ export default function CustomExamTest() {
                     className="relative w-full aspect-square flex items-center justify-center cursor-pointer transition-transform active:scale-95 group focus:outline-none"
                     title={`Question ${idx + 1}`}
                   >
-                      <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible">
+                      <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible scale-[0.97] transform origin-center">
                         <defs>
                           <linearGradient id={`sq-bg-green-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#4ade80" />
