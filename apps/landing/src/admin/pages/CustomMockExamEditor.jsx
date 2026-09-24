@@ -166,6 +166,18 @@ export default function CustomMockExamEditor() {
     }
   }
 
+  function toDatetimeLocal(isoStr) {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch {
+      return '';
+    }
+  }
+
   async function fetchExamData() {
     setLoading(true);
     const { data: examData, error: examErr } = await supabase
@@ -194,13 +206,13 @@ export default function CustomMockExamEditor() {
       }
 
       if (examData.registration_start_time) {
-        setRegistrationStartTime(new Date(examData.registration_start_time).toISOString().slice(0, 16));
+        setRegistrationStartTime(toDatetimeLocal(examData.registration_start_time));
       }
       if (examData.exam_start_time) {
-        setExamStartTime(new Date(examData.exam_start_time).toISOString().slice(0, 16));
+        setExamStartTime(toDatetimeLocal(examData.exam_start_time));
       }
       if (examData.exam_end_time) {
-        setExamEndTime(new Date(examData.exam_end_time).toISOString().slice(0, 16));
+        setExamEndTime(toDatetimeLocal(examData.exam_end_time));
       }
 
       // Fetch questions
@@ -318,13 +330,26 @@ export default function CustomMockExamEditor() {
     }
 
     // Validate timing guards
+    if (registrationStartTime && examStartTime) {
+      const regMs = new Date(registrationStartTime).getTime();
+      const startMs = new Date(examStartTime).getTime();
+      if (startMs < regMs + 5 * 60 * 1000) {
+        showAlertModal(
+          'Timing Guard Requirement',
+          'Scheduled Exam Start Time must be set at least 5 minutes AFTER the Candidate Login Open Time (minimum 5 min gap).',
+          'error'
+        );
+        return false;
+      }
+    }
+
     if (examStartTime && examEndTime) {
       const startMs = new Date(examStartTime).getTime();
       const endMs = new Date(examEndTime).getTime();
       if (endMs <= startMs) {
         showAlertModal(
           'Timing Error',
-          'Scheduled Exam End Time must be set AFTER the Scheduled Exam Start Time.',
+          'Scheduled Candidate Login Close Time must be set AFTER the Scheduled Exam Start Time.',
           'error'
         );
         return false;
@@ -340,15 +365,11 @@ export default function CustomMockExamEditor() {
 
     setSaving(true);
 
-    const calculatedDurationMins = (examStartTime && examEndTime)
-      ? Math.max(1, Math.round((new Date(examEndTime).getTime() - new Date(examStartTime).getTime()) / (1000 * 60)))
-      : Number(timeLimitMins || 20);
-
     const examPayload = {
       title: title.trim(),
       slug: slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       category: category.trim(),
-      time_limit_mins: calculatedDurationMins,
+      time_limit_mins: Number(timeLimitMins || 20),
       total_marks: Number(totalMarks),
       question_count_option: Number(questionCountOption),
       registration_start_time: registrationStartTime ? new Date(registrationStartTime).toISOString() : null,
@@ -730,21 +751,38 @@ export default function CustomMockExamEditor() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Registration Start Date & Time
+                    Exam Duration (Minutes) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={timeLimitMins}
+                    onChange={e => setTimeLimitMins(e.target.value)}
+                    required
+                    placeholder="e.g. 20 Mins"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-brand-blue outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Duration given to candidate once test starts (e.g. 20 Mins).</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Candidate Login Open Time <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
                     value={registrationStartTime}
                     onChange={e => setRegistrationStartTime(e.target.value)}
+                    required
                     style={{ colorScheme: 'light' }}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">Registration opens automatically at this date & time.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Candidate login & waiting lobby open (Min 5 mins before Exam Start Time).</p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Exam Start Date & Time <span className="text-red-500">*</span>
+                    Scheduled Exam Start Time <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -755,13 +793,13 @@ export default function CustomMockExamEditor() {
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-brand-blue outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Candidates can log in and view instructions before this start time.
+                    Exam countdown reaches 0 and popup triggers candidates into instructions/exam.
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Exam End Date & Time <span className="text-red-500">*</span>
+                    Candidate Login Close Time <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -772,33 +810,10 @@ export default function CustomMockExamEditor() {
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 cursor-pointer"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
-                    The exam timer and portal automatically close at this end time.
+                    Deadline after which candidate login portal closes (Login window end).
                   </p>
                 </div>
               </div>
-
-              {/* DYNAMIC CALCULATED DURATION BADGE */}
-              {examStartTime && examEndTime && new Date(examEndTime) > new Date(examStartTime) && (
-                <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <FiClock className="w-5 h-5 text-brand-blue shrink-0" />
-                    <div>
-                      <span className="text-xs font-bold text-brand-blue block">Calculated Exam Duration</span>
-                      <span className="text-[11px] text-slate-600">Calculated dynamically from Exam Start Time to Exam End Time.</span>
-                    </div>
-                  </div>
-                  <div className="px-4 py-2 bg-brand-blue text-white font-mono font-bold text-sm rounded-xl shrink-0 shadow-2xs">
-                    {(() => {
-                      const diffMins = Math.round((new Date(examEndTime).getTime() - new Date(examStartTime).getTime()) / (1000 * 60));
-                      const h = Math.floor(diffMins / 60);
-                      const m = diffMins % 60;
-                      if (h > 0 && m > 0) return `${h} hr ${m} mins`;
-                      if (h > 0) return `${h} hour${h > 1 ? 's' : ''}`;
-                      return `${m} Minutes`;
-                    })()}
-                  </div>
-                </div>
-              )}
 
               {/* ALLOWED DEGREES CONFIGURATION CARD */}
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">

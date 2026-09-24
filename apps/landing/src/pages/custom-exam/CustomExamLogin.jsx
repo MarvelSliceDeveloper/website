@@ -43,6 +43,11 @@ export default function CustomExamLogin() {
     return Date.now() + serverOffsetMs;
   }
 
+  const isLoginNotOpen = () => {
+    if (!exam?.registration_start_time) return false;
+    return getSyncedNow() < new Date(exam.registration_start_time).getTime();
+  };
+
   const isExamEnded = () => {
     if (!exam?.exam_end_time) return false;
     return getSyncedNow() >= new Date(exam.exam_end_time).getTime();
@@ -74,6 +79,11 @@ export default function CustomExamLogin() {
   async function handleLogin(e) {
     e.preventDefault();
     setLoginError('');
+    if (isLoginNotOpen()) {
+      setLoginError(`Candidate Login Not Open Yet: Logins for this exam open at ${new Date(exam.registration_start_time).toLocaleString()}.`);
+      return;
+    }
+
     if (isExamEnded()) {
       setLoginError('Exam Ended: The scheduled time for this exam has passed. Logins are closed.');
       return;

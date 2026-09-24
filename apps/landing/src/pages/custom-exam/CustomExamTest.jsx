@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiClock, FiCheckCircle, FiX, FiCheck, FiAward, FiShield, FiUser,
-  FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight, FiAlertCircle, FiBookmark
+  FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight, FiAlertCircle, FiBookmark,
+  FiLock, FiPlayCircle
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -154,8 +155,13 @@ export default function CustomExamTest() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Active Flow Step: 'INSTRUCTIONS' | 'QUIZ' | 'FEEDBACK' | 'SUBMITTED'
+  // Active Flow Step: 'GATE_BLOCKED' | 'WAITING_LOBBY' | 'INSTRUCTIONS' | 'QUIZ' | 'REVIEW_MARKED' | 'FEEDBACK' | 'SUBMITTED'
   const [activeStep, setActiveStep] = useState('INSTRUCTIONS');
+  const [gateReason, setGateReason] = useState(''); // 'NOT_OPEN' | 'EXAM_ENDED'
+  const [lobbyTimeLeftSecs, setLobbyTimeLeftSecs] = useState(0);
+  const [showExamStartedPopup, setShowExamStartedPopup] = useState(false);
+  const [showSubmitConfirmModal, setShowSubmitConfirmModal] = useState(false);
+
   const [isSessionRestored, setIsSessionRestored] = useState(false);
   const [agreeInstructions, setAgreeInstructions] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -178,6 +184,7 @@ export default function CustomExamTest() {
   const [feedbackError, setFeedbackError] = useState('');
 
   const timerRef = useRef(null);
+  const lobbyTimerRef = useRef(null);
   const hasRestoredSessionRef = useRef(false);
 
   const currentQIndexRef = useRef(currentQIndex);
@@ -291,7 +298,7 @@ export default function CustomExamTest() {
 
     setExamQuestions(questions);
 
-    // Check if candidate already submitted this exam previously in DB with actual answered questions
+    // Check existing DB submission status
     if (currentExam.id && !currentExam.id.startsWith('demo-') && authCand?.user_email) {
       const { data: existingSub } = await supabase
         .from('custom_mock_exam_submissions')
@@ -302,9 +309,7 @@ export default function CustomExamTest() {
         .limit(1)
         .maybeSingle();
 
-      const hasValidAnswers = existingSub?.answers && typeof existingSub.answers === 'object' && Object.keys(existingSub.answers).length > 0;
-
-      if (existingSub && hasValidAnswers) {
+      if (existingSub && existingSub.status === 'SUBMITTED') {
         setUserAnswers(existingSub.answers || {});
         setFeedbackAnswers(existingSub.feedback_answers || {});
         setActiveStep('SUBMITTED');
@@ -312,17 +317,77 @@ export default function CustomExamTest() {
         hasRestoredSessionRef.current = true;
         setLoading(false);
         return;
-      } else {
-        // No submission in DB (Admin reset or first attempt). Clear any stale local cached session to allow retake!
-        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
+      } else if (existingSub && existingSub.status === 'DRAFT' && existingSub.answers) {
+        setUserAnswers(existingSub.answers || {});
+        if (existingSub.visited_questions) setVisitedQuestions(existingSub.visited_questions);
       }
     }
 
-    // Restore cached exam session if page was refreshed
+    // Evaluate Candidate Entrance Gate & Timings
+    const now = Date.now();
+    const loginStartMs = currentExam.registration_start_time ? new Date(currentExam.registration_start_time).getTime() : null;
+    const examStartMs = currentExam.exam_start_time ? new Date(currentExam.exam_start_time).getTime() : null;
+    const loginEndMs = currentExam.exam_end_time ? new Date(currentExam.exam_end_time).getTime() : null;
+
+    if (loginStartMs && now < loginStartMs) {
+      setActiveStep('GATE_BLOCKED');
+      setGateReason('NOT_OPEN');
+      setLoading(false);
+      return;
+    }
+
+    if (loginEndMs && now > loginEndMs) {
+      setActiveStep('GATE_BLOCKED');
+      setGateReason('EXAM_ENDED');
+      setLoading(false);
+      return;
+    }
+
+    // Check if candidate already has an active local QUIZ session
+    const rawSession = localStorage.getItem(`custom_exam_test_session_${slug}`);
+    let cachedSession = null;
+    try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
+
+    if (cachedSession && cachedSession.activeStep === 'QUIZ') {
+      restoreSessionFromCache(currentExam, questions);
+      hasRestoredSessionRef.current = true;
+      setLoading(false);
+      return;
+    }
+
+    // If before exam start time, candidate enters WAITING_LOBBY
+    if (examStartMs && now < examStartMs) {
+      setActiveStep('WAITING_LOBBY');
+      setLobbyTimeLeftSecs(Math.max(0, Math.floor((examStartMs - now) / 1000)));
+      hasRestoredSessionRef.current = true;
+      setLoading(false);
+      return;
+    }
+
+    // Restore cached exam session if page was refreshed during active exam
     restoreSessionFromCache(currentExam, questions);
     hasRestoredSessionRef.current = true;
     setLoading(false);
   }
+
+  // WAITING LOBBY COUNTDOWN TIMER EFFECT
+  useEffect(() => {
+    if (activeStep === 'WAITING_LOBBY' && lobbyTimeLeftSecs > 0) {
+      lobbyTimerRef.current = setInterval(() => {
+        setLobbyTimeLeftSecs((prev) => {
+          if (prev <= 1) {
+            clearInterval(lobbyTimerRef.current);
+            setShowExamStartedPopup(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (lobbyTimerRef.current) clearInterval(lobbyTimerRef.current);
+    };
+  }, [activeStep, lobbyTimeLeftSecs]);
 
   function handleStartExam() {
     if (!agreeInstructions || !agreeTerms) return;
@@ -333,7 +398,7 @@ export default function CustomExamTest() {
     setActiveStep('QUIZ');
     hasRestoredSessionRef.current = true;
 
-    // Immediately persist QUIZ activeStep so browser refresh never shows instructions
+    // Immediately persist QUIZ activeStep & draft to DB / localStorage
     const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
     const sessionData = {
       activeStep: 'QUIZ',
@@ -349,14 +414,12 @@ export default function CustomExamTest() {
     try {
       localStorage.setItem(`custom_exam_test_session_${slug}`, JSON.stringify(sessionData));
     } catch (e) {}
+
+    autoSaveDraftToSupabase({}, initialVisited, fullExamSecs);
   }
 
   function restoreSessionFromCache(currentExam, questions) {
     let fullExamSecs = (currentExam.time_limit_mins || 20) * 60;
-    if (currentExam.exam_end_time) {
-      const endMs = new Date(currentExam.exam_end_time).getTime();
-      fullExamSecs = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
-    }
 
     try {
       const raw = localStorage.getItem(`custom_exam_test_session_${slug}`);
@@ -373,7 +436,6 @@ export default function CustomExamTest() {
         return;
       }
 
-      // If already submitted, clear session and reset to instructions
       if (cached.activeStep === 'SUBMITTED') {
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         setTimeLeftSeconds(fullExamSecs);
@@ -384,7 +446,6 @@ export default function CustomExamTest() {
       const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
       const remainingSecs = Math.max(0, (cached.timeLeftSeconds ?? fullExamSecs) - elapsedSecs);
 
-      // Restore active session state
       if (cached.examStartedAtMs) setExamStartedAtMs(cached.examStartedAtMs);
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
       if (cached.markedForReview) setMarkedForReview(cached.markedForReview);
@@ -399,7 +460,6 @@ export default function CustomExamTest() {
         setActiveStep(cached.activeStep || 'QUIZ');
         setIsSessionRestored(true);
       } else {
-        // Time expired during refresh -> trigger submit
         setTimeLeftSeconds(0);
         setActiveStep('QUIZ');
         setIsSessionRestored(true);
@@ -413,7 +473,7 @@ export default function CustomExamTest() {
     }
   }
 
-  // Persist session to localStorage across page reloads (Only after session initialization and in QUIZ/FEEDBACK mode)
+  // Persist session to localStorage across page reloads
   useEffect(() => {
     if (!hasRestoredSessionRef.current || !exam) return;
 
@@ -422,7 +482,7 @@ export default function CustomExamTest() {
       return;
     }
 
-    if (activeStep === 'INSTRUCTIONS') return;
+    if (activeStep === 'INSTRUCTIONS' || activeStep === 'GATE_BLOCKED' || activeStep === 'WAITING_LOBBY') return;
 
     const sessionData = {
       activeStep,
@@ -443,16 +503,78 @@ export default function CustomExamTest() {
     } catch (e) {}
   }, [activeStep, currentQIndex, userAnswers, markedForReview, visitedQuestions, feedbackAnswers, timeLeftSeconds, examStartedAtMs, tabSwitchCount, tabSwitchLogs, exam]);
 
-  // Auto-mark active question as visited
+  // Auto-mark active question as visited & save draft
   useEffect(() => {
     if (activeStep === 'QUIZ' && examQuestions.length > 0 && examQuestions[currentQIndex]?.id) {
       const qId = examQuestions[currentQIndex].id;
       setVisitedQuestions(prev => {
         if (prev[qId]) return prev;
-        return { ...prev, [qId]: true };
+        const updated = { ...prev, [qId]: true };
+        autoSaveDraftToSupabase(userAnswers, updated, timeLeftSeconds);
+        return updated;
       });
     }
   }, [activeStep, currentQIndex, examQuestions]);
+
+  // Background Auto-Save Draft to Supabase
+  async function autoSaveDraftToSupabase(answersToSave, visitedToSave, timeRemaining) {
+    if (!exam || exam.id.startsWith('demo-') || !candidate?.user_email) return;
+
+    try {
+      const totalSecs = (exam?.time_limit_mins || 20) * 60;
+      const timeTaken = examStartedAtMs
+        ? Math.max(1, Math.floor((Date.now() - examStartedAtMs) / 1000))
+        : Math.max(1, totalSecs - (timeRemaining || 0));
+
+      const draftPayload = {
+        custom_mock_exam_id: exam.id,
+        registration_id: candidate?.id || null,
+        user_name: candidate?.user_name || '',
+        user_email: candidate?.user_email.toLowerCase(),
+        user_phone: candidate?.user_phone || '',
+        user_dob: candidate?.user_dob || null,
+        user_department: candidate?.user_department || '',
+        user_degree: candidate?.user_degree || '',
+        user_address: candidate?.user_address || '',
+        user_10th_mark: candidate?.user_10th_mark || null,
+        user_12th_mark: candidate?.user_12th_mark || null,
+        user_cgpa: candidate?.user_cgpa || null,
+        user_year: candidate?.user_year || '',
+        user_college: candidate?.user_college || '',
+        candidate_photo: candidate?.candidate_photo || null,
+        status: 'DRAFT',
+        answers: answersToSave || userAnswers,
+        visited_questions: visitedToSave || visitedQuestions,
+        time_taken_seconds: timeTaken,
+        tab_switch_count: tabSwitchCount,
+        tab_switch_logs: tabSwitchLogs,
+        updated_at: new Date().toISOString()
+      };
+
+      // Check existing draft
+      const { data: existing } = await supabase
+        .from('custom_mock_exam_submissions')
+        .select('id, status')
+        .eq('custom_mock_exam_id', exam.id)
+        .eq('user_email', candidate.user_email.toLowerCase())
+        .maybeSingle();
+
+      if (existing) {
+        if (existing.status !== 'SUBMITTED') {
+          await supabase
+            .from('custom_mock_exam_submissions')
+            .update(draftPayload)
+            .eq('id', existing.id);
+        }
+      } else {
+        await supabase
+          .from('custom_mock_exam_submissions')
+          .insert([draftPayload]);
+      }
+    } catch (e) {
+      console.warn('Silent draft auto-save error:', e);
+    }
+  }
 
   // Countdown timer effect
   useEffect(() => {
@@ -539,24 +661,16 @@ export default function CustomExamTest() {
 
   function handleOptionSelect(qId, optIdx) {
     setUserAnswers(prev => {
+      let updated;
       if (prev[qId] === optIdx) {
-        const copy = { ...prev };
-        delete copy[qId];
-        return copy;
+        updated = { ...prev };
+        delete updated[qId];
+      } else {
+        updated = { ...prev, [qId]: optIdx };
       }
-      return { ...prev, [qId]: optIdx };
+      autoSaveDraftToSupabase(updated, visitedQuestions, timeLeftSeconds);
+      return updated;
     });
-  }
-
-  function countSentences(text) {
-    if (!text || typeof text !== 'string') return 0;
-    const trimmed = text.trim();
-    if (!trimmed) return 0;
-    const segments = trimmed
-      .split(/[.!?\n]+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 2);
-    return segments.length;
   }
 
   function triggerFeedbackOrSubmit() {
@@ -686,22 +800,49 @@ export default function CustomExamTest() {
         user_year: candidate?.user_year || '',
         user_college: candidate?.user_college || '',
         candidate_photo: candidate?.candidate_photo || null,
+        status: 'SUBMITTED',
         score: score,
         total_questions: examQuestions.length,
         correct_answers: correctCount,
         wrong_answers: wrongCount,
         answers: userAnswers,
+        visited_questions: visitedQuestions,
         category_scores: categoryScores,
         feedback_answers: feedbackAnswers,
         time_taken_seconds: Math.max(timeTaken, 1),
         tab_switch_count: tabSwitchCount,
-        tab_switch_logs: tabSwitchLogs
+        tab_switch_logs: tabSwitchLogs,
+        updated_at: new Date().toISOString()
       };
 
-      const { data: subResp, error } = await supabase.from('custom_mock_exam_submissions').insert(submissionData).select().single();
+      // Check existing submission record to update or insert
+      const { data: existingSub } = await supabase
+        .from('custom_mock_exam_submissions')
+        .select('id')
+        .eq('custom_mock_exam_id', exam.id)
+        .eq('user_email', candidate.user_email.toLowerCase())
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error inserting custom_mock_exam_submission:', error);
+      let subResp = existingSub;
+      if (existingSub) {
+        const { data: updatedSub, error: updateErr } = await supabase
+          .from('custom_mock_exam_submissions')
+          .update(submissionData)
+          .eq('id', existingSub.id)
+          .select()
+          .single();
+
+        if (updateErr) console.error('Error updating custom_mock_exam_submissions:', updateErr);
+        else subResp = updatedSub;
+      } else {
+        const { data: insertedSub, error: insertErr } = await supabase
+          .from('custom_mock_exam_submissions')
+          .insert([submissionData])
+          .select()
+          .single();
+
+        if (insertErr) console.error('Error inserting custom_mock_exam_submissions:', insertErr);
+        else subResp = insertedSub;
       }
 
       // Record into dedicated custom_mock_exam_tab_switches table
@@ -716,6 +857,8 @@ export default function CustomExamTest() {
         });
       } catch (e) {}
     }
+
+    try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
 
     setIsSubmitting(false);
     setActiveStep('SUBMITTED');
@@ -739,6 +882,163 @@ export default function CustomExamTest() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
         <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // STEP: GATE BLOCKED VIEW (BEFORE LOGIN OPEN OR AFTER LOGIN CLOSE)
+  // -------------------------------------------------------------
+  if (activeStep === 'GATE_BLOCKED') {
+    const isNotOpen = gateReason === 'NOT_OPEN';
+
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5 my-auto animate-in fade-in zoom-in-95 duration-200">
+          
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
+            {isNotOpen ? <FiClock className="w-8 h-8" /> : <FiLock className="w-8 h-8 text-rose-600" />}
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {isNotOpen ? 'Candidate Login Not Open Yet' : 'Candidate Login Window Closed'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+              {isNotOpen
+                ? `Logins for "${exam?.title}" will open at ${new Date(exam?.registration_start_time).toLocaleString()}. Please check back once candidate login opens.`
+                : `Logins for "${exam?.title}" closed at ${new Date(exam?.exam_end_time).toLocaleString()}. New logins are no longer permitted.`}
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-1.5 text-slate-700">
+            <div className="font-bold text-slate-900">{exam?.title}</div>
+            {isNotOpen && exam?.registration_start_time && (
+              <div><span className="font-semibold text-slate-500">Login Open Time:</span> {new Date(exam.registration_start_time).toLocaleString()}</div>
+            )}
+            {exam?.exam_start_time && (
+              <div><span className="font-semibold text-slate-500">Scheduled Exam Start Time:</span> {new Date(exam.exam_start_time).toLocaleString()}</div>
+            )}
+            {exam?.exam_end_time && (
+              <div><span className="font-semibold text-slate-500">Login Close Time:</span> {new Date(exam.exam_end_time).toLocaleString()}</div>
+            )}
+          </div>
+
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => initExam()}
+              className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center gap-2"
+            >
+              <FiRefreshCw className="w-4 h-4" />
+              <span>Refresh Status</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClosePortal}
+              className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <span>Exit Portal</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // STEP: WAITING LOBBY (COUNTDOWN TO EXAM START TIME)
+  // -------------------------------------------------------------
+  if (activeStep === 'WAITING_LOBBY') {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative overflow-hidden">
+          
+          {/* CANDIDATE INFO HEADER */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                {candidate?.candidate_photo ? (
+                  <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
+                ) : (
+                  <FiUser className="w-7 h-7 text-slate-400" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">{candidate?.user_name}</h3>
+                <p className="text-xs text-slate-500 font-medium">{candidate?.user_department} • {candidate?.user_year}</p>
+                <p className="text-[11px] text-brand-blue font-semibold">{candidate?.user_college}</p>
+              </div>
+            </div>
+            <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              Waiting Lobby
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-xs font-black uppercase tracking-widest text-brand-blue">Candidate Waiting Room</span>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {exam?.title}
+            </h2>
+            <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
+              You are logged in and ready! Please wait on this screen until the scheduled exam start time.
+            </p>
+          </div>
+
+          {/* COUNTDOWN TIMER BADGE */}
+          <div className="p-6 bg-slate-900 text-white rounded-3xl space-y-2 shadow-xl border border-slate-800">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">Exam Starts In</span>
+            <div className="font-mono text-4xl sm:text-5xl font-black text-amber-400 tracking-tight flex items-center justify-center gap-2">
+              <FiClock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 animate-pulse shrink-0" />
+              <span>{formatTime(lobbyTimeLeftSecs)}</span>
+            </div>
+            <p className="text-[11px] text-slate-400 pt-1">
+              Scheduled Start: <span className="text-white font-semibold">{new Date(exam?.exam_start_time).toLocaleTimeString()}</span>
+            </p>
+          </div>
+
+          <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl text-xs text-brand-blue text-left space-y-1">
+            <div className="font-bold flex items-center gap-1.5">
+              <FiShield className="w-4 h-4 text-brand-blue shrink-0" />
+              <span>Exam Guidelines Reminder:</span>
+            </div>
+            <ul className="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 pl-1">
+              <li>Do not refresh or close this tab while waiting.</li>
+              <li>When countdown reaches 00:00, you will be prompted to start the exam.</li>
+              <li>Duration: <span className="font-bold">{exam?.time_limit_mins || 20} Minutes</span> ({examQuestions.length} MCQs).</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* POPUP MODAL WHEN COUNTDOWN REACHES 0 */}
+        {showExamStartedPopup && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                <FiPlayCircle className="w-9 h-9" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Exam Started! 🎉</h3>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  The scheduled exam time has arrived. Click below to view exam instructions and begin your test.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExamStartedPopup(false);
+                  setActiveStep('INSTRUCTIONS');
+                }}
+                className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                <span>Continue to Exam Instructions</span>
+                <FiArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1172,18 +1472,12 @@ export default function CustomExamTest() {
   // -------------------------------------------------------------
   // STEP: ACTIVE TIMED MOCK EXAM INTERFACE (ALL CIRCLES)
   // -------------------------------------------------------------
-  // Calculate live question status counts
   const totalQCount = examQuestions.length;
   const answeredCount = Object.keys(userAnswers).filter(id => userAnswers[id] !== undefined).length;
   const markedCount = Object.keys(markedForReview).filter(id => markedForReview[id] === true).length;
   const visitedCount = Object.keys(visitedQuestions).filter(id => visitedQuestions[id] === true).length;
-  const unansweredCount = Object.keys(visitedQuestions).filter(id => visitedQuestions[id] === true && userAnswers[id] === undefined).length;
-  const notVisitedCount = Math.max(0, totalQCount - visitedCount);
+  const unansweredCount = Math.max(0, totalQCount - answeredCount);
 
-  // Dynamic timer text color logic:
-  // Green from start down to 50% time left
-  // Yellow from 50% time left down to last 7 mins (420s)
-  // Red in last 7 mins (<= 420s)
   const totalMins = exam?.time_limit_mins || 20;
   const totalSeconds = totalMins * 60;
   const halfTimeSeconds = totalSeconds / 2;
@@ -1241,7 +1535,6 @@ export default function CustomExamTest() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
-            {/* TIMER ON LEFT SIDE */}
             {activeStep === 'INSTRUCTIONS' ? (
               <div className="font-mono text-[13px] sm:text-sm font-bold text-slate-700">
                 <span className="text-slate-600 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
@@ -1259,11 +1552,9 @@ export default function CustomExamTest() {
       {/* QUIZ MAIN BODY: INSTRUCTIONS OR (QUESTION AREA + SIDEBAR) */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[#e3e3e3]">
         {activeStep === 'INSTRUCTIONS' ? (
-          /* INSTRUCTIONS CARD VIEW WITH SCROLLABLE CONTENT & PINNED BOTTOM BUTTON ON #e3e3e3 BG */
           <div className="flex-1 min-h-0 px-3 sm:px-6 py-2 sm:py-3 bg-[#e3e3e3] flex flex-col items-center overflow-y-auto">
             <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto max-h-full space-y-3">
               
-              {/* TITLE & RED SUBTITLE (FIXED TOP) */}
               <div className="shrink-0 text-center">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
@@ -1273,7 +1564,6 @@ export default function CustomExamTest() {
                 </p>
               </div>
 
-              {/* RULES & INSTRUCTIONS CONTENT AREA (SCROLLABLE IF OVERFLOW) */}
               <div className="overflow-y-auto pr-2 space-y-3 text-slate-700 min-h-0">
                 {exam?.rules_text ? (
                   <div className="text-[17px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
@@ -1294,7 +1584,6 @@ export default function CustomExamTest() {
                   </ol>
                 )}
 
-                {/* AGREEMENT CHECKBOXES */}
                 <div className="space-y-2 pt-3">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
@@ -1322,7 +1611,6 @@ export default function CustomExamTest() {
                 </div>
               </div>
 
-              {/* START EXAM BUTTON (PINNED AT BOTTOM) */}
               <div className="shrink-0 pt-3 border-t border-slate-100 flex justify-center bg-white">
                 <button
                   type="button"
@@ -1337,11 +1625,10 @@ export default function CustomExamTest() {
           </div>
         ) : (
           <>
-            {/* 76% QUESTION AREA */}
+            {/* QUESTION AREA */}
             <div className="flex-1 lg:w-[76%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
             <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3.5 bg-white">
-              {/* DYNAMIC CATEGORY / SECTION NAVIGATION TABS */}
               {(() => {
                 const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
                   ? exam.exam_categories
@@ -1468,7 +1755,7 @@ export default function CustomExamTest() {
 
                   <button
                     type="button"
-                    onClick={triggerFeedbackOrSubmit}
+                    onClick={() => setShowSubmitConfirmModal(true)}
                     className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[11px] sm:text-xs transition-colors cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
                   >
                     Submit Test
@@ -1479,14 +1766,12 @@ export default function CustomExamTest() {
           )}
         </div>
 
-        {/* 24% SIDEBAR PALETTE (ALL CIRCLES) */}
+        {/* SIDEBAR PALETTE */}
         <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 pt-2 px-3 sm:px-4 pb-3 sm:pb-4 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
-          {/* TOP HEADER */}
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 shrink-0 mb-1 mt-0">
             Question Palette ({examQuestions.length})
           </h3>
 
-          {/* SCROLLABLE QUESTION NUMBERS GRID (EXACTLY 5 VERTICAL ROWS / 25 SQUARES VISIBLE ON NON-MOBILE) */}
           <div className="w-full sm:aspect-square overflow-y-auto pr-1 max-h-60 sm:max-h-none no-scrollbar sm:custom-scrollbar">
             <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-1.5">
               {examQuestions.map((q, idx) => {
@@ -1548,26 +1833,22 @@ export default function CustomExamTest() {
                             <stop offset="100%" stopColor="#e2e8f0" />
                           </linearGradient>
 
-                          {/* Top-Right Diagonal Glass Gloss Sheen */}
                           <linearGradient id={`sq-diag-gloss-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
                             <stop offset="50%" stopColor="#ffffff" stopOpacity="0.15" />
                             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
                           </linearGradient>
 
-                          {/* Top Inner Gloss Highlight */}
                           <linearGradient id={`sq-top-glow-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
                             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
                           </linearGradient>
                         </defs>
 
-                        {/* Active Question Outer Pulsing Ring */}
                         {isCurrent && (
                           <rect x="0.8" y="0.8" width="30.4" height="30.4" rx="7" ry="7" fill="none" stroke="#2563eb" strokeWidth="2.0" className="animate-pulse" />
                         )}
 
-                        {/* Main 3D Glossy Rounded Square Base */}
                         <rect
                           x="3"
                           y="3"
@@ -1587,7 +1868,6 @@ export default function CustomExamTest() {
                           strokeWidth="1.0"
                         />
 
-                        {/* Top Inner Glass Glow Highlight */}
                         <rect
                           x="4"
                           y="4"
@@ -1599,14 +1879,12 @@ export default function CustomExamTest() {
                           opacity="0.5"
                         />
 
-                        {/* Top-Right Diagonal Glass Gloss Sheen */}
                         <path
                           d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z"
                           fill={`url(#sq-diag-gloss-${idx})`}
                           opacity="0.8"
                         />
 
-                        {/* Perfectly Centered SVG Text */}
                         <text
                           x="16"
                           y="16"
@@ -1631,7 +1909,6 @@ export default function CustomExamTest() {
             </div>
           </div>
 
-          {/* STILL / FIXED LEGEND WITH 3D GLOSSY ROUNDED SQUARES */}
           <div className="p-3.5 sm:p-4 border-t border-slate-200 text-xs sm:text-sm text-slate-800 space-y-2.5 mt-3 shrink-0 bg-slate-100/90 rounded-2xl">
             <div className="flex items-center gap-3">
               <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
@@ -1681,6 +1958,64 @@ export default function CustomExamTest() {
       </>
     )}
   </div>
+
+  {/* SUBMIT CONFIRMATION POPUP MODAL */}
+  {showSubmitConfirmModal && (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        
+        <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-brand-blue flex items-center justify-center mx-auto shadow-xs">
+          <FiAlertCircle className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-1.5">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">Confirm Test Submission</h3>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {unansweredCount > 0
+              ? `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''} out of ${totalQCount}. Are you sure you want to submit?`
+              : `All ${totalQCount} questions have been answered! Are you sure you want to submit?`}
+          </p>
+        </div>
+
+        {/* SUMMARY STATS GRID */}
+        <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+          <div className="bg-white p-2 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Answered</span>
+            <span className="text-base font-black text-emerald-600">{answeredCount}</span>
+          </div>
+          <div className="bg-white p-2 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Unanswered</span>
+            <span className="text-base font-black text-rose-600">{unansweredCount}</span>
+          </div>
+          <div className="bg-white p-2 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Marked</span>
+            <span className="text-base font-black text-purple-600">{markedCount}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => setShowSubmitConfirmModal(false)}
+            className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
+          >
+            Cancel / Return
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSubmitConfirmModal(false);
+              triggerFeedbackOrSubmit();
+            }}
+            className="flex-1 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center gap-1.5"
+          >
+            <span>Confirm & Submit</span>
+            <FiCheck className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 </div>
 );
 }
