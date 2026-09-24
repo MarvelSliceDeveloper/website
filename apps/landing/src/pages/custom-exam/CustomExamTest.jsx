@@ -303,18 +303,23 @@ export default function CustomExamTest() {
     let dbDraftVisited = null;
 
     if (currentExam.id && !currentExam.id.startsWith('demo-') && authCand?.user_email) {
-      const { data: existingSub } = await supabase
+      const { data: existingRows } = await supabase
         .from('custom_mock_exam_submissions')
         .select('*')
         .eq('custom_mock_exam_id', currentExam.id)
         .eq('user_email', authCand.user_email.toLowerCase())
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
 
-      if (existingSub && existingSub.status === 'SUBMITTED') {
-        setUserAnswers(existingSub.answers || {});
-        setFeedbackAnswers(existingSub.feedback_answers || {});
+      const existingSub = existingRows && existingRows.length > 0 ? existingRows[0] : null;
+
+      if (authCand?.alreadySubmitted || (existingSub && existingSub.status === 'SUBMITTED')) {
+        if (existingSub) {
+          setUserAnswers(existingSub.answers || {});
+          setFeedbackAnswers(existingSub.feedback_answers || {});
+          setScore(existingSub.score || 0);
+          setTabSwitchCount(existingSub.tab_switch_count || 0);
+        }
         setActiveStep('SUBMITTED');
         try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
         hasRestoredSessionRef.current = true;
@@ -449,9 +454,7 @@ export default function CustomExamTest() {
       }
 
       if (cached && cached.activeStep === 'SUBMITTED') {
-        try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
-        setTimeLeftSeconds(fullExamSecs);
-        setActiveStep('INSTRUCTIONS');
+        setActiveStep('SUBMITTED');
         return;
       }
 
@@ -569,13 +572,16 @@ export default function CustomExamTest() {
         updated_at: new Date().toISOString()
       };
 
-      // Check existing draft
-      const { data: existing } = await supabase
+      // Check existing draft safely
+      const { data: existingRows } = await supabase
         .from('custom_mock_exam_submissions')
         .select('id, status')
         .eq('custom_mock_exam_id', exam.id)
         .eq('user_email', candidate.user_email.toLowerCase())
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
       if (existing) {
         if (existing.status !== 'SUBMITTED') {
@@ -613,71 +619,7 @@ export default function CustomExamTest() {
     };
   }, [activeStep, timeLeftSeconds]);
 
-  // SILENT TAB SWITCH DETECTION & TRACKING ENGINE (NO USER ALERTS)
-  useEffect(() => {
-    if (activeStep !== 'QUIZ') return;
-
-    function recordTabSwitch(eventType) {
-      const now = Date.now();
-      if (now - lastSwitchTimeRef.current < 800) return; // Debounce rapid focus/blur events
-      lastSwitchTimeRef.current = now;
-
-      const qIndex = currentQIndexRef.current || 0;
-      const secs = timeLeftRef.current || 0;
-      const currentQ = examQuestionsRef.current?.[qIndex];
-
-      const mins = Math.floor(secs / 60);
-      const remainingSecs = secs % 60;
-      const formattedTime = `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
-
-      const logEntry = {
-        switch_number: (tabSwitchLogsRef.current?.length || 0) + 1,
-        timestamp: new Date().toISOString(),
-        event_type: eventType, // 'tab_hidden' or 'window_blur'
-        question_number: qIndex + 1,
-        question_id: currentQ?.id || `q-${qIndex + 1}`,
-        question_category: currentQ?.category_name || 'General',
-        time_left_formatted: formattedTime,
-        time_left_seconds: secs,
-        document_hidden: document.hidden,
-        window_title: document.title,
-        referrer: document.referrer || 'Direct'
-      };
-
-      setTabSwitchCount(prev => prev + 1);
-      setTabSwitchLogs(prev => [...prev, logEntry]);
-    }
-
-    function handleVisibilityChange() {
-      if (document.hidden) {
-        recordTabSwitch('tab_hidden');
-      }
-    }
-
-    function handleWindowBlur() {
-      recordTabSwitch('window_blur');
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, [activeStep]);
-
-  // Prevent scrolling
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    };
-  }, []);
-
-  function saveImmediateSession(answers, visited, index) {
+  function saveImmediateSession(answers, visited, index, switchCount, switchLogs) {
     const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
     const sessionData = {
       activeStep: 'QUIZ',
@@ -688,8 +630,8 @@ export default function CustomExamTest() {
       feedbackAnswers,
       timeLeftSeconds,
       examStartedAtMs: examStartedAtMs || Date.now(),
-      tabSwitchCount,
-      tabSwitchLogs,
+      tabSwitchCount: switchCount !== undefined ? switchCount : tabSwitchCount,
+      tabSwitchLogs: switchLogs !== undefined ? switchLogs : tabSwitchLogs,
       savedAtTimestampMs: Date.now()
     };
     try {
@@ -725,6 +667,77 @@ export default function CustomExamTest() {
     autoSaveDraftToSupabase(userAnswers, updatedVisited, timeLeftSeconds);
     setCurrentQIndex(nextIdx);
   }
+
+  // SILENT TAB SWITCH DETECTION & TRACKING ENGINE (NO USER ALERTS)
+  useEffect(() => {
+    if (activeStep !== 'QUIZ') return;
+
+    function recordTabSwitch(eventType) {
+      const now = Date.now();
+      if (now - lastSwitchTimeRef.current < 800) return; // Debounce rapid focus/blur events
+      lastSwitchTimeRef.current = now;
+
+      const qIndex = currentQIndexRef.current || 0;
+      const secs = timeLeftRef.current || 0;
+      const currentQ = examQuestionsRef.current?.[qIndex];
+
+      const mins = Math.floor(secs / 60);
+      const remainingSecs = secs % 60;
+      const formattedTime = `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+
+      const logEntry = {
+        switch_number: (tabSwitchLogsRef.current?.length || 0) + 1,
+        timestamp: new Date().toISOString(),
+        event_type: eventType, // 'tab_hidden' or 'window_blur'
+        question_number: qIndex + 1,
+        question_id: currentQ?.id || `q-${qIndex + 1}`,
+        question_category: currentQ?.category_name || 'General',
+        time_left_formatted: formattedTime,
+        time_left_seconds: secs,
+        document_hidden: document.hidden,
+        window_title: document.title,
+        referrer: document.referrer || 'Direct'
+      };
+
+      const updatedLogs = [...(tabSwitchLogsRef.current || []), logEntry];
+      const updatedCount = updatedLogs.length;
+
+      setTabSwitchCount(updatedCount);
+      setTabSwitchLogs(updatedLogs);
+
+      saveImmediateSession(userAnswers, visitedQuestions, currentQIndexRef.current, updatedCount, updatedLogs);
+      autoSaveDraftToSupabase(userAnswers, visitedQuestions, timeLeftRef.current, updatedCount, updatedLogs);
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        recordTabSwitch('tab_hidden');
+      }
+    }
+
+    function handleWindowBlur() {
+      recordTabSwitch('window_blur');
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [activeStep]);
+
+  // Prevent scrolling
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
 
   function triggerFeedbackOrSubmit() {
     const markedQList = examQuestions.filter(q => markedForReview[q.id] === true);
@@ -869,34 +882,48 @@ export default function CustomExamTest() {
         updated_at: new Date().toISOString()
       };
 
-      // Check existing submission record to update or insert
-      const { data: existingSub } = await supabase
+      // Check existing submission record to update or insert safely
+      const { data: existingRows } = await supabase
         .from('custom_mock_exam_submissions')
         .select('id')
         .eq('custom_mock_exam_id', exam.id)
         .eq('user_email', candidate.user_email.toLowerCase())
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      let subResp = existingSub;
-      if (existingSub) {
+      let subResp = null;
+      if (existingRows && existingRows.length > 0) {
+        const primaryId = existingRows[0].id;
         const { data: updatedSub, error: updateErr } = await supabase
           .from('custom_mock_exam_submissions')
           .update(submissionData)
-          .eq('id', existingSub.id)
-          .select()
-          .single();
+          .eq('id', primaryId)
+          .select();
 
-        if (updateErr) console.error('Error updating custom_mock_exam_submissions:', updateErr);
-        else subResp = updatedSub;
+        if (updateErr) {
+          console.error('Error updating custom_mock_exam_submissions:', updateErr);
+        } else if (updatedSub && updatedSub.length > 0) {
+          subResp = updatedSub[0];
+        }
+
+        // Clean up any extra duplicate draft rows if present
+        if (existingRows.length > 1) {
+          const extraIds = existingRows.slice(1).map(r => r.id);
+          await supabase
+            .from('custom_mock_exam_submissions')
+            .delete()
+            .in('id', extraIds);
+        }
       } else {
         const { data: insertedSub, error: insertErr } = await supabase
           .from('custom_mock_exam_submissions')
           .insert([submissionData])
-          .select()
-          .single();
+          .select();
 
-        if (insertErr) console.error('Error inserting custom_mock_exam_submissions:', insertErr);
-        else subResp = insertedSub;
+        if (insertErr) {
+          console.error('Error inserting custom_mock_exam_submissions:', insertErr);
+        } else if (insertedSub && insertedSub.length > 0) {
+          subResp = insertedSub[0];
+        }
       }
 
       // Record into dedicated custom_mock_exam_tab_switches table
@@ -912,7 +939,12 @@ export default function CustomExamTest() {
       } catch (e) {}
     }
 
-    try { localStorage.removeItem(`custom_exam_test_session_${slug}`); } catch (e) {}
+    try {
+      localStorage.removeItem(`custom_exam_test_session_${slug}`);
+      if (candidate?.user_email) {
+        localStorage.setItem(`custom_exam_submitted_${slug}_${candidate.user_email.toLowerCase()}`, 'true');
+      }
+    } catch (e) {}
 
     setIsSubmitting(false);
     setActiveStep('SUBMITTED');

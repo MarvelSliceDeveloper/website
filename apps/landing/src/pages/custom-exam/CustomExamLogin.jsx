@@ -132,18 +132,36 @@ export default function CustomExamLogin() {
       return;
     }
 
+    let alreadySubmitted = false;
+    if (exam && !exam.id.startsWith('demo-') && candidate) {
+      const { data: subRows } = await supabase
+        .from('custom_mock_exam_submissions')
+        .select('id, status')
+        .eq('custom_mock_exam_id', exam.id)
+        .eq('user_email', cleanEmail)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (subRows && subRows.length > 0 && subRows[0].status === 'SUBMITTED') {
+        alreadySubmitted = true;
+      }
+    }
+
     // Save candidate authentication session
     const authSession = {
       examId: exam.id,
       examSlug: exam.slug,
       candidate: candidate,
+      alreadySubmitted,
       loginTimestampMs: Date.now()
     };
 
     try {
       sessionStorage.setItem(`custom_exam_auth_${slug}`, JSON.stringify(authSession));
-      // Clear any stale cached test session for this slug on fresh login
-      localStorage.removeItem(`custom_exam_test_session_${slug}`);
+      if (!alreadySubmitted) {
+        // Clear any stale cached test session for this slug on fresh login only if not submitted
+        localStorage.removeItem(`custom_exam_test_session_${slug}`);
+      }
     } catch (err) {
       console.warn('Could not save auth session:', err);
     }

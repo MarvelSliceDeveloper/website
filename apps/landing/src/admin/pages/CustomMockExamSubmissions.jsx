@@ -418,6 +418,7 @@ export default function CustomMockExamSubmissions() {
               <thead>
                 <tr className="bg-slate-50 text-slate-700 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
                   <th className="p-3.5">Candidate & Contact</th>
+                  <th className="p-3.5">Status</th>
                   <th className="p-3.5">Degree & College</th>
                   <th className="p-3.5">Academics (10th/12th/CGPA)</th>
                   <th className="p-3.5">Overall Score</th>
@@ -432,6 +433,7 @@ export default function CustomMockExamSubmissions() {
                   const hasFeedback = sub.feedback_answers && Object.keys(sub.feedback_answers).length > 0;
                   const catScores = sub.category_scores || {};
                   const switchCount = sub.tab_switch_count || sub.tab_switch_logs?.length || 0;
+                  const isSubmitted = sub.status === 'SUBMITTED';
 
                   return (
                     <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
@@ -450,6 +452,20 @@ export default function CustomMockExamSubmissions() {
                             <span className="text-[10px] text-slate-400 block">{sub.user_phone}</span>
                           </div>
                         </div>
+                      </td>
+
+                      <td className="p-3.5">
+                        {isSubmitted ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            Completed
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                            In Progress (Draft)
+                          </span>
+                        )}
                       </td>
 
                       <td className="p-3.5">

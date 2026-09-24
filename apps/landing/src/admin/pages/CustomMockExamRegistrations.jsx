@@ -25,6 +25,8 @@ export default function CustomMockExamRegistrations() {
   const [emailBody, setEmailBody] = useState('');
   const [copiedField, setCopiedField] = useState(null);
 
+  const [submissionsMap, setSubmissionsMap] = useState({});
+
   useEffect(() => {
     fetchExams();
   }, []);
@@ -57,6 +59,23 @@ export default function CustomMockExamRegistrations() {
 
     if (!error && data) {
       setRegistrations(data);
+
+      try {
+        const { data: subData } = await supabase
+          .from('custom_mock_exam_submissions')
+          .select('custom_mock_exam_id, user_email, status, score, total_questions, tab_switch_count');
+
+        if (subData) {
+          const map = {};
+          subData.forEach(s => {
+            if (s.user_email) {
+              const key = `${s.custom_mock_exam_id}_${s.user_email.toLowerCase()}`;
+              map[key] = s;
+            }
+          });
+          setSubmissionsMap(map);
+        }
+      } catch (e) {}
     } else {
       console.warn('custom_mock_exam_registrations query error:', error);
       // Demo registrations if table empty
@@ -372,6 +391,7 @@ Marvel Slice LMS Team`;
                   <th className="p-3.5">Candidate</th>
                   <th className="p-3.5">Login Credentials</th>
                   <th className="p-3.5">College & Dept</th>
+                  <th className="p-3.5">Exam Status</th>
                   <th className="p-3.5">Phone</th>
                   <th className="p-3.5">Registered Exam</th>
                   <th className="p-3.5">Reg Date</th>
@@ -379,50 +399,72 @@ Marvel Slice LMS Team`;
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filteredRegistrations.map((reg) => (
-                  <tr
-                    key={reg.id}
-                    onClick={() => setSelectedCandidate(reg)}
-                    className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
-                  >
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center group-hover:border-brand-blue transition-colors">
-                          {reg.candidate_photo ? (
-                            <img src={reg.candidate_photo} alt={reg.user_name} className="w-full h-full object-cover" />
-                          ) : (
-                            <FiUser className="w-4 h-4 text-slate-400 group-hover:text-brand-blue transition-colors" />
-                          )}
+                {filteredRegistrations.map((reg) => {
+                  const key = `${reg.custom_mock_exam_id}_${reg.user_email?.toLowerCase()}`;
+                  const sub = submissionsMap[key];
+
+                  return (
+                    <tr
+                      key={reg.id}
+                      onClick={() => setSelectedCandidate(reg)}
+                      className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+                    >
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center group-hover:border-brand-blue transition-colors">
+                            {reg.candidate_photo ? (
+                              <img src={reg.candidate_photo} alt={reg.user_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <FiUser className="w-4 h-4 text-slate-400 group-hover:text-brand-blue transition-colors" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 block text-xs group-hover:text-brand-blue transition-colors">
+                              {reg.user_name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">{reg.user_year || 'Candidate'}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-bold text-slate-900 block text-xs group-hover:text-brand-blue transition-colors">
-                            {reg.user_name}
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="space-y-0.5">
+                          <span className="font-mono text-slate-900 block text-[11px]">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">User:</span>
+                            {reg.user_email}
                           </span>
-                          <span className="text-[10px] text-slate-400 block">{reg.user_year || 'Candidate'}</span>
+                          <span className="font-mono text-brand-blue font-bold block text-[11px]">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">Pass (DOB):</span>
+                            {reg.user_dob || 'N/A'}
+                          </span>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="p-3.5">
-                      <div className="space-y-0.5">
-                        <span className="font-mono text-slate-900 block text-[11px]">
-                          <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">User:</span>
-                          {reg.user_email}
-                        </span>
-                        <span className="font-mono text-brand-blue font-bold block text-[11px]">
-                          <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">Pass (DOB):</span>
-                          {reg.user_dob || 'N/A'}
-                        </span>
-                      </div>
-                    </td>
+                      <td className="p-3.5">
+                        <span className="font-semibold text-slate-900 block">{reg.user_college || 'N/A'}</span>
+                        <span className="text-[10px] text-slate-500 block">{reg.user_department || 'N/A'}</span>
+                        {reg.user_reg_num && (
+                          <span className="text-[10px] font-mono text-brand-blue font-bold block">Reg: {reg.user_reg_num}</span>
+                        )}
+                      </td>
 
-                    <td className="p-3.5">
-                      <span className="font-semibold text-slate-900 block">{reg.user_college || 'N/A'}</span>
-                      <span className="text-[10px] text-slate-500 block">{reg.user_department || 'N/A'}</span>
-                      {reg.user_reg_num && (
-                        <span className="text-[10px] font-mono text-brand-blue font-bold block">Reg: {reg.user_reg_num}</span>
-                      )}
-                    </td>
+                      <td className="p-3.5">
+                        {!sub ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                            Registered Only
+                          </span>
+                        ) : sub.status === 'SUBMITTED' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            Completed
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                            In Progress (Draft)
+                          </span>
+                        )}
+                      </td>
 
                     <td className="p-3.5 font-mono text-[11px] text-slate-800">
                       {reg.user_phone || 'N/A'}
@@ -460,8 +502,9 @@ Marvel Slice LMS Team`;
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                );
+              })}
+            </tbody>
             </table>
           </div>
         </div>
