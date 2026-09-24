@@ -485,11 +485,8 @@ export default function CustomExamTest() {
         setIsSessionRestored(true);
       } else {
         setTimeLeftSeconds(0);
-        setActiveStep('QUIZ');
+        setActiveStep('FEEDBACK');
         setIsSessionRestored(true);
-        setTimeout(() => {
-          triggerFeedbackOrSubmit();
-        }, 500);
       }
     } catch (e) {
       setTimeLeftSeconds(fullExamSecs);
@@ -610,7 +607,7 @@ export default function CustomExamTest() {
         setTimeLeftSeconds((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current);
-            triggerFeedbackOrSubmit();
+            setActiveStep('FEEDBACK');
             return 0;
           }
           return prev - 1;
@@ -643,6 +640,7 @@ export default function CustomExamTest() {
   }
 
   function handleOptionSelect(qId, optIdx) {
+    if (timeLeftSeconds <= 0) return; // Prevent answer modification after timer ends
     setUserAnswers(prev => {
       let updated;
       if (prev[qId] === optIdx) {
@@ -743,6 +741,10 @@ export default function CustomExamTest() {
 
 
   function triggerFeedbackOrSubmit() {
+    if (timeLeftSeconds <= 0) {
+      setActiveStep('FEEDBACK');
+      return;
+    }
     const markedQList = examQuestions.filter(q => markedForReview[q.id] === true);
     if (markedQList.length > 0) {
       setActiveStep('REVIEW_MARKED');

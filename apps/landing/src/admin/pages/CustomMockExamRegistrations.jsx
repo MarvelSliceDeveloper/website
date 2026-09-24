@@ -70,7 +70,9 @@ export default function CustomMockExamRegistrations() {
           subData.forEach(s => {
             if (s.user_email) {
               const key = `${s.custom_mock_exam_id}_${s.user_email.toLowerCase()}`;
-              map[key] = s;
+              if (!map[key] || s.status === 'SUBMITTED') {
+                map[key] = s;
+              }
             }
           });
           setSubmissionsMap(map);
