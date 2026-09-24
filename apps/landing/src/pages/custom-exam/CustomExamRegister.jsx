@@ -544,7 +544,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
       <Header />
 
       <main className="flex-1 py-6 sm:py-8 px-4 flex flex-col justify-center items-center">
-        <div className="max-w-3xl w-full mx-auto">
+        <div className="max-w-[690px] w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
           <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200/80 flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden">
             <div className="text-center shrink-0 mb-4">
