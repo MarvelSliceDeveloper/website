@@ -13,6 +13,7 @@ import PageShell from '../components/ui/PageShell';
 import DateTimePicker from '../components/ui/DateTimePicker';
 import FormRow, { Input, Select, Textarea } from '../components/ui/FormRow';
 import { toDateTimeLocal, fromDateTimeLocal } from '../../lib/datetime';
+import { DEFAULT_EXAM_RULES_TEXT } from '../../lib/examRules';
 
 export default function CustomMockExamEditor() {
   const { id } = useParams();
@@ -147,9 +148,7 @@ export default function CustomMockExamEditor() {
   const [registrationStartTime, setRegistrationStartTime] = useState('');
   const [examStartTime, setExamStartTime] = useState('');
   const [examEndTime, setExamEndTime] = useState('');
-  const [rulesText, setRulesText] = useState(
-    '1. Stay on the official exam website with a stable internet connection throughout the test.\n2. Do not refresh, close, or leave the exam page while the test is running.\n3. Do not switch browser tabs or windows — tab switches are tracked and reported.\n4. Do not leak, share, screenshot, or distribute any exam questions or content.\n5. Do not use unauthorized materials, devices, or external assistance during the exam.\n6. Each question carries 1 mark with no negative marking.\n7. Read each question carefully before selecting your answer.\n8. Manage your time effectively and attempt all questions within the given duration.\n9. Review your answers and marked questions before final submit, if time permits.\n10. The exam auto-submits when the timer expires; once submitted, answers cannot be changed.'
-  );
+  const [rulesText, setRulesText] = useState(DEFAULT_EXAM_RULES_TEXT);
 
   // Feedback Questions Builder State [{ id, question_text, type: 'rating' | 'text' }]
   const [feedbackQuestions, setFeedbackQuestions] = useState([
@@ -441,7 +440,7 @@ export default function CustomMockExamEditor() {
       registration_start_time: registrationStartTime ? fromDateTimeLocal(registrationStartTime) : null,
       exam_start_time: examStartTime ? fromDateTimeLocal(examStartTime) : null,
       exam_end_time: examEndTime ? fromDateTimeLocal(examEndTime) : null,
-      rules_text: rulesText.trim(),
+      rules_text: rulesText.trim() || DEFAULT_EXAM_RULES_TEXT,
       feedback_questions: feedbackQuestions,
       allowed_degrees: allowedDegrees,
       exam_categories: examCategories,
@@ -947,7 +946,7 @@ export default function CustomMockExamEditor() {
                 )}
               </FormRow>
 
-              <FormRow label="Exam Rules & Guidelines Text">
+              <FormRow label="Exam Rules & Guidelines Text" hint="Edit freely, or clear the box to auto-fill the default 10 rules on save.">
                 <Textarea
                   rows={5}
                   value={rulesText}

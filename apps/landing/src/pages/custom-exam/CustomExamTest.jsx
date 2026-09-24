@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import { getExamRulesText } from '../../lib/examRules';
 import './custom-exam-responsive.css';
 
 // FIREWORKS & FIRECRACKER CELEBRATION ANIMATION ENGINE
@@ -1723,24 +1724,9 @@ export default function CustomExamTest() {
               </div>
 
               <div className="overflow-y-auto pr-2 space-y-3 text-slate-700 min-h-0">
-                {exam?.rules_text ? (
-                  <div className="text-[17px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
-                    {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
-                  </div>
-                ) : (
-                  <ol className="list-decimal list-inside text-[17px] text-slate-700 font-medium leading-[2.2]">
-                    <li>Stay on the official exam website with a stable internet connection throughout the test.</li>
-                    <li>Do not refresh, close, or leave the exam page while the test is running.</li>
-                    <li>Do not switch browser tabs or windows — tab switches are tracked and reported.</li>
-                    <li>Do not leak, share, screenshot, or distribute any exam questions or content.</li>
-                    <li>Do not use unauthorized materials, devices, or external assistance during the exam.</li>
-                    <li>Each question carries 1 mark with no negative marking.</li>
-                    <li>Read each question carefully before selecting your answer.</li>
-                    <li>Manage your time effectively and attempt all questions within the given duration.</li>
-                    <li>Review your answers and marked questions before final submit, if time permits.</li>
-                    <li>The exam auto-submits when the timer expires; once submitted, answers cannot be changed.</li>
-                  </ol>
-                )}
+                <div className="text-[17px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
+                  {getExamRulesText(exam).replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
+                </div>
 
                 <div className="space-y-2 pt-3">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">

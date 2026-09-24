@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import { getExamRulesText } from '../../lib/examRules';
 
 export default function CustomExamInstructions() {
   const { slug } = useParams();
@@ -220,11 +221,7 @@ export default function CustomExamInstructions() {
               <span>Rules & Code of Conduct</span>
             </h3>
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto">
-              {exam?.rules_text ? (
-                exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
-              ) : (
-                "1. Stay on the official exam website with a stable internet connection throughout the test.\n2. Do not refresh, close, or leave the exam page while the test is running.\n3. Do not switch browser tabs or windows — tab switches are tracked and reported.\n4. Do not leak, share, screenshot, or distribute any exam questions or content.\n5. Do not use unauthorized materials, devices, or external assistance during the exam.\n6. Each question carries 1 mark with no negative marking.\n7. Read each question carefully before selecting your answer.\n8. Manage your time effectively and attempt all questions within the given duration.\n9. Review your answers and marked questions before final submit, if time permits.\n10. The exam auto-submits when the timer expires; once submitted, answers cannot be changed."
-              )}
+              {getExamRulesText(exam).replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
             </div>
           </div>
 
