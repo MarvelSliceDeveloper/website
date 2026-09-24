@@ -538,7 +538,14 @@ export default function CustomExamTest() {
   }, []);
 
   function handleOptionSelect(qId, optIdx) {
-    setUserAnswers(prev => ({ ...prev, [qId]: optIdx }));
+    setUserAnswers(prev => {
+      if (prev[qId] === optIdx) {
+        const copy = { ...prev };
+        delete copy[qId];
+        return copy;
+      }
+      return { ...prev, [qId]: optIdx };
+    });
   }
 
   function countSentences(text) {
@@ -1405,21 +1412,9 @@ export default function CustomExamTest() {
                       onClick={() => setCurrentQIndex(prev => Math.min(prev + 1, examQuestions.length - 1))}
                       className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-r-full bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] sm:text-xs disabled:opacity-40 transition-colors cursor-pointer shadow-xs whitespace-nowrap"
                     >
-                      Next
+                      Save & Next
                     </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setUserAnswers(prev => {
-                      const copy = { ...prev };
-                      delete copy[examQuestions[currentQIndex]?.id];
-                      return copy;
-                    })}
-                    className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-white border-2 border-brand-blue/30 text-brand-blue font-bold text-[11px] sm:text-xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    Clear Choice
-                  </button>
 
                   <button
                     type="button"
@@ -1435,9 +1430,9 @@ export default function CustomExamTest() {
         </div>
 
         {/* 24% SIDEBAR PALETTE (ALL CIRCLES) */}
-        <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 p-3 sm:p-4 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
+        <div className="w-full lg:w-[24%] bg-slate-100 border-t lg:border-t-0 lg:border-l border-slate-200 pt-2 px-3 sm:px-4 pb-3 sm:pb-4 shrink-0 flex flex-col min-h-0 justify-between order-2 lg:order-2">
           {/* TOP HEADER */}
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mb-2">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 shrink-0 mb-1 mt-0">
             Question Palette ({examQuestions.length})
           </h3>
 
@@ -1472,9 +1467,9 @@ export default function CustomExamTest() {
                       <svg viewBox="0 0 32 32" className="w-full h-full overflow-visible scale-[0.97] transform origin-center">
                         <defs>
                           <linearGradient id={`sq-bg-green-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#4ade80" />
-                            <stop offset="45%" stopColor="#22c55e" />
-                            <stop offset="100%" stopColor="#15803d" />
+                            <stop offset="0%" stopColor="#93d21b" />
+                            <stop offset="45%" stopColor="#74a916" />
+                            <stop offset="100%" stopColor="#4d7c0f" />
                           </linearGradient>
                           <linearGradient id={`sq-bg-purple-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#c084fc" />
@@ -1482,15 +1477,15 @@ export default function CustomExamTest() {
                             <stop offset="100%" stopColor="#7e22ce" />
                           </linearGradient>
                           <linearGradient id={`sq-bg-dual-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#22c55e" />
-                            <stop offset="49.9%" stopColor="#22c55e" />
+                            <stop offset="0%" stopColor="#74a916" />
+                            <stop offset="49.9%" stopColor="#74a916" />
                             <stop offset="50.1%" stopColor="#a855f7" />
                             <stop offset="100%" stopColor="#a855f7" />
                           </linearGradient>
                           <linearGradient id={`sq-bg-red-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#f87171" />
-                            <stop offset="45%" stopColor="#ef4444" />
-                            <stop offset="100%" stopColor="#b91c1c" />
+                            <stop offset="0%" stopColor="#ff4d4d" />
+                            <stop offset="45%" stopColor="#dc2626" />
+                            <stop offset="100%" stopColor="#991b1b" />
                           </linearGradient>
                           <linearGradient id={`sq-bg-blue-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stopColor="#60a5fa" />
@@ -1590,14 +1585,14 @@ export default function CustomExamTest() {
           <div className="p-3.5 sm:p-4 border-t border-slate-200 text-xs sm:text-sm text-slate-800 space-y-2.5 mt-3 shrink-0 bg-slate-100/90 rounded-2xl">
             <div className="flex items-center gap-3">
               <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
-                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#22c55e" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#74a916" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
               </svg>
               <span className="font-semibold text-slate-800">Answered</span>
             </div>
             <div className="flex items-center gap-3">
               <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
-                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#ef4444" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
+                <rect x="3" y="3" width="26" height="26" rx="6" ry="6" fill="#dc2626" stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" />
                 <path d="M 12,3 L 23,3 C 26.3,3 29,5.7 29,9 L 29,19 Z" fill="#ffffff" opacity="0.3" />
               </svg>
               <span className="font-semibold text-slate-800">Not Answered</span>
@@ -1613,8 +1608,8 @@ export default function CustomExamTest() {
               <svg viewBox="0 0 32 32" className="w-6 h-6 shrink-0">
                 <defs>
                   <linearGradient id="legend-sq-bg-dual" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#22c55e" />
-                    <stop offset="49.9%" stopColor="#22c55e" />
+                    <stop offset="0%" stopColor="#74a916" />
+                    <stop offset="49.9%" stopColor="#74a916" />
                     <stop offset="50.1%" stopColor="#a855f7" />
                     <stop offset="100%" stopColor="#a855f7" />
                   </linearGradient>
