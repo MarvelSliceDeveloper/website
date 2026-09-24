@@ -1,0 +1,136 @@
+/* ==========================================================================
+   CUSTOM MOCK EXAM — DEVICE-SPECIFIC RESPONSIVE RULES
+   Scope: .cem-login / .cem-register / .cem-test ONLY.
+   Desktop (PC, >=1280px) intentionally has NO rules here — PC renders
+   exactly as designed. Everything below targets smaller devices.
+   Ranges:
+     Fold folded + extra-small mobiles : <= 359.98px
+     Medium mobiles                     : 360px - 430.98px
+     Large mobiles                      : 431px - 640.98px
+     Small tablets                      : 641px - 820.98px
+     Medium tablets                     : 821px - 1024.98px
+     Large tablets / small laptops      : 1025px - 1279.98px
+     Short landscape screens            : height <= 500px + landscape
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   FOLD FOLDED + EXTRA-SMALL MOBILES (<= 359.98px)
+   e.g. Galaxy Fold folded (~280-344px), iPhone SE 320px
+   -------------------------------------------------------------------------- */
+@media (max-width: 359.98px) {
+  /* Login */
+  .cem-login { padding-left: 0.625rem; padding-right: 0.625rem; padding-top: 1.25rem; padding-bottom: 1.25rem; }
+  .cem-login .cem-card { padding: 1rem; border-radius: 1.25rem; }
+
+  /* Register */
+  .cem-register .cem-card { padding: 0.875rem; border-radius: 1.25rem; max-height: 92vh; }
+
+  /* Exam: reclaim horizontal + vertical space */
+  .cem-test .cem-qarea { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+  .cem-test .cem-timerbar { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+  .cem-test .cem-candidate-photo { width: 44px !important; height: 44px !important; border-radius: 0.75rem; }
+  .cem-test .cem-candidate-meta { font-size: 11px; }
+  .cem-test .cem-hide-xs { display: none !important; }
+  .cem-test .cem-actionbar { flex-wrap: wrap; overflow-x: visible; row-gap: 0.5rem; }
+  .cem-test .cem-actionbar > * { flex: 1 1 auto; justify-content: center; }
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   MEDIUM MOBILES (360px - 430.98px)
+   e.g. iPhone 12/13/14 (390px), Pixel (412px), Galaxy S (360-412px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 360px) and (max-width: 430.98px) {
+  /* Login */
+  .cem-login { padding-left: 0.875rem; padding-right: 0.875rem; }
+  .cem-login .cem-card { padding: 1.25rem; }
+
+  /* Register */
+  .cem-register .cem-card { padding: 1rem; max-height: 90vh; }
+
+  /* Exam */
+  .cem-test .cem-qarea { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+  .cem-test .cem-timerbar { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+  .cem-test .cem-candidate-photo { width: 52px !important; height: 52px !important; }
+  .cem-test .cem-hide-xs { display: none !important; }
+  .cem-test .cem-actionbar { flex-wrap: wrap; overflow-x: visible; row-gap: 0.5rem; }
+  .cem-test .cem-actionbar > *:last-child { flex: 1 1 100%; justify-content: center; }
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   LARGE MOBILES (431px - 640.98px)
+   e.g. large phones, small phones in landscape
+   -------------------------------------------------------------------------- */
+@media (min-width: 431px) and (max-width: 640.98px) {
+  /* Exam */
+  .cem-test .cem-qarea { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .cem-test .cem-timerbar { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .cem-test .cem-candidate-photo { width: 60px !important; height: 60px !important; }
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+  /* Register card breathes a little more */
+  .cem-register .cem-card { padding: 1.25rem; }
+}
+
+/* --------------------------------------------------------------------------
+   SMALL TABLETS (641px - 820.98px)
+   e.g. iPad Mini portrait (768px), Fold unfolded portrait (~717-884px),
+   large phones landscape
+   -------------------------------------------------------------------------- */
+@media (min-width: 641px) and (max-width: 820.98px) {
+  /* Exam: two-column zodiac still stacks under lg — shorten the palette */
+  .cem-test .cem-qarea { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+  .cem-test .cem-timerbar { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+  /* Register: two-column fields already active; widen card slightly */
+  .cem-register .cem-card { max-height: 86vh; }
+}
+
+/* --------------------------------------------------------------------------
+   MEDIUM TABLETS (821px - 1024.98px)
+   e.g. iPad Air/Pro 11" portrait (820-834px), tablets landscape
+   -------------------------------------------------------------------------- */
+@media (min-width: 821px) and (max-width: 1024.98px) {
+  /* Exam */
+  .cem-test .cem-qarea { padding-left: 2rem !important; padding-right: 2rem !important; }
+  .cem-test .cem-timerbar { padding-left: 2rem !important; padding-right: 2rem !important; }
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+  /* Register */
+  .cem-register .cem-card { max-height: 84vh; }
+}
+
+/* --------------------------------------------------------------------------
+   LARGE TABLETS / SMALL LAPTOPS (1025px - 1279.98px)
+   e.g. iPad Pro 12.9" landscape (1366px falls in PC), Fold unfolded
+   landscape (~1104px), small laptops
+   -------------------------------------------------------------------------- */
+@media (min-width: 1025px) and (max-width: 1279.98px) {
+  /* Exam sidebar is side-by-side here (lg breakpoint); keep palette tight */
+  .cem-test .cem-palette-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   SHORT LANDSCAPE SCREENS (height <= 500px + landscape)
+   e.g. phones in landscape (360-930px wide, ~360-430px tall)
+   Compact vertical rhythm so content fits without trapping scroll.
+   -------------------------------------------------------------------------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Login */
+  .cem-login { padding-top: 0.75rem; padding-bottom: 0.75rem; justify-content: flex-start; }
+  .cem-login .cem-card { padding: 1rem; }
+
+  /* Register */
+  .cem-register .cem-card { max-height: 94vh; padding: 1rem; }
+
+  /* Exam: slim candidate bar, tighter paddings */
+  .cem-test .cem-candidate-photo { width: 40px !important; height: 40px !important; border-radius: 0.625rem; }
+  .cem-test .cem-hide-xs { display: none !important; }
+  .cem-test .cem-qarea { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+  .cem-test .cem-timerbar { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+
+  /* Lobby / instruction / submitted modals stay scrollable on short screens */
+  .cem-test .overflow-y-auto { -webkit-overflow-scrolling: touch; }
+}

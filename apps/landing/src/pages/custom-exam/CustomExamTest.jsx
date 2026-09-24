@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import './custom-exam-responsive.css';
 
 // FIREWORKS & FIRECRACKER CELEBRATION ANIMATION ENGINE
 function FireworksCrackerCanvas() {
@@ -1647,7 +1648,7 @@ export default function CustomExamTest() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#e3e3e3] flex flex-col text-slate-800 overflow-hidden">
+    <div className="cem-test fixed inset-0 z-50 bg-[#e3e3e3] flex flex-col text-slate-800 overflow-hidden">
       {/* TOP HEADER WITH EXAM TITLE (COMPACT SPACING) */}
       <header className="bg-white border-b border-slate-200 px-4 py-1 shrink-0 shadow-2xs z-20 flex flex-col items-center justify-center text-center">
         <div className="flex items-center gap-2 select-none cursor-default justify-center">
@@ -1668,25 +1669,25 @@ export default function CustomExamTest() {
       </header>
 
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
-      <div className={activeStep === 'INSTRUCTIONS' ? "bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs" : "bg-white border-b border-slate-200 px-8 sm:px-16 lg:px-28 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs"}>
+      <div className={activeStep === 'INSTRUCTIONS' ? "bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs" : "cem-timerbar bg-white border-b border-slate-200 px-8 sm:px-16 lg:px-28 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs"}>
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
+            <div className="cem-candidate-photo w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
                 <FiUser className="w-9 h-9 text-slate-400" />
               )}
             </div>
-            <div className="text-[13px] leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
+            <div className="cem-candidate-meta text-[13px] leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
               <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
               {candidate?.user_reg_num && (
                 <div className="truncate"><span className="font-semibold text-slate-500">Reg No:</span> <span className="font-mono font-bold text-brand-blue">{candidate.user_reg_num}</span></div>
               )}
-              <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
-              <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
+              <div className="cem-hide-xs truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
+              <div className="cem-hide-xs truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
               {candidate?.user_college && (
-                <div className="truncate"><span className="font-semibold text-slate-500">College:</span> {candidate?.user_college}</div>
+                <div className="cem-hide-xs truncate"><span className="font-semibold text-slate-500">College:</span> {candidate?.user_college}</div>
               )}
             </div>
           </div>
@@ -1784,7 +1785,7 @@ export default function CustomExamTest() {
             {/* QUESTION AREA */}
             <div className="flex-1 lg:w-[76%] min-h-0 flex flex-col bg-white order-1 lg:order-1">
           {examQuestions.length > 0 && (
-            <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3.5 bg-white">
+            <div className="cem-qarea flex-1 min-h-0 flex flex-col w-full px-8 sm:px-16 lg:px-28 py-2.5 sm:py-3.5 bg-white">
               {(() => {
                 const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
                   ? exam.exam_categories
@@ -1876,7 +1877,7 @@ export default function CustomExamTest() {
 
               {/* ACTION BUTTONS BAR */}
               <div className="pt-3 sm:pt-4 mt-3 border-t border-slate-200 shrink-0 bg-white">
-                <div className="flex items-center justify-between gap-3 sm:gap-6 lg:gap-8 overflow-x-auto py-2 no-scrollbar w-full">
+                <div className="cem-actionbar flex items-center justify-between gap-3 sm:gap-6 lg:gap-8 overflow-x-auto py-2 no-scrollbar w-full">
                   <button
                     type="button"
                     disabled={timeLeftSeconds <= 0}
@@ -1931,7 +1932,7 @@ export default function CustomExamTest() {
           </h3>
 
           <div className="w-full sm:aspect-square overflow-y-auto pr-1 max-h-60 sm:max-h-none no-scrollbar sm:custom-scrollbar">
-            <div className="w-full grid grid-cols-5 gap-1.5 sm:gap-1.5">
+            <div className="cem-palette-grid w-full grid grid-cols-5 gap-1.5 sm:gap-1.5">
               {examQuestions.map((q, idx) => {
                 const isAnswered = userAnswers[q.id] !== undefined;
                 const isMarked = markedForReview[q.id];

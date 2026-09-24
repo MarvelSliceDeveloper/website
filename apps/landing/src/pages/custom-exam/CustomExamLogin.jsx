@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import './custom-exam-responsive.css';
 
 
 
@@ -188,7 +189,7 @@ export default function CustomExamLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-10 px-4">
+    <div className="cem-login min-h-screen bg-slate-100 flex flex-col justify-center py-10 px-4">
       <div className="max-w-md w-full mx-auto space-y-6">
         {/* LOGO HEADER */}
         <div className="text-center space-y-3">
@@ -215,7 +216,7 @@ export default function CustomExamLogin() {
         </div>
 
         {/* LOGIN CARD */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
+        <div className="cem-card bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
 
           {loginError && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-xs text-rose-800">

@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
+import './custom-exam-responsive.css';
 import TopBar from '../../components/layout/TopBar';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -539,14 +540,14 @@ export default function CustomExamRegister() {  const { slug } = useParams();
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+    <div className="cem-register min-h-screen bg-slate-50 flex flex-col justify-between">
       <TopBar />
       <Header />
 
       <main className="flex-1 py-6 sm:py-8 px-4 flex flex-col justify-center items-center">
         <div className="max-w-[690px] w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
-          <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200/80 flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden">
+          <div className="cem-card bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200/80 flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden">
             <div className="text-center shrink-0 -mx-5 -mt-5 sm:-mx-7 sm:-mt-7 mb-4 px-5 py-5 bg-slate-100 border-b border-slate-200">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Candidate Exam Registration
