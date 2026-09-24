@@ -1729,15 +1729,11 @@ export default function CustomExamTest() {
                   </div>
                 ) : (
                   <ol className="list-decimal list-inside text-[17px] text-slate-700 font-medium leading-[2.2]">
-                    <li>Ensure a stable internet connection throughout the test.</li>
-                    <li>Do not refresh the page or switch browser tabs during the exam.</li>
-                    <li>Each question carries 1 mark. Select the correct option.</li>
-                    <li>The exam will auto-submit when the timer expires.</li>
-                    <li>Read each question carefully before selecting your answer.</li>
-                    <li>Once an answer is submitted, ensure it is your final choice before proceeding.</li>
-                    <li>Do not use unauthorized materials, devices, or external assistance during the exam.</li>
-                    <li>Manage your time effectively and ensure all questions are attempted within the given duration.</li>
-                    <li>Submit the exam only after reviewing your answers, if time permits.</li>
+                    <li>Stay on the official exam website with a stable internet connection throughout the test.</li>
+                    <li>Do not refresh, close, or leave the exam page while the test is running.</li>
+                    <li>Do not switch browser tabs or windows — tab switches are tracked and reported.</li>
+                    <li>Do not leak, share, screenshot, or distribute any exam questions or content.</li>
+                    <li>Each question carries 1 mark with no negative marking; the exam auto-submits when the timer expires.</li>
                   </ol>
                 )}
 

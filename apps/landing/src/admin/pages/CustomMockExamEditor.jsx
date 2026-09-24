@@ -148,7 +148,7 @@ export default function CustomMockExamEditor() {
   const [examStartTime, setExamStartTime] = useState('');
   const [examEndTime, setExamEndTime] = useState('');
   const [rulesText, setRulesText] = useState(
-    '1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option.\n4. There is no negative marking — incorrect answers score 0.\n5. The exam will auto-submit when the timer expires.'
+    '1. Stay on the official exam website with a stable internet connection throughout the test.\n2. Do not refresh, close, or leave the exam page while the test is running.\n3. Do not switch browser tabs or windows — tab switches are tracked and reported.\n4. Do not leak, share, screenshot, or distribute any exam questions or content.\n5. Each question carries 1 mark with no negative marking; the exam auto-submits when the timer expires.'
   );
 
   // Feedback Questions Builder State [{ id, question_text, type: 'rating' | 'text' }]

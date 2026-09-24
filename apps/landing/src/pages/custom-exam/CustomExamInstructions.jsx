@@ -223,7 +223,7 @@ export default function CustomExamInstructions() {
               {exam?.rules_text ? (
                 exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
               ) : (
-                "1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option in the palette.\n4. The exam will auto-submit when the timer expires."
+                "1. Stay on the official exam website with a stable internet connection throughout the test.\n2. Do not refresh, close, or leave the exam page while the test is running.\n3. Do not switch browser tabs or windows — tab switches are tracked and reported.\n4. Do not leak, share, screenshot, or distribute any exam questions or content.\n5. Each question carries 1 mark with no negative marking; the exam auto-submits when the timer expires."
               )}
             </div>
           </div>
