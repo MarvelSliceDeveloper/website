@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  FiUsers, FiSearch, FiDownload, FiFileText, FiRefreshCw, FiUser, FiCalendar, FiPhone, FiMail,
-  FiX, FiCheck, FiSend, FiCopy, FiExternalLink, FiMapPin, FiAward, FiBookOpen, FiShield, FiEye
+  FiUsers, FiDownload, FiFileText, FiUser, FiMail,
+  FiX, FiCheck, FiSend, FiCopy, FiAward, FiBookOpen, FiShield, FiEye
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import PageShell from '../components/ui/PageShell';
+import DataTable from '../components/ui/DataTable';
+import Badge from '../components/Badge';
+import EmptyState from '../components/EmptyState';
 
 export default function CustomMockExamRegistrations() {
   const [searchParams] = useSearchParams();
@@ -16,7 +20,6 @@ export default function CustomMockExamRegistrations() {
   const [selectedExamId, setSelectedExamId] = useState(initialExamId);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Modals
   const [selectedCandidate, setSelectedCandidate] = useState(null); // Detail Popup Modal
@@ -104,24 +107,107 @@ export default function CustomMockExamRegistrations() {
     setLoading(false);
   }
 
-  const filteredRegistrations = registrations.filter(r => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      r.user_name?.toLowerCase().includes(term) ||
-      r.user_email?.toLowerCase().includes(term) ||
-      r.user_phone?.toLowerCase().includes(term) ||
-      r.user_college?.toLowerCase().includes(term) ||
-      r.user_department?.toLowerCase().includes(term) ||
-      r.user_reg_num?.toLowerCase().includes(term)
-    );
-  });
+  const examFilteredRegistrations = selectedExamId === 'ALL'
+    ? registrations
+    : registrations.filter((r) => r.custom_mock_exam_id === selectedExamId);
+
+  const columns = [
+    {
+      header: 'Candidate',
+      cell: (reg) => (
+        <div className="flex items-center gap-3 min-w-[180px]">
+          <div className="w-9 h-9 rounded-full bg-admin-100 border border-admin-200 overflow-hidden shrink-0 flex items-center justify-center">
+            {reg.candidate_photo ? (
+              <img src={reg.candidate_photo} alt={reg.user_name} className="w-full h-full object-cover" />
+            ) : (
+              <FiUser className="w-4 h-4 text-neutral-400" />
+            )}
+          </div>
+          <div>
+            <span className="font-semibold text-neutral-900 block text-sm">{reg.user_name}</span>
+            <span className="text-xs text-neutral-400 block">{reg.user_year || 'Candidate'}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Login Credentials',
+      cell: (reg) => (
+        <div className="whitespace-nowrap">
+          <span className="font-mono text-neutral-900 block text-xs">{reg.user_email}</span>
+          <span className="font-mono text-admin-600 font-semibold block text-xs">DOB: {reg.user_dob || 'N/A'}</span>
+        </div>
+      ),
+    },
+    {
+      header: 'College & Dept',
+      cell: (reg) => (
+        <div className="min-w-[160px]">
+          <span className="font-semibold text-neutral-900 block text-sm">{reg.user_college || 'N/A'}</span>
+          <span className="text-xs text-neutral-500 block">{reg.user_department || 'N/A'}</span>
+          {reg.user_reg_num && (
+            <span className="text-xs font-mono text-admin-600 font-semibold block">Reg: {reg.user_reg_num}</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Exam Status',
+      cell: (reg) => {
+        const key = `${reg.custom_mock_exam_id}_${reg.user_email?.toLowerCase()}`;
+        const sub = submissionsMap[key];
+        if (!sub) return <Badge variant="inactive">Registered Only</Badge>;
+        if (sub.status === 'SUBMITTED') return <Badge variant="active">Completed</Badge>;
+        return <Badge variant="coming_soon">In Progress</Badge>;
+      },
+    },
+    {
+      header: 'Phone',
+      cell: (reg) => <span className="font-mono text-xs text-neutral-700 whitespace-nowrap">{reg.user_phone || 'N/A'}</span>,
+    },
+    {
+      header: 'Registered Exam',
+      cell: (reg) => <Badge variant="default">{reg.custom_mock_exams?.title || 'Custom Exam'}</Badge>,
+    },
+    {
+      header: 'Reg Date',
+      cell: (reg) => (
+        <span className="text-xs text-neutral-500 whitespace-nowrap">
+          {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      cell: (reg) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => setSelectedCandidate(reg)}
+            title="View Full Profile Dossier"
+            className="p-1.5 bg-admin-100 hover:bg-admin-600 hover:text-white text-admin-600 rounded-lg transition-colors cursor-pointer"
+          >
+            <FiEye className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => openEmailComposer(reg)}
+            title="Send Email / Reply"
+            className="p-1.5 bg-success-50 hover:bg-green-600 text-green-700 hover:text-white rounded-lg transition-colors cursor-pointer"
+          >
+            <FiMail className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   // Export All CSV
   function exportCSV() {
-    if (filteredRegistrations.length === 0) return;
+    if (examFilteredRegistrations.length === 0) return;
     const headers = ['Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Register / Roll No', 'Department', 'Degree', 'Year', '10th Mark', '12th Mark', 'CGPA', 'Address', 'Exam Title', 'Registration Date'];
-    const rows = filteredRegistrations.map(r => [
+    const rows = examFilteredRegistrations.map(r => [
       `"${r.user_name || ''}"`,
       `"${r.user_email || ''}"`,
       `"${r.user_dob || ''}"`,
@@ -151,14 +237,14 @@ export default function CustomMockExamRegistrations() {
 
   // Export All PDF
   function exportPDF() {
-    if (filteredRegistrations.length === 0) return;
+    if (examFilteredRegistrations.length === 0) return;
     const doc = new jsPDF('landscape');
     doc.setFontSize(16);
     doc.text('Custom Mock Exam Registered Candidates Report', 14, 15);
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${filteredRegistrations.length}`, 14, 22);
+    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${examFilteredRegistrations.length}`, 14, 22);
 
-    const tableData = filteredRegistrations.map((r, i) => [
+    const tableData = examFilteredRegistrations.map((r, i) => [
       i + 1,
       r.user_name || '',
       r.user_email || '',
@@ -308,50 +394,37 @@ Marvel Slice LMS Team`;
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-        <div>
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-blue bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Registered Candidates
-          </span>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 flex items-center gap-2">
-            <FiUsers className="w-6 h-6 text-brand-blue" />
-            <span>Custom Exam Registered Candidates</span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Click any candidate row to view full profile dossier, download individual PDF/CSV reports, or send credentials via email.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
+    <PageShell
+      title="Custom Exam Registered Candidates"
+      subtitle="Click any candidate row to view full profile dossier, download individual PDF/CSV reports, or send credentials via email."
+      actions={
+        <>
           <button
             type="button"
             onClick={exportCSV}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 transition-all cursor-pointer"
           >
-            <FiDownload className="w-3.5 h-3.5" />
-            <span>Export All CSV</span>
+            <FiDownload className="w-4 h-4 text-admin-600" />
+            Export CSV
           </button>
           <button
             type="button"
             onClick={exportPDF}
-            className="px-4 py-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-admin-600 text-white hover:bg-admin-700 transition-all cursor-pointer shadow-sm"
           >
-            <FiFileText className="w-3.5 h-3.5" />
-            <span>Export All PDF</span>
+            <FiFileText className="w-4 h-4" />
+            Export PDF
           </button>
-        </div>
-      </div>
-
-      {/* FILTER & SEARCH */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200">
+        </>
+      }
+    >
+      <div className="bg-white border border-admin-200 rounded-xl p-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label className="text-xs font-bold text-slate-600 uppercase shrink-0">Filter Exam:</label>
+          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Filter Exam:</label>
           <select
             value={selectedExamId}
             onChange={e => setSelectedExamId(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none w-full sm:w-64 cursor-pointer"
+            className="h-9 px-3 pr-8 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 rounded-lg w-full sm:w-64 cursor-pointer"
           >
             <option value="ALL">All Custom Exams ({exams.length})</option>
             {exams.map(e => (
@@ -359,157 +432,34 @@ Marvel Slice LMS Team`;
             ))}
           </select>
         </div>
-
-        <div className="relative w-full sm:w-72">
-          <FiSearch className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search by name, email, phone..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-          />
-        </div>
       </div>
 
-      {/* CANDIDATES TABLE */}
-      {loading ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-          <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-xs text-slate-500 font-medium">Loading registered candidates...</p>
-        </div>
-      ) : filteredRegistrations.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-300 space-y-2">
-          <FiUsers className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="font-bold text-slate-800 text-sm">No Candidate Registrations Found</h3>
-          <p className="text-xs text-slate-500">Candidates who register using the custom registration link will appear here.</p>
+      {examFilteredRegistrations.length === 0 && !loading ? (
+        <div className="border border-admin-200 rounded-xl">
+          <EmptyState
+            icon={FiUsers}
+            title="No candidate registrations found"
+            description="Candidates who register using the custom registration link will appear here."
+          />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-700 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
-                  <th className="p-3.5">Candidate</th>
-                  <th className="p-3.5">Login Credentials</th>
-                  <th className="p-3.5">College & Dept</th>
-                  <th className="p-3.5">Exam Status</th>
-                  <th className="p-3.5">Phone</th>
-                  <th className="p-3.5">Registered Exam</th>
-                  <th className="p-3.5">Reg Date</th>
-                  <th className="p-3.5 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filteredRegistrations.map((reg) => {
-                  const key = `${reg.custom_mock_exam_id}_${reg.user_email?.toLowerCase()}`;
-                  const sub = submissionsMap[key];
-
-                  return (
-                    <tr
-                      key={reg.id}
-                      onClick={() => setSelectedCandidate(reg)}
-                      className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
-                    >
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-300 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center group-hover:border-brand-blue transition-colors">
-                            {reg.candidate_photo ? (
-                              <img src={reg.candidate_photo} alt={reg.user_name} className="w-full h-full object-cover" />
-                            ) : (
-                              <FiUser className="w-4 h-4 text-slate-400 group-hover:text-brand-blue transition-colors" />
-                            )}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 block text-xs group-hover:text-brand-blue transition-colors">
-                              {reg.user_name}
-                            </span>
-                            <span className="text-[10px] text-slate-400 block">{reg.user_year || 'Candidate'}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        <div className="space-y-0.5">
-                          <span className="font-mono text-slate-900 block text-[11px]">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">User:</span>
-                            {reg.user_email}
-                          </span>
-                          <span className="font-mono text-brand-blue font-bold block text-[11px]">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 mr-1">Pass (DOB):</span>
-                            {reg.user_dob || 'N/A'}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        <span className="font-semibold text-slate-900 block">{reg.user_college || 'N/A'}</span>
-                        <span className="text-[10px] text-slate-500 block">{reg.user_department || 'N/A'}</span>
-                        {reg.user_reg_num && (
-                          <span className="text-[10px] font-mono text-brand-blue font-bold block">Reg: {reg.user_reg_num}</span>
-                        )}
-                      </td>
-
-                      <td className="p-3.5">
-                        {!sub ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                            Registered Only
-                          </span>
-                        ) : sub.status === 'SUBMITTED' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            Completed
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                            In Progress (Draft)
-                          </span>
-                        )}
-                      </td>
-
-                    <td className="p-3.5 font-mono text-[11px] text-slate-800">
-                      {reg.user_phone || 'N/A'}
-                    </td>
-
-                    <td className="p-3.5">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100">
-                        {reg.custom_mock_exams?.title || 'Custom Exam'}
-                      </span>
-                    </td>
-
-                    <td className="p-3.5 text-slate-500 text-[11px]">
-                      {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : 'N/A'}
-                    </td>
-
-                    <td className="p-3.5 text-center" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedCandidate(reg)}
-                          title="View Full Profile Dossier"
-                          className="p-1.5 bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-600 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <FiEye className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => openEmailComposer(reg)}
-                          title="Send Email / Reply"
-                          className="p-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-lg transition-colors cursor-pointer"
-                        >
-                          <FiMail className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          columns={columns}
+          data={examFilteredRegistrations}
+          isLoading={loading}
+          searchPlaceholder="Search by name, email, phone..."
+          onRowClick={(reg) => setSelectedCandidate(reg)}
+          filterFn={(r, q) =>
+            (r.user_name || '').toLowerCase().includes(q) ||
+            (r.user_email || '').toLowerCase().includes(q) ||
+            (r.user_phone || '').toLowerCase().includes(q) ||
+            (r.user_college || '').toLowerCase().includes(q) ||
+            (r.user_department || '').toLowerCase().includes(q) ||
+            (r.user_reg_num || '').toLowerCase().includes(q)
+          }
+          emptyTitle="No candidates"
+          emptyDescription="Registrations will appear here."
+        />
       )}
 
       {/* CANDIDATE FULL PROFILE DOSSIER POPUP MODAL */}
@@ -794,6 +744,6 @@ Marvel Slice LMS Team`;
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

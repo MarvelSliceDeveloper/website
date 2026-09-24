@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FiArrowLeft, FiSave, FiPlus, FiTrash2, FiClock, FiHelpCircle,
   FiCheckCircle, FiAlertCircle, FiFileText, FiList, FiMessageSquare,
@@ -9,6 +9,10 @@ import { HiSparkles } from 'react-icons/hi2';
 import { supabase } from '../../lib/supabaseClient';
 import FolderTabs from '../components/ui/FolderTabs';
 import SaveCancelBar from '../components/SaveCancelBar';
+import PageShell from '../components/ui/PageShell';
+import DateTimePicker from '../components/ui/DateTimePicker';
+import FormRow, { Input, Select, Textarea } from '../components/ui/FormRow';
+import { toDateTimeLocal, fromDateTimeLocal } from '../../lib/datetime';
 
 export default function CustomMockExamEditor() {
   const { id } = useParams();
@@ -131,7 +135,7 @@ export default function CustomMockExamEditor() {
     setQuestions(list);
   }
 
-  // Handle Question Count Option Change
+  // Handle Question Count Option Change (grow AND shrink)
   function handleCountOptionChange(newCount) {
     const countNum = Number(newCount);
     setQuestionCountOption(countNum);
@@ -151,6 +155,8 @@ export default function CustomMockExamEditor() {
         });
       }
       setQuestions(prev => [...prev, ...extra]);
+    } else if (questions.length > countNum) {
+      setQuestions(prev => prev.slice(0, countNum));
     }
   }
 
@@ -167,15 +173,7 @@ export default function CustomMockExamEditor() {
   }
 
   function toDatetimeLocal(isoStr) {
-    if (!isoStr) return '';
-    try {
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) return '';
-      const pad = (n) => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    } catch {
-      return '';
-    }
+    return toDateTimeLocal(isoStr);
   }
 
   async function fetchExamData() {
@@ -254,6 +252,8 @@ export default function CustomMockExamEditor() {
     }
 
     const reqCount = Number(questionCountOption);
+    // Link-only mode: questions & feedback are optional (registration link first)
+    if (examMode !== 'link_only') {
     if (questions.length < reqCount) {
       showAlertModal(
         'Questions Missing',
@@ -297,8 +297,8 @@ export default function CustomMockExamEditor() {
       }
     }
 
-    // Validate Feedback questions (At least 2 mandatory)
-    if (!Array.isArray(feedbackQuestions) || feedbackQuestions.length < 2) {
+    // Validate Feedback questions (At least 2 mandatory, except link-only mode)
+    if (examMode !== 'link_only' && (!Array.isArray(feedbackQuestions) || feedbackQuestions.length < 2)) {
       showAlertModal(
         'Feedback Questions Mandatory',
         `Creating at least 2 candidate feedback questions is mandatory before saving. Currently you have ${feedbackQuestions?.length || 0} feedback questions.`,
@@ -328,6 +328,7 @@ export default function CustomMockExamEditor() {
         }
       }
     }
+    } // end link_only question/feedback exemption
 
     // Validate timing guards
     if (registrationStartTime && examStartTime) {
@@ -372,9 +373,9 @@ export default function CustomMockExamEditor() {
       time_limit_mins: Number(timeLimitMins || 20),
       total_marks: Number(totalMarks),
       question_count_option: Number(questionCountOption),
-      registration_start_time: registrationStartTime ? new Date(registrationStartTime).toISOString() : null,
-      exam_start_time: examStartTime ? new Date(examStartTime).toISOString() : null,
-      exam_end_time: examEndTime ? new Date(examEndTime).toISOString() : null,
+      registration_start_time: registrationStartTime ? fromDateTimeLocal(registrationStartTime) : null,
+      exam_start_time: examStartTime ? fromDateTimeLocal(examStartTime) : null,
+      exam_end_time: examEndTime ? fromDateTimeLocal(examEndTime) : null,
       rules_text: rulesText.trim(),
       feedback_questions: feedbackQuestions,
       allowed_degrees: allowedDegrees,
@@ -438,7 +439,8 @@ export default function CustomMockExamEditor() {
         options: ['', '', '', ''],
         correct_option: 0,
         explanation: '',
-        marks: 1
+        marks: 1,
+        category_name: examCategories[0] || 'General'
       }
     ]);
   }
@@ -616,20 +618,10 @@ export default function CustomMockExamEditor() {
   }
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-12">
-      {/* BREADCRUMBS & PAGE HEADING */}
-      <div className="space-y-1">
-        <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-1.5">
-          <Link to="/admin" className="hover:text-brand-blue">Dashboard</Link>
-          <span>/</span>
-          <Link to="/admin/custom-mock-exams" className="hover:text-brand-blue">Custom Mock Exams</Link>
-          <span>/</span>
-          <span className="text-slate-900 font-medium">{isEditing ? 'Edit Exam' : 'New Custom Exam'}</span>
-        </div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-          {isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
-        </h1>
-      </div>
+    <PageShell
+      title={isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
+      subtitle="Configure exam parameters, schedule windows, MCQ questions and candidate feedback."
+    >
 
       {loading ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
@@ -654,165 +646,91 @@ export default function CustomMockExamEditor() {
             {activeTab === 'DETAILS' && (
               <div className="bg-white p-6 sm:p-8 rounded-b-[20px] rounded-tr-[20px] border border-gray-300 shadow-sm space-y-6 relative z-30 -mt-[2px]">
               {/* EXAM CREATION TYPE DROPDOWN */}
-              <div className="p-4 bg-blue-50/60 border border-blue-200/80 rounded-2xl space-y-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-brand-blue">
-                  Exam Creation Type / Mode <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={examMode}
-                  onChange={e => setExamMode(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border-2 border-brand-blue/30 rounded-xl text-xs sm:text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer shadow-2xs"
-                >
-                  <option value="questions">📝 Exam with Questions (Full MCQs & Questions Mandatory)</option>
-                  <option value="link_only">🔗 Exam Registration Link Only (Basic Parameters & Dates Enough)</option>
-                </select>
-                <p className="text-[11px] text-slate-600 font-medium pt-0.5">
+              <div className="p-4 bg-neutral-50 border border-admin-200 rounded-xl space-y-1.5">
+                <FormRow label="Exam Creation Type / Mode" required>
+                  <Select value={examMode} onChange={e => setExamMode(e.target.value)}>
+                    <option value="questions">Exam with Questions (Full MCQs & Questions Mandatory)</option>
+                    <option value="link_only">Exam Registration Link Only (Basic Parameters & Dates Enough)</option>
+                  </Select>
+                </FormRow>
+                <p className="text-xs text-neutral-500 pt-0.5">
                   {examMode === 'link_only'
-                    ? '⚡ Link Only Mode: Fill out the basic parameters and timing dates below to save and copy registration links immediately. Questions are not required.'
-                    : '📋 Exam with Questions Mode: Basic parameters + mandatory question creation (25, 50, 75, 100) and feedback questions before saving.'}
+                    ? 'Link Only Mode: fill basic parameters and schedule below to save and copy registration links immediately. Questions are not required.'
+                    : 'Exam with Questions Mode: basic parameters + mandatory questions and feedback before saving.'}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Exam Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                <FormRow label="Exam Title" required>
+                  <Input
                     type="text"
                     value={title}
                     onChange={e => handleTitleChange(e.target.value)}
                     placeholder="e.g. Special Speed Drill 2026"
                     required
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
-                </div>
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Unique Link Slug <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center">
-                    <span className="px-3 py-2.5 bg-slate-100 border border-r-0 border-slate-300 rounded-l-xl text-xs font-mono text-slate-500">
-                      /custom-exam/
-                    </span>
-                    <input
-                      type="text"
-                      value={slug}
-                      onChange={e => setSlug(e.target.value)}
-                      placeholder="special-speed-drill"
-                      required
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-r-xl text-xs sm:text-sm font-mono text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                  </div>
-                </div>
+                <FormRow label="Unique Link Slug" required hint="/custom-exam/ + slug">
+                  <Input
+                    type="text"
+                    value={slug}
+                    onChange={e => setSlug(e.target.value)}
+                    placeholder="special-speed-drill"
+                    required
+                    className="font-mono"
+                  />
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Category / Department
-                  </label>
-                  <input
+                <FormRow label="Category / Department">
+                  <Input
                     type="text"
                     value={category}
                     onChange={e => setCategory(e.target.value)}
                     placeholder="e.g. Common / Department"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
-                </div>
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Question Count Selection <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={questionCountOption}
-                    onChange={e => handleCountOptionChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 font-bold"
-                  >
+                <FormRow label="Question Count Selection" required>
+                  <Select value={questionCountOption} onChange={e => handleCountOptionChange(e.target.value)}>
                     <option value={25}>25 Questions (Short Drill)</option>
                     <option value={50}>50 Questions (Medium Test)</option>
                     <option value={75}>75 Questions (Full Sectional)</option>
                     <option value={100}>100 Questions (Full Length Mock)</option>
-                  </select>
-                </div>
+                  </Select>
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Total Marks
-                  </label>
-                  <input
+                <FormRow label="Total Marks">
+                  <Input
                     type="number"
                     min={1}
                     value={totalMarks}
                     onChange={e => setTotalMarks(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   />
-                </div>
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Exam Duration (Minutes) <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                <FormRow label="Exam Duration (Minutes)" required hint="Time given to candidate once the test starts.">
+                  <Input
                     type="number"
                     min={1}
                     value={timeLimitMins}
                     onChange={e => setTimeLimitMins(e.target.value)}
                     required
-                    placeholder="e.g. 20 Mins"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-brand-blue outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    placeholder="e.g. 20"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">Duration given to candidate once test starts (e.g. 20 Mins).</p>
-                </div>
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Candidate Login Open Time <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={registrationStartTime}
-                    onChange={e => setRegistrationStartTime(e.target.value)}
-                    required
-                    style={{ colorScheme: 'light' }}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">Candidate login & waiting lobby open (Min 5 mins before Exam Start Time).</p>
-                </div>
+                <FormRow label="Candidate Login Open Time" required hint="Login & waiting lobby open (min 5 mins before exam start).">
+                  <DateTimePicker value={registrationStartTime} onChange={setRegistrationStartTime} disablePast={!isEditing} />
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Scheduled Exam Start Time <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={examStartTime}
-                    onChange={e => setExamStartTime(e.target.value)}
-                    required
-                    style={{ colorScheme: 'light' }}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-brand-blue outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Exam countdown reaches 0 and popup triggers candidates into instructions/exam.
-                  </p>
-                </div>
+                <FormRow label="Scheduled Exam Start Time" required hint="Countdown hits 0 and candidates enter instructions/exam.">
+                  <DateTimePicker value={examStartTime} onChange={setExamStartTime} disablePast={!isEditing} />
+                </FormRow>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Candidate Login Close Time <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={examEndTime}
-                    onChange={e => setExamEndTime(e.target.value)}
-                    required
-                    style={{ colorScheme: 'light' }}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-rose-600 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 cursor-pointer"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Deadline after which candidate login portal closes (Login window end).
-                  </p>
-                </div>
+                <FormRow label="Candidate Login Close Time" required hint="Deadline after which the login portal closes. Must be after exam start.">
+                  <DateTimePicker value={examEndTime} onChange={setExamEndTime} disablePast={!isEditing} />
+                </FormRow>
               </div>
 
               {/* ALLOWED DEGREES CONFIGURATION CARD */}
@@ -835,96 +753,78 @@ export default function CustomMockExamEditor() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Left Column: Select Preset Degree Dropdown */}
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                      Select Preset Degree
-                    </label>
-                    <select
+                  <FormRow label="Select Preset Degree" hint="Pick a degree to add it to this exam.">
+                    <Select
                       value=""
                       onChange={e => {
                         const val = e.target.value;
                         if (val && !allowedDegrees.includes(val)) {
                           setAllowedDegrees(prev => [...prev, val]);
                         }
+                        e.target.value = '';
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer font-medium"
                     >
-                      <option value="" disabled>-- Select Degree from Dropdown --</option>
-                      {DEFAULT_DEGREES.map((d, idx) => (
-                        <option key={idx} value={d} disabled={allowedDegrees.includes(d)}>
-                          {d} {allowedDegrees.includes(d) ? ' (Added)' : ''}
-                        </option>
+                      <option value="">-- Select degree to add --</option>
+                      {DEFAULT_DEGREES.filter(d => !allowedDegrees.includes(d)).map((d, idx) => (
+                        <option key={idx} value={d}>{d}</option>
                       ))}
-                    </select>
-                  </div>
+                    </Select>
+                  </FormRow>
 
-                  {/* Right Column: Added Degrees Dropdown */}
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                      Added Degrees ({allowedDegrees.length} Selected)
-                    </label>
-                    <select
-                      value=""
-                      onChange={e => {
-                        const valToRemove = e.target.value;
-                        if (valToRemove) {
-                          setAllowedDegrees(prev => prev.filter(d => d !== valToRemove));
-                        }
-                      }}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-brand-blue outline-none focus:ring-2 focus:ring-brand-blue/20 cursor-pointer"
-                    >
-                      <option value="" disabled>
-                        🎓 Click to View Added Degrees ({allowedDegrees.length} total)
-                      </option>
-                      {allowedDegrees.map((deg, dIdx) => (
-                        <option key={dIdx} value={deg}>
-                          ❌ Remove "{deg}"
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Right Column: Custom Degree Input */}
+                  <FormRow label="Add Custom Degree Option">
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={newDegreeInput}
+                        onChange={e => setNewDegreeInput(e.target.value)}
+                        placeholder="e.g. B.Arch, M.Sc (Phy), Diploma in AI..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
+                            setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
+                            setNewDegreeInput('');
+                          }
+                        }}
+                        className="px-4 h-10 lg:h-9 bg-admin-600 hover:bg-admin-700 text-white font-medium text-sm rounded-lg cursor-pointer shrink-0 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </FormRow>
                 </div>
 
-                {/* Custom Degree Input Row */}
-                <div className="pt-2 border-t border-slate-200/80">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                    Add Custom Degree Option
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newDegreeInput}
-                      onChange={e => setNewDegreeInput(e.target.value)}
-                      placeholder="e.g. B.Arch, M.Sc (Phy), Diploma in AI..."
-                      className="flex-1 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand-blue/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (newDegreeInput.trim() && !allowedDegrees.includes(newDegreeInput.trim())) {
-                          setAllowedDegrees(prev => [...prev, newDegreeInput.trim()]);
-                          setNewDegreeInput('');
-                        }
-                      }}
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
-                    >
-                      + Add Degree
-                    </button>
-                  </div>
+                {/* Added Degrees Chips */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs font-medium text-neutral-500 w-full">Added Degrees ({allowedDegrees.length})</span>
+                  {allowedDegrees.length === 0 && (
+                    <span className="text-xs text-neutral-400">No degrees added yet.</span>
+                  )}
+                  {allowedDegrees.map((deg, dIdx) => (
+                    <span key={dIdx} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-admin-100 text-admin-700 font-medium text-xs rounded-full">
+                      {deg}
+                      <button
+                        type="button"
+                        onClick={() => setAllowedDegrees(prev => prev.filter(d => d !== deg))}
+                        className="text-admin-400 hover:text-red-600 cursor-pointer"
+                        title={`Remove ${deg}`}
+                      >
+                        <FiX className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Exam Rules & Guidelines Text
-                </label>
-                <textarea
+              <FormRow label="Exam Rules & Guidelines Text">
+                <Textarea
                   rows={5}
                   value={rulesText}
                   onChange={e => setRulesText(e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 leading-relaxed"
                 />
-              </div>
+              </FormRow>
             </div>
           )}
 
@@ -1549,6 +1449,6 @@ export default function CustomMockExamEditor() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  FiClipboard, FiSearch, FiDownload, FiFileText, FiUser, FiCheckCircle,
-  FiClock, FiMessageSquare, FiX, FiAward, FiEye, FiCheck, FiAlertCircle,
+  FiClipboard, FiDownload, FiFileText, FiUser, FiCheckCircle,
+  FiMessageSquare, FiX, FiEye,
   FiRotateCcw, FiMonitor
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import PageShell from '../components/ui/PageShell';
+import DataTable from '../components/ui/DataTable';
+import Badge from '../components/Badge';
+import EmptyState from '../components/EmptyState';
 
 export default function CustomMockExamSubmissions() {
   const [searchParams] = useSearchParams();
@@ -17,7 +21,6 @@ export default function CustomMockExamSubmissions() {
   const [selectedExamId, setSelectedExamId] = useState(initialExamId);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Modals
   const [activeFeedbackModal, setActiveFeedbackModal] = useState(null);
@@ -182,18 +185,139 @@ export default function CustomMockExamSubmissions() {
     }
   }
 
-  const filteredSubmissions = submissions.filter(s => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      s.user_name?.toLowerCase().includes(term) ||
-      s.user_email?.toLowerCase().includes(term) ||
-      s.user_phone?.toLowerCase().includes(term) ||
-      s.user_college?.toLowerCase().includes(term) ||
-      s.user_degree?.toLowerCase().includes(term) ||
-      s.user_reg_num?.toLowerCase().includes(term)
-    );
-  });
+  const examFilteredSubmissions = selectedExamId === 'ALL'
+    ? submissions
+    : submissions.filter((s) => s.custom_mock_exam_id === selectedExamId);
+
+  const columns = [
+    {
+      header: 'Candidate & Contact',
+      cell: (sub) => (
+        <div className="flex items-center gap-3 min-w-[200px]">
+          <div className="w-10 h-10 rounded-full bg-admin-100 border border-admin-200 overflow-hidden shrink-0 flex items-center justify-center">
+            {sub.candidate_photo ? (
+              <img src={sub.candidate_photo} alt={sub.user_name} className="w-full h-full object-cover" />
+            ) : (
+              <FiUser className="w-5 h-5 text-neutral-400" />
+            )}
+          </div>
+          <div>
+            <span className="font-semibold text-neutral-900 block text-sm">{sub.user_name}</span>
+            <span className="text-xs text-neutral-500 block font-mono">{sub.user_email}</span>
+            <span className="text-xs text-neutral-400 block">{sub.user_phone}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Status',
+      cell: (sub) => (
+        sub.status === 'SUBMITTED'
+          ? <Badge variant="active">Completed</Badge>
+          : <Badge variant="coming_soon">In Progress</Badge>
+      ),
+    },
+    {
+      header: 'Degree & College',
+      cell: (sub) => (
+        <div className="min-w-[150px]">
+          <span className="font-semibold text-neutral-900 block text-sm">{sub.user_degree || sub.user_department}</span>
+          <span className="text-xs text-neutral-500 block">{sub.user_college}</span>
+          <span className="text-xs text-neutral-400 block">{sub.user_year}</span>
+        </div>
+      ),
+    },
+    {
+      header: 'Score',
+      cell: (sub) => (
+        <div className="whitespace-nowrap">
+          <span className="font-bold text-green-700 text-sm block">
+            {sub.score ?? 0} <span className="text-xs font-normal text-neutral-400">/ {sub.total_questions || 0}</span>
+          </span>
+          <span className="text-xs text-neutral-500 block">
+            {sub.correct_answers || 0} Correct · {sub.wrong_answers || 0} Wrong
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Section Breakdown',
+      cell: (sub) => {
+        const catScores = sub.category_scores || {};
+        if (Object.keys(catScores).length === 0) {
+          return <span className="text-xs text-neutral-400 italic">Common Section</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1 max-w-xs">
+            {Object.entries(catScores).map(([cat, st], cIdx) => (
+              <Badge key={cIdx} variant="default">{cat}: {st.correct || 0}/{st.total || 0}</Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Tab Switches',
+      cell: (sub) => {
+        const switchCount = sub.tab_switch_count || sub.tab_switch_logs?.length || 0;
+        if (switchCount === 0) return <Badge variant="active">0 Switches</Badge>;
+        return (
+          <div className="space-y-1">
+            <Badge variant="coming_soon">{switchCount} Switches</Badge>
+            <button
+              type="button"
+              onClick={() => setActiveTabSwitchModal(sub)}
+              className="text-xs text-admin-600 font-semibold hover:underline block cursor-pointer"
+            >
+              View Logs
+            </button>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Time Taken',
+      cell: (sub) => <span className="font-mono text-xs text-neutral-700 whitespace-nowrap">{formatTime(sub.time_taken_seconds)}</span>,
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      cell: (sub) => {
+        const hasFeedback = sub.feedback_answers && Object.keys(sub.feedback_answers).length > 0;
+        return (
+          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => openReviewModal(sub)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-admin-600 hover:bg-admin-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+            >
+              <FiEye className="w-3.5 h-3.5" />
+              Review
+            </button>
+            {hasFeedback && (
+              <button
+                type="button"
+                onClick={() => setActiveFeedbackModal(sub)}
+                className="p-1.5 bg-admin-100 hover:bg-admin-200 text-admin-600 rounded-lg transition-colors cursor-pointer"
+                title="View Feedback"
+              >
+                <FiMessageSquare className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handleResetSubmission(sub)}
+              disabled={resettingSubId === sub.id}
+              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 cursor-pointer disabled:opacity-50"
+              title="Reset submission and permit candidate to retake exam"
+            >
+              <FiRotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
 
   function formatTime(seconds) {
     const mins = Math.floor((seconds || 0) / 60);
@@ -203,7 +327,7 @@ export default function CustomMockExamSubmissions() {
 
   // EXPORT EXCEL / CSV FUNCTION
   function performCSVExport(isDetailed = false) {
-    if (filteredSubmissions.length === 0) return;
+    if (examFilteredSubmissions.length === 0) return;
 
     let headers = [
       'Candidate Name', 'Email', 'Phone', 'DOB', 'Degree', 'Department', 'Year',
@@ -215,7 +339,7 @@ export default function CustomMockExamSubmissions() {
       headers.push('Category Breakdown', 'Feedback Responses');
     }
 
-    const rows = filteredSubmissions.map(s => {
+    const rows = examFilteredSubmissions.map(s => {
       const catText = s.category_scores
         ? Object.entries(s.category_scores)
             .map(([cat, st]) => `${cat}: ${st.correct || 0}/${st.total || 0} (${st.score || 0}pts)`)
@@ -270,17 +394,17 @@ export default function CustomMockExamSubmissions() {
 
   // EXPORT PDF FUNCTION (SUMMARY VS DETAILED REPORT)
   function performPDFExport(isDetailed = false) {
-    if (filteredSubmissions.length === 0) return;
+    if (examFilteredSubmissions.length === 0) return;
 
     const doc = new jsPDF('landscape');
     doc.setFontSize(16);
     doc.text(`Custom Mock Exam ${isDetailed ? 'Detailed Full' : 'Summary'} Submissions Report`, 14, 15);
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Attempts: ${filteredSubmissions.length}`, 14, 22);
+    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Attempts: ${examFilteredSubmissions.length}`, 14, 22);
 
     if (!isDetailed) {
       // SUMMARY REPORT TABLE
-      const tableData = filteredSubmissions.map((s, i) => [
+      const tableData = examFilteredSubmissions.map((s, i) => [
         i + 1,
         s.user_name || '',
         s.user_degree || s.user_department || '',
@@ -301,7 +425,7 @@ export default function CustomMockExamSubmissions() {
       });
     } else {
       // DETAILED MULTI-SECTION REPORT WITH CANDIDATE ACADEMICS & CATEGORY SCORES
-      const tableData = filteredSubmissions.map((s, i) => {
+      const tableData = examFilteredSubmissions.map((s, i) => {
         const catText = s.category_scores
           ? Object.entries(s.category_scores)
               .map(([cat, st]) => `${cat}: ${st.correct || 0}/${st.total || 0}`)
@@ -343,42 +467,27 @@ export default function CustomMockExamSubmissions() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-        <div>
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-            Results, Category Analytics & Attempt Review
-          </span>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 flex items-center gap-2">
-            <FiClipboard className="w-6 h-6 text-emerald-600" />
-            <span>Custom Exam Submissions</span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            View candidate degree info, academic marks (10th, 12th, CGPA), section category breakdowns, individual question responses, and generate reports.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setShowExportModal(true)}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
-          >
-            <FiDownload className="w-4 h-4" />
-            <span>Export Reports (PDF / Excel)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* FILTER & SEARCH */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200">
+    <PageShell
+      title="Custom Exam Submissions"
+      subtitle="Candidate scores, academic marks (10th, 12th, CGPA), section category breakdowns, attempt review and reports."
+      actions={
+        <button
+          type="button"
+          onClick={() => setShowExportModal(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-admin-600 text-white hover:bg-admin-700 transition-all cursor-pointer shadow-sm"
+        >
+          <FiDownload className="w-4 h-4" />
+          Export Reports (PDF / Excel)
+        </button>
+      }
+    >
+      <div className="bg-white border border-admin-200 rounded-xl p-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label className="text-xs font-bold text-slate-600 uppercase shrink-0">Filter Exam:</label>
+          <label className="text-xs font-semibold text-neutral-600 uppercase shrink-0">Filter Exam:</label>
           <select
             value={selectedExamId}
             onChange={e => setSelectedExamId(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none w-full sm:w-64"
+            className="h-9 px-3 pr-8 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 rounded-lg w-full sm:w-64 cursor-pointer"
           >
             <option value="ALL">All Custom Exams ({exams.length})</option>
             {exams.map(e => (
@@ -386,195 +495,33 @@ export default function CustomMockExamSubmissions() {
             ))}
           </select>
         </div>
-
-        <div className="relative w-full sm:w-72">
-          <FiSearch className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search name, email, degree, college..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white"
-          />
-        </div>
       </div>
 
-      {/* SUBMISSIONS TABLE */}
-      {loading ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
-          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-          <p className="text-xs text-slate-500 font-medium">Loading candidate submissions...</p>
-        </div>
-      ) : filteredSubmissions.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-300 space-y-2">
-          <FiClipboard className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="font-bold text-slate-800 text-sm">No Exam Submissions Recorded Yet</h3>
-          <p className="text-xs text-slate-500">When candidates complete custom exams, their attempt details will be listed here.</p>
+      {examFilteredSubmissions.length === 0 && !loading ? (
+        <div className="border border-admin-200 rounded-xl">
+          <EmptyState
+            icon={FiClipboard}
+            title="No exam submissions recorded yet"
+            description="When candidates complete custom exams, their attempt details will be listed here."
+          />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 text-slate-700 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
-                  <th className="p-3.5">Candidate & Contact</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5">Degree & College</th>
-                  <th className="p-3.5">Academics (10th/12th/CGPA)</th>
-                  <th className="p-3.5">Overall Score</th>
-                  <th className="p-3.5">Section Breakdown</th>
-                  <th className="p-3.5">Tab Switches</th>
-                  <th className="p-3.5">Time Taken</th>
-                  <th className="p-3.5 text-center">Actions & Review</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filteredSubmissions.map((sub) => {
-                  const hasFeedback = sub.feedback_answers && Object.keys(sub.feedback_answers).length > 0;
-                  const catScores = sub.category_scores || {};
-                  const switchCount = sub.tab_switch_count || sub.tab_switch_logs?.length || 0;
-                  const isSubmitted = sub.status === 'SUBMITTED';
-
-                  return (
-                    <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
-                            {sub.candidate_photo ? (
-                              <img src={sub.candidate_photo} alt={sub.user_name} className="w-full h-full object-cover" />
-                            ) : (
-                              <FiUser className="w-5 h-5 text-slate-400" />
-                            )}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 block text-xs">{sub.user_name}</span>
-                            <span className="text-[10px] text-slate-500 block font-mono">{sub.user_email}</span>
-                            <span className="text-[10px] text-slate-400 block">{sub.user_phone}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        {isSubmitted ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5 whitespace-nowrap">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            Completed
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5 whitespace-nowrap">
-                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                            In Progress (Draft)
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="p-3.5">
-                        <span className="font-bold text-slate-900 block">{sub.user_degree || sub.user_department}</span>
-                        <span className="text-[10px] text-slate-500 block">{sub.user_college}</span>
-                        <span className="text-[10px] text-slate-400 block">{sub.user_year}</span>
-                      </td>
-
-                      <td className="p-3.5">
-                        <div className="space-y-0.5 text-[11px]">
-                          <div><span className="font-semibold text-slate-500">CGPA:</span> <span className="font-bold text-slate-900">{sub.user_cgpa ?? 'N/A'}</span></div>
-                          <div><span className="font-semibold text-slate-500">10th:</span> <span className="font-semibold text-slate-800">{sub.user_10th_mark ? `${sub.user_10th_mark}%` : 'N/A'}</span></div>
-                          <div><span className="font-semibold text-slate-500">12th:</span> <span className="font-semibold text-slate-800">{sub.user_12th_mark ? `${sub.user_12th_mark}%` : 'N/A'}</span></div>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        <div className="space-y-0.5">
-                          <span className="font-black text-emerald-600 text-sm block">
-                            {sub.score ?? 0} <span className="text-xs font-normal text-slate-400">/ {sub.total_questions || 0}</span>
-                          </span>
-                          <span className="text-[10px] text-slate-500 block">
-                            {sub.correct_answers || 0} Correct · {sub.wrong_answers || 0} Wrong
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {Object.keys(catScores).length > 0 ? (
-                            Object.entries(catScores).map(([cat, st], cIdx) => (
-                              <span key={cIdx} className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-brand-blue font-bold text-[10px] rounded-md">
-                                {cat}: {st.correct || 0}/{st.total || 0}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">Common Section</span>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="p-3.5">
-                        {switchCount > 0 ? (
-                          <div className="space-y-1">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1">
-                              <FiMonitor className="w-3 h-3 text-amber-700" />
-                              {switchCount} Switches
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setActiveTabSwitchModal(sub)}
-                              className="text-[10px] text-brand-blue font-bold hover:underline block cursor-pointer"
-                            >
-                              View Logs
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                            <FiCheckCircle className="w-3 h-3 text-emerald-600" />
-                            0 Switches
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="p-3.5 font-mono text-[11px] text-slate-800">
-                        {formatTime(sub.time_taken_seconds)}
-                      </td>
-
-                      <td className="p-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                          <button
-                            type="button"
-                            onClick={() => openReviewModal(sub)}
-                            className="px-3 py-1.5 rounded-lg bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                          >
-                            <FiEye className="w-3.5 h-3.5" />
-                            <span>Review</span>
-                          </button>
-
-                          {hasFeedback && (
-                            <button
-                              type="button"
-                              onClick={() => setActiveFeedbackModal(sub)}
-                              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
-                              title="View Feedback"
-                            >
-                              <FiMessageSquare className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => handleResetSubmission(sub)}
-                            disabled={resettingSubId === sub.id}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] flex items-center gap-1 transition-colors border border-rose-200 cursor-pointer disabled:opacity-50"
-                            title="Reset submission and permit candidate to retake exam"
-                          >
-                            <FiRotateCcw className="w-3.5 h-3.5 text-rose-600" />
-                            <span>{resettingSubId === sub.id ? 'Resetting...' : 'Reset'}</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          columns={columns}
+          data={examFilteredSubmissions}
+          isLoading={loading}
+          searchPlaceholder="Search name, email, degree, college..."
+          filterFn={(s, q) =>
+            (s.user_name || '').toLowerCase().includes(q) ||
+            (s.user_email || '').toLowerCase().includes(q) ||
+            (s.user_phone || '').toLowerCase().includes(q) ||
+            (s.user_college || '').toLowerCase().includes(q) ||
+            (s.user_degree || '').toLowerCase().includes(q) ||
+            (s.user_reg_num || '').toLowerCase().includes(q)
+          }
+          emptyTitle="No submissions"
+          emptyDescription="Completed attempts will appear here."
+        />
       )}
 
       {/* INDIVIDUAL CANDIDATE ATTEMPT & QUESTION REVIEW MODAL */}
@@ -1035,6 +982,6 @@ export default function CustomMockExamSubmissions() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
