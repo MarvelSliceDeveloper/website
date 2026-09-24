@@ -1032,6 +1032,16 @@ export default function CustomExamTest() {
       ? Math.max(1, Math.floor((Date.now() - examStartedAtMs) / 1000))
       : Math.max(1, totalSecs - timeLeftSeconds);
 
+    const categoriesList = (exam?.exam_categories && Array.isArray(exam.exam_categories) && exam.exam_categories.length > 0)
+      ? exam.exam_categories
+      : Array.from(new Set(examQuestions.map(q => q.category_name).filter(Boolean)));
+
+    const categoryStats = categoriesList.map(cat => {
+      const catQs = examQuestions.filter(q => (q.category_name || categoriesList[0]) === cat);
+      const catAnswered = catQs.filter(q => userAnswers[q.id] !== undefined).length;
+      return { catName: cat, total: catQs.length, answered: catAnswered };
+    });
+
     function formatTimeTaken(seconds) {
       if (!seconds || isNaN(seconds) || seconds <= 0) return '00:00 (0 secs)';
       const mins = Math.floor(seconds / 60);
@@ -1046,70 +1056,76 @@ export default function CustomExamTest() {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
         <FireworksCrackerCanvas />
-        <div className="bg-white rounded-3xl max-w-lg w-full p-8 sm:p-10 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative z-20 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl max-w-xl sm:max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 my-auto relative z-20 animate-in fade-in zoom-in-95 duration-200">
           
-          <div className="relative w-24 h-24 mx-auto">
-            <div className="w-24 h-24 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shadow-lg ring-8 ring-amber-50 animate-bounce">
-              <FiAward className="w-12 h-12 text-amber-600" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1.5 shadow-md">
-              <FiCheckCircle className="w-5 h-5" />
-            </div>
+          {/* MARVEL SLICE BRAND & LOGO (FIRST TOP) */}
+          <div className="flex items-center justify-center gap-2.5">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs" />
+            ) : (
+              <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-10 sm:h-12 w-10 sm:w-12 object-contain drop-shadow-xs" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+            <span className="text-xl sm:text-2xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
           </div>
 
-          <div className="space-y-3">
-            {/* MARVEL SLICE BRAND & LARGER LOGO */}
-            <div className="flex items-center justify-center gap-3 mb-1">
-              {settings?.logo_url ? (
-                <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-12 sm:h-14 w-auto object-contain drop-shadow-xs" />
-              ) : (
-                <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-12 sm:h-14 w-12 sm:w-14 object-contain drop-shadow-xs" onError={(e) => { e.target.style.display = 'none'; }} />
-              )}
-              <span className="text-2xl sm:text-3xl font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-                Marvel <span className="text-brand-orange">Slice</span>
-              </span>
-            </div>
-
-            {/* COMPACT CONGRATULATIONS BADGE */}
-            <div className="flex justify-center">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
-                🎉 Congratulations!
-              </span>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Exam Submitted Successfully!
+          {/* SINGLE LINE: EXAM SUBMITTED SUCCESSFULLY! */}
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">
+              Exam Submitted Successfully! 🎉
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+            <p className="text-xs text-slate-600 max-w-md mx-auto">
               Great job, <span className="font-bold text-slate-900">{candidate?.user_name}</span>! Your exam attempt and feedback have been securely recorded.
             </p>
           </div>
 
-          {/* SUMMARY DETAILS CARD - ONLY SHOW EXAM TITLE, CANDIDATE NAME, ANSWERED & TIME TAKEN */}
-          <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-3 text-slate-700 shadow-2xs">
-            <div className="flex justify-between border-b border-slate-200/80 pb-2">
-              <span className="font-bold text-slate-500">Exam Title:</span>
-              <span className="font-semibold text-slate-900 truncate max-w-[220px]">{exam?.title}</span>
+          {/* SUMMARY DETAILS CARD - WIDER & COMPACT WITH CATEGORY STATS */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-2.5 text-slate-700 shadow-2xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-b border-slate-200/80 pb-2">
+              <div>
+                <span className="font-bold text-slate-500 block text-[11px]">Exam Title:</span>
+                <span className="font-semibold text-slate-900 truncate block">{exam?.title}</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-500 block text-[11px]">Candidate Name:</span>
+                <span className="font-semibold text-slate-900 block">{candidate?.user_name}</span>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-slate-200/80 pb-2">
-              <span className="font-bold text-slate-500">Candidate Name:</span>
-              <span className="font-semibold text-slate-900">{candidate?.user_name}</span>
-            </div>
-            <div className="flex justify-between border-b border-slate-200/80 pb-2">
-              <span className="font-bold text-slate-500">Questions Attempted:</span>
-              <span className="font-bold text-brand-blue">{answeredCount} of {totalQCount} MCQs</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-bold text-slate-500">Time Taken:</span>
-              <span className="font-bold text-emerald-700">{formatTimeTaken(timeTaken)}</span>
+
+            {/* STATS BY CATEGORY */}
+            {categoryStats.length > 0 && (
+              <div className="border-b border-slate-200/80 pb-2.5">
+                <span className="font-bold text-slate-500 block text-[11px] mb-1.5">Category Stats:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {categoryStats.map((cs, cIdx) => (
+                    <div key={cIdx} className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
+                      <span className="font-semibold text-slate-700 truncate max-w-[150px]">{cs.catName}</span>
+                      <span className="font-bold text-brand-blue">{cs.answered} / {cs.total}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* OVERALL ATTENDED & TIME TAKEN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                <span className="font-bold text-slate-500 text-[11px]">Total Attempted Overall:</span>
+                <span className="font-bold text-brand-blue text-xs">{answeredCount} of {totalQCount} MCQs</span>
+              </div>
+              <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                <span className="font-bold text-slate-500 text-[11px]">Time Taken:</span>
+                <span className="font-bold text-emerald-700 text-xs">{formatTimeTaken(timeTaken)}</span>
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 flex justify-center">
+          <div className="pt-1 flex justify-center">
             <button
               type="button"
               onClick={handleClosePortal}
-              className="px-8 py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center"
+              className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center"
             >
               Exit & Close Portal
             </button>
@@ -1198,7 +1214,7 @@ export default function CustomExamTest() {
               </div>
             ) : (
               <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
-                <span className="text-slate-700 font-semibold">Time Left:</span>
+                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 shrink-0" />
                 <span className={timerColorClass}>{formatTime(timeLeftSeconds)}</span>
               </div>
             )}
