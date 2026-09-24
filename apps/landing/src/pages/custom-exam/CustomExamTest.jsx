@@ -563,22 +563,6 @@ export default function CustomExamTest() {
 
   function handleFinalSubmissionWithValidation() {
     setFeedbackError('');
-    const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
-      ? exam.feedback_questions
-      : [
-          { id: 'fb-overall-exp', type: 'text', question_text: 'Please write your detailed feedback about the exam, question difficulty, and overall experience (Minimum 5 sentences mandatory).' }
-        ];
-
-    for (const fb of feedbackList) {
-      if (fb.type !== 'rating') {
-        const val = feedbackAnswers[fb.id] || '';
-        const sentenceCount = countSentences(val);
-        if (sentenceCount < 5) {
-          setFeedbackError(`Please write at least 5 complete sentences for: "${fb.question_text}". Current count: ${sentenceCount} / 5 sentences.`);
-          return;
-        }
-      }
-    }
     executeFinalSubmission();
   }
 
@@ -856,7 +840,7 @@ export default function CustomExamTest() {
             ]
           },
           { id: 'fb-rating-overall', type: 'rating', question_text: 'Overall Satisfaction' },
-          { id: 'fb-overall-exp', type: 'text', question_text: 'Suggestions or Comments (Minimum 5 sentences mandatory):' }
+          { id: 'fb-overall-exp', type: 'text', question_text: 'Suggestions or Comments:' }
         ];
 
     const hasMatrixQuestion = feedbackList.some(f => f.type === 'matrix');
@@ -874,20 +858,18 @@ export default function CustomExamTest() {
               Share Your Feedback
             </h2>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              Mandatory: Minimum 5 sentences required for text feedback. <span className="text-slate-900 font-bold">(</span><span className="text-red-600 font-semibold">Only when feedback is submitted, your exam will be submitted</span><span className="text-slate-900 font-bold">)</span>
+              Please share your experience below before submitting your exam.
             </p>
           </div>
 
           <div className="space-y-5 overflow-y-auto flex-1 pr-1">
             {feedbackList.map((fb, idx) => {
               const currentText = typeof feedbackAnswers[fb.id] === 'string' ? feedbackAnswers[fb.id] : '';
-              const sentenceCount = countSentences(currentText);
-              const isSatisfied = sentenceCount >= 5;
 
               return (
                 <div key={fb.id || idx} className="space-y-3 p-4 bg-slate-50/90 border border-slate-200 rounded-2xl">
                   <label className="block text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                    {idx + 1}. {fb.question_text} {fb.type === 'text' && <span className="text-rose-500">* (Min 5 Sentences)</span>}
+                    {idx + 1}. {fb.question_text.replace(/\s*\([^)]*5 sentences[^)]*\)/gi, '')}
                   </label>
 
                   {fb.type === 'matrix' ? (
@@ -979,24 +961,9 @@ export default function CustomExamTest() {
                           setFeedbackError('');
                           setFeedbackAnswers(prev => ({ ...prev, [fb.id]: e.target.value }));
                         }}
-                        placeholder="Write at least 5 complete sentences here..."
-                        className={`w-full p-3 bg-white border rounded-xl text-xs text-slate-800 outline-none transition-all ${
-                          isSatisfied ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-200' : 'border-slate-300 focus:ring-2 focus:ring-brand-blue/20'
-                        }`}
+                        placeholder="Write your feedback here..."
+                        className="w-full p-3 bg-white border border-slate-300 focus:ring-2 focus:ring-brand-blue/20 rounded-xl text-xs text-slate-800 outline-none transition-all"
                       />
-                      <div className="flex items-center justify-between text-[11px] font-semibold">
-                        <span className={isSatisfied ? 'text-emerald-600 font-bold flex items-center gap-1' : 'text-amber-600 font-medium'}>
-                          {isSatisfied ? (
-                            <>
-                              <FiCheckCircle className="w-3.5 h-3.5 inline text-emerald-600" />
-                              <span>✓ Sentence requirement met ({sentenceCount} sentences)</span>
-                            </>
-                          ) : (
-                            <span>Sentence count: {sentenceCount} / 5 (Mandatory 5 sentences)</span>
-                          )}
-                        </span>
-                        <span className="text-slate-400 text-[10px]">Min 5 sentences</span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -1206,16 +1173,6 @@ export default function CustomExamTest() {
               <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
                 <span className="text-slate-700 font-semibold">Time Left:</span>
                 <span className={timerColorClass}>{formatTime(timeLeftSeconds)}</span>
-              </div>
-            )}
-
-            {/* STATS ON RIGHT SIDE */}
-            {activeStep === 'QUIZ' && (
-              <div className="hidden sm:flex flex-col text-left text-xs font-medium text-slate-700 leading-snug space-y-0.5 border-l border-slate-200 pl-3 sm:pl-4">
-                <div><span className="text-slate-600 font-semibold">Answered:</span> <span className="font-bold text-slate-900">{answeredCount}</span></div>
-                <div><span className="text-slate-600 font-semibold">Unanswered:</span> <span className="font-bold text-slate-900">{unansweredCount}</span></div>
-                <div><span className="text-slate-600 font-semibold">Marked for Review:</span> <span className="font-bold text-slate-900">{markedCount}</span></div>
-                <div><span className="text-slate-600 font-semibold">Not Visited:</span> <span className="font-bold text-slate-900">{notVisitedCount}</span></div>
               </div>
             )}
           </div>
