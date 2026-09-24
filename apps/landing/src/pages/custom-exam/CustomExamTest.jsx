@@ -572,19 +572,55 @@ export default function CustomExamTest() {
     setFeedbackError('');
     const feedbackList = (exam?.feedback_questions && Array.isArray(exam.feedback_questions) && exam.feedback_questions.length > 0)
       ? exam.feedback_questions
-      : [];
+      : [
+          {
+            id: 'fb-matrix-1',
+            type: 'matrix',
+            question_text: 'Please choose the best answer for each of the following:',
+            matrix_columns: ['Strongly Agree', 'Agree', 'Disagree', 'Strongly Disagree', 'N/A'],
+            matrix_rows: [
+              'The online class materials were useful and accurate',
+              'The class description accurately described the class content',
+              'The technology used was appropriate for this online class',
+              'Exams were based on material covered in assignments and lectures',
+              'I was technically prepared for this class',
+              'I was academically prepared for this class',
+              'The instructor was qualified to teach this class',
+              'The class size was appropriate'
+            ]
+          },
+          { id: 'fb-rating-overall', type: 'rating', question_text: 'Overall Satisfaction' },
+          { id: 'fb-overall-exp', type: 'text', question_text: 'Suggestions or Comments:' }
+        ];
 
     for (const fb of feedbackList) {
+      const val = feedbackAnswers[fb.id];
+
       if (fb.type === 'matrix') {
-        const val = feedbackAnswers[fb.id];
-        if (!val || typeof val !== 'object' || Object.keys(val).length === 0) {
-          setFeedbackError(`Please select at least one option for: "${fb.question_text || 'Feedback Statement'}"`);
+        const rows = fb.matrix_rows || [
+          'The online class materials were useful and accurate',
+          'The class description accurately described the class content',
+          'The technology used was appropriate for this online class',
+          'Exams were based on material covered in assignments and lectures',
+          'I was technically prepared for this class',
+          'I was academically prepared for this class',
+          'The instructor was qualified to teach this class',
+          'The class size was appropriate'
+        ];
+        const valObj = (val && typeof val === 'object') ? val : {};
+        const unansweredRow = rows.find(r => !valObj[r]);
+        if (unansweredRow) {
+          setFeedbackError(`Please select an option for statement: "${unansweredRow}"`);
           return;
         }
       } else if (fb.type === 'radio' || fb.type === 'rating' || fb.type === 'choice') {
-        const val = feedbackAnswers[fb.id];
         if (val === undefined || val === null || val === '') {
           setFeedbackError(`Please select an option for: "${fb.question_text || 'Feedback Question'}"`);
+          return;
+        }
+      } else {
+        if (!val || typeof val !== 'string' || val.trim() === '') {
+          setFeedbackError(`Please provide your response for: "${fb.question_text || 'Feedback Question'}"`);
           return;
         }
       }
@@ -885,7 +921,7 @@ export default function CustomExamTest() {
               Share Your Feedback
             </h2>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              Please share your experience below before submitting your exam.
+              Please complete all required feedback questions below before submitting your exam. <span className="text-rose-500 font-semibold">(All fields are mandatory *)</span>
             </p>
           </div>
 
@@ -896,7 +932,7 @@ export default function CustomExamTest() {
               return (
                 <div key={fb.id || idx} className="space-y-3 p-4 bg-slate-50/90 border border-slate-200 rounded-2xl">
                   <label className="block text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                    {idx + 1}. {fb.question_text.replace(/\s*\([^)]*5 sentences[^)]*\)/gi, '')}
+                    {idx + 1}. {fb.question_text.replace(/\s*\([^)]*5 sentences[^)]*\)/gi, '')} <span className="text-rose-500">*</span>
                   </label>
 
                   {fb.type === 'matrix' ? (
