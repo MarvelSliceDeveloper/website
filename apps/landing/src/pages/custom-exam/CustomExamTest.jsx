@@ -1166,14 +1166,14 @@ export default function CustomExamTest() {
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs">
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+            <div className="w-[50px] h-[50px] sm:w-[58px] sm:h-[58px] rounded-xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
                 <FiUser className="w-7 h-7 text-slate-400" />
               )}
             </div>
-            <div className="text-xs leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
+            <div className="text-[13px] leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
               <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
               <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
               <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
@@ -1186,7 +1186,7 @@ export default function CustomExamTest() {
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
             {/* TIMER ON LEFT SIDE */}
             {activeStep === 'INSTRUCTIONS' ? (
-              <div className="font-mono text-xs sm:text-sm font-bold text-slate-700">
+              <div className="font-mono text-[13px] sm:text-sm font-bold text-slate-700">
                 <span className="text-slate-600 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
@@ -1207,7 +1207,7 @@ export default function CustomExamTest() {
             <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg border border-slate-200 flex flex-col max-w-[1000px] w-full mx-auto max-h-full space-y-3">
               
               {/* TITLE & RED SUBTITLE (FIXED TOP) */}
-              <div className="shrink-0">
+              <div className="shrink-0 text-center">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
@@ -1238,7 +1238,7 @@ export default function CustomExamTest() {
                 )}
 
                 {/* AGREEMENT CHECKBOXES */}
-                <div className="space-y-2 pt-3 border-t border-slate-100">
+                <div className="space-y-2 pt-3">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
