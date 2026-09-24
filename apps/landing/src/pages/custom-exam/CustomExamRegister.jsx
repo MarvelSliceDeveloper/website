@@ -367,6 +367,29 @@ export default function CustomExamRegister() {  const { slug } = useParams();
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [redirectSecs, setRedirectSecs] = useState(4);
+
+  // After successful registration: show the success popup, then auto-redirect
+  // to the home page after 4 seconds (or immediately on Close).
+  useEffect(() => {
+    if (!isRegistered) return;
+    setRedirectSecs(4);
+    const timer = setInterval(() => {
+      setRedirectSecs((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          window.location.href = 'https://marvelslice.com';
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isRegistered]);
+
+  function handleCloseSuccess() {
+    window.location.href = 'https://marvelslice.com';
+  }
 
   useEffect(() => {
     fetchExam();
@@ -568,39 +591,6 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                 </p>
                 <div className="px-4 py-2 bg-amber-600 text-white font-mono font-bold text-sm rounded-xl inline-block shadow-xs">
                   Starts in {formatCountdown(regCountdownSecs)}
-                </div>
-              </div>
-            ) : isRegistered ? (
-              /* SUCCESS CONFIRMATION */
-              <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200 py-6 my-auto">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
-                  <FiCheckCircle className="w-8 h-8" />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    {settings?.logo_url ? (
-                      <img src={settings.logo_url} alt="Marvel Slice Logo" className="h-6 sm:h-7 w-auto object-contain" />
-                    ) : (
-                      <img src="/apple-touch-icon.png" alt="Marvel Slice Logo" className="h-6 w-6 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-                    )}
-                    <span className="text-sm font-black text-brand-blue tracking-tight font-['Roboto',sans-serif]">
-                      Marvel <span className="text-brand-orange">Slice</span>
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-extrabold text-slate-900">Registration Completed! 🎉</h2>
-                  <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-                    Your candidate details have been successfully recorded. You will be able to log in to the exam portal using your registered email address and Date of Birth once the exam commences.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl text-center space-y-1">
-                  <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
-                    Registration Details Saved
-                  </p>
-                  <p className="text-xs text-emerald-700">
-                    <span className="font-semibold">{userEmail}</span>
-                  </p>
                 </div>
               </div>
             ) : (
@@ -967,6 +957,36 @@ export default function CustomExamRegister() {  const { slug } = useParams();
           </div>
         </div>
       </main>
+
+      {/* REGISTRATION SUCCESS POPUP — Close redirects home, else auto-redirect in 4s */}
+      {isRegistered && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
+              <FiCheckCircle className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-extrabold text-slate-900">Registration Successful!</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your details have been recorded for <span className="font-bold text-slate-800">{userEmail}</span>.
+                You can log in to the exam portal with your email and Date of Birth once the exam commences.
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={handleCloseSuccess}
+                className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-2xl shadow-md transition-all cursor-pointer active:scale-[0.99]"
+              >
+                Close
+              </button>
+              <p className="text-[11px] text-slate-400 font-medium mt-2">
+                Redirecting to home page in {redirectSecs}s…
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
