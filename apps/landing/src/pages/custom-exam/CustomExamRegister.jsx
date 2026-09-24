@@ -820,7 +820,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       </Field>
 
                       {/* Degree Selection */}
-                      <Field label="Degree / Qualification" error={undefined} className={userDegree === 'Other' ? '' : 'sm:col-span-2'}>
+                      <Field label="Degree / Qualification" error={undefined}>
                         <div className="relative">
                           <FieldIcon><FiAward /></FieldIcon>
                           <select
@@ -836,7 +836,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                         </div>
                       </Field>
 
-                      {userDegree === 'Other' && (
+                      {userDegree === 'Other' ? (
                         <Field label="Specify Degree" error={formErrors.customDegree}>
                           <div className="relative">
                             <FieldIcon><FiAward /></FieldIcon>
@@ -850,31 +850,31 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                             />
                           </div>
                         </Field>
+                      ) : (
+                        <Field label="Department" error={undefined}>
+                          <div className="relative">
+                            <FieldIcon><FiBriefcase /></FieldIcon>
+                            <select
+                              value={userDept}
+                              onChange={e => setUserDept(e.target.value)}
+                              className={fieldSelectCls}
+                            >
+                              <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                              <option value="Information Technology">Information Technology</option>
+                              <option value="Electronics & Communication">Electronics & Communication</option>
+                              <option value="Electrical Engineering">Electrical Engineering</option>
+                              <option value="Mechanical Engineering">Mechanical Engineering</option>
+                              <option value="Commerce & Finance">Commerce & Finance</option>
+                              <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                        </Field>
                       )}
                     </div>
 
-                    {/* Department / Year / CGPA row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4">
-                      <Field label="Department" error={undefined}>
-                        <div className="relative">
-                          <FieldIcon><FiBriefcase /></FieldIcon>
-                          <select
-                            value={userDept}
-                            onChange={e => setUserDept(e.target.value)}
-                            className={fieldSelectCls}
-                          >
-                            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Electronics & Communication">Electronics & Communication</option>
-                            <option value="Electrical Engineering">Electrical Engineering</option>
-                            <option value="Mechanical Engineering">Mechanical Engineering</option>
-                            <option value="Commerce & Finance">Commerce & Finance</option>
-                            <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                      </Field>
-
+                    {/* Year / CGPA row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                       <Field label="Year of Study" error={undefined}>
                         <div className="relative">
                           <FieldIcon><FiCalendar /></FieldIcon>
@@ -909,6 +909,28 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                         </div>
                       </Field>
                     </div>
+
+                    {userDegree === 'Other' && (
+                      <Field label="Department" error={undefined}>
+                        <div className="relative">
+                          <FieldIcon><FiBriefcase /></FieldIcon>
+                          <select
+                            value={userDept}
+                            onChange={e => setUserDept(e.target.value)}
+                            className={fieldSelectCls}
+                          >
+                            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Communication">Electronics & Communication</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Commerce & Finance">Commerce & Finance</option>
+                            <option value="Business Administration (MBA/BBA)">Business Administration (MBA/BBA)</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </Field>
+                    )}
 
                     {userDept === 'Other' && (
                       <Field label="Specify Department" error={formErrors.customDept}>
