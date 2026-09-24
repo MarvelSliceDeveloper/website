@@ -312,6 +312,7 @@ export default function CustomExamRegister() {
   const [user12thSchool, setUser12thSchool] = useState('');
   const [user12thMark, setUser12thMark] = useState('');
   const [userCollege, setUserCollege] = useState('');
+  const [userRegNum, setUserRegNum] = useState('');
   const [userDegree, setUserDegree] = useState(DEFAULT_DEGREES[0]);
   const [customDegree, setCustomDegree] = useState('');
   const [userDept, setUserDept] = useState('Computer Science & Engineering');
@@ -412,6 +413,7 @@ export default function CustomExamRegister() {
     if (!user12thSchool.trim()) errs.user12thSchool = '12th/Diploma school name is required';
     if (!user12thMark || isNaN(Number(user12thMark))) errs.user12thMark = '12th/Diploma mark (%) is required';
     if (!userCollege.trim()) errs.college = 'College/Institute name is required';
+    if (!userRegNum.trim()) errs.regNum = 'College Register/Roll Number is required';
     if (!userCgpa || isNaN(Number(userCgpa))) errs.cgpa = 'Current CGPA is required';
     if (userDegree === 'Other' && !customDegree.trim()) errs.customDegree = 'Degree qualification is required';
     if (userDept === 'Other' && !customDept.trim()) errs.customDept = 'Department name is required';
@@ -431,6 +433,7 @@ export default function CustomExamRegister() {
       user_email: userEmail.trim().toLowerCase(),
       user_phone: userPhone.trim(),
       user_dob: userDob,
+      user_reg_num: userRegNum.trim().toUpperCase(),
       user_department: finalDept,
       user_degree: finalDegree,
       user_address: userAddress.trim(),
@@ -746,8 +749,8 @@ export default function CustomExamRegister() {
                         {formErrors.user12thMark && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.user12thMark}</p>}
                       </div>
 
-                      {/* College Name */}
-                      <div className="sm:col-span-2">
+                      {/* College Name & Register / Roll Number */}
+                      <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
                           College / Institute Name <span className="text-red-500">*</span>
                         </label>
@@ -760,6 +763,21 @@ export default function CustomExamRegister() {
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                         />
                         {formErrors.college && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.college}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          College Register / Roll Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={userRegNum}
+                          onChange={e => setUserRegNum(e.target.value)}
+                          placeholder="e.g. 711221104015"
+                          required
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 uppercase"
+                        />
+                        {formErrors.regNum && <p className="text-[10px] text-rose-600 font-semibold mt-0.5">{formErrors.regNum}</p>}
                       </div>
 
                       {/* Degree Selection */}

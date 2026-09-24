@@ -190,7 +190,8 @@ export default function CustomMockExamSubmissions() {
       s.user_email?.toLowerCase().includes(term) ||
       s.user_phone?.toLowerCase().includes(term) ||
       s.user_college?.toLowerCase().includes(term) ||
-      s.user_degree?.toLowerCase().includes(term)
+      s.user_degree?.toLowerCase().includes(term) ||
+      s.user_reg_num?.toLowerCase().includes(term)
     );
   });
 
@@ -206,7 +207,7 @@ export default function CustomMockExamSubmissions() {
 
     let headers = [
       'Candidate Name', 'Email', 'Phone', 'DOB', 'Degree', 'Department', 'Year',
-      'College', 'Address', '10th Mark (%)', '12th Mark (%)', 'CGPA', 'Score',
+      'College', 'Register / Roll No', 'Address', '10th Mark (%)', '12th Mark (%)', 'CGPA', 'Score',
       'Total Questions', 'Correct', 'Wrong', 'Time Taken', 'Exam Title', 'Date'
     ];
 
@@ -236,6 +237,7 @@ export default function CustomMockExamSubmissions() {
         `"${s.user_department || ''}"`,
         `"${s.user_year || ''}"`,
         `"${s.user_college || ''}"`,
+        `"${s.user_reg_num || ''}"`,
         `"${(s.user_address || '').replace(/"/g, '""')}"`,
         `"${s.user_10th_mark ?? 'N/A'}"`,
         `"${s.user_12th_mark ?? 'N/A'}"`,
@@ -282,7 +284,7 @@ export default function CustomMockExamSubmissions() {
         i + 1,
         s.user_name || '',
         s.user_degree || s.user_department || '',
-        s.user_college || '',
+        `${s.user_college || ''}${s.user_reg_num ? '\nReg: ' + s.user_reg_num : ''}`,
         s.user_cgpa ? `${s.user_cgpa} CGPA` : 'N/A',
         `${s.score ?? 0} / ${s.total_questions ?? 0}`,
         `${s.correct_answers ?? 0} Correct`,
@@ -292,7 +294,7 @@ export default function CustomMockExamSubmissions() {
 
       doc.autoTable({
         startY: 28,
-        head: [['#', 'Name', 'Degree / Dept', 'College', 'CGPA', 'Score', 'Accuracy', 'Time Taken', 'Exam Title']],
+        head: [['#', 'Name', 'Degree / Dept', 'College & Reg No', 'CGPA', 'Score', 'Accuracy', 'Time Taken', 'Exam Title']],
         body: tableData,
         theme: 'grid',
         styles: { fontSize: 8 }
@@ -309,7 +311,7 @@ export default function CustomMockExamSubmissions() {
         return [
           i + 1,
           `${s.user_name || ''}\n${s.user_email || ''}\nPh: ${s.user_phone || ''}`,
-          `${s.user_degree || s.user_department || ''}\n${s.user_college || ''}`,
+          `${s.user_degree || s.user_department || ''}\n${s.user_college || ''}${s.user_reg_num ? '\nReg: ' + s.user_reg_num : ''}`,
           `10th: ${s.user_10th_mark ? s.user_10th_mark + '%' : 'N/A'}\n12th: ${s.user_12th_mark ? s.user_12th_mark + '%' : 'N/A'}\nCGPA: ${s.user_cgpa || 'N/A'}`,
           s.user_address || 'N/A',
           `${s.score ?? 0} / ${s.total_questions ?? 0}`,
@@ -321,7 +323,7 @@ export default function CustomMockExamSubmissions() {
 
       doc.autoTable({
         startY: 28,
-        head: [['#', 'Candidate Profile', 'Degree & College', 'Academics', 'Residential Address', 'Total Score', 'Category Scores', 'Time Taken', 'Exam Title']],
+        head: [['#', 'Candidate Profile', 'Degree, College & Reg No', 'Academics', 'Residential Address', 'Total Score', 'Category Scores', 'Time Taken', 'Exam Title']],
         body: tableData,
         theme: 'grid',
         styles: { fontSize: 7.5, cellPadding: 2 }

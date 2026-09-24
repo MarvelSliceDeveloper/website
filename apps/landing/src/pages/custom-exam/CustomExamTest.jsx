@@ -348,7 +348,7 @@ export default function CustomExamTest() {
     let cachedSession = null;
     try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
 
-    if (cachedSession && cachedSession.activeStep === 'QUIZ') {
+    if (cachedSession && (cachedSession.activeStep === 'QUIZ' || cachedSession.activeStep === 'FEEDBACK' || cachedSession.activeStep === 'REVIEW_MARKED')) {
       restoreSessionFromCache(currentExam, questions);
       hasRestoredSessionRef.current = true;
       setLoading(false);
@@ -407,7 +407,7 @@ export default function CustomExamTest() {
       markedForReview: {},
       visitedQuestions: initialVisited,
       feedbackAnswers: {},
-      timeLeftSeconds: timeLeftSeconds || fullExamSecs,
+      timeLeftSeconds: fullExamSecs,
       examStartedAtMs: nowMs,
       savedAtTimestampMs: nowMs
     };
@@ -443,8 +443,15 @@ export default function CustomExamTest() {
         return;
       }
 
-      const elapsedSecs = Math.floor((Date.now() - (cached.savedAtTimestampMs || Date.now())) / 1000);
-      const remainingSecs = Math.max(0, (cached.timeLeftSeconds ?? fullExamSecs) - elapsedSecs);
+      // Calculate exact remaining time based on exam start timestamp
+      let remainingSecs = fullExamSecs;
+      if (cached.examStartedAtMs) {
+        const elapsedSecs = Math.floor((Date.now() - cached.examStartedAtMs) / 1000);
+        remainingSecs = Math.max(0, fullExamSecs - elapsedSecs);
+      } else if (cached.timeLeftSeconds !== undefined && cached.savedAtTimestampMs) {
+        const elapsedSecs = Math.floor((Date.now() - cached.savedAtTimestampMs) / 1000);
+        remainingSecs = Math.max(0, cached.timeLeftSeconds - elapsedSecs);
+      }
 
       if (cached.examStartedAtMs) setExamStartedAtMs(cached.examStartedAtMs);
       if (cached.userAnswers) setUserAnswers(cached.userAnswers);
@@ -457,7 +464,8 @@ export default function CustomExamTest() {
 
       if (remainingSecs > 0) {
         setTimeLeftSeconds(remainingSecs);
-        setActiveStep(cached.activeStep || 'QUIZ');
+        // CRITICAL: Always return candidate to QUIZ screen on refresh when time remains
+        setActiveStep('QUIZ');
         setIsSessionRestored(true);
       } else {
         setTimeLeftSeconds(0);
@@ -485,14 +493,14 @@ export default function CustomExamTest() {
     if (activeStep === 'INSTRUCTIONS' || activeStep === 'GATE_BLOCKED' || activeStep === 'WAITING_LOBBY') return;
 
     const sessionData = {
-      activeStep,
+      activeStep: 'QUIZ',
       currentQIndex,
       userAnswers,
       markedForReview,
       visitedQuestions,
       feedbackAnswers,
       timeLeftSeconds,
-      examStartedAtMs,
+      examStartedAtMs: examStartedAtMs || Date.now(),
       tabSwitchCount,
       tabSwitchLogs,
       savedAtTimestampMs: Date.now()
@@ -799,6 +807,7 @@ export default function CustomExamTest() {
         user_cgpa: candidate?.user_cgpa || null,
         user_year: candidate?.user_year || '',
         user_college: candidate?.user_college || '',
+        user_reg_num: candidate?.user_reg_num || '',
         candidate_photo: candidate?.candidate_photo || null,
         status: 'SUBMITTED',
         score: score,
@@ -1164,11 +1173,19 @@ export default function CustomExamTest() {
             )}
           </div>
 
-          <div className="pt-2 border-t border-slate-100 shrink-0">
+          <div className="pt-2 border-t border-slate-100 shrink-0 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveStep('QUIZ')}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
+            >
+              Back to Questions
+            </button>
+
             <button
               type="button"
               onClick={() => setActiveStep('FEEDBACK')}
-              className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="px-6 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <span>Proceed to Feedback</span>
               <FiArrowRight className="w-4 h-4" />
@@ -1341,7 +1358,15 @@ export default function CustomExamTest() {
             </div>
           )}
 
-          <div className="pt-2 flex justify-center shrink-0">
+          <div className="pt-2 flex items-center justify-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveStep('QUIZ')}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
+            >
+              Back to Questions
+            </button>
+
             <button
               type="button"
               onClick={handleFinalSubmissionWithValidation}
@@ -1526,6 +1551,9 @@ export default function CustomExamTest() {
             </div>
             <div className="text-[13px] leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
               <div className="truncate"><span className="font-semibold text-slate-500">Name:</span> {candidate?.user_name}</div>
+              {candidate?.user_reg_num && (
+                <div className="truncate"><span className="font-semibold text-slate-500">Reg No:</span> <span className="font-mono font-bold text-brand-blue">{candidate.user_reg_num}</span></div>
+              )}
               <div className="truncate"><span className="font-semibold text-slate-500">Dept:</span> {candidate?.user_department}</div>
               <div className="truncate"><span className="font-semibold text-slate-500">Year:</span> {candidate?.user_year}</div>
               {candidate?.user_college && (

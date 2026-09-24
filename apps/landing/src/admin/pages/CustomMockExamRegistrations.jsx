@@ -91,20 +91,22 @@ export default function CustomMockExamRegistrations() {
       r.user_email?.toLowerCase().includes(term) ||
       r.user_phone?.toLowerCase().includes(term) ||
       r.user_college?.toLowerCase().includes(term) ||
-      r.user_department?.toLowerCase().includes(term)
+      r.user_department?.toLowerCase().includes(term) ||
+      r.user_reg_num?.toLowerCase().includes(term)
     );
   });
 
   // Export All CSV
   function exportCSV() {
     if (filteredRegistrations.length === 0) return;
-    const headers = ['Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Department', 'Degree', 'Year', '10th Mark', '12th Mark', 'CGPA', 'Address', 'Exam Title', 'Registration Date'];
+    const headers = ['Candidate Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Register / Roll No', 'Department', 'Degree', 'Year', '10th Mark', '12th Mark', 'CGPA', 'Address', 'Exam Title', 'Registration Date'];
     const rows = filteredRegistrations.map(r => [
       `"${r.user_name || ''}"`,
       `"${r.user_email || ''}"`,
       `"${r.user_dob || ''}"`,
       `"${r.user_phone || ''}"`,
       `"${r.user_college || ''}"`,
+      `"${r.user_reg_num || ''}"`,
       `"${r.user_department || ''}"`,
       `"${r.user_degree || ''}"`,
       `"${r.user_year || ''}"`,
@@ -142,6 +144,7 @@ export default function CustomMockExamRegistrations() {
       r.user_dob || '',
       r.user_phone || '',
       r.user_college || '',
+      r.user_reg_num || 'N/A',
       r.user_department || '',
       r.user_year || '',
       r.custom_mock_exams?.title || ''
@@ -149,7 +152,7 @@ export default function CustomMockExamRegistrations() {
 
     doc.autoTable({
       startY: 28,
-      head: [['#', 'Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Department', 'Year', 'Exam']],
+      head: [['#', 'Name', 'Email (Username)', 'DOB (Password)', 'Phone', 'College', 'Reg No', 'Department', 'Year', 'Exam']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 }
@@ -194,10 +197,11 @@ export default function CustomMockExamRegistrations() {
     const profileDetails = [
       ['Candidate Name', candidate.user_name || 'N/A', 'Phone Number', candidate.user_phone || 'N/A'],
       ['Email Address', candidate.user_email || 'N/A', 'Date of Birth', candidate.user_dob || 'N/A'],
-      ['College Name', candidate.user_college || 'N/A', 'Department', candidate.user_department || 'N/A'],
-      ['Degree / Branch', candidate.user_degree || 'N/A', 'Year of Study', candidate.user_year || 'N/A'],
-      ['10th Mark / %', candidate.user_10th_mark ? `${candidate.user_10th_mark}%` : 'N/A', '12th / Diploma Mark', candidate.user_12th_mark ? `${candidate.user_12th_mark}%` : 'N/A'],
-      ['College CGPA', candidate.user_cgpa ? `${candidate.user_cgpa}` : 'N/A', 'Address', candidate.user_address || 'N/A']
+      ['College Name', candidate.user_college || 'N/A', 'Register / Roll No', candidate.user_reg_num || 'N/A'],
+      ['Department', candidate.user_department || 'N/A', 'Degree / Branch', candidate.user_degree || 'N/A'],
+      ['Year of Study', candidate.user_year || 'N/A', '10th Mark / %', candidate.user_10th_mark ? `${candidate.user_10th_mark}%` : 'N/A'],
+      ['12th / Diploma %', candidate.user_12th_mark ? `${candidate.user_12th_mark}%` : 'N/A', 'College CGPA', candidate.user_cgpa ? `${candidate.user_cgpa}` : 'N/A'],
+      ['Residential Address', candidate.user_address || 'N/A', '', '']
     ];
 
     doc.autoTable({
@@ -222,6 +226,7 @@ export default function CustomMockExamRegistrations() {
       ['DOB (Password)', `"${candidate.user_dob || ''}"`],
       ['Phone', `"${candidate.user_phone || ''}"`],
       ['College', `"${candidate.user_college || ''}"`],
+      ['Register / Roll No', `"${candidate.user_reg_num || ''}"`],
       ['Department', `"${candidate.user_department || ''}"`],
       ['Degree', `"${candidate.user_degree || ''}"`],
       ['Year', `"${candidate.user_year || ''}"`],
@@ -414,6 +419,9 @@ Marvel Slice LMS Team`;
                     <td className="p-3.5">
                       <span className="font-semibold text-slate-900 block">{reg.user_college || 'N/A'}</span>
                       <span className="text-[10px] text-slate-500 block">{reg.user_department || 'N/A'}</span>
+                      {reg.user_reg_num && (
+                        <span className="text-[10px] font-mono text-brand-blue font-bold block">Reg: {reg.user_reg_num}</span>
+                      )}
                     </td>
 
                     <td className="p-3.5 font-mono text-[11px] text-slate-800">
@@ -586,6 +594,10 @@ Marvel Slice LMS Team`;
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="text-[10px] font-bold text-slate-400 block">College / Institution:</span>
                     <span className="font-bold text-slate-900 block">{selectedCandidate.user_college || 'N/A'}</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 block">Register / Roll Number:</span>
+                    <span className="font-bold font-mono text-brand-blue block">{selectedCandidate.user_reg_num || 'N/A'}</span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="text-[10px] font-bold text-slate-400 block">Department / Major:</span>
