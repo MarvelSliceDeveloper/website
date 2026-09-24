@@ -841,7 +841,6 @@ export default function CustomExamTest() {
         } else {
           wrongCount++;
           categoryScores[catName].wrong += 1;
-          categoryScores[catName].score -= 0.25;
         }
       } else {
         categoryScores[catName].unanswered += 1;
@@ -1684,7 +1683,6 @@ export default function CustomExamTest() {
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
-                    <li>Negative marking of 0.25 marks applies for incorrect answers.</li>
                     <li>The exam will auto-submit when the timer expires.</li>
                     <li>Read each question carefully before selecting your answer.</li>
                     <li>Once an answer is submitted, ensure it is your final choice before proceeding.</li>

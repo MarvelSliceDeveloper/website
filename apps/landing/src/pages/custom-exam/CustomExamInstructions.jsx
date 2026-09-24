@@ -78,7 +78,7 @@ export default function CustomExamInstructions() {
         time_limit_mins: 20,
         total_marks: 100,
         question_count_option: 50,
-        rules_text: '1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option in the palette.\n4. Negative marking of 0.25 marks applies for incorrect answers.\n5. The exam will auto-submit when the timer expires.'
+        rules_text: '1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option in the palette.\n4. The exam will auto-submit when the timer expires.'
       });
     }
     setLoading(false);
@@ -223,7 +223,7 @@ export default function CustomExamInstructions() {
               {exam?.rules_text ? (
                 exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')
               ) : (
-                "1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option in the palette.\n4. Negative marking of 0.25 marks applies for incorrect answers.\n5. The exam will auto-submit when the timer expires."
+                "1. Ensure a stable internet connection throughout the test.\n2. Do not refresh the page or switch browser tabs during the exam.\n3. Each question carries 1 mark. Select the correct option in the palette.\n4. The exam will auto-submit when the timer expires."
               )}
             </div>
           </div>

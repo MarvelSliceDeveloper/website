@@ -720,7 +720,7 @@ export default function CustomMockExamSubmissions() {
                                 </span>
                               ) : (
                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                                  ✗ Incorrect (-0.25 Marks)
+                                  ✗ Incorrect (0 Marks)
                                 </span>
                               )}
                             </div>
