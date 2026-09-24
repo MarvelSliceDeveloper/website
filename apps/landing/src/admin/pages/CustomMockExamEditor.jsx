@@ -63,8 +63,45 @@ export default function CustomMockExamEditor() {
     'Quantitative Aptitude',
     'Logical Reasoning',
     'Verbal Ability',
-    'Technical Knowledge'
+    'Technical Knowledge',
+    'General Awareness'
   ];
+
+  // Fallback pool used to top exams up to the minimum section count
+  const GEN_FALLBACK_CATEGORIES = [
+    'Quantitative Aptitude',
+    'Logical Reasoning',
+    'Verbal Ability',
+    'Technical Knowledge',
+    'General Awareness'
+  ];
+  const MIN_GEN_CATEGORIES = 5;
+
+  // Even split of `total` questions across `cats` (remainder goes to first sections)
+  function evenSplitPlan(total, cats) {
+    const n = Number(total) || 0;
+    const list = (cats && cats.length > 0) ? cats : GEN_FALLBACK_CATEGORIES;
+    const base = Math.floor(n / Math.max(1, list.length));
+    const rem = n % Math.max(1, list.length);
+    return list.map((cat, i) => ({ category: cat, count: base + (i < rem ? 1 : 0) }));
+  }
+
+  // Top the exam's sections up to the minimum with fallback defaults
+  function topUpCategoriesToMinimum() {
+    setExamCategories((prev) => {
+      const next = [...(prev && prev.length > 0 ? prev : [])];
+      GEN_FALLBACK_CATEGORIES.forEach((c) => {
+        if (next.length < MIN_GEN_CATEGORIES && !next.includes(c)) next.push(c);
+      });
+      let n = next.length + 1;
+      while (next.length < MIN_GEN_CATEGORIES) {
+        const name = `Section ${n}`;
+        if (!next.includes(name)) next.push(name);
+        n += 1;
+      }
+      return next;
+    });
+  }
 
   const [allowedDegrees, setAllowedDegrees] = useState(DEFAULT_DEGREES);
   const [newDegreeInput, setNewDegreeInput] = useState('');
@@ -527,14 +564,24 @@ export default function CustomMockExamEditor() {
     }));
   }
 
-  // AI Question Generator Handler (Generates clean, structured questions distributed across section categories)
+  // AI Question Generator Handler (tops sections up to minimum 5, then splits evenly)
   function handleGenerateAIQuestions() {
+    // Auto top-up to the minimum section count so every generation covers 5+ categories
+    let categories = [...(examCategories && examCategories.length > 0 ? examCategories : [])];
+    GEN_FALLBACK_CATEGORIES.forEach((c) => {
+      if (categories.length < MIN_GEN_CATEGORIES && !categories.includes(c)) categories.push(c);
+    });
+    let n = categories.length + 1;
+    while (categories.length < MIN_GEN_CATEGORIES) {
+      const name = `Section ${n}`;
+      if (!categories.includes(name)) categories.push(name);
+      n += 1;
+    }
+    setExamCategories(categories);
+
     setAiGenerating(true);
     setTimeout(() => {
       const countToGen = Number(aiCount) || 25;
-      const categories = (examCategories && examCategories.length > 0)
-        ? examCategories
-        : ['Quantitative Aptitude', 'Logical Reasoning', 'Technical Knowledge', 'Verbal Ability'];
 
       const topicLower = aiTopic.toLowerCase();
 
@@ -567,40 +614,50 @@ export default function CustomMockExamEditor() {
           { q: `Which protocol operates at the Transport Layer of the OSI model?`, opts: ['HTTP', 'TCP', 'IP', 'Ethernet'], correct: 1, exp: 'TCP and UDP operate at the Transport Layer (Layer 4).' },
           { q: `In relational databases, what does ACID stand for?`, opts: ['Atomicity, Consistency, Isolation, Durability', 'Access, Control, Index, Data', 'Algorithm, Code, Input, Output', 'Array, Chain, Index, Data'], correct: 0, exp: 'ACID guarantees database transaction reliability.' },
           { q: `What is the primary function of Garbage Collection in modern runtimes?`, opts: ['Memory Allocation', 'Automatic Unreachable Object Reclamation', 'Syntax Checking', 'Thread Management'], correct: 1, exp: 'Garbage Collection frees unreferenced heap memory automatically.' }
+        ],
+        'General Awareness': [
+          { q: 'Which body is responsible for conducting the Census in India?', opts: ['NITI Aayog', 'Registrar General & Census Commissioner', 'Election Commission', 'Planning Commission'], correct: 1, exp: 'The Office of the Registrar General & Census Commissioner conducts the Census.' },
+          { q: 'The Headquarters of the International Monetary Fund (IMF) is located in:', opts: ['New York', 'Washington D.C.', 'Geneva', 'London'], correct: 1, exp: 'The IMF headquarters is in Washington D.C., USA.' },
+          { q: 'Which article of the Indian Constitution deals with the Right to Equality?', opts: ['Article 14', 'Article 19', 'Article 21', 'Article 32'], correct: 0, exp: 'Article 14 guarantees equality before law.' },
+          { q: 'Who is known as the Father of the Indian Constitution?', opts: ['Mahatma Gandhi', 'Jawaharlal Nehru', 'B. R. Ambedkar', 'Sardar Patel'], correct: 2, exp: 'Dr. B. R. Ambedkar chaired the drafting committee.' },
+          { q: 'The currency of Japan is:', opts: ['Won', 'Yuan', 'Yen', 'Ringgit'], correct: 2, exp: 'The official currency of Japan is the Yen.' }
         ]
       };
 
+      const plan = evenSplitPlan(countToGen, categories);
       const generated = [];
-      for (let i = 1; i <= countToGen; i++) {
-        const categoryName = categories[(i - 1) % categories.length];
+      plan.forEach(({ category: categoryName, count }) => {
         const bank = categoryBanks[categoryName] || categoryBanks['Technical Knowledge'];
-        const sample = bank[(Math.floor((i - 1) / categories.length)) % bank.length];
-
-        generated.push({
-          id: `ai-q-${Date.now()}-${i}`,
-          question_text: sample.q,
-          options: sample.opts,
-          correct_option: sample.correct,
-          explanation: sample.exp,
-          marks: 1,
-          category_name: categoryName
-        });
-      }
+        for (let j = 0; j < count; j++) {
+          const sample = bank[j % bank.length];
+          generated.push({
+            id: `ai-q-${Date.now()}-${categoryName}-${j}`,
+            question_text: sample.q,
+            options: sample.opts,
+            correct_option: sample.correct,
+            explanation: sample.exp,
+            marks: 1,
+            category_name: categoryName
+          });
+        }
+      });
 
       setQuestions(generated);
       setQuestionCountOption(countToGen);
       setAiGenerating(false);
       setShowAiModal(false);
-      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} questions across ${categories.length} section categories for "${aiTopic}"!`, 'success');
+      showAlertModal('AI Generation Complete', `Successfully generated ${countToGen} questions split evenly across ${categories.length} sections (${plan.map(p => `${p.category}: ${p.count}`).join(', ')})!`, 'success');
     }, 800);
   }
 
-  // JSON / CSV Question Parser
+  // JSON / CSV Question Parser (supports per-question category_name / category)
   function handleImportQuestions() {
     if (!importText.trim()) {
       showAlertModal('Import Error', 'Please paste JSON array or CSV text.', 'error');
       return;
     }
+
+    const fallbackCat = (examCategories && examCategories[0]) || 'General';
 
     try {
       let parsed = [];
@@ -613,10 +670,11 @@ export default function CustomMockExamEditor() {
           options: Array.isArray(item.options) && item.options.length >= 4 ? item.options.slice(0, 4).map(o => String(o).trim()) : ['', '', '', ''],
           correct_option: Number(item.correct_option ?? item.correctIndex ?? 0),
           explanation: (item.explanation || '').trim(),
-          marks: Number(item.marks || 1)
+          marks: Number(item.marks || 1),
+          category_name: (item.category_name || item.category || fallbackCat).toString().trim() || fallbackCat
         }));
       } else {
-        // CSV Parsing
+        // CSV Parsing (8th column = section category, optional)
         const lines = importText.trim().split('\n').filter(l => l.trim().length > 0);
         lines.forEach((line, idx) => {
           if (idx === 0 && line.toLowerCase().includes('question')) return; // Skip header
@@ -628,7 +686,8 @@ export default function CustomMockExamEditor() {
               options: [parts[1] || '', parts[2] || '', parts[3] || '', parts[4] || ''],
               correct_option: Number(parts[5] || 0),
               explanation: parts[6] || '',
-              marks: 1
+              marks: 1,
+              category_name: (parts[7] || fallbackCat).trim() || fallbackCat
             });
           }
         });
@@ -636,10 +695,22 @@ export default function CustomMockExamEditor() {
 
       if (parsed.length === 0) throw new Error('No valid questions found in import data');
 
+      // Auto-register any new section categories found in the import
+      const foundCats = Array.from(new Set(parsed.map(q => q.category_name).filter(Boolean)));
+      const newCats = foundCats.filter(c => !examCategories.includes(c));
+      if (newCats.length > 0) {
+        setExamCategories(prev => [...prev, ...newCats.filter(c => !prev.includes(c))]);
+      }
+
+      // Snap the question count option when the import matches a preset size
+      if ([25, 50, 75, 100].includes(parsed.length)) {
+        setQuestionCountOption(parsed.length);
+      }
+
       setQuestions(parsed);
       setShowImportModal(false);
       setImportText('');
-      showAlertModal('Import Successful', `Successfully imported ${parsed.length} questions into exam builder!`, 'success');
+      showAlertModal('Import Successful', `Successfully imported ${parsed.length} questions across ${foundCats.length} section${foundCats.length > 1 ? 's' : ''} (${foundCats.join(', ')})!${newCats.length > 0 ? ` ${newCats.length} new section${newCats.length > 1 ? 's were' : ' was'} added.` : ''}`, 'success');
     } catch (err) {
       showAlertModal('Import Failed', err.message || 'Unable to parse import text format.', 'error');
     }
@@ -1428,6 +1499,43 @@ export default function CustomMockExamEditor() {
                   </select>
                 </div>
               </div>
+
+              {/* EVEN-SPLIT PLAN PREVIEW (MINIMUM 5 SECTIONS) */}
+              {(() => {
+                const effective = (examCategories && examCategories.length > 0) ? examCategories : GEN_FALLBACK_CATEGORIES;
+                const plan = evenSplitPlan(Number(aiCount) || 25, effective);
+                const needsTopUp = effective.length < MIN_GEN_CATEGORIES;
+                return (
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        Even Split Plan ({plan.length} Sections)
+                      </span>
+                      {needsTopUp && (
+                        <button
+                          type="button"
+                          onClick={topUpCategoriesToMinimum}
+                          className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
+                        >
+                          Top up to {MIN_GEN_CATEGORIES} sections
+                        </button>
+                      )}
+                    </div>
+                    {needsTopUp && (
+                      <p className="text-[11px] text-amber-700 font-medium">
+                        Only {effective.length} section{effective.length === 1 ? '' : 's'} configured — generating auto-adds missing default sections to reach minimum {MIN_GEN_CATEGORIES}.
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {plan.map((p, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-white border border-slate-200 text-slate-700 font-bold text-[11px] rounded-full">
+                          {p.category}: {p.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
@@ -1488,8 +1596,8 @@ export default function CustomMockExamEditor() {
             <div className="space-y-2 text-xs">
               <p className="text-slate-500 font-medium">
                 {importTab === 'json'
-                  ? 'Paste JSON array containing question_text, options array (4 items), correct_option index (0-3), and explanation.'
-                  : 'Paste CSV rows: Question, Option A, Option B, Option C, Option D, Correct Index (0-3), Explanation'}
+                  ? 'Paste JSON array containing question_text, options array (4 items), correct_option index (0-3), explanation, and optional category_name to place each question in a section.'
+                  : 'Paste CSV rows: Question, Option A, Option B, Option C, Option D, Correct Index (0-3), Explanation, Section Category (optional, 8th column)'}
               </p>
 
               <textarea
@@ -1498,8 +1606,8 @@ export default function CustomMockExamEditor() {
                 onChange={e => setImportText(e.target.value)}
                 placeholder={
                   importTab === 'json'
-                    ? '[\n  {\n    "question_text": "Sample question statement",\n    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],\n    "correct_option": 0,\n    "explanation": "Note"\n  }\n]'
-                    : 'Question,Option A,Option B,Option C,Option D,Correct Index,Explanation\n"Sample question prompt","Opt A","Opt B","Opt C","Opt D",0,"Explanation note"'
+                    ? '[\n  {\n    "question_text": "Sample question statement",\n    "options": ["Opt A", "Opt B", "Opt C", "Opt D"],\n    "correct_option": 0,\n    "explanation": "Note",\n    "category_name": "Quantitative Aptitude"\n  }\n]'
+                    : 'Question,Option A,Option B,Option C,Option D,Correct Index,Explanation,Section Category\n"Sample question prompt","Opt A","Opt B","Opt C","Opt D",0,"Explanation note","Quantitative Aptitude"'
                 }
                 className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-800 outline-none"
               />
