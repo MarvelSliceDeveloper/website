@@ -536,7 +536,16 @@ export default function CustomMockExamSubmissions() {
       {/* INDIVIDUAL CANDIDATE ATTEMPT & QUESTION REVIEW MODAL */}
       {activeReviewModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto">
+          <div className="relative max-w-4xl w-full max-h-[90vh] my-auto">
+            <button
+              type="button"
+              onClick={() => setActiveReviewModal(null)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
+          <div className="bg-white rounded-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
             {/* MODAL HEADER */}
             <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
@@ -554,13 +563,6 @@ export default function CustomMockExamSubmissions() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveReviewModal(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full cursor-pointer transition-colors"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             {/* MODAL BODY */}
@@ -724,17 +726,7 @@ export default function CustomMockExamSubmissions() {
                 )}
               </div>
             </div>
-
-            {/* MODAL FOOTER */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveReviewModal(null)}
-                className="px-6 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-900 cursor-pointer shadow-xs"
-              >
-                Close Review
-              </button>
-            </div>
+          </div>
           </div>
         </div>
       )}
@@ -742,19 +734,20 @@ export default function CustomMockExamSubmissions() {
       {/* FEEDBACK ANSWERS MODAL */}
       {activeFeedbackModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
+          <div className="relative bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveFeedbackModal(null)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <FiMessageSquare className="w-5 h-5 text-brand-blue" />
                 <h3 className="font-bold text-slate-900 text-sm">Candidate Feedback Response</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveFeedbackModal(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -771,16 +764,6 @@ export default function CustomMockExamSubmissions() {
                 </div>
               ))}
             </div>
-
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={() => setActiveFeedbackModal(null)}
-                className="px-5 py-2 bg-brand-blue text-white font-bold text-xs rounded-xl shadow-xs hover:bg-brand-blue/90 cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -788,19 +771,20 @@ export default function CustomMockExamSubmissions() {
       {/* EXPORT OPTIONS MODAL (SUMMARY VS DETAILED REPORT) */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-slate-200">
+          <div className="relative bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setShowExportModal(false)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <FiDownload className="w-5 h-5 text-emerald-600" />
                 <h3 className="font-extrabold text-slate-900 text-sm">Export Submissions Report</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowExportModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             <div className="space-y-4">
@@ -887,13 +871,6 @@ export default function CustomMockExamSubmissions() {
             <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
                 onClick={handleTriggerExport}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
@@ -908,7 +885,15 @@ export default function CustomMockExamSubmissions() {
       {/* TAB SWITCH AUDIT LOG MODAL */}
       {activeTabSwitchModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-auto max-h-[85vh] flex flex-col">
+          <div className="relative bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-auto max-h-[85vh] flex flex-col">
+            <button
+              type="button"
+              onClick={() => setActiveTabSwitchModal(null)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
               <div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
@@ -922,13 +907,6 @@ export default function CustomMockExamSubmissions() {
                   Detailed log of tab & window switches captured silently during the exam.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveTabSwitchModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 cursor-pointer"
-              >
-                <FiX className="w-4 h-4" />
-              </button>
             </div>
 
             <div className="overflow-y-auto flex-1 space-y-3 pr-1">
@@ -977,16 +955,6 @@ export default function CustomMockExamSubmissions() {
                   </table>
                 </div>
               )}
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex justify-end shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTabSwitchModal(null)}
-                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

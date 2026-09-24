@@ -115,20 +115,21 @@ export default function CustomMockExamsOverallReportModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-neutral-50 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-admin-200 overflow-hidden my-auto">
+      <div className="relative max-w-4xl w-full max-h-[90vh] my-auto">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+        >
+          <FiX className="w-5 h-5 text-red-600" />
+        </button>
+      <div className="bg-neutral-50 rounded-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-admin-200 overflow-hidden">
         <div className="p-5 border-b border-admin-200 bg-white flex items-start justify-between gap-3 shrink-0">
           <div>
             <h3 className="font-bold text-neutral-900 text-base">Overall Exams Report</h3>
             <p className="text-sm text-neutral-500 mt-0.5">Registration & attendance across all custom mock exams.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer shrink-0"
-            title="Close report"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
@@ -215,14 +216,8 @@ export default function CustomMockExamsOverallReportModal({ onClose }) {
             <FiDownload className="w-4 h-4 text-admin-600" />
             Export PDF
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2 bg-admin-600 hover:bg-admin-700 text-white font-semibold text-sm rounded-lg transition-colors cursor-pointer"
-          >
-            Close Report
-          </button>
         </div>
+      </div>
       </div>
     </div>
   );

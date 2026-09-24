@@ -1336,7 +1336,18 @@ export default function CustomMockExamEditor() {
       {/* CUSTOM ADMIN MODAL DIALOG */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                if (modalConfig.onConfirm) modalConfig.onConfirm();
+                setModalConfig({ isOpen: false, title: '', message: '', type: 'info' });
+              }}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
               modalConfig.type === 'error' ? 'bg-rose-100 text-rose-600 ring-8 ring-rose-50' :
               modalConfig.type === 'success' ? 'bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50' : 'bg-blue-100 text-brand-blue ring-8 ring-blue-50'
@@ -1348,18 +1359,6 @@ export default function CustomMockExamEditor() {
               <h3 className="font-bold text-slate-900 text-base">{modalConfig.title}</h3>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">{modalConfig.message}</p>
             </div>
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (modalConfig.onConfirm) modalConfig.onConfirm();
-                  setModalConfig({ isOpen: false, title: '', message: '', type: 'info' });
-                }}
-                className="w-full py-2.5 bg-brand-blue text-white font-bold text-xs rounded-xl shadow-xs hover:bg-brand-blue/90 cursor-pointer"
-              >
-                OK
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1367,19 +1366,20 @@ export default function CustomMockExamEditor() {
       {/* AI QUESTION GENERATOR MODAL */}
       {showAiModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+          <div className="relative bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setShowAiModal(false)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-purple-700">
                 <HiSparkles className="w-5 h-5 text-purple-600" />
                 <h3 className="font-bold text-slate-900 text-base">AI Question Generator</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAiModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             <div className="space-y-4 text-xs">
@@ -1433,13 +1433,6 @@ export default function CustomMockExamEditor() {
             <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowAiModal(false)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
                 disabled={aiGenerating}
                 onClick={handleGenerateAIQuestions}
                 className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
@@ -1455,19 +1448,20 @@ export default function CustomMockExamEditor() {
       {/* JSON / CSV QUESTION IMPORT MODAL */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+          <div className="relative bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setShowImportModal(false)}
+              aria-label="Close modal"
+              className="absolute -top-3 -right-3 bg-white shadow-lg p-2 rounded-full transition-all cursor-pointer border border-slate-200 z-50 flex items-center justify-center"
+            >
+              <FiX className="w-5 h-5 text-red-600" />
+            </button>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2 text-brand-blue">
                 <FiUpload className="w-5 h-5" />
                 <h3 className="font-bold text-slate-900 text-base">Import Questions (JSON / CSV)</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
             </div>
 
             <div className="flex items-center gap-2 border-b border-slate-200">
@@ -1512,13 +1506,6 @@ export default function CustomMockExamEditor() {
             </div>
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
-              >
-                Cancel
-              </button>
               <button
                 type="button"
                 onClick={handleImportQuestions}
