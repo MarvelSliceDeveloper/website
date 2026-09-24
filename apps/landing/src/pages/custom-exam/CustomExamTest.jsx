@@ -1231,10 +1231,10 @@ export default function CustomExamTest() {
               
               {/* TITLE & RED SUBTITLE (FIXED TOP) */}
               <div className="shrink-0">
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Exam Instructions & Guidelines
                 </h1>
-                <p className="text-xs font-bold text-slate-800 mt-0.5">
+                <p className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
                   (<span className="text-red-600">Please read all instructions carefully before starting the exam.</span>)
                 </p>
               </div>
@@ -1242,11 +1242,11 @@ export default function CustomExamTest() {
               {/* RULES & INSTRUCTIONS CONTENT AREA (SCROLLABLE IF OVERFLOW) */}
               <div className="overflow-y-auto pr-2 space-y-3 text-slate-700 min-h-0">
                 {exam?.rules_text ? (
-                  <div className="text-[16px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
+                  <div className="text-[17px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
                     {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
                   </div>
                 ) : (
-                  <ol className="list-decimal list-inside text-[16px] text-slate-700 font-medium leading-[2.2]">
+                  <ol className="list-decimal list-inside text-[17px] text-slate-700 font-medium leading-[2.2]">
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
@@ -1269,7 +1269,7 @@ export default function CustomExamTest() {
                       onChange={e => setAgreeInstructions(e.target.checked)}
                       className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
                     />
-                    <span className="text-xs text-slate-800 font-semibold leading-snug">
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
                       I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
                     </span>
                   </label>
@@ -1281,7 +1281,7 @@ export default function CustomExamTest() {
                       onChange={e => setAgreeTerms(e.target.checked)}
                       className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
                     />
-                    <span className="text-xs text-slate-800 font-semibold leading-snug">
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
                       I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
                     </span>
                   </label>
