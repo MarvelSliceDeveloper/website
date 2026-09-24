@@ -1165,12 +1165,12 @@ export default function CustomExamTest() {
       {/* CANDIDATE INFO & LIVE TIMER BAR (WHITE BG) */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-1.5 sm:py-2 shrink-0 z-10 shadow-2xs">
         <div className={activeStep === 'INSTRUCTIONS' ? "max-w-[1000px] w-full mx-auto flex items-center justify-between gap-3 sm:gap-6" : "w-full flex items-center justify-between gap-3 sm:gap-6"}>
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-[50px] h-[50px] sm:w-[58px] sm:h-[58px] rounded-xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
               {candidate?.candidate_photo ? (
                 <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
               ) : (
-                <FiUser className="w-7 h-7 text-slate-400" />
+                <FiUser className="w-9 h-9 text-slate-400" />
               )}
             </div>
             <div className="text-[13px] leading-snug text-slate-800 font-semibold space-y-0.5 min-w-0">
