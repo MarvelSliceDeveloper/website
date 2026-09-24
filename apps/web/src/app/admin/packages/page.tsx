@@ -19,6 +19,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconPackage, IconPlus, IconEye, IconTrash } from "@tabler/icons-react";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
+import { CreatePackageModal } from "@/components/admin/CreatePackageModal";
 
 type Package = {
   id: string;
@@ -61,6 +62,7 @@ export default function AdminPackagesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -203,13 +205,13 @@ export default function AdminPackagesPage() {
         description="Create and manage course bundles for students."
         breadcrumbs={[{ label: "Packages", href: "/admin/packages" }]}
         action={
-          <Link
-            href="/admin/packages/new"
+          <button
+            onClick={() => setCreateOpen(true)}
             className="btn-primary text-sm flex items-center gap-1.5"
           >
             <IconPlus size={16} stroke={1.5} />
             Add Package
-          </Link>
+          </button>
         }
       />
 
@@ -247,9 +249,12 @@ export default function AdminPackagesPage() {
           title="No packages yet"
           description="Create your first package to bundle courses together."
           action={
-            <Link href="/admin/packages/new" className="btn-primary text-sm">
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="btn-primary text-sm"
+            >
               Add Package
-            </Link>
+            </button>
           }
         />
       ) : (
@@ -267,6 +272,13 @@ export default function AdminPackagesPage() {
           />
         </>
       )}
+      <CreatePackageModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => {
+          void packagesQuery.refetch();
+        }}
+      />
     </div>
   );
 }

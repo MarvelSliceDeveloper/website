@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
+import { CreateBatchModal } from "@/components/admin/CreateBatchModal";
 
 type Batch = {
   id: string;
@@ -65,6 +66,7 @@ function BatchesPageContent() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   // List query keyed on the active filter/search/page so any change refetches.
   const batchesQuery = useApiQuery<PaginatedResponse<Batch>>(
@@ -212,11 +214,12 @@ function BatchesPageContent() {
         description={`${total} batch${total !== 1 ? "es" : ""}`}
         breadcrumbs={[{ label: "Batches", href: "/admin/batches" }]}
         action={
-          <Link href="/admin/batches/new">
-            <Button leftIcon={<IconPlus size={16} />}>
-              Add Batch
-            </Button>
-          </Link>
+          <Button
+            leftIcon={<IconPlus size={16} />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Add Batch
+          </Button>
         }
       />
 
@@ -257,9 +260,13 @@ function BatchesPageContent() {
           title="No batches yet"
           description="Create your first batch to start enrolling students."
           action={
-            <Link href="/admin/batches/new" className="mt-4 inline-flex">
-              <Button leftIcon={<IconPlus size={16} />}>Add Batch</Button>
-            </Link>
+            <Button
+              leftIcon={<IconPlus size={16} />}
+              onClick={() => setCreateOpen(true)}
+              className="mt-4"
+            >
+              Add Batch
+            </Button>
           }
         />
       ) : (
@@ -274,6 +281,13 @@ function BatchesPageContent() {
           headerVariant="blue"
         />
       )}
+      <CreateBatchModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={() => {
+          void batchesQuery.refetch();
+        }}
+      />
     </div>
   );
 }

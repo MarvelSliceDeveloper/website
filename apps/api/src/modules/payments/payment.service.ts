@@ -305,7 +305,10 @@ export const paymentService = {
   ) {
     const payment = await prisma.payment.findUnique({
       where: { razorpayOrderId },
-      include: { package: true, user: { select: { name: true, email: true } } },
+      include: {
+        package: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
     });
     if (!payment) throw new AppError(404, "Payment record not found");
     if (payment.status !== "PENDING")
@@ -344,6 +347,34 @@ export const paymentService = {
       .catch((err: Error) =>
         console.error("[payment] Failed to send invoice email:", err),
       );
+
+    // Credentials go out HERE at payment time — not at enroll time — so a
+    // buyer who never finishes batch selection still receives their login.
+    // (The enroll/consent steps only email users created fresh in that call,
+    // so no one ever gets two conflicting passwords.)
+    if (payment.userId) {
+      const payer = await prisma.user.findUnique({
+        where: { id: payment.userId },
+        select: { id: true, name: true, email: true, mustChangePassword: true },
+      });
+      if (payer?.mustChangePassword) {
+        const tempPassword = generateDummyPassword();
+        const hashed = await bcrypt.hash(tempPassword, 12);
+        await prisma.user.update({
+          where: { id: payer.id },
+          data: { passwordHash: hashed, mustChangePassword: true },
+        });
+        emailService
+          .sendWelcomeEmail({
+            name: payer.name,
+            email: payer.email,
+            credentials: { email: payer.email, password: tempPassword },
+          })
+          .catch((err: Error) =>
+            console.error("[payment] Failed to send welcome email:", err),
+          );
+      }
+    }
 
     if (payment.couponId) {
       await prisma.coupon
@@ -441,29 +472,6 @@ export const paymentService = {
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
         );
-    } else if (user!.mustChangePassword) {
-      const dummyPassword = generateDummyPassword();
-      const hashed = await bcrypt.hash(dummyPassword, 12);
-      await prisma.user.update({
-        where: { id: user!.id },
-        data: { passwordHash: hashed },
-      });
-
-      emailService
-        .sendWelcomeEmail({
-          name,
-          email: email.toLowerCase(),
-          credentials: { email: email.toLowerCase(), password: dummyPassword },
-          invoice: {
-            paymentId: payment.id,
-            packageName: payment.package!.name,
-            amount: payment.amount,
-            discountAmount: payment.discountAmount,
-          },
-        })
-        .catch((err: Error) =>
-          console.error("[payment] Failed to send welcome email:", err),
-        );
     }
 
     if (user && normalizedPhone && !user.phone) {
@@ -541,29 +549,6 @@ export const paymentService = {
           mustChangePassword: true,
           role: "STUDENT",
         },
-      });
-
-      emailService
-        .sendWelcomeEmail({
-          name,
-          email: email.toLowerCase(),
-          credentials: { email: email.toLowerCase(), password: dummyPassword },
-          invoice: {
-            paymentId: payment.id,
-            packageName: payment.package!.name,
-            amount: payment.amount,
-            discountAmount: payment.discountAmount,
-          },
-        })
-        .catch((err: Error) =>
-          console.error("[payment] Failed to send welcome email:", err),
-        );
-    } else if (user!.mustChangePassword) {
-      const dummyPassword = generateDummyPassword();
-      const hashed = await bcrypt.hash(dummyPassword, 12);
-      await prisma.user.update({
-        where: { id: user!.id },
-        data: { passwordHash: hashed },
       });
 
       emailService
