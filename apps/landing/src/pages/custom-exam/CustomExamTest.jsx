@@ -1242,11 +1242,11 @@ export default function CustomExamTest() {
               {/* RULES & INSTRUCTIONS CONTENT AREA (SCROLLABLE IF OVERFLOW) */}
               <div className="overflow-y-auto pr-2 space-y-3 text-slate-700 min-h-0">
                 {exam?.rules_text ? (
-                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium">
+                  <div className="text-[16px] text-slate-700 leading-[2.2] whitespace-pre-line font-medium">
                     {exam.rules_text.replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
                   </div>
                 ) : (
-                  <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                  <ol className="list-decimal list-inside text-[16px] text-slate-700 font-medium leading-[2.2]">
                     <li>Ensure a stable internet connection throughout the test.</li>
                     <li>Do not refresh the page or switch browser tabs during the exam.</li>
                     <li>Each question carries 1 mark. Select the correct option.</li>
