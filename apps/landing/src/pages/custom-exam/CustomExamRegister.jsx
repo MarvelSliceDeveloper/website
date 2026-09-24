@@ -547,12 +547,12 @@ export default function CustomExamRegister() {  const { slug } = useParams();
         <div className="max-w-[690px] w-full mx-auto">
           {/* REGISTRATION CARD WITH INTERNAL SCROLL */}
           <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-200/80 flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden">
-            <div className="text-center shrink-0 mb-4">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <div className="text-center shrink-0 -mx-5 -mt-5 sm:-mx-7 sm:-mt-7 mb-4 px-5 py-5 bg-gradient-to-r from-brand-blue via-blue-600 to-brand-blue">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 Candidate Exam Registration
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Fill in your details to register for <span className="font-bold text-brand-blue">{exam?.title || 'Mock Exam'}</span>
+              <p className="text-xs sm:text-sm text-blue-100 font-medium mt-1">
+                Fill in your details to register for <span className="font-bold text-white">{exam?.title || 'Mock Exam'}</span>
               </p>
             </div>
 
@@ -952,7 +952,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                 </div>
 
                 {/* SUBMIT */}
-                <div className="pt-1 shrink-0 flex justify-center">
+                <div className="shrink-0 flex justify-center -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 mt-4 px-5 py-4 bg-slate-100 border-t border-slate-200">
                   <button
                     type="submit"
                     disabled={submitting}
