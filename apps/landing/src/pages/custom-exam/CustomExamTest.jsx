@@ -690,7 +690,7 @@ export default function CustomExamTest() {
       sessionStorage.removeItem(`custom_exam_auth_${slug}`);
       localStorage.removeItem(`custom_exam_test_session_${slug}`);
     } catch (e) {}
-    navigate(`/custom-exam/login/${slug}`);
+    window.location.href = 'https://marvelslice.com';
   }
 
   function formatTime(seconds) {
@@ -1070,19 +1070,12 @@ export default function CustomExamTest() {
             </span>
           </div>
 
-          {/* SINGLE LINE: EXAM SUBMITTED SUCCESSFULLY! WITH BOLD GREEN TICK BADGE */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-wrap">
-              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <FiCheck className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
-              </span>
-              <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">
-                Exam Submitted Successfully! 🎉
-              </h2>
-            </div>
-            <p className="text-xs text-slate-600 max-w-md mx-auto pt-0.5">
-              Great job, <span className="font-bold text-slate-900">{candidate?.user_name}</span>! Your exam attempt and feedback have been securely recorded.
-            </p>
+          {/* EXAM SUBMITTED SUCCESSFULLY! WITH ORIGINAL GREEN CHECK CIRCLE */}
+          <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+            <FiCheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-500 shrink-0" />
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">
+              Exam Submitted Successfully! 🎉
+            </h2>
           </div>
 
           {/* SUMMARY DETAILS CARD - WIDER & COMPACT WITH CATEGORY STATS */}
