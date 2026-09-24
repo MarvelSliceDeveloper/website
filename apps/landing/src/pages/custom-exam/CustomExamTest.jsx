@@ -344,17 +344,20 @@ export default function CustomExamTest() {
       return;
     }
 
-    if (loginEndMs && now > loginEndMs) {
+    // Check if candidate already has an active local or DB session / auth credentials
+    const rawSession = localStorage.getItem(`custom_exam_test_session_${slug}`);
+    let cachedSession = null;
+    try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
+
+    const isAlreadyLoggedIn = Boolean(authCand || cachedSession || dbDraftAnswers);
+
+    // Gate 2: Login Window Closed - ONLY BLOCK NEW / UNAUTHENTICATED CANDIDATES
+    if (!isAlreadyLoggedIn && loginEndMs && now > loginEndMs) {
       setActiveStep('GATE_BLOCKED');
       setGateReason('EXAM_ENDED');
       setLoading(false);
       return;
     }
-
-    // Check if candidate already has an active local QUIZ session
-    const rawSession = localStorage.getItem(`custom_exam_test_session_${slug}`);
-    let cachedSession = null;
-    try { cachedSession = rawSession ? JSON.parse(rawSession) : null; } catch (e) {}
 
     if (cachedSession || dbDraftAnswers) {
       restoreSessionFromCache(currentExam, questions, dbDraftAnswers, dbDraftVisited);
