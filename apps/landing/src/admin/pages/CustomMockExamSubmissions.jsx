@@ -536,7 +536,7 @@ export default function CustomMockExamSubmissions() {
       {/* INDIVIDUAL CANDIDATE ATTEMPT & QUESTION REVIEW MODAL */}
       {activeReviewModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="relative max-w-4xl w-full max-h-[90vh] my-auto">
+          <div className="relative bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 my-auto">
             <button
               type="button"
               onClick={() => setActiveReviewModal(null)}
@@ -545,9 +545,8 @@ export default function CustomMockExamSubmissions() {
             >
               <FiX className="w-5 h-5 text-red-600" />
             </button>
-          <div className="bg-white rounded-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
             {/* MODAL HEADER */}
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-3xl shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-white border-2 border-brand-blue/30 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
                   {activeReviewModal.candidate_photo ? (
@@ -726,7 +725,6 @@ export default function CustomMockExamSubmissions() {
                 )}
               </div>
             </div>
-          </div>
           </div>
         </div>
       )}
