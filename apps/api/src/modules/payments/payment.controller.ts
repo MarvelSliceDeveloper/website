@@ -169,6 +169,18 @@ export const paymentController = {
     }
   },
 
+  async checkEmailRegistered(req: Request, res: Response) {
+    try {
+      const email =
+        typeof req.query.email === "string" ? req.query.email : "";
+      const result = await paymentService.checkEmailRegistered(email);
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   async getAdminPayments(req: AuthRequest, res: Response) {
     try {
       const { page, limit } = req.query;

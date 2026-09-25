@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRazorpayPayment } from "../../_hooks/useRazorpayPayment";
 import { toast } from "sonner";
+import AlreadyRegisteredDialog from "./AlreadyRegisteredDialog";
+import { useRegisteredEmailCheck } from "../../_hooks/useRegisteredEmailCheck";
 import type { PackageDetail } from "@/lib/api-types";
 import {
   IconArrowRight,
@@ -458,6 +460,17 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   } = useRazorpayPayment();
 
   const [copied, setCopied] = useState(false);
+  const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
+  const { isRegistered: isEmailRegistered } = useRegisteredEmailCheck(
+    email,
+    step === "idle" || step === "collecting_info",
+  );
+
+  useEffect(() => {
+    if (isEmailRegistered && !alreadyRegisteredOpen) {
+      setAlreadyRegisteredOpen(true);
+    }
+  }, [isEmailRegistered, alreadyRegisteredOpen]);
 
   const hasPrice = pkg.price != null && pkg.price > 0;
 
@@ -531,7 +544,13 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
   // ── Step 1: Details & Payment ─────────────────────────────────────────────
   if (step === "idle" || step === "collecting_info") {
     return (
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-[#175cdd]/5 ring-1 ring-black/5">
+      <>
+        <AlreadyRegisteredDialog
+          open={alreadyRegisteredOpen}
+          onOpenChange={setAlreadyRegisteredOpen}
+          email={email}
+        />
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-[#175cdd]/5 ring-1 ring-black/5">
         <SecureCheckoutHeader />
 
         <div className="space-y-5 p-5 sm:p-6">
@@ -669,9 +688,10 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
             <span>Instant Access</span>
           </div>
         </div>
-      </div>
-    );
-  }
+        </div>
+        </>
+      );
+    }
 
   // ── Step 2: Processing Payment ────────────────────────────────────────────
   if (

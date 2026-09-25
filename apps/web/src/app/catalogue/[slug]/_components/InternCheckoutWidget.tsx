@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import AlreadyRegisteredDialog from "./AlreadyRegisteredDialog";
+import { useRegisteredEmailCheck } from "../../_hooks/useRegisteredEmailCheck";
 import Image from "next/image";
 import { api } from "@/lib/api";
 import { getErrorMessage } from "@/lib/toast";
@@ -212,6 +214,17 @@ export function InternCheckoutWidget({ pkg }: Props) {
   const [loadingFields, setLoadingFields] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [alreadyRegisteredOpen, setAlreadyRegisteredOpen] = useState(false);
+  const { isRegistered: isEmailRegistered } = useRegisteredEmailCheck(
+    email,
+    step === "form",
+  );
+
+  useEffect(() => {
+    if (isEmailRegistered && !alreadyRegisteredOpen) {
+      setAlreadyRegisteredOpen(true);
+    }
+  }, [isEmailRegistered, alreadyRegisteredOpen]);
 
   useEffect(() => {
     api
@@ -328,7 +341,13 @@ export function InternCheckoutWidget({ pkg }: Props) {
   // ── Main application form ────────────────────────────────────────────────────
   if (step === "form" || step === "error") {
     return (
-      <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-lg shadow-primary/5">
+      <>
+        <AlreadyRegisteredDialog
+          open={alreadyRegisteredOpen}
+          onOpenChange={setAlreadyRegisteredOpen}
+          email={email}
+        />
+        <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-lg shadow-primary/5">
         <SecureCheckoutHeader />
 
         <div className="px-6 pb-6">
@@ -590,7 +609,8 @@ export function InternCheckoutWidget({ pkg }: Props) {
             <TrustRow />
           </form>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
