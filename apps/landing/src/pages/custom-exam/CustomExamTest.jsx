@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FiClock, FiCheckCircle, FiX, FiCheck, FiAward, FiShield, FiUser,
   FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight, FiAlertCircle, FiBookmark,
-  FiLock, FiPlayCircle
+  FiLock
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -157,11 +157,12 @@ export default function CustomExamTest() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Active Flow Step: 'GATE_BLOCKED' | 'WAITING_LOBBY' | 'INSTRUCTIONS' | 'QUIZ' | 'REVIEW_MARKED' | 'FEEDBACK' | 'SUBMITTED'
+  // Active Flow Step: 'GATE_BLOCKED' | 'INSTRUCTIONS' | 'QUIZ' | 'REVIEW_MARKED' | 'FEEDBACK' | 'SUBMITTED'
   const [activeStep, setActiveStep] = useState('INSTRUCTIONS');
   const [gateReason, setGateReason] = useState(''); // 'NOT_OPEN' | 'EXAM_ENDED'
-  const [lobbyTimeLeftSecs, setLobbyTimeLeftSecs] = useState(0);
-  const [showExamStartedPopup, setShowExamStartedPopup] = useState(false);
+  // Seconds until the scheduled exam start (<= 0 once started / no schedule)
+  const [preStartSecs, setPreStartSecs] = useState(0);
+  const [showStartedPopup, setShowStartedPopup] = useState(false);
   const [showSubmitConfirmModal, setShowSubmitConfirmModal] = useState(false);
 
   const [isSessionRestored, setIsSessionRestored] = useState(false);
@@ -186,7 +187,6 @@ export default function CustomExamTest() {
   const [feedbackError, setFeedbackError] = useState('');
 
   const timerRef = useRef(null);
-  const lobbyTimerRef = useRef(null);
   const hasRestoredSessionRef = useRef(false);
 
   const currentQIndexRef = useRef(currentQIndex);
@@ -392,10 +392,11 @@ export default function CustomExamTest() {
       return;
     }
 
-    // If before exam start time, candidate enters WAITING_LOBBY
+    // If before exam start time, candidate lands directly on the locked
+    // INSTRUCTIONS page (no separate lobby, no popup) with live countdown.
     if (examStartMs && now < examStartMs) {
-      setActiveStep('WAITING_LOBBY');
-      setLobbyTimeLeftSecs(Math.max(0, Math.floor((examStartMs - now) / 1000)));
+      setPreStartSecs(Math.max(0, Math.floor((examStartMs - now) / 1000)));
+      setActiveStep('INSTRUCTIONS');
       hasRestoredSessionRef.current = true;
       setLoading(false);
       return;
@@ -407,27 +408,29 @@ export default function CustomExamTest() {
     setLoading(false);
   }
 
-  // WAITING LOBBY COUNTDOWN TIMER EFFECT
+  // PRE-START COUNTDOWN TICKER (instructions locked until the exam starts).
+  // When the countdown hits zero, the rectangular "Exam Started" popup appears.
   useEffect(() => {
-    if (activeStep === 'WAITING_LOBBY' && lobbyTimeLeftSecs > 0) {
-      lobbyTimerRef.current = setInterval(() => {
-        setLobbyTimeLeftSecs((prev) => {
-          if (prev <= 1) {
-            clearInterval(lobbyTimerRef.current);
-            setShowExamStartedPopup(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (activeStep !== 'INSTRUCTIONS' || !exam?.exam_start_time) {
+      if (!exam?.exam_start_time) setPreStartSecs(0);
+      return;
     }
-    return () => {
-      if (lobbyTimerRef.current) clearInterval(lobbyTimerRef.current);
-    };
-  }, [activeStep, lobbyTimeLeftSecs]);
+    const startMs = new Date(exam.exam_start_time).getTime();
+    if (Number.isNaN(startMs)) return;
+    setPreStartSecs(Math.max(0, Math.floor((startMs - Date.now()) / 1000)));
+    const tickId = setInterval(() => {
+      const left = Math.max(0, Math.floor((startMs - Date.now()) / 1000));
+      setPreStartSecs((prev) => {
+        if (prev > 0 && left <= 0) setShowStartedPopup(true);
+        return left;
+      });
+    }, 1000);
+    return () => clearInterval(tickId);
+  }, [activeStep, exam?.exam_start_time]);
 
   function handleStartExam() {
     if (!agreeInstructions || !agreeTerms) return;
+    if (preStartSecs > 0) return; // Still locked until the scheduled start
     const nowMs = Date.now();
     const initialVisited = examQuestions[0]?.id ? { [examQuestions[0].id]: true } : {};
     setVisitedQuestions(initialVisited);
@@ -543,7 +546,7 @@ export default function CustomExamTest() {
       return;
     }
 
-    if (activeStep === 'INSTRUCTIONS' || activeStep === 'GATE_BLOCKED' || activeStep === 'WAITING_LOBBY') return;
+    if (activeStep === 'INSTRUCTIONS' || activeStep === 'GATE_BLOCKED') return;
 
     const sessionData = {
       activeStep: 'QUIZ',
@@ -1026,6 +1029,16 @@ export default function CustomExamTest() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
+  function formatCountdownHMS(seconds) {
+    const s = Math.max(0, seconds || 0);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    const mm = m.toString().padStart(2, '0');
+    const ss = r.toString().padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
@@ -1091,102 +1104,6 @@ export default function CustomExamTest() {
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // -------------------------------------------------------------
-  // STEP: WAITING LOBBY (COUNTDOWN TO EXAM START TIME)
-  // -------------------------------------------------------------
-  if (activeStep === 'WAITING_LOBBY') {
-    return (
-      <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-6 my-auto relative overflow-hidden">
-          
-          {/* CANDIDATE INFO HEADER */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 text-left">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                {candidate?.candidate_photo ? (
-                  <img src={candidate.candidate_photo} alt={candidate.user_name} className="w-full h-full object-cover" />
-                ) : (
-                  <FiUser className="w-7 h-7 text-slate-400" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">{candidate?.user_name}</h3>
-                <p className="text-xs text-slate-500 font-medium">{candidate?.user_department} • {candidate?.user_year}</p>
-                <p className="text-[11px] text-brand-blue font-semibold">{candidate?.user_college}</p>
-              </div>
-            </div>
-            <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-              Waiting Lobby
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-xs font-black uppercase tracking-widest text-brand-blue">Candidate Waiting Room</span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              {exam?.title}
-            </h2>
-            <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
-              You are logged in and ready! Please wait on this screen until the scheduled exam start time.
-            </p>
-          </div>
-
-          {/* COUNTDOWN TIMER BADGE */}
-          <div className="p-6 bg-slate-900 text-white rounded-3xl space-y-2 shadow-xl border border-slate-800">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">Exam Starts In</span>
-            <div className="font-mono text-4xl sm:text-5xl font-black text-amber-400 tracking-tight flex items-center justify-center gap-2">
-              <FiClock className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 animate-pulse shrink-0" />
-              <span>{formatTime(lobbyTimeLeftSecs)}</span>
-            </div>
-            <p className="text-[11px] text-slate-400 pt-1">
-              Scheduled Start: <span className="text-white font-semibold">{new Date(exam?.exam_start_time).toLocaleTimeString()}</span>
-            </p>
-          </div>
-
-          <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl text-xs text-brand-blue text-left space-y-1">
-            <div className="font-bold flex items-center gap-1.5">
-              <FiShield className="w-4 h-4 text-brand-blue shrink-0" />
-              <span>Exam Guidelines Reminder:</span>
-            </div>
-            <ul className="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 pl-1">
-              <li>Do not refresh or close this tab while waiting.</li>
-              <li>When countdown reaches 00:00, you will be prompted to start the exam.</li>
-              <li>Duration: <span className="font-bold">{exam?.time_limit_mins || 20} Minutes</span> ({examQuestions.length} MCQs).</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* POPUP MODAL WHEN COUNTDOWN REACHES 0 */}
-        {showExamStartedPopup && (
-          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-                <FiPlayCircle className="w-9 h-9" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Exam Started! 🎉</h3>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                  The scheduled exam time has arrived. Click below to view exam instructions and begin your test.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowExamStartedPopup(false);
-                  setActiveStep('INSTRUCTIONS');
-                }}
-                className="w-full py-3.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                <span>Continue to Exam Instructions</span>
-                <FiArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -1694,7 +1611,12 @@ export default function CustomExamTest() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
-            {activeStep === 'INSTRUCTIONS' ? (
+            {preStartSecs > 0 ? (
+              <div className="font-mono text-base sm:text-lg font-black tracking-tight text-amber-600 flex items-center gap-1.5">
+                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 animate-pulse shrink-0" />
+                <span>Exam starts in {formatCountdownHMS(preStartSecs)}</span>
+              </div>
+            ) : activeStep === 'INSTRUCTIONS' ? (
               <div className="font-mono text-[13px] sm:text-sm font-bold text-slate-700">
                 <span className="text-slate-600 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
@@ -1729,12 +1651,20 @@ export default function CustomExamTest() {
                 </div>
 
                 <div className="space-y-2 pt-3">
+                  {preStartSecs > 0 && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                      <p className="text-xs sm:text-sm font-bold text-amber-700">
+                        Exam starts in {formatCountdownHMS(preStartSecs)} — buttons unlock automatically.
+                      </p>
+                    </div>
+                  )}
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={agreeInstructions}
+                      disabled={preStartSecs > 0}
                       onChange={e => setAgreeInstructions(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                     />
                     <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
                       I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
@@ -1745,20 +1675,44 @@ export default function CustomExamTest() {
                     <input
                       type="checkbox"
                       checked={agreeTerms}
+                      disabled={preStartSecs > 0}
                       onChange={e => setAgreeTerms(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0"
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                     />
                     <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
                       I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
                     </span>
                   </label>
                 </div>
+                {/* PALETTE COLOUR LEGEND — what each colour means in the test */}
+                <div className="pt-1">
+                  <p className="text-[11px] font-black tracking-wider text-slate-500 mb-2">
+                    Question palette colours
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { label: 'Answered', swatch: 'linear-gradient(180deg,#93d21b 0%,#74a916 45%,#4d7c0f 100%)' },
+                      { label: 'Not answered', swatch: 'linear-gradient(180deg,#ff4d4d 0%,#dc2626 45%,#991b1b 100%)' },
+                      { label: 'Marked for review', swatch: 'linear-gradient(180deg,#c084fc 0%,#a855f7 45%,#7e22ce 100%)' },
+                      { label: 'Answered and marked', swatch: 'linear-gradient(135deg,#74a916 0%,#74a916 49.9%,#a855f7 50.1%,#7e22ce 100%)' },
+                      { label: 'Not visited', swatch: 'linear-gradient(180deg,#ffffff 0%,#f8fafc 45%,#e2e8f0 100%)', ring: true },
+                    ].map((item) => (
+                      <span key={item.label} className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+                        <span
+                          className={`w-5 h-5 rounded-md inline-block shrink-0 ${item.ring ? 'border border-slate-300' : ''}`}
+                          style={{ background: item.swatch }}
+                        />
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="shrink-0 pt-3 border-t border-slate-100 flex justify-center bg-white">
                 <button
                   type="button"
-                  disabled={!agreeInstructions || !agreeTerms}
+                  disabled={!agreeInstructions || !agreeTerms || preStartSecs > 0}
                   onClick={handleStartExam}
                   className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -2104,6 +2058,30 @@ export default function CustomExamTest() {
       </>
     )}
   </div>
+
+  {/* EXAM STARTED RECTANGLE POPUP — wish message + OK, then checkboxes unlock */}
+  {showStartedPopup && (
+    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
+          <FiCheckCircle className="w-7 h-7" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Exam Started</h3>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+            All the best for your exam! Read the instructions, tick both checkboxes, then press Start Exam.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowStartedPopup(false)}
+          className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
 
   {/* SUBMIT CONFIRMATION POPUP MODAL */}
   {showSubmitConfirmModal && (
