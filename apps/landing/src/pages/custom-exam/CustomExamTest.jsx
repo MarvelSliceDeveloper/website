@@ -5,6 +5,7 @@ import {
   FiRefreshCw, FiStar, FiMessageSquare, FiArrowRight, FiAlertCircle, FiBookmark,
   FiLock
 } from 'react-icons/fi';
+import { BsStopwatch } from 'react-icons/bs';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
 import { getExamRulesText } from '../../lib/examRules';
@@ -1615,18 +1616,18 @@ export default function CustomExamTest() {
 
           <div className="flex items-center gap-3 sm:gap-5 shrink-0 ml-auto justify-end">
             {preStartSecs > 0 ? (
-              <div className="font-mono text-base sm:text-lg font-black tracking-tight text-amber-600 flex items-center gap-1.5">
-                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 animate-pulse shrink-0" />
-                <span>Exam starts in {formatCountdownHMS(preStartSecs)}</span>
+              <div className="inline-flex items-center gap-2 pl-2.5 pr-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-xs">
+                <BsStopwatch className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 animate-pulse shrink-0" />
+                <span className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-900">Exam starts in {formatCountdownHMS(preStartSecs)}</span>
               </div>
             ) : activeStep === 'INSTRUCTIONS' ? (
               <div className="font-mono text-[13px] sm:text-sm font-bold text-slate-700">
                 <span className="text-slate-600 font-semibold">Duration:</span> <span>{exam?.time_limit_mins || 20} Mins</span>
               </div>
             ) : (
-              <div className="font-mono text-base sm:text-lg font-black tracking-tight text-slate-700 flex items-center gap-1.5">
-                <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 shrink-0" />
-                <span className={timerColorClass}>{formatTime(timeLeftSeconds)}</span>
+              <div className="inline-flex items-center gap-2 pl-2.5 pr-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-xs">
+                <BsStopwatch className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${timeLeftSeconds <= sevenMinsSeconds ? 'text-rose-600 animate-pulse' : 'text-slate-900'}`} />
+                <span className={`font-mono text-base sm:text-lg font-black tracking-tight ${timerColorClass}`}>{formatTime(timeLeftSeconds)}</span>
               </div>
             )}
           </div>
