@@ -1650,15 +1650,8 @@ export default function CustomExamTest() {
                   {getExamRulesText(exam).replace(/(\d+)\.([^\s\d])/g, '$1. $2')}
                 </div>
 
-                <div className="space-y-2 pt-3">
-                  {preStartSecs > 0 && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
-                      <p className="text-xs sm:text-sm font-bold text-amber-700">
-                        Exam starts in {formatCountdownHMS(preStartSecs)} — buttons unlock automatically.
-                      </p>
-                    </div>
-                  )}
-                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <div className="space-y-2 pt-3">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={agreeInstructions}
