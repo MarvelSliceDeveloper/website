@@ -648,24 +648,25 @@ export default function CustomExamTest() {
     }
   }
 
-  // Countdown timer effect
+  // Countdown timer effect — single interval per QUIZ entry. Uses functional
+  // updates so the timer state stays out of the deps (re-creating the
+  // interval on every tick stalls/drifts the countdown).
   useEffect(() => {
-    if (activeStep === 'QUIZ' && timeLeftSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeftSeconds((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            setActiveStep('FEEDBACK');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (activeStep !== 'QUIZ') return;
+    timerRef.current = setInterval(() => {
+      setTimeLeftSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setActiveStep('FEEDBACK');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [activeStep, timeLeftSeconds]);
+  }, [activeStep]);
 
   // Periodic DB draft backup (every 30s while answering) so an idle or
   // crashed candidate still has a fresh server-side draft to rejoin from.
