@@ -235,6 +235,14 @@ export default function CustomMockExamsList() {
           </Link>
           <button
             type="button"
+            onClick={() => navigate(`/admin/custom-mock-exams/new?clone=${exam.id}`)}
+            className="p-1.5 text-amber-500 hover:text-white hover:bg-amber-600 rounded transition-colors cursor-pointer"
+            title="Clone exam as new (copies questions, sections, timings)"
+          >
+            <FiCopy className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => handleDeleteExam(exam.id, exam.title)}
             className="p-1.5 text-red-500 hover:text-white hover:bg-red-600 rounded transition-colors cursor-pointer"
             title="Delete Exam"

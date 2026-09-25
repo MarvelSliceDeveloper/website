@@ -136,6 +136,9 @@ export default function CustomMockExamEditor() {
   // Exam Form State
   const [searchParams] = useSearchParams();
   const modeParam = searchParams.get('mode');
+  const cloneId = searchParams.get('clone');
+  const isCloneMode = !isEditing && Boolean(cloneId);
+  const [clonedFromTitle, setClonedFromTitle] = useState('');
   const initialMode = modeParam === 'link_only' ? 'link_only' : 'questions';
   const [examMode, setExamMode] = useState(initialMode); // 'questions' | 'link_only'
 
@@ -162,6 +165,8 @@ export default function CustomMockExamEditor() {
   useEffect(() => {
     if (isEditing) {
       fetchExamData();
+    } else if (cloneId) {
+      fetchCloneData(cloneId);
     } else {
       generateInitialQuestions(25);
     }
@@ -245,8 +250,37 @@ export default function CustomMockExamEditor() {
       .single();
 
     if (!examErr && examData) {
+      fillFormFromExam(examData, id, false);
+    } else {
+      generateInitialQuestions(25);
+    }
+    setLoading(false);
+  }
+
+  // Clone mode: copy everything from the source exam; the name MUST be
+  // changed (enforced at validation) and the slug regenerates from it.
+  async function fetchCloneData(sourceId) {
+    setLoading(true);
+    const { data: examData, error: examErr } = await supabase
+      .from('custom_mock_exams')
+      .select('*')
+      .eq('id', sourceId)
+      .single();
+
+    if (!examErr && examData) {
+      setClonedFromTitle(examData.title || '');
+      fillFormFromExam(examData, sourceId, true);
+    } else {
+      showAlertModal('Clone Failed', 'Source exam not found. Starting with a blank form.', 'error');
+      generateInitialQuestions(25);
+    }
+    setLoading(false);
+  }
+
+  async function fillFormFromExam(examData, sourceId, isClone) {
       setTitle(examData.title || '');
-      setSlug(examData.slug || '');
+      // In clone mode the slug is regenerated from the (mandatory new) title
+      setSlug(isClone ? '' : (examData.slug || ''));
       setCategory(examData.category || 'Common');
       if (examData.exam_mode) setExamMode(examData.exam_mode);
       setTimeLimitMins(examData.time_limit_mins || 20);
@@ -263,26 +297,31 @@ export default function CustomMockExamEditor() {
         setFeedbackQuestions(examData.feedback_questions);
       }
 
-      if (examData.registration_start_time) {
-        setRegistrationStartTime(toDatetimeLocal(examData.registration_start_time));
-      }
-      if (examData.exam_start_time) {
-        setExamStartTime(toDatetimeLocal(examData.exam_start_time));
-      }
-      if (examData.exam_end_time) {
-        setExamEndTime(toDatetimeLocal(examData.exam_end_time));
+      // Clone mode: timings are NOT copied — admin must set fresh
+      // registration-open, exam-start and login-close times for the new exam.
+      if (!isClone) {
+        if (examData.registration_start_time) {
+          setRegistrationStartTime(toDatetimeLocal(examData.registration_start_time));
+        }
+        if (examData.exam_start_time) {
+          setExamStartTime(toDatetimeLocal(examData.exam_start_time));
+        }
+        if (examData.exam_end_time) {
+          setExamEndTime(toDatetimeLocal(examData.exam_end_time));
+        }
       }
 
       // Fetch questions
       const { data: qData } = await supabase
         .from('custom_mock_exam_questions')
         .select('*')
-        .eq('custom_mock_exam_id', id)
+        .eq('custom_mock_exam_id', sourceId)
         .order('order_index', { ascending: true });
 
       if (qData && qData.length > 0) {
         setQuestions(qData.map((q, qIdx) => ({
-          id: q.id,
+          // Fresh local ids in clone mode so React keys never collide
+          id: isClone ? `clone-q-${Date.now()}-${qIdx}` : q.id,
           question_text: q.question_text || '',
           options: Array.isArray(q.options) && q.options.length >= 4 ? q.options : ['', '', '', ''],
           correct_option: q.correct_option ?? 0,
@@ -293,14 +332,12 @@ export default function CustomMockExamEditor() {
       } else {
         generateInitialQuestions(examData.question_count_option || 25);
       }
-    } else {
-      generateInitialQuestions(25);
-    }
-    setLoading(false);
   }
 
   // STRICT MANDATORY VALIDATION GUARD (DOES NOT ALLOW SAVING IF ANY QUESTION OR OPTION IS BLANK)
-  function validateExamForm() {
+  // Also enforces unique exam names (verified against the DB before saving).
+  let nameCheckCache = { titles: [], slugs: [] };
+  async function validateExamForm() {
     if (!title.trim()) {
       showAlertModal('Validation Error', 'Exam Title is mandatory.', 'error');
       return false;
@@ -309,6 +346,30 @@ export default function CustomMockExamEditor() {
     if (!slug.trim()) {
       showAlertModal('Validation Error', 'Unique Link Slug is mandatory.', 'error');
       return false;
+    }
+
+    // Clone mode: changing the name is mandatory
+    if (isCloneMode && clonedFromTitle && title.trim().toLowerCase() === clonedFromTitle.trim().toLowerCase()) {
+      showAlertModal('Change Exam Name', `This is a clone of "${clonedFromTitle}". Please change the exam name to save it as a new exam.`, 'error');
+      return false;
+    }
+
+    // No two exams may share a name — verify against saved exams
+    try {
+      const { data: existing } = await supabase.from('custom_mock_exams').select('id, title, slug');
+      nameCheckCache = {
+        titles: (existing || []).map((e) => ({ id: e.id, title: (e.title || '').trim().toLowerCase() })),
+        slugs: (existing || []).map((e) => ({ id: e.id, slug: (e.slug || '').trim().toLowerCase() })),
+      };
+      const clash = nameCheckCache.titles.find(
+        (e) => e.title === title.trim().toLowerCase() && (!isEditing || e.id !== id)
+      );
+      if (clash) {
+        showAlertModal('Duplicate Exam Name', 'An exam with this name already exists. Please change the exam name and save again.', 'error');
+        return false;
+      }
+    } catch (e) {
+      // Fail-open: the database unique constraints remain the backstop
     }
 
     const reqCount = Number(questionCountOption);
@@ -426,13 +487,25 @@ export default function CustomMockExamEditor() {
 
   async function handleSave(e) {
     if (e) e.preventDefault();
-    if (!validateExamForm()) return;
+    if (!(await validateExamForm())) return;
 
     setSaving(true);
 
+    // Ensure slug uniqueness (auto-suffix) so a clone never collides
+    let finalSlug = slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const usedSlugs = new Set(
+      nameCheckCache.slugs.filter((s) => !isEditing || s.id !== id).map((s) => s.slug)
+    );
+    if (usedSlugs.has(finalSlug)) {
+      let n = 2;
+      while (usedSlugs.has(`${finalSlug}-${n}`)) n += 1;
+      finalSlug = `${finalSlug}-${n}`;
+      setSlug(finalSlug);
+    }
+
     const examPayload = {
       title: title.trim(),
-      slug: slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: finalSlug,
       category: category.trim(),
       time_limit_mins: Number(timeLimitMins || 20),
       total_marks: Number(totalMarks),
@@ -702,8 +775,8 @@ export default function CustomMockExamEditor() {
 
   return (
     <PageShell
-      title={isEditing ? 'Edit Custom Mock Exam' : 'Create Custom Mock Exam'}
-      subtitle="Configure exam parameters, schedule windows, MCQ questions and candidate feedback."
+      title={isEditing ? 'Edit Custom Mock Exam' : isCloneMode ? 'Clone Custom Mock Exam' : 'Create Custom Mock Exam'}
+      subtitle={isCloneMode ? `Copy of "${clonedFromTitle}" — change the name and save as a new exam.` : 'Configure exam parameters, schedule windows, MCQ questions and candidate feedback.'}
     >
 
       {loading ? (
@@ -713,6 +786,11 @@ export default function CustomMockExamEditor() {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
+          {isCloneMode && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs sm:text-sm text-amber-800 font-medium">
+              Cloning <span className="font-bold">“{clonedFromTitle}”</span> — questions, sections, feedback and settings are copied. Changing the exam name is mandatory, set fresh timings below, and duplicate names are blocked on save.
+            </div>
+          )}
           {/* FOLDER TABS & TAB CONTENT CONTAINER */}
           <div>
             <FolderTabs
