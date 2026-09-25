@@ -290,7 +290,7 @@ export default function AdminSendNotificationPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
           Admin
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
+        <h1 className="mt-1 text-xl font-bold text-foreground">
           Send Notification
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -628,10 +628,10 @@ export default function AdminSendNotificationPage() {
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={() => router.back()}
-              className="btn-secondary"
-            >
-              Cancel
+                onClick={() => router.back()}
+                className="btn-cancel"
+              >
+                Cancel
             </button>
             <button
               type="button"
@@ -749,10 +749,10 @@ export default function AdminSendNotificationPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmShow(false)}
-                className="btn-secondary"
-                disabled={sendMutation.isPending}
-              >
-                Cancel
+                  className="btn-cancel"
+                  disabled={sendMutation.isPending}
+                >
+                  Cancel
               </button>
               <button
                 onClick={handleSend}

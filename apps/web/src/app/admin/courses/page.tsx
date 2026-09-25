@@ -321,7 +321,7 @@ function CoursesPageContent() {
   ];
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
         title="Course Management"
         description={`${total} course${total !== 1 ? "s" : ""} total`}

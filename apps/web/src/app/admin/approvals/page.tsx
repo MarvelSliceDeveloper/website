@@ -303,10 +303,10 @@ export default function ApprovalsPage() {
                       setShowRejectInput(false);
                       setRejectionReason("");
                     }}
-                    className="btn-secondary text-sm px-5 py-2.5"
-                    disabled={actionLoading}
-                  >
-                    Cancel
+                      className="btn-cancel text-sm px-5 py-2.5"
+                      disabled={actionLoading}
+                    >
+                      Cancel
                   </button>
                   <button
                     onClick={handleReject}

@@ -54,7 +54,7 @@ export function AdminPageHeader({
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
+          <h1 className="mt-1 text-xl font-bold text-foreground">
             {title}
           </h1>
           {description && (

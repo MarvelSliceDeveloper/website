@@ -140,7 +140,7 @@ export function EditAssignmentModal({
       footer={
         <>
           <Button
-            variant="secondary"
+            variant="danger"
             type="button"
             onClick={onClose}
             disabled={updateMutation.isPending || uploadingPdf}

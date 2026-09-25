@@ -232,7 +232,7 @@ export default function InstructorCourseDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-xl font-bold text-foreground">
               {course.title}
             </h1>
             <span

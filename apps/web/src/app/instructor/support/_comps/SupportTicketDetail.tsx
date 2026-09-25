@@ -99,7 +99,7 @@ export default function SupportTicketDetail({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
             Instructor
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground">
+          <h1 className="mt-1 text-xl font-bold text-foreground">
             {ticket.title}
           </h1>
           <div className="mt-2 flex items-center gap-3">

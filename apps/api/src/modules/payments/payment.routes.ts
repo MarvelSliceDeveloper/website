@@ -10,6 +10,7 @@ import { UserRole } from "@lms/types";
 // ── Public / Authenticated payment routes (mounted at /api/payments) ──
 export const paymentRouter = Router();
 
+paymentRouter.get("/check-email", paymentController.checkEmailRegistered);
 paymentRouter.post(
   "/create-order",
   optionalAuth,

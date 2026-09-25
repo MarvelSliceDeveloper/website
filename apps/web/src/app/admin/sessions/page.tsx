@@ -202,7 +202,7 @@ export default function AdminSessionsPage() {
   const hasFilters = query.trim() !== "" || batchFilter !== "all";
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
         title="Sessions"
         description={`${sessions.length} total sessions`}
@@ -234,7 +234,7 @@ export default function AdminSessionsPage() {
         <div className="space-y-5">
           {/* Hero strip */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Card className="p-4 shadow-xs">
+            <Card className="rounded-2xl border-border/80 p-4 shadow-2xs">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   Live Now
@@ -255,7 +255,7 @@ export default function AdminSessionsPage() {
               </p>
             </Card>
 
-            <Card className="p-4 shadow-xs">
+            <Card className="rounded-2xl border-border/80 p-4 shadow-2xs">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Up Next
               </p>
@@ -276,7 +276,7 @@ export default function AdminSessionsPage() {
               </p>
             </Card>
 
-            <Card className="p-4 shadow-xs">
+            <Card className="rounded-2xl border-border/80 p-4 shadow-2xs">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Today
               </p>
@@ -340,7 +340,7 @@ export default function AdminSessionsPage() {
 
           {/* Session list */}
           {visible.length === 0 ? (
-            <Card className="p-12 text-center">
+            <Card className="rounded-2xl border-border/80 p-12 text-center shadow-2xs">
               <p className="text-sm font-semibold text-foreground">
                 No sessions match your filters
               </p>
@@ -391,11 +391,11 @@ export default function AdminSessionsPage() {
           <>
             <Button
               type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setEditingSession(null)}
-            >
-              Cancel
+                variant="danger"
+                size="sm"
+                onClick={() => setEditingSession(null)}
+              >
+                Cancel
             </Button>
             <Button
               type="submit"
@@ -470,7 +470,7 @@ function SessionCard({
   );
 
   return (
-    <Card hoverable className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <Card hoverable className="rounded-2xl border-border/80 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
       <div className="flex items-start gap-3.5 min-w-0">
         {/* Date block */}
         <div

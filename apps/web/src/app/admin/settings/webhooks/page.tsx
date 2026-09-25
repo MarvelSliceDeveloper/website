@@ -284,7 +284,7 @@ export default function WebhooksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Alerting Webhooks</h1>
+          <h1 className="text-xl font-bold">Alerting Webhooks</h1>
           <p className="text-foreground/60 mt-1">
             Configure webhook endpoints for system alerts
           </p>
@@ -440,7 +440,7 @@ export default function WebhooksPage() {
           <div className="flex gap-2 justify-end">
             <button
               onClick={resetForm}
-              className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-muted/50"
+                className="btn-cancel px-4 py-2 text-sm"
             >
               Cancel
             </button>

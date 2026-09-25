@@ -597,7 +597,7 @@ export default function CreateCoursePage() {
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/courses" className="btn-secondary text-sm">
+            <Link href="/admin/courses" className="btn-cancel text-sm">
             Cancel
           </Link>
           <button

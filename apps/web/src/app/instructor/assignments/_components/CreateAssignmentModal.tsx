@@ -171,12 +171,12 @@ export function CreateAssignmentModal({
       footer={
         <>
           <Button
-            variant="secondary"
-            type="button"
-            onClick={handleClose}
-            disabled={createMutation.isPending || uploadingPdf}
-          >
-            Cancel
+              variant="danger"
+              type="button"
+              onClick={handleClose}
+              disabled={createMutation.isPending || uploadingPdf}
+            >
+              Cancel
           </Button>
           <Button
             variant="primary"

@@ -1353,9 +1353,9 @@ export default function HomeView({
                       setMentorTopic("");
                       setMentorDateTime("");
                     }}
-                    className="flex-1 btn-secondary py-2.5 text-sm font-semibold"
-                  >
-                    Cancel
+                      className="flex-1 btn-cancel py-2.5 text-sm font-semibold"
+                    >
+                      Cancel
                   </button>
                   <button
                     type="submit"

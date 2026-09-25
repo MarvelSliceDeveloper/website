@@ -281,9 +281,9 @@ export default function I18nPage() {
                 setShowCreate(false);
                 setNewLocale("");
               }}
-              className="btn-secondary text-sm"
-            >
-              Cancel
+                className="btn-cancel text-sm"
+              >
+                Cancel
             </button>
           </div>
           <p className="text-xs text-muted-foreground">

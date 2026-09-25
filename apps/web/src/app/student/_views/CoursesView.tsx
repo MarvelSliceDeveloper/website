@@ -50,7 +50,7 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Courses</h1>
+          <h1 className="text-xl font-bold text-foreground">My Courses</h1>
         </div>
       </div>
 

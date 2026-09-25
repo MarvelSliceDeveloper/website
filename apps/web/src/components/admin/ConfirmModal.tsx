@@ -88,11 +88,11 @@ export function ConfirmModal({
 
         <div className="flex items-center justify-center gap-2 pt-1">
           <button
-            className="btn-secondary text-sm"
-            onClick={onClose}
-            disabled={confirmLoading}
-          >
-            Cancel
+              className="btn-cancel text-sm"
+              onClick={onClose}
+              disabled={confirmLoading}
+            >
+              Cancel
           </button>
           <button
             className={

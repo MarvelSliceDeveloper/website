@@ -64,7 +64,7 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
 
         <button
           onClick={toggleCollapse}
-          className="flex items-center gap-1 text-xs font-medium text-muted hover:text-foreground transition-colors rounded-lg px-2 py-1 hover:bg-card-hover"
+          className="flex cursor-pointer items-center gap-1 text-xs font-medium text-muted transition-colors rounded-lg px-2 py-1 hover:bg-card-hover hover:text-foreground"
         >
           {isCollapsed ? (
             <>

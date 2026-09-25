@@ -152,11 +152,7 @@ export function AssignmentRow({
             <button
               type="button"
               onClick={() => onReview(assignment)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                pendingCount > 0
-                  ? "bg-primary text-white shadow-xs hover:brightness-110"
-                  : "border border-border bg-card text-foreground hover:bg-muted/30"
-              }`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white shadow-xs transition-all hover:brightness-110 cursor-pointer"
             >
               {pendingCount > 0 ? `Review (${pendingCount})` : "Review"}
               <IconArrowRight size={14} />
@@ -166,7 +162,7 @@ export function AssignmentRow({
               onClick={() => onViewDetails(assignment)}
               title="View details"
               aria-label="View details"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-blue-600 dark:text-blue-400 transition-all hover:bg-blue-500/10 cursor-pointer"
             >
               <IconEye size={16} />
             </button>
@@ -175,7 +171,7 @@ export function AssignmentRow({
               onClick={() => onEdit(assignment)}
               title="Edit assignment"
               aria-label="Edit assignment"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-amber-600 dark:text-amber-400 transition-all hover:bg-amber-500/10 cursor-pointer"
             >
               <IconEdit size={16} />
             </button>
@@ -184,7 +180,7 @@ export function AssignmentRow({
               onClick={() => onDelete(assignment)}
               title="Delete assignment"
               aria-label="Delete assignment"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-danger/10 hover:text-danger cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-all hover:bg-danger/10 cursor-pointer"
             >
               <IconTrash size={16} />
             </button>

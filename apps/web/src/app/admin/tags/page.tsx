@@ -208,7 +208,7 @@ export default function AdminTagsPage() {
                   ? "Update"
                   : "Create"}
             </button>
-            <button onClick={cancelForm} className="btn-secondary text-xs py-2">
+              <button onClick={cancelForm} className="btn-cancel text-xs py-2">
               Cancel
             </button>
           </div>

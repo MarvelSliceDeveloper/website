@@ -306,7 +306,7 @@ export default function StudentSupportPage() {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="btn-secondary text-sm"
+              className="btn-cancel text-sm"
             >
               Cancel
             </button>
@@ -382,7 +382,7 @@ export default function StudentSupportPage() {
         {/* Page header */}
         <div>
           <p className="sp-eyebrow">Student</p>
-          <h1 className="mt-1.5 text-2xl font-bold text-foreground">Support</h1>
+          <h1 className="mt-1 text-xl font-bold text-foreground">Support</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Report issues or ask questions about login, courses, or anything
             else.

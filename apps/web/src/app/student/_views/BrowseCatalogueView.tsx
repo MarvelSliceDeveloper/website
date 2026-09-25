@@ -44,7 +44,7 @@ export default function BrowseCatalogueView({
       {/* Header */}
       <div>
         <p className="sp-eyebrow">Catalogue</p>
-        <h1 className="text-2xl font-bold text-foreground">Course Catalogue</h1>
+        <h1 className="text-xl font-bold text-foreground">Course Catalogue</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Explore all available courses. New batches every month.
         </p>

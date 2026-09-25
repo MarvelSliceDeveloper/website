@@ -613,6 +613,16 @@ export const paymentService = {
     }));
   },
 
+  async checkEmailRegistered(email: string) {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || !normalized.includes("@")) return { exists: false };
+    const user = await prisma.user.findUnique({
+      where: { email: normalized },
+      select: { id: true },
+    });
+    return { exists: !!user };
+  },
+
   async getAdminPayments(params?: PaginationParams) {
     const { page, limit } = params || {};
     const {

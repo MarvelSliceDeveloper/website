@@ -105,7 +105,7 @@ export default function CalendarView({ events }: CalendarViewProps) {
       {/* Header */}
       <div>
         <p className="sp-eyebrow">Schedule</p>
-        <h1 className="text-2xl font-bold text-foreground">My Calendar</h1>
+        <h1 className="text-xl font-bold text-foreground">My Calendar</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           All your live sessions and mentorship slots in one place.
         </p>

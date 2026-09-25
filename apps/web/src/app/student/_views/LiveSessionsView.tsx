@@ -133,7 +133,7 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
     <div className="sp-view-enter space-y-6">
       <div>
         <p className="sp-eyebrow">Sessions</p>
-        <h1 className="text-2xl font-bold text-foreground">Live Sessions</h1>
+        <h1 className="text-xl font-bold text-foreground">Live Sessions</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {liveNow.length} active &middot; {upcoming.length} upcoming
         </p>

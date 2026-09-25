@@ -74,9 +74,9 @@ export default function CreateTicketForm({
         <button
           type="button"
           onClick={onCancel}
-          className="btn-secondary text-sm"
-        >
-          Cancel
+            className="btn-cancel text-sm"
+          >
+            Cancel
         </button>
         <button
           type="submit"

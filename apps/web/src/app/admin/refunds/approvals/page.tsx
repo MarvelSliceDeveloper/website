@@ -277,10 +277,10 @@ export default function RefundApprovalsPage() {
           <>
             <button
               onClick={() => setRejectId(null)}
-              className="btn-secondary text-sm"
-              disabled={processing}
-            >
-              Cancel
+                className="btn-cancel text-sm"
+                disabled={processing}
+              >
+                Cancel
             </button>
             <button
               onClick={handleReject}

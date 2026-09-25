@@ -407,7 +407,7 @@ export default function CreatePackagePage() {
 
         {/* Actions */}
         <div className="w-full flex items-center justify-end gap-2">
-          <Link href="/admin/packages" className="btn-secondary text-sm">
+            <Link href="/admin/packages" className="btn-cancel text-sm">
             Cancel
           </Link>
           <button

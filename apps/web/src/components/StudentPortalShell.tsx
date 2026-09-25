@@ -17,27 +17,19 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   IconArrowLeft,
-  IconArrowRight,
-  IconBell,
-  IconX,
   IconLogout,
-  IconSettings,
-  IconEye,
   IconBook,
   IconInbox,
   IconUser,
   IconChevronDown,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
-import { timeAgo } from "@/lib/time-ago";
-import type { NotificationItem } from "@/lib/notifications";
-import { NotificationIcon } from "@/lib/notifications";
-import { useSocket, RealtimeNotification } from "@/lib/use-socket";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import HeaderNotifications from "@/components/HeaderNotifications";
 
 export interface Breadcrumb {
   label: string;
@@ -75,95 +67,18 @@ export default function StudentPortalShell({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Fetch notifications from API
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const data = await api.get<{
-        notifications: NotificationItem[];
-        unreadCount: number;
-      }>("/api/notifications");
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
-    } catch {
-      // silently fail
-    }
-  }, []);
-
-  useEffect(() => {
-    Promise.resolve().then(() => fetchNotifications());
-    let interval = setInterval(fetchNotifications, 120000);
-    function handleVisibility() {
-      if (document.hidden) {
-        clearInterval(interval);
-      } else {
-        fetchNotifications();
-        interval = setInterval(fetchNotifications, 120000);
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [fetchNotifications]);
-
-  useSocket(
-    useCallback((newNotif: RealtimeNotification) => {
-      const item: NotificationItem = {
-        id: newNotif.id || `rt-${Date.now()}`,
-        title: newNotif.title,
-        message: newNotif.message,
-        type: newNotif.type,
-        read: false,
-        createdAt: newNotif.createdAt || new Date().toISOString(),
-      };
-      setNotifications((prev) => [item, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    }, []),
-  );
-
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node))
-        setNotifOpen(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node))
         setProfileOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  // Mark all notifications as read
-  async function markAllRead() {
-    try {
-      await api.post("/api/notifications/read-all");
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Mark a single notification as read
-  async function markOneRead(id: string) {
-    try {
-      await api.patch(`/api/notifications/${id}/read`, {});
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {
-      /* ignore */
-    }
-  }
 
   // Log out the user and redirect to login
   async function handleSignOut() {
@@ -274,109 +189,13 @@ export default function StudentPortalShell({
             </div>
 
             <div className="flex items-center gap-2">
-              <div ref={notifRef} className="relative">
-                <button
-                  id="sp-notif-btn"
-                  onClick={() => setNotifOpen((v) => !v)}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
-                  aria-label="Notifications"
-                  aria-haspopup="true"
-                  aria-expanded={notifOpen}
-                >
-                  <IconBell size={17} stroke={1.8} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {notifOpen && (
-                  <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl">
-                    <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                      <p className="text-sm font-semibold text-foreground">
-                        Notifications
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={markAllRead}
-                            className="text-[11px] text-primary hover:underline"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setNotifOpen(false)}
-                          className="text-muted hover:text-foreground"
-                        >
-                          <IconX size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="max-h-72 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <p className="px-4 py-6 text-center text-sm text-muted">
-                          No notifications
-                        </p>
-                      ) : (
-                        notifications.slice(0, 5).map((n) => (
-                          <div
-                            key={n.id}
-                            className={`group flex items-start gap-3 border-b border-border/50 px-4 py-3 last:border-0 ${!n.read ? "bg-primary/5" : ""}`}
-                          >
-                            <div className="mt-0.5 shrink-0">
-                              <NotificationIcon
-                                type={n.type}
-                                withContainer={false}
-                              />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm leading-snug text-foreground">
-                                {n.message}
-                              </p>
-                              <p className="mt-0.5 text-[11px] text-muted">
-                                {timeAgo(n.createdAt)}
-                              </p>
-                            </div>
-                            <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {!n.read && (
-                                <button
-                                  onClick={() => markOneRead(n.id)}
-                                  className="rounded-lg p-1 text-muted hover:text-primary hover:bg-primary/10"
-                                  title="Mark as read"
-                                >
-                                  <IconEye size={14} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    {notifications.length > 0 && (
-                      <div className="border-t border-border px-4 py-2.5">
-                        <button
-                          onClick={() => {
-                            router.push("/student/inbox");
-                            setNotifOpen(false);
-                          }}
-                          className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                        >
-                          View all notifications
-                          <IconArrowRight size={13} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <HeaderNotifications inboxHref="/student/inbox" realtime />
 
               {!hideProfile && (
                 <div ref={profileRef} className="relative">
                   <button
                     onClick={() => setProfileOpen((v) => !v)}
-                    className="flex items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
                     aria-label="Profile menu"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-hover text-[12px] font-bold text-white">
