@@ -131,6 +131,22 @@ export default function CustomMockExamsList() {
       ),
     },
     {
+      header: 'Login Open',
+      cell: (exam) => (
+        <span className="text-xs text-neutral-700 whitespace-nowrap">
+          {exam.registration_start_time ? formatDateTime(exam.registration_start_time) : 'Immediate'}
+        </span>
+      ),
+    },
+    {
+      header: 'Login Close',
+      cell: (exam) => (
+        <span className="text-xs text-neutral-700 whitespace-nowrap">
+          {exam.exam_end_time ? formatDateTime(exam.exam_end_time) : 'No Limit'}
+        </span>
+      ),
+    },
+    {
       header: 'Status',
       cell: (exam) => (
         <button type="button" onClick={() => toggleExamActive(exam)} title="Toggle active">
