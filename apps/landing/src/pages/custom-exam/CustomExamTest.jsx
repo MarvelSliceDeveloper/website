@@ -440,6 +440,9 @@ export default function CustomExamTest() {
 
     // Immediately persist QUIZ activeStep & draft to DB / localStorage
     const fullExamSecs = (exam?.time_limit_mins || 20) * 60;
+    // Initialize the LIVE countdown too — without this the timer stays 00:00
+    // on fresh entry (it only recovered after a refresh via session restore).
+    setTimeLeftSeconds(fullExamSecs);
     const sessionData = {
       activeStep: 'QUIZ',
       currentQIndex: 0,
