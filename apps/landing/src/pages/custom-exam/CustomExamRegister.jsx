@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  FiCheckCircle, FiLock, FiClock, FiArrowRight, FiUser, FiCamera,
-  FiUpload, FiShield, FiAlertCircle, FiCheck, FiCalendar, FiMail, FiPhone,
-  FiMapPin, FiHome, FiPercent, FiBriefcase, FiStar, FiSend, FiAward, FiBookOpen, FiArrowUp
+  FiCheckCircle, FiLock, FiCamera, FiUser,
+  FiUpload, FiAlertCircle, FiCalendar, FiMail, FiPhone,
+  FiMapPin, FiAward, FiArrowUp
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
 import { useSiteSettings } from '../../hooks/useSupabase';
@@ -278,8 +278,11 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
 // Shared field styles matching the reference registration design
 const fieldInputCls =
   'w-full h-11 pl-10 pr-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium';
-const fieldSelectCls =
-  'w-full h-11 pl-10 pr-8 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium appearance-none cursor-pointer';
+// Plain variants (no left icon) — used by the Educational Details section
+const fieldPlainCls =
+  'w-full h-11 px-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium';
+const fieldPlainSelectCls =
+  'w-full h-11 px-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium appearance-none cursor-pointer';
 
 function Field({ label, error, children, className = '' }) {
   return (
@@ -720,21 +723,19 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       {/* 10th School Name & Mark */}
                       <Field label="10th School Name" error={formErrors.user10thSchool}>
                         <div className="relative">
-                          <FieldIcon><FiHome /></FieldIcon>
                           <input
                             type="text"
                             value={user10thSchool}
                             onChange={e => setUser10thSchool(e.target.value)}
                             placeholder="e.g. Govt Higher Sec School"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
 
                       <Field label="10th Mark (%)" error={formErrors.user10thMark}>
                         <div className="relative">
-                          <FieldIcon><FiPercent /></FieldIcon>
                           <input
                             type="number"
                             step="0.01"
@@ -744,7 +745,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                             onChange={e => setUser10thMark(e.target.value)}
                             placeholder="e.g. 88.5"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
@@ -752,21 +753,19 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       {/* 12th School Name & Mark */}
                       <Field label="12th / Diploma School Name" error={formErrors.user12thSchool}>
                         <div className="relative">
-                          <FieldIcon><FiHome /></FieldIcon>
                           <input
                             type="text"
                             value={user12thSchool}
                             onChange={e => setUser12thSchool(e.target.value)}
                             placeholder="e.g. St. Joseph Higher Sec School"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
 
                       <Field label="12th / Diploma Mark (%)" error={formErrors.user12thMark}>
                         <div className="relative">
-                          <FieldIcon><FiPercent /></FieldIcon>
                           <input
                             type="number"
                             step="0.01"
@@ -776,7 +775,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                             onChange={e => setUser12thMark(e.target.value)}
                             placeholder="e.g. 92.0"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
@@ -784,28 +783,26 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       {/* College Name & Register / Roll Number */}
                       <Field label="College / Institute Name" error={formErrors.college}>
                         <div className="relative">
-                          <FieldIcon><FiBookOpen /></FieldIcon>
                           <input
                             type="text"
                             value={userCollege}
                             onChange={e => setUserCollege(e.target.value)}
                             placeholder="e.g. Marvel Institute of Technology"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
 
                       <Field label="College Register / Roll Number" error={formErrors.regNum}>
                         <div className="relative">
-                          <FieldIcon><FiUser /></FieldIcon>
                           <input
                             type="text"
                             value={userRegNum}
                             onChange={e => setUserRegNum(e.target.value)}
                             placeholder="e.g. 711221104015"
                             required
-                            className={`${fieldInputCls} uppercase`}
+                            className={`${fieldPlainCls} uppercase`}
                           />
                         </div>
                       </Field>
@@ -813,11 +810,10 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       {/* Degree Selection */}
                       <Field label="Degree / Qualification" error={undefined}>
                         <div className="relative">
-                          <FieldIcon><FiAward /></FieldIcon>
                           <select
                             value={userDegree}
                             onChange={e => setUserDegree(e.target.value)}
-                            className={fieldSelectCls}
+                            className={fieldPlainSelectCls}
                           >
                             {(exam?.allowed_degrees && exam.allowed_degrees.length > 0 ? exam.allowed_degrees : DEFAULT_DEGREES).map((deg, idx) => (
                               <option key={idx} value={deg}>{deg}</option>
@@ -830,25 +826,23 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       {userDegree === 'Other' ? (
                         <Field label="Specify Degree" error={formErrors.customDegree}>
                           <div className="relative">
-                            <FieldIcon><FiAward /></FieldIcon>
                             <input
                               type="text"
                               value={customDegree}
                               onChange={e => setCustomDegree(e.target.value)}
                               placeholder="e.g. B.E (Robotics), B.Tech..."
                               required
-                              className={fieldInputCls}
+                              className={fieldPlainCls}
                             />
                           </div>
                         </Field>
                       ) : (
                         <Field label="Department" error={undefined}>
                           <div className="relative">
-                            <FieldIcon><FiBriefcase /></FieldIcon>
                             <select
                               value={userDept}
                               onChange={e => setUserDept(e.target.value)}
-                              className={fieldSelectCls}
+                              className={fieldPlainSelectCls}
                             >
                               <option value="Computer Science & Engineering">Computer Science & Engineering</option>
                               <option value="Information Technology">Information Technology</option>
@@ -868,11 +862,10 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                       <Field label="Year of Study" error={undefined}>
                         <div className="relative">
-                          <FieldIcon><FiCalendar /></FieldIcon>
                           <select
                             value={userYear}
                             onChange={e => setUserYear(e.target.value)}
-                            className={fieldSelectCls}
+                            className={fieldPlainSelectCls}
                           >
                             <option value="1st Year">1st Year</option>
                             <option value="2nd Year">2nd Year</option>
@@ -885,7 +878,6 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
                       <Field label="Current College CGPA" error={formErrors.cgpa}>
                         <div className="relative">
-                          <FieldIcon><FiStar /></FieldIcon>
                           <input
                             type="number"
                             step="0.01"
@@ -895,7 +887,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                             onChange={e => setUserCgpa(e.target.value)}
                             placeholder="e.g. 7.5"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
@@ -904,11 +896,10 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                     {userDegree === 'Other' && (
                       <Field label="Department" error={undefined}>
                         <div className="relative">
-                          <FieldIcon><FiBriefcase /></FieldIcon>
                           <select
                             value={userDept}
                             onChange={e => setUserDept(e.target.value)}
-                            className={fieldSelectCls}
+                            className={fieldPlainSelectCls}
                           >
                             <option value="Computer Science & Engineering">Computer Science & Engineering</option>
                             <option value="Information Technology">Information Technology</option>
@@ -926,14 +917,13 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                     {userDept === 'Other' && (
                       <Field label="Specify Department" error={formErrors.customDept}>
                         <div className="relative">
-                          <FieldIcon><FiBriefcase /></FieldIcon>
                           <input
                             type="text"
                             value={customDept}
                             onChange={e => setCustomDept(e.target.value)}
                             placeholder="Enter your department"
                             required
-                            className={fieldInputCls}
+                            className={fieldPlainCls}
                           />
                         </div>
                       </Field>
