@@ -91,9 +91,37 @@ function PhotoCapture({ photoUrl, onPhotoCaptured, error }) {
 
   function processFile(file) {
     if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (event) => onPhotoCaptured(event.target.result);
-    reader.readAsDataURL(file);
+    // Downscale to a max 800px JPEG so the base64 payload stays well under
+    // proxy body limits (large phone photos otherwise trigger HTTP 413).
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const MAX_DIM = 800;
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width || 1, img.height || 1));
+        const w = Math.max(1, Math.round((img.width || 320) * scale));
+        const h = Math.max(1, Math.round((img.height || 320) * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        onPhotoCaptured(canvas.toDataURL('image/jpeg', 0.82));
+      } catch (err) {
+        // Fall back to the raw file if downscaling fails
+        const reader = new FileReader();
+        reader.onload = (event) => onPhotoCaptured(event.target.result);
+        reader.readAsDataURL(file);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = (event) => onPhotoCaptured(event.target.result);
+      reader.readAsDataURL(file);
+    };
+    img.src = objectUrl;
   }
 
   function handleFileUpload(e) {
@@ -547,7 +575,11 @@ export default function CustomExamRegister() {  const { slug } = useParams();
         return;
       } else if (error) {
         console.error('Registration insert error:', error);
-        alert(`Registration failed and was NOT saved (${error.message || error.code || 'server error'}). Please try again.`);
+        const rawMsg = error.message || error.code || 'server error';
+        const friendly = /413|too large|</i.test(rawMsg)
+          ? 'the photo or details are too large to upload. Please use a smaller photo and try again.'
+          : rawMsg;
+        alert(`Registration failed and was NOT saved (${friendly}). Please try again.`);
         setSubmitting(false);
         return;
       }
