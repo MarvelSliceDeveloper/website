@@ -1651,19 +1651,6 @@ export default function CustomExamTest() {
                 </div>
 
               <div className="space-y-2 pt-3">
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={agreeInstructions}
-                      disabled={preStartSecs > 0}
-                      onChange={e => setAgreeInstructions(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
-                      I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
-                    </span>
-                  </label>
-
                 {/* PALETTE COLOUR LEGEND — what each colour means in the test */}
                 <div className="pt-1">
                   <p className="text-[11px] font-black tracking-wider text-slate-500 mb-2">
@@ -1687,6 +1674,19 @@ export default function CustomExamTest() {
                     ))}
                   </div>
                 </div>
+
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreeInstructions}
+                      disabled={preStartSecs > 0}
+                      onChange={e => setAgreeInstructions(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                      I have read, understood, and agree to abide by all the examination instructions, candidate rules, and guidelines stated above. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
 
                 <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input
