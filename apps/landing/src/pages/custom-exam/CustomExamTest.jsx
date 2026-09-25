@@ -1664,19 +1664,6 @@ export default function CustomExamTest() {
                     </span>
                   </label>
 
-                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={agreeTerms}
-                      disabled={preStartSecs > 0}
-                      onChange={e => setAgreeTerms(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
-                      I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
-                    </span>
-                  </label>
-                </div>
                 {/* PALETTE COLOUR LEGEND — what each colour means in the test */}
                 <div className="pt-1">
                   <p className="text-[11px] font-black tracking-wider text-slate-500 mb-2">
@@ -1699,6 +1686,20 @@ export default function CustomExamTest() {
                       </span>
                     ))}
                   </div>
+                </div>
+
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreeTerms}
+                      disabled={preStartSecs > 0}
+                      onChange={e => setAgreeTerms(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                    <span className="text-xs sm:text-sm text-slate-800 font-semibold leading-snug">
+                      I agree to the <Link to="/terms" target="_blank" className="text-brand-blue underline hover:text-blue-700">Terms & Conditions</Link> and <Link to="/privacy" target="_blank" className="text-brand-blue underline hover:text-blue-700">Privacy Policy</Link>. <span className="text-rose-500">*</span>
+                    </span>
+                  </label>
                 </div>
               </div>
 
