@@ -133,7 +133,7 @@ export default function HeaderNotifications({
           setOpen((v) => !v);
           if (!open) void loadNotifications();
         }}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/15 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/15 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         aria-label="Notifications"
         aria-haspopup="true"
         aria-expanded={open}
@@ -156,14 +156,14 @@ export default function HeaderNotifications({
               {unreadCount > 0 && (
                 <button
                   onClick={() => void markAllRead()}
-                  className="text-[11px] text-primary hover:underline"
+                  className="cursor-pointer text-[11px] text-primary hover:underline"
                 >
                   Mark all read
                 </button>
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="text-muted hover:text-foreground"
+                className="cursor-pointer text-muted hover:text-foreground"
                 aria-label="Close notifications"
               >
                 <IconX size={14} />
@@ -199,7 +199,7 @@ export default function HeaderNotifications({
                   {!n.read && (
                     <button
                       onClick={() => void markOneRead(n.id)}
-                      className="mt-0.5 shrink-0 p-1 text-muted opacity-0 transition-colors group-hover:opacity-100 hover:text-primary"
+                      className="mt-0.5 shrink-0 cursor-pointer p-1 text-muted opacity-0 transition-colors group-hover:opacity-100 hover:text-primary"
                       title="Mark as read"
                     >
                       <IconEye size={14} />
@@ -217,7 +217,7 @@ export default function HeaderNotifications({
                   router.push(inboxHref);
                   setOpen(false);
                 }}
-                className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+                className="flex w-full cursor-pointer items-center justify-center gap-1.5 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
               >
                 View all notifications
                 <IconArrowRight size={13} />

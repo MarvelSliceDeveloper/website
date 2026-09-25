@@ -41,10 +41,10 @@ export default function StudentInboxPage() {
       showBack
       onBack={() => window.history.back()}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs">
         <div>
           <p className="sp-eyebrow">Student</p>
-          <h1 className="mt-1.5 text-2xl font-bold text-foreground">Inbox</h1>
+          <h1 className="mt-1 text-xl font-bold text-foreground">Inbox</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Notifications from instructors and admins.
           </p>

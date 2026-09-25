@@ -263,9 +263,9 @@ export default function AdminEmailTemplatesPage() {
               </button>
               <button
                 onClick={cancelEdit}
-                className="btn-secondary text-xs py-2"
-              >
-                Cancel
+                  className="btn-cancel text-xs py-2"
+                >
+                  Cancel
               </button>
             </div>
           </div>

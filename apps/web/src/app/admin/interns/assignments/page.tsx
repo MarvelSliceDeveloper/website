@@ -486,9 +486,9 @@ export default function InternAssignmentsPage() {
                 setNewSheetName("");
                 setNewSheetGid("0");
               }}
-              className="btn-secondary text-xs px-3 py-2"
-            >
-              Cancel
+                className="btn-cancel text-xs px-3 py-2"
+              >
+                Cancel
             </button>
           </div>
         </div>

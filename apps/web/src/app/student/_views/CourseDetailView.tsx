@@ -31,7 +31,7 @@ function SectionHeading({
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
         {kicker}
       </p>
-      <h2 className="mt-2 text-2xl font-bold text-foreground">{title}</h2>
+      <h2 className="mt-2 text-xl font-bold text-foreground">{title}</h2>
       {subtitle && (
         <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
       )}
@@ -273,7 +273,7 @@ export default function CourseDetailView({ course, onEnroll }: CourseDetailViewP
                 Enrollment request will be submitted for admin approval. You&apos;ll be notified once approved.
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-full border border-border bg-background py-2.5 text-sm font-semibold hover:bg-card">
+                  <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-full bg-danger py-2.5 text-sm font-semibold text-white border border-transparent hover:bg-danger/90">
                   Cancel
                 </button>
                 <button onClick={handleEnroll} disabled={enrolling} className="flex-1 flex items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-60">

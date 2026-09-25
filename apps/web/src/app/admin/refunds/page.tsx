@@ -250,12 +250,12 @@ export default function AdminRefundsPage() {
           <>
             <button
               onClick={resetForm}
-              className="btn-secondary text-sm"
-              disabled={
-                createRefundMutation.isPending || lookupMutation.isPending
-              }
-            >
-              Cancel
+                className="btn-cancel text-sm"
+                disabled={
+                  createRefundMutation.isPending || lookupMutation.isPending
+                }
+              >
+                Cancel
             </button>
             {lookupResult ? (
               <button

@@ -138,13 +138,12 @@ export function EditAssignmentModal({
       title="Edit Assignment"
       size="lg"
       footer={
-        <div className="flex w-full items-center justify-center gap-2">
+        <>
           <Button
             variant="danger"
             type="button"
             onClick={onClose}
             disabled={updateMutation.isPending || uploadingPdf}
-            className="text-xs"
           >
             Cancel
           </Button>
@@ -154,11 +153,10 @@ export function EditAssignmentModal({
             onClick={handleSubmit}
             loading={updateMutation.isPending}
             disabled={uploadingPdf}
-            className="text-xs"
           >
             Save Changes
           </Button>
-        </div>
+        </>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">

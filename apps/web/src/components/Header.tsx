@@ -99,7 +99,7 @@ export default function Header({
 
           <button
             onClick={() => router.push(settingsHref)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 transition-colors hover:bg-violet-500/15 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 transition-colors hover:bg-violet-500/15 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
             aria-label="Settings"
           >
             <IconSettings size={17} stroke={1.8} />
@@ -107,7 +107,7 @@ export default function Header({
 
           <button
             onClick={handleSignOut}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger/10 text-danger transition-colors hover:bg-danger/15"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-danger/10 text-danger transition-colors hover:bg-danger/15"
             aria-label="Sign out"
           >
             <IconLogout size={17} stroke={1.8} />

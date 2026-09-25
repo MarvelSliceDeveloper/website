@@ -272,10 +272,10 @@ export default function SecuritySettings() {
                 setSetupData(null);
                 setCode("");
               }}
-              className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <IconX size={16} />
-              Cancel
+                className="flex items-center gap-2 text-sm text-danger transition-colors hover:text-danger/80"
+              >
+                <IconX size={16} />
+                Cancel
             </button>
           </div>
         </div>
@@ -365,9 +365,9 @@ export default function SecuritySettings() {
                     setShowDisableConfirm(false);
                     setPassword("");
                   }}
-                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Cancel
+                      className="flex items-center gap-2 text-sm text-danger transition-colors hover:text-danger/80"
+                    >
+                      Cancel
                 </button>
               </div>
             </div>

@@ -195,7 +195,7 @@ export default function StudentPortalShell({
                 <div ref={profileRef} className="relative">
                   <button
                     onClick={() => setProfileOpen((v) => !v)}
-                    className="flex items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
                     aria-label="Profile menu"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-hover text-[12px] font-bold text-white">

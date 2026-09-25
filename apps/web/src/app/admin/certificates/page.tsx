@@ -1401,9 +1401,9 @@ function TemplatesTab() {
             <div className="p-6 border-t border-border flex gap-3">
               <button
                 onClick={closeModal}
-                className="btn-secondary flex-1 text-sm"
-              >
-                Cancel
+                  className="btn-cancel flex-1 text-sm"
+                >
+                  Cancel
               </button>
               <button
                 onClick={handleSave}

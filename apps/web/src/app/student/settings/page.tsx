@@ -269,6 +269,56 @@ export default function SettingsPage() {
     );
   }
 
+  function SectionCard({
+    icon,
+    title,
+    tone = "primary",
+    children,
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    tone?: "primary" | "emerald" | "sky" | "amber" | "violet";
+    children: React.ReactNode;
+  }) {
+    const tones = {
+      primary: {
+        icon: "bg-primary/10 text-primary border-primary/20",
+        border: "border-primary/20",
+      },
+      emerald: {
+        icon: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+        border: "border-emerald-500/20",
+      },
+      sky: {
+        icon: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+        border: "border-sky-500/20",
+      },
+      amber: {
+        icon: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+        border: "border-amber-500/20",
+      },
+      violet: {
+        icon: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
+        border: "border-violet-500/20",
+      },
+    } as const;
+    return (
+      <div className="glass-card p-5 space-y-4">
+        <div
+          className={`flex items-center gap-2.5 pb-2.5 border-b ${tones[tone].border}`}
+        >
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-lg border ${tones[tone].icon}`}
+          >
+            {icon}
+          </span>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+        </div>
+        <div className="space-y-2.5">{children}</div>
+      </div>
+    );
+  }
+
   function renderProfile() {
     if (profileLoading) {
       return (
@@ -296,10 +346,11 @@ export default function SettingsPage() {
 
         <div className="p-6 space-y-5">
           {/* Account Details */}
-          <div className="glass-card p-5 space-y-3">
-            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
-              Account Details
-            </p>
+          <SectionCard
+            icon={<IconUser size={16} />}
+            title="Account Details"
+            tone="primary"
+          >
             <InfoRow
               icon={<IconUser size={15} />}
               label="Name"
@@ -315,13 +366,14 @@ export default function SettingsPage() {
               label="Role"
               value={studentRole.toLowerCase()}
             />
-          </div>
+          </SectionCard>
 
           {/* Contact Info */}
-          <div className="glass-card p-5 space-y-3">
-            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
-              Contact Information
-            </p>
+          <SectionCard
+            icon={<IconPhone size={16} />}
+            title="Contact Information"
+            tone="sky"
+          >
             <InfoRow
               icon={<IconPhone size={15} />}
               label="Phone"
@@ -356,13 +408,14 @@ export default function SettingsPage() {
                   No contact details added yet.
                 </p>
               )}
-          </div>
+          </SectionCard>
 
           {/* Payment History Summary */}
-          <div className="glass-card p-5 space-y-3">
-            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
-              Invoices & Payments
-            </p>
+          <SectionCard
+            icon={<IconCreditCard size={16} />}
+            title="Invoices & Payments"
+            tone="emerald"
+          >
             {payments.length === 0 ? (
               <p className="text-xs text-muted-foreground">No payments yet.</p>
             ) : (
@@ -612,11 +665,11 @@ export default function SettingsPage() {
       showBack
       onBack={() => window.history.back()}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs">
         {/* Page header */}
         <div>
           <p className="sp-eyebrow">Student</p>
-          <h1 className="mt-1.5 text-2xl font-bold text-foreground">
+          <h1 className="mt-1 text-xl font-bold text-foreground">
             Settings
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

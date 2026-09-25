@@ -311,6 +311,28 @@ button {
   border-color: var(--danger);
 }
 
+.btn-cancel {
+  background: var(--danger);
+  color: #fff;
+  padding: 0.62rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-cancel:hover {
+  background: color-mix(in srgb, var(--danger) 90%, #000);
+}
+
 .field {
   width: 100%;
   border-radius: 0.72rem;
@@ -631,6 +653,13 @@ button {
 [data-section="admin"] .btn-danger:hover {
   background: #eef2ff;
   border-color: var(--danger);
+}
+
+[data-section="admin"] .btn-cancel {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
 }
 
 [data-section="admin"] .field {

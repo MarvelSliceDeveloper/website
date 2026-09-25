@@ -391,11 +391,11 @@ export default function AdminSessionsPage() {
           <>
             <Button
               type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setEditingSession(null)}
-            >
-              Cancel
+                variant="danger"
+                size="sm"
+                onClick={() => setEditingSession(null)}
+              >
+                Cancel
             </Button>
             <Button
               type="submit"

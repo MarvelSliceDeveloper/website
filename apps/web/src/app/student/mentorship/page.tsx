@@ -169,7 +169,7 @@ export default function StudentMentorshipPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
               Student
             </p>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+            <h1 className="text-xl font-bold text-foreground">
               1-on-1 Mentorship
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -297,7 +297,7 @@ export default function StudentMentorshipPage() {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="btn-secondary text-sm"
+              className="btn-cancel text-sm"
             >
               Cancel
             </button>

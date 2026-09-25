@@ -480,7 +480,7 @@ export default function ScheduleSessionPage() {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/sessions" className="btn-secondary text-sm">
+            <Link href="/admin/sessions" className="btn-cancel text-sm">
             Cancel
           </Link>
           <button

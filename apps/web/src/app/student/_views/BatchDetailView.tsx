@@ -169,7 +169,7 @@ export default function BatchDetailView({
       {/* Header */}
       <div>
         <p className="sp-eyebrow">Course</p>
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-xl font-bold text-foreground">
           {batch.courseTitle}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

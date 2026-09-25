@@ -364,11 +364,11 @@ function SessionsPageContent() {
               <div className="flex justify-end gap-2 pt-2 border-t border-border">
                 <Button
                   type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowEditModal(false)}
+                  >
+                    Cancel
                 </Button>
                 <Button
                   type="submit"

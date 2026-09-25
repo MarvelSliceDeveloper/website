@@ -118,9 +118,9 @@ export function CreatePackageModal({
           <button
             type="button"
             onClick={handleClose}
-            className="btn-secondary text-sm"
-          >
-            Cancel
+              className="btn-cancel text-sm"
+            >
+              Cancel
           </button>
           <button
             type="submit"

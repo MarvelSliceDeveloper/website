@@ -121,7 +121,7 @@ export default function MentorshipView({
           </div>
           <div>
             <p className="sp-eyebrow">Support</p>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-xl font-bold text-foreground">
               1-on-1 Mentorship
             </h1>
             <p className="mt-1 text-sm text-muted-foreground max-w-md">
@@ -132,8 +132,8 @@ export default function MentorshipView({
         <button
           id="sp-request-session-btn"
           onClick={() => setShowForm((v) => !v)}
-          className="btn-primary shrink-0"
-        >
+            className="btn-cancel shrink-0"
+          >
           {showForm ? (
             <>
               <IconX size={15} stroke={2} />
@@ -246,9 +246,9 @@ export default function MentorshipView({
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="btn-secondary text-sm"
-            >
-              Cancel
+                className="btn-cancel text-sm"
+              >
+                Cancel
             </button>
             <button
               type="submit"

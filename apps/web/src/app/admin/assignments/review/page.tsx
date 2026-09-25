@@ -461,25 +461,24 @@ export default function AssignmentReviewPage() {
                         >
                           {sub.status === "GRADED" && <IconCheck size={10} />}
                           {sub.status === "PENDING" && <IconX size={10} />}
-                          {cfg.label}
                         </span>
                       </td>
                       <td className="py-3">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => openGradeModal(sub)}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-2.5 py-1 text-xs font-medium text-foreground transition-all hover:bg-card hover:border-border shadow-2xs hover:shadow-xs"
                             title="View Detail"
                           >
-                            <IconEye size={12} /> View
+                            <IconEye size={13} className="text-muted-foreground" /> View
                           </button>
                           {sub.status === "PENDING" && (
                             <button
                               onClick={() => openGradeModal(sub)}
-                              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-all hover:bg-primary/20 shadow-2xs hover:shadow-xs"
                               title="Grade Submission"
                             >
-                              <IconClipboardCheck size={12} /> Grade
+                              <IconClipboardCheck size={13} className="text-primary" /> Grade
                             </button>
                           )}
                         </div>
@@ -507,10 +506,10 @@ export default function AssignmentReviewPage() {
           <>
             <button
               onClick={closeGradeModal}
-              className="btn-secondary text-sm"
-              disabled={gradeMutation.isPending}
-            >
-              Cancel
+                className="btn-cancel text-sm"
+                disabled={gradeMutation.isPending}
+              >
+                Cancel
             </button>
             <button
               onClick={handleGradeSubmit}

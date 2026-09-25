@@ -518,11 +518,11 @@ export function SubmissionReviewView({
           footer={
             <>
               <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setGradeModal(null)}
-              >
-                Cancel
+                  variant="danger"
+                  type="button"
+                  onClick={() => setGradeModal(null)}
+                >
+                  Cancel
               </Button>
               <Button
                 variant="primary"

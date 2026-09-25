@@ -453,7 +453,7 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs">
       <AdminPageHeader
         title="Students"
         description={`${totalStudents} registered students`}
@@ -521,12 +521,12 @@ export default function AdminUsersPage() {
         footer={
           <>
             <Button
-              variant="secondary"
-              type="button"
-              onClick={() => setShowModal(false)}
-              disabled={createUserMutation.isPending}
-            >
-              Cancel
+                variant="danger"
+                type="button"
+                onClick={() => setShowModal(false)}
+                disabled={createUserMutation.isPending}
+              >
+                Cancel
             </Button>
             <Button
               variant="primary"
@@ -637,12 +637,12 @@ export default function AdminUsersPage() {
         footer={
           <>
             <Button
-              variant="secondary"
-              type="button"
-              onClick={() => setEditUser(null)}
-              disabled={editUserMutation.isPending}
-            >
-              Cancel
+                variant="danger"
+                type="button"
+                onClick={() => setEditUser(null)}
+                disabled={editUserMutation.isPending}
+              >
+                Cancel
             </Button>
             <Button
               variant="primary"

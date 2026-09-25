@@ -9,6 +9,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { NotificationIcon } from "@/lib/notifications";
 import { useApiQuery } from "@/lib/query";
 import { toast } from "@/lib/toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type SentNotificationItem = {
   id: string;
@@ -30,19 +31,13 @@ const CHANNEL_LABEL: Record<SentNotificationItem["channel"], string> = {
 export default function AdminInboxPage() {
   usePageTitle("Inbox");
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-foreground">
-          Notifications
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          View your inbox and notifications you&apos;ve sent.
-        </p>
-      </div>
+    <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs">
+      <AdminPageHeader
+        title="Notifications"
+        breadcrumbs={[{ label: "Inbox", href: "/admin/inbox" }]}
+        role="Admin"
+        description="View your inbox and notifications you've sent."
+      />
 
       <SentTab />
       <NotificationsTab />

@@ -385,7 +385,7 @@ export default function CreateBatchPage() {
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/batches" className="btn-secondary text-sm">
+            <Link href="/admin/batches" className="btn-cancel text-sm">
             Cancel
           </Link>
           <button

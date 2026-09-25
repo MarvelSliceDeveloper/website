@@ -323,7 +323,7 @@ export function CreateCourseModal({
       size="lg"
       footer={
         <>
-          <button type="button" onClick={handleClose} className="btn-secondary text-sm">
+            <button type="button" onClick={handleClose} className="btn-cancel text-sm">
             Cancel
           </button>
           <button

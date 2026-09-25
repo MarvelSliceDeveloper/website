@@ -591,9 +591,9 @@ export default function AdminInternsPage() {
                     <button
                       type="button"
                       onClick={() => setShowFieldModal(false)}
-                      className="btn-secondary text-xs px-3 py-2"
-                    >
-                      Cancel
+                        className="btn-cancel text-xs px-3 py-2"
+                      >
+                        Cancel
                     </button>
                     <button
                       type="submit"

@@ -233,9 +233,9 @@ export default function CreateInstructorPage() {
           <button
             type="button"
             onClick={() => router.push("/admin/instructors")}
-            className="btn-secondary text-sm"
-          >
-            Cancel
+              className="btn-cancel text-sm"
+            >
+              Cancel
           </button>
           <button
             type="submit"

@@ -628,10 +628,10 @@ export default function AdminSendNotificationPage() {
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={() => router.back()}
-              className="btn-secondary"
-            >
-              Cancel
+                onClick={() => router.back()}
+                className="btn-cancel"
+              >
+                Cancel
             </button>
             <button
               type="button"
@@ -749,10 +749,10 @@ export default function AdminSendNotificationPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => setConfirmShow(false)}
-                className="btn-secondary"
-                disabled={sendMutation.isPending}
-              >
-                Cancel
+                  className="btn-cancel"
+                  disabled={sendMutation.isPending}
+                >
+                  Cancel
               </button>
               <button
                 onClick={handleSend}

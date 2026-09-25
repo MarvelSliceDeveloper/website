@@ -248,9 +248,9 @@ export default function ApiKeysPage() {
                 </button>
                 <button
                   onClick={() => setShowCreate(false)}
-                  className="btn-secondary text-xs py-2"
-                >
-                  Cancel
+                    className="btn-cancel text-xs py-2"
+                  >
+                    Cancel
                 </button>
               </div>
             </div>
@@ -299,7 +299,7 @@ export default function ApiKeysPage() {
               </button>
               <button
                 onClick={() => setEditingKey(null)}
-                className="btn-secondary text-xs py-2"
+                className="btn-cancel text-xs py-2"
               >
                 Cancel
               </button>

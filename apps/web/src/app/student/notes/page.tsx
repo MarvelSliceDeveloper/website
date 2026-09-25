@@ -341,9 +341,9 @@ function NoteEditorPanel({
               <button
                 type="button"
                 onClick={handleClose}
-                className="btn-secondary text-xs"
-              >
-                Cancel
+                  className="btn-cancel text-xs"
+                >
+                  Cancel
               </button>
               <button
                 type="submit"
@@ -610,7 +610,7 @@ export default function StudentNotesPage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="sp-eyebrow">Student</p>
-              <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+              <h1 className="text-xl font-bold text-foreground">
                 My Notes
               </h1>
             </div>

@@ -648,7 +648,7 @@ export default function QuizOverdueView({
     <div className="sp-view-enter space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between ">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Quizzes</h1>
+          <h1 className="text-xl font-bold text-foreground">Quizzes</h1>
         </div>
 
         {/* Quick Stat Badges */}

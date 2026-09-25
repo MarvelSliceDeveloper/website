@@ -403,7 +403,7 @@ export default function AdminCouponsPage() {
             >
               {createMutation.isPending ? "Adding..." : "Add Coupon"}
             </button>
-            <button onClick={resetForm} className="btn-secondary text-xs py-2">
+              <button onClick={resetForm} className="btn-cancel text-xs py-2">
               Cancel
             </button>
           </div>

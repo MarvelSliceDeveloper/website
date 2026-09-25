@@ -388,9 +388,9 @@ function InstructorMentorshipContent() {
                 <button
                   type="button"
                   onClick={() => setActionTicket(null)}
-                  className="btn-secondary text-sm"
-                >
-                  Cancel
+                    className="btn-cancel text-sm"
+                  >
+                    Cancel
                 </button>
                 <button
                   type="button"

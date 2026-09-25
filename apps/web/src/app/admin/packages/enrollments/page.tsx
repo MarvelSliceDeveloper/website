@@ -369,10 +369,10 @@ export default function PackageEnrollmentsPage() {
             <>
               <button
                 onClick={() => setApproveModal(null)}
-                className="btn-secondary text-sm"
-                disabled={approveMutation.isPending}
-              >
-                Cancel
+                  className="btn-cancel text-sm"
+                  disabled={approveMutation.isPending}
+                >
+                  Cancel
               </button>
               <button
                 onClick={handleApprove}

@@ -166,7 +166,7 @@ export default function AssignmentOverdueView({
   return (
     <div className="sp-view-enter space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Assignments</h1>
+        <h1 className="text-xl font-bold text-foreground">Assignments</h1>
       </div>
 
       <input
@@ -721,9 +721,9 @@ export default function AssignmentOverdueView({
               <div className="flex items-center justify-end gap-3 border-t border-border/50 px-6 py-4">
                 <button
                   onClick={handleCloseModal}
-                  className="btn-secondary text-sm font-semibold px-5 py-2"
-                >
-                  Cancel
+                    className="btn-cancel text-sm font-semibold px-5 py-2"
+                  >
+                    Cancel
                 </button>
                 <button
                   onClick={() => handleSubmitFile(modalAssignment.id)}
