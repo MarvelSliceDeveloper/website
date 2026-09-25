@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRazorpayPayment } from "../../_hooks/useRazorpayPayment";
 import { toast } from "sonner";
-import AlreadyRegisteredDialog from "./AlreadyRegisteredDialog";
+import AlreadyRegisteredDialog from "../../_components/AlreadyRegisteredDialog";
 import { useRegisteredEmailCheck } from "../../_hooks/useRegisteredEmailCheck";
 import type { PackageDetail } from "@/lib/api-types";
 import {

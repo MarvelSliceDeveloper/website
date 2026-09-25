@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AlreadyRegisteredDialog from "./AlreadyRegisteredDialog";
+import AlreadyRegisteredDialog from "../../_components/AlreadyRegisteredDialog";
 import { useRegisteredEmailCheck } from "../../_hooks/useRegisteredEmailCheck";
 import Image from "next/image";
 import { api } from "@/lib/api";
