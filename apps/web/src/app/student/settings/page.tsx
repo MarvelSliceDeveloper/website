@@ -462,7 +462,7 @@ export default function SettingsPage() {
             >
               View all payments →
             </button>
-          </div>
+          </SectionCard>
         </div>
       </>
     );
