@@ -472,13 +472,11 @@ export default function CustomExamRegister() {  const { slug } = useParams();
       alert('Cannot reach the server right now, so registration cannot be saved. Please check your connection and reload the page.');
       return;
     }
+    // Registration stays open once the window opens (as before) — it is NOT
+    // closed by the login-close time. Fresh entry after close is enforced
+    // on the login page instead.
     if (!isRegistrationOpen()) {
       alert('Registration is not open yet! Please wait for the scheduled start time.');
-      return;
-    }
-
-    if (exam?.exam_end_time && getSyncedNow() >= new Date(exam.exam_end_time).getTime()) {
-      alert('Registrations are closed for this exam. The login window has ended.');
       return;
     }
 
