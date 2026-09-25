@@ -2057,22 +2057,21 @@ export default function CustomExamTest() {
   {showStartedPopup && (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
-        <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto ring-8 ring-emerald-50">
-          <FiCheckCircle className="w-7 h-7" />
-        </div>
         <div className="space-y-2">
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Exam Started</h3>
           <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-            All the best for your exam! Read the instructions, tick both checkboxes, then press Start Exam.
+            All the best for your exam! Read the instructions and tick both checkboxes.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowStartedPopup(false)}
-          className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
-        >
-          OK
-        </button>
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowStartedPopup(false)}
+            className="px-10 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+          >
+            OK
+          </button>
+        </div>
       </div>
     </div>
   )}
