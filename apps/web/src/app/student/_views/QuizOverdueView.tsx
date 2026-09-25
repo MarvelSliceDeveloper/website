@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
@@ -92,6 +92,48 @@ export default function QuizOverdueView({
   const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">(
     "all",
   );
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleCloseModal = useCallback(() => {
+    setSubView({ type: "LIST" });
+    setCurrentQuestionIdx(0);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleCloseModal();
+      if (e.key === "Tab" && modalRef.current && subView.type !== "LIST") {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [handleCloseModal, subView.type],
+  );
+
+  useEffect(() => {
+    if (subView.type === "LIST") return;
+    document.addEventListener("keydown", handleKeyDown);
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    };
+  }, [subView.type, handleKeyDown]);
 
   const overdueItems = quizzes.filter((q) => q.status === "PENDING");
   const completedItems = quizzes.filter((q) => q.status === "SUBMITTED");
@@ -156,6 +198,7 @@ export default function QuizOverdueView({
         `/api/courses/quizzes/${quizId}/questions`,
       );
       setSelectedAnswers({});
+      setCurrentQuestionIdx(0);
       setSubView({ type: "QUIZ", assignmentId: quizId, data });
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -233,405 +276,6 @@ export default function QuizOverdueView({
       }),
     );
 
-    submitMutation.mutate({ assignmentId, answers });
-  }
-
-  // ── QUIZ TAKING SCREEN ──
-  if (subView.type === "QUIZ") {
-    const { data } = subView;
-    const answeredCount = Object.keys(selectedAnswers).length;
-    const totalCount = data.questions.length;
-    const currentQ = data.questions[currentQuestionIdx] ?? data.questions[0];
-    const currentIdx = currentQuestionIdx;
-    const progressPct = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
-
-    return (
-      <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
-        {/* Header */}
-        <div>
-          <button
-            onClick={() => {
-              setSubView({ type: "LIST" });
-              setCurrentQuestionIdx(0);
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
-          >
-            <IconArrowLeft size={14} /> Back to Quizzes
-          </button>
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
-                MCQ Assessment
-              </p>
-              <h1 className="text-xl font-bold text-foreground mt-0.5">
-                {data.title}
-              </h1>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              {data.dueDate && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border/60">
-                  <IconClock size={12} />{" "}
-                  {new Date(data.dueDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              )}
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border/60">
-                <IconAward size={12} /> {data.maxPoints} pts
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            <span>
-              Question {currentIdx + 1} of {totalCount}
-            </span>
-            <span
-              className={answeredCount === totalCount ? "text-emerald-500" : ""}
-            >
-              {answeredCount}/{totalCount} answered
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full bg-border/40 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 via-primary to-emerald-500 transition-all duration-500 ease-out"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Question Navigator Dots */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {data.questions.map((q, i) => {
-            const answered = !!selectedAnswers[q.id];
-            const isCurrent = i === currentIdx;
-            return (
-              <button
-                key={q.id}
-                onClick={() => setCurrentQuestionIdx(i)}
-                className={`h-8 min-w-8 px-2 rounded-lg text-[11px] font-semibold border transition-all duration-200 ${
-                  isCurrent
-                    ? "border-violet-500 bg-violet-500/15 text-violet-600 dark:text-violet-400 shadow-sm shadow-violet-500/10 scale-105"
-                    : answered
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "border-border/60 text-muted-foreground hover:border-border-hover hover:bg-card-hover"
-                }`}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Current Question Card */}
-        {currentQ && (
-          <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400 text-sm font-bold border border-violet-500/20">
-                  {currentIdx + 1}
-                </span>
-                <p className="text-[15px] font-semibold text-foreground leading-relaxed pt-0.5">
-                  {currentQ.questionText}
-                </p>
-              </div>
-              <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
-                {currentQ.marks} {currentQ.marks === 1 ? "mark" : "marks"}
-              </span>
-            </div>
-
-            <div className="space-y-2.5">
-              {currentQ.options.map((opt, optIdx) => {
-                const isSelected = selectedAnswers[currentQ.id] === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedAnswers((prev) => ({
-                        ...prev,
-                        [currentQ.id]: opt.id,
-                      }))
-                    }
-                    className={`group w-full flex items-center gap-3.5 p-4 rounded-xl border text-left text-sm transition-all duration-200 ${
-                      isSelected
-                        ? "border-violet-500/50 bg-gradient-to-r from-violet-500/10 to-primary/5 text-foreground font-semibold shadow-sm shadow-violet-500/5 -translate-y-0.5"
-                        : "border-border/60 text-muted-foreground hover:border-violet-500/30 hover:bg-violet-500/5 hover:-translate-y-0.5"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-200 ${
-                        isSelected
-                          ? "border-violet-500 bg-violet-500 text-white scale-110"
-                          : "border-border group-hover:border-violet-500/40 text-muted group-hover:text-violet-500"
-                      }`}
-                    >
-                      {isSelected ? (
-                        <IconCheck size={14} />
-                      ) : (
-                        String.fromCharCode(65 + optIdx)
-                      )}
-                    </div>
-                    <span className="leading-snug flex-1">
-                      {opt.optionText}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Navigation + Submit Footer */}
-        <div className="flex items-center justify-between pt-2">
-          <button
-            onClick={() => setCurrentQuestionIdx(Math.max(0, currentIdx - 1))}
-            disabled={currentIdx === 0}
-            className="flex items-center gap-1.5 text-xs font-medium px-4 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-border-hover disabled:opacity-30 transition-all"
-          >
-            <IconArrowLeft size={14} /> Previous
-          </button>
-
-          {currentIdx < totalCount - 1 ? (
-            <button
-              onClick={() => setCurrentQuestionIdx(currentIdx + 1)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-5 py-2.5 rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/25 hover:bg-violet-500/25 transition-all"
-            >
-              Next <IconArrowRight size={14} />
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmitMcq}
-              disabled={submitMutation.isPending || answeredCount < totalCount}
-              className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-primary text-white shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 transition-all duration-200"
-            >
-              {submitMutation.isPending ? (
-                <>
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />{" "}
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <IconSend size={16} /> Submit Quiz
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ── RESULT SCREEN ──
-  if (subView.type === "RESULT") {
-    const { data } = subView;
-    const correctCount = data.questionResponses.filter(
-      (r) => r.isCorrect,
-    ).length;
-    const totalQuestions = data.assignment.questions.length;
-    const pct =
-      data.assignment.maxPoints > 0
-        ? Math.round(((data.totalScore ?? 0) / data.assignment.maxPoints) * 100)
-        : 0;
-
-    const isPassed = pct >= 60;
-    const isAverage = pct >= 40 && pct < 60;
-
-    return (
-      <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
-        {/* Scorecard Container */}
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-lg text-center space-y-6">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl" />
-          <div className="absolute -left-12 -bottom-12 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
-
-          {/* Badge & Trophy Icon */}
-          <div className="relative flex justify-center">
-            <div
-              className={`flex h-24 w-24 items-center justify-center rounded-full border-4 shadow-xl transition-transform duration-300 hover:scale-105 ${
-                isPassed
-                  ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-400 shadow-emerald-500/20"
-                  : isAverage
-                    ? "border-amber-500/60 bg-amber-500/15 text-amber-400 shadow-amber-500/20"
-                    : "border-danger/60 bg-danger/15 text-danger shadow-danger/20"
-              }`}
-            >
-              <IconAward size={44} />
-            </div>
-          </div>
-
-          <div className="relative space-y-1">
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight">
-              {data.assignment.title}
-            </h2>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {isPassed
-                ? "🎉 Assessment Passed!"
-                : isAverage
-                  ? "⚡ Keep Practicing!"
-                  : "📚 Needs Revision"}
-            </p>
-          </div>
-
-          {/* Big Score Display */}
-          <div className="relative inline-flex flex-col items-center justify-center p-4 rounded-2xl bg-muted/40 border border-border/60 min-w-[200px]">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Final Score
-            </span>
-            <div className="text-4xl sm:text-5xl font-black text-foreground mt-1">
-              {data.totalScore ?? 0}
-              <span className="text-xl font-normal text-muted-foreground">
-                {" "}
-                / {data.assignment.maxPoints}
-              </span>
-            </div>
-            <span
-              className={`inline-block mt-2 px-3 py-0.5 text-xs font-bold rounded-full ${
-                isPassed
-                  ? "bg-emerald-500/15 text-emerald-500"
-                  : isAverage
-                    ? "bg-amber-500/15 text-amber-500"
-                    : "bg-danger/15 text-danger"
-              }`}
-            >
-              {pct}% Accuracy
-            </span>
-          </div>
-
-          {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-            <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center gap-2">
-              <IconCircleCheck size={18} className="text-emerald-500" />
-              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                {correctCount} Correct
-              </span>
-            </div>
-            <div className="p-3 rounded-xl border border-danger/30 bg-danger/10 flex items-center justify-center gap-2">
-              <IconCircleX size={18} className="text-danger" />
-              <span className="text-xs font-bold text-danger">
-                {totalQuestions - correctCount} Incorrect
-              </span>
-            </div>
-          </div>
-
-          {data.feedback && (
-            <div className="mx-auto max-w-md rounded-xl border border-violet-500/25 bg-violet-500/10 p-3.5 text-xs text-foreground text-left flex items-start gap-2">
-              <span className="text-base">💡</span>
-              <div>
-                <strong className="font-semibold text-violet-600 dark:text-violet-400">
-                  Feedback:
-                </strong>{" "}
-                {data.feedback}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Question Breakdown List */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Question Breakdown ({totalQuestions} questions)
-            </h3>
-          </div>
-
-          {data.assignment.questions.map((q, idx) => {
-            const response = data.questionResponses.find(
-              (r) => r.questionId === q.id,
-            );
-            const isCorrect = !!response?.isCorrect;
-
-            return (
-              <div
-                key={q.id}
-                className={`rounded-2xl p-5 border bg-card transition-all space-y-3 shadow-sm ${
-                  isCorrect
-                    ? "border-emerald-500/30 shadow-emerald-500/5"
-                    : "border-danger/30 shadow-danger/5"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-semibold text-foreground leading-snug">
-                    <span className="text-violet-500 font-bold mr-2">
-                      Q{idx + 1}.
-                    </span>
-                    {q.questionText}
-                  </p>
-                  {isCorrect ? (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/15 px-2.5 py-1 rounded-lg shrink-0">
-                      <IconCircleCheck size={14} /> Correct (+{q.marks})
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-danger bg-danger/15 px-2.5 py-1 rounded-lg shrink-0">
-                      <IconCircleX size={14} /> Incorrect (0/{q.marks})
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2 pt-1">
-                  {q.options.map((o, optIdx) => {
-                    const isSelected = o.id === response?.selectedOptionId;
-                    const isCorrectOption = o.isCorrect;
-
-                    return (
-                      <div
-                        key={o.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl text-xs transition-colors border ${
-                          isCorrectOption
-                            ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-semibold"
-                            : isSelected
-                              ? "bg-danger/10 border-danger/40 text-danger font-semibold"
-                              : "border-border/40 text-muted-foreground bg-background/50"
-                        }`}
-                      >
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold border border-current">
-                          {String.fromCharCode(65 + optIdx)}
-                        </span>
-                        <span className="flex-1">{o.optionText}</span>
-                        {isCorrectOption && (
-                          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">
-                            Correct Answer ✓
-                          </span>
-                        )}
-                        {isSelected && !isCorrectOption && (
-                          <span className="text-[10px] font-bold text-danger uppercase tracking-wider">
-                            Your Choice ✗
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-center gap-3 pt-2">
-          {!isPassed && (
-            <button
-              onClick={() => handleStartQuiz(data.assignment.id)}
-              disabled={loading}
-              className="flex items-center gap-2 btn-primary text-xs px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
-            >
-              <IconRefresh size={14} /> Retake Quiz
-            </button>
-          )}
-          <button
-            onClick={() => {
-              setSubView({ type: "LIST" });
-              setCurrentQuestionIdx(0);
-            }}
-            className="flex items-center gap-2 btn-secondary text-xs px-6 py-2.5 rounded-xl"
-          >
-            <IconArrowLeft size={14} /> Back to Quizzes
-          </button>
-        </div>
-      </div>
-    );
   }
 
   const allItems = [...overdueItems, ...completedItems];
@@ -1085,6 +729,453 @@ export default function QuizOverdueView({
                 ? "You've finished all required quizzes for your enrolled courses."
                 : "Complete a quiz to review your results here."}
           </p>
+        </div>
+      )}
+
+      {/* ── QUIZ TAKING MODAL POPUP ── */}
+      {subView.type === "QUIZ" && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label={subView.data.title}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
+        >
+          <div
+            ref={modalRef}
+            className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border/80 bg-card px-6 py-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
+                  MCQ Assessment
+                </p>
+                <h2 className="text-lg font-bold text-foreground truncate max-w-lg">
+                  {subView.data.title}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2.5">
+                {subView.data.dueDate && (
+                  <span className="hidden sm:flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted/30 border border-border/60 text-muted-foreground">
+                    <IconClock size={12} />
+                    {new Date(subView.data.dueDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 font-semibold">
+                  <IconAward size={12} /> {subView.data.maxPoints} pts
+                </span>
+                <button
+                  onClick={handleCloseModal}
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/20 hover:text-foreground cursor-pointer"
+                  aria-label="Close quiz"
+                >
+                  <IconX size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Progress Bar & Navigator */}
+            <div className="border-b border-border/50 bg-muted/20 px-6 py-3 space-y-2.5">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span>
+                  Question {currentQuestionIdx + 1} of{" "}
+                  {subView.data.questions.length}
+                </span>
+                <span
+                  className={
+                    Object.keys(selectedAnswers).length ===
+                    subView.data.questions.length
+                      ? "text-emerald-500 font-semibold"
+                      : ""
+                  }
+                >
+                  {Object.keys(selectedAnswers).length}/
+                  {subView.data.questions.length} answered
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-border/40 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 via-primary to-emerald-500 transition-all duration-500 ease-out"
+                  style={{
+                    width: `${
+                      subView.data.questions.length > 0
+                        ? (Object.keys(selectedAnswers).length /
+                            subView.data.questions.length) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              {/* Question Dots */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                {subView.data.questions.map((q, i) => {
+                  const answered = !!selectedAnswers[q.id];
+                  const isCurrent = i === currentQuestionIdx;
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => setCurrentQuestionIdx(i)}
+                      className={`h-7 min-w-7 px-2 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
+                        isCurrent
+                          ? "border-violet-500 bg-violet-500/15 text-violet-600 dark:text-violet-400 shadow-xs scale-105"
+                          : answered
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "border-border/60 text-muted-foreground hover:border-border-hover hover:bg-card-hover"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Question Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {subView.data.questions[currentQuestionIdx] && (() => {
+                const currentQ = subView.data.questions[currentQuestionIdx];
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400 text-sm font-bold border border-violet-500/20">
+                          {currentQuestionIdx + 1}
+                        </span>
+                        <p className="text-[15px] font-semibold text-foreground leading-relaxed pt-0.5">
+                          {currentQ.questionText}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
+                        {currentQ.marks}{" "}
+                        {currentQ.marks === 1 ? "mark" : "marks"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5 pt-2">
+                      {currentQ.options.map((opt, optIdx) => {
+                        const isSelected =
+                          selectedAnswers[currentQ.id] === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedAnswers((prev) => ({
+                                ...prev,
+                                [currentQ.id]: opt.id,
+                              }))
+                            }
+                            className={`w-full flex items-center gap-3.5 p-3.5 rounded-xl border text-left text-sm transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-violet-500 bg-violet-500/10 text-foreground font-semibold shadow-xs ring-1 ring-violet-500/30"
+                                : "border-border/60 bg-background/50 text-muted-foreground hover:border-border hover:bg-card-hover hover:text-foreground"
+                            }`}
+                          >
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                                isSelected
+                                  ? "bg-violet-600 text-white shadow-xs"
+                                  : "bg-muted/40 text-muted-foreground"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            <span className="flex-1 leading-snug">
+                              {opt.optionText}
+                            </span>
+                            {isSelected && (
+                              <IconCheck
+                                size={16}
+                                className="shrink-0 text-violet-600 dark:text-violet-400"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex shrink-0 items-center justify-between border-t border-border/80 bg-card px-6 py-3.5">
+              <button
+                onClick={() => setCurrentQuestionIdx((p) => Math.max(0, p - 1))}
+                disabled={currentQuestionIdx === 0}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-card-hover disabled:opacity-40 transition-all cursor-pointer disabled:cursor-not-allowed"
+              >
+                <IconArrowLeft size={14} /> Previous
+              </button>
+
+              <div className="flex items-center gap-2">
+                {currentQuestionIdx < subView.data.questions.length - 1 ? (
+                  <button
+                    onClick={() =>
+                      setCurrentQuestionIdx((p) =>
+                        Math.min(subView.data.questions.length - 1, p + 1),
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary-hover transition-all cursor-pointer shadow-xs"
+                  >
+                    Next <IconArrowRight size={14} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmitMcq}
+                    disabled={submitMutation.isPending}
+                    className="inline-flex items-center gap-1.5 px-5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:opacity-90 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    <IconSend size={14} />
+                    {submitMutation.isPending ? "Submitting..." : "Submit Quiz"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── QUIZ RESULT MODAL POPUP ── */}
+      {subView.type === "RESULT" && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Quiz Results"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
+        >
+          <div
+            ref={modalRef}
+            className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-border bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Result Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border/80 bg-card px-6 py-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
+                  Assessment Results
+                </p>
+                <h2 className="text-lg font-bold text-foreground truncate max-w-lg">
+                  {subView.data.assignment.title}
+                </h2>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/20 hover:text-foreground cursor-pointer"
+                aria-label="Close result"
+              >
+                <IconX size={18} />
+              </button>
+            </div>
+
+            {/* Result Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {/* Score & Metrics Banner */}
+              {(() => {
+                const totalPoints = subView.data.assignment.maxPoints || 100;
+                const score = subView.data.totalScore ?? 0;
+                const pct = Math.round((score / totalPoints) * 100);
+                const isPassed = pct >= 60;
+                const isAverage = pct >= 40 && pct < 60;
+                const correctCount = subView.data.questionResponses.filter(
+                  (r) => r.isCorrect,
+                ).length;
+                const totalQuestions = subView.data.assignment.questions.length;
+
+                return (
+                  <div className="space-y-6">
+                    <div className="rounded-2xl border border-border/80 bg-muted/15 p-6 text-center space-y-4">
+                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-md mx-auto">
+                        <IconAward size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-foreground">
+                          {isPassed
+                            ? "Assessment Passed! 🎉"
+                            : "Keep Practicing! 💪"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          You scored{" "}
+                          <strong className="text-foreground">{score}</strong>{" "}
+                          out of{" "}
+                          <strong className="text-foreground">
+                            {totalPoints} points
+                          </strong>
+                        </p>
+                        <span
+                          className={`inline-block mt-2 px-3 py-0.5 text-xs font-bold rounded-full ${
+                            isPassed
+                              ? "bg-emerald-500/15 text-emerald-500"
+                              : isAverage
+                                ? "bg-amber-500/15 text-amber-500"
+                                : "bg-danger/15 text-danger"
+                          }`}
+                        >
+                          {pct}% Accuracy
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+                        <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center gap-2">
+                          <IconCircleCheck
+                            size={18}
+                            className="text-emerald-500"
+                          />
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            {correctCount} Correct
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl border border-danger/30 bg-danger/10 flex items-center justify-center gap-2">
+                          <IconCircleX size={18} className="text-danger" />
+                          <span className="text-xs font-bold text-danger">
+                            {totalQuestions - correctCount} Incorrect
+                          </span>
+                        </div>
+                      </div>
+
+                      {subView.data.feedback && (
+                        <div className="mx-auto max-w-md rounded-xl border border-violet-500/25 bg-violet-500/10 p-3.5 text-xs text-foreground text-left flex items-start gap-2">
+                          <span className="text-base">💡</span>
+                          <div>
+                            <strong className="font-semibold text-violet-600 dark:text-violet-400">
+                              Feedback:
+                            </strong>{" "}
+                            {subView.data.feedback}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Question Breakdown List */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Question Breakdown ({totalQuestions} questions)
+                      </h4>
+
+                      {subView.data.assignment.questions.map((q, idx) => {
+                        const response =
+                          subView.data.questionResponses.find(
+                            (r) => r.questionId === q.id,
+                          );
+                        const isCorrect = !!response?.isCorrect;
+
+                        return (
+                          <div
+                            key={q.id}
+                            className={`rounded-2xl p-5 border bg-card transition-all space-y-3 shadow-xs ${
+                              isCorrect
+                                ? "border-emerald-500/30"
+                                : "border-danger/30"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-sm font-semibold text-foreground leading-snug">
+                                <span className="text-violet-500 font-bold mr-2">
+                                  Q{idx + 1}.
+                                </span>
+                                {q.questionText}
+                              </p>
+                              {isCorrect ? (
+                                <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/15 px-2.5 py-1 rounded-lg shrink-0">
+                                  <IconCircleCheck size={14} /> Correct (+
+                                  {q.marks})
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1 text-[11px] font-bold text-danger bg-danger/15 px-2.5 py-1 rounded-lg shrink-0">
+                                  <IconCircleX size={14} /> Incorrect (0/
+                                  {q.marks})
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                              {q.options.map((o, optIdx) => {
+                                const isSelected =
+                                  o.id === response?.selectedOptionId;
+                                const isCorrectOption = o.isCorrect;
+
+                                return (
+                                  <div
+                                    key={o.id}
+                                    className={`flex items-center gap-3 p-3 rounded-xl text-xs transition-colors border ${
+                                      isCorrectOption
+                                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-semibold"
+                                        : isSelected
+                                          ? "bg-danger/10 border-danger/40 text-danger font-semibold"
+                                          : "border-border/40 text-muted-foreground bg-background/50"
+                                    }`}
+                                  >
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold border border-current">
+                                      {String.fromCharCode(65 + optIdx)}
+                                    </span>
+                                    <span className="flex-1">
+                                      {o.optionText}
+                                    </span>
+                                    {isCorrectOption && (
+                                      <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">
+                                        Correct Answer ✓
+                                      </span>
+                                    )}
+                                    {isSelected && !isCorrectOption && (
+                                      <span className="text-[10px] font-bold text-danger uppercase tracking-wider">
+                                        Your Choice ✗
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Result Footer */}
+            <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-border/80 bg-card px-6 py-3.5">
+              {(() => {
+                const totalPoints = subView.data.assignment.maxPoints || 100;
+                const score = subView.data.totalScore ?? 0;
+                const pct = Math.round((score / totalPoints) * 100);
+                const isPassed = pct >= 60;
+                return (
+                  <>
+                    {!isPassed && (
+                      <button
+                        onClick={() =>
+                          handleStartQuiz(subView.data.assignment.id)
+                        }
+                        disabled={loading}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-all cursor-pointer shadow-xs"
+                      >
+                        <IconRefresh size={14} /> Retake Quiz
+                      </button>
+                    )}
+                    <button
+                      onClick={handleCloseModal}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-card-hover transition-all cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
         </div>
       )}
     </div>
