@@ -27,6 +27,14 @@ export default function CustomExamLogin() {
     syncServerTime();
   }, [slug]);
 
+  // Re-render every second so the Login button enables itself
+  // the moment the login window opens (no banner, no refresh needed).
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   async function syncServerTime() {
     try {
       const startMs = Date.now();
@@ -75,8 +83,8 @@ export default function CustomExamLogin() {
   async function handleLogin(e) {
     e.preventDefault();
     setLoginError('');
+    // Login window gate is enforced by the disabled button; silently ignore early submits.
     if (isLoginNotOpen()) {
-      setLoginError(`Candidate Login Not Open Yet: Logins for this exam open at ${new Date(exam.registration_start_time).toLocaleString()}.`);
       return;
     }
 
@@ -273,14 +281,20 @@ export default function CustomExamLogin() {
               <span>Only candidates registered for this exam are allowed access.</span>
             </div>
 
-            <div className="pt-2 flex justify-center">
+            <div className="pt-2 flex flex-col items-center gap-2">
               <button
                 type="submit"
-                disabled={loggingIn}
-                className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+                disabled={loggingIn || isLoginNotOpen()}
+                title={isLoginNotOpen() && exam?.registration_start_time ? `Logins open at ${new Date(exam.registration_start_time).toLocaleString()}` : undefined}
+                className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all inline-flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>{loggingIn ? 'Logging in...' : 'Login / Start Exam'}</span>
+                <span>{loggingIn ? 'Logging in...' : 'Login'}</span>
               </button>
+              {isLoginNotOpen() && exam?.registration_start_time && (
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Logins open at {new Date(exam.registration_start_time).toLocaleString()}
+                </p>
+              )}
             </div>
           </form>
         </div>
