@@ -42,7 +42,7 @@ export default function InstructorInboxPage() {
   const [tab, setTab] = useState<Tab>("notifications");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-2xs">
       <AdminPageHeader
         title="Inbox"
         breadcrumbs={[{ label: "Inbox", href: "/instructor/inbox" }]}

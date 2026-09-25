@@ -158,7 +158,7 @@ export default function ApiKeysPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
             Settings
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
+          <h1 className="mt-1 text-xl font-bold text-foreground flex items-center gap-3">
             <IconKey size={28} className="text-primary-hover" />
             API Keys
           </h1>

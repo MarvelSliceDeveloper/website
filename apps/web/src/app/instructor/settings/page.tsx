@@ -289,16 +289,46 @@ export default function InstructorSettingsPage() {
   function SectionCard({
     icon,
     title,
+    tone = "primary",
     children,
   }: {
     icon: React.ReactNode;
     title: string;
+    tone?: "primary" | "emerald" | "sky" | "amber" | "violet";
     children: React.ReactNode;
   }) {
+    const tones = {
+      primary: {
+        icon: "bg-primary/10 text-primary border-primary/20",
+        border: "border-primary/20",
+      },
+      emerald: {
+        icon: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+        border: "border-emerald-500/20",
+      },
+      sky: {
+        icon: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+        border: "border-sky-500/20",
+      },
+      amber: {
+        icon: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+        border: "border-amber-500/20",
+      },
+      violet: {
+        icon: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
+        border: "border-violet-500/20",
+      },
+    } as const;
     return (
       <div className="glass-card p-5 space-y-4">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-border/50">
-          <span className="text-primary">{icon}</span>
+        <div
+          className={`flex items-center gap-2.5 pb-2.5 border-b ${tones[tone].border}`}
+        >
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-lg border ${tones[tone].icon}`}
+          >
+            {icon}
+          </span>
           <p className="text-sm font-semibold text-foreground">{title}</p>
         </div>
         <div className="space-y-2.5">{children}</div>
@@ -390,6 +420,7 @@ export default function InstructorSettingsPage() {
           <SectionCard
             icon={<IconBriefcase size={18} />}
             title="Professional Info"
+            tone="primary"
           >
             <InfoRow
               icon={<IconUser size={15} />}
@@ -471,7 +502,11 @@ export default function InstructorSettingsPage() {
           </SectionCard>
 
           {/* Contact Details */}
-          <SectionCard icon={<IconMapPin size={18} />} title="Contact Details">
+          <SectionCard
+            icon={<IconMapPin size={18} />}
+            title="Contact Details"
+            tone="emerald"
+          >
             <InfoRow
               icon={<IconPhone size={15} />}
               label="Phone"
@@ -501,7 +536,11 @@ export default function InstructorSettingsPage() {
 
           {/* Social Links */}
           {social && (social.linkedin || social.github || social.portfolio) ? (
-            <SectionCard icon={<IconWorld size={18} />} title="Social Links">
+            <SectionCard
+              icon={<IconWorld size={18} />}
+              title="Social Links"
+              tone="sky"
+            >
               {social.linkedin && (
                 <a
                   href={social.linkedin}
@@ -559,6 +598,7 @@ export default function InstructorSettingsPage() {
             <SectionCard
               icon={<IconBuildingBank size={18} />}
               title="Bank Information"
+              tone="amber"
             >
               <InfoRow
                 icon={<IconBuildingBank size={15} />}
@@ -594,7 +634,11 @@ export default function InstructorSettingsPage() {
 
           {/* Photo & Resume */}
           {p?.photoUrl || p?.resumeUrl ? (
-            <SectionCard icon={<IconPhoto size={18} />} title="Documents">
+            <SectionCard
+              icon={<IconPhoto size={18} />}
+              title="Documents"
+              tone="violet"
+            >
               {p?.photoUrl && (
                 <div className="flex items-center gap-3 text-sm">
                   <IconPhoto size={15} className="shrink-0 text-muted" />

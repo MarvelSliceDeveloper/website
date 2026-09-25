@@ -99,7 +99,7 @@ export default function AdminCalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">
+          <h1 className="text-xl font-bold text-foreground">
             Calendar
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

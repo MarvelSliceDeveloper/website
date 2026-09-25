@@ -199,7 +199,7 @@ export default function AIIntegrationPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
             Settings
           </p>
-          <h1 className="mt-1 flex items-center gap-3 text-2xl font-bold text-foreground md:text-3xl">
+          <h1 className="mt-1 flex items-center gap-3 text-xl font-bold text-foreground">
             <IconSparkles size={28} className="text-primary-hover" />
             AI Integration
           </h1>

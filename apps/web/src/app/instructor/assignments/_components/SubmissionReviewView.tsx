@@ -158,7 +158,7 @@ export function SubmissionReviewView({
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-5 sm:p-6 rounded-xl border border-border/80 shadow-2xs">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-5 sm:p-6 rounded-2xl border border-border/80 shadow-2xs">
         <div className="flex items-start gap-4">
           <Button
             variant="secondary"
@@ -237,8 +237,8 @@ export function SubmissionReviewView({
 
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border border-border/80 shadow-2xs">
-          <CardContent className="p-5 flex items-center gap-4">
+        <Card className="rounded-2xl border border-border/80 shadow-2xs">
+          <CardContent className="p-5 sm:p-6 flex items-center gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
               <IconUsers size={20} stroke={1.8} />
             </div>
@@ -254,13 +254,13 @@ export function SubmissionReviewView({
         </Card>
 
         <Card
-          className={`border shadow-2xs ${
+          className={`rounded-2xl border shadow-2xs ${
             pendingCount > 0
               ? "border-amber-500/40 bg-amber-500/5"
               : "border-border/80"
           }`}
         >
-          <CardContent className="p-5 flex items-center gap-4">
+          <CardContent className="p-5 sm:p-6 flex items-center gap-4">
             <div
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
                 pendingCount > 0
@@ -287,8 +287,8 @@ export function SubmissionReviewView({
           </CardContent>
         </Card>
 
-        <Card className="border border-border/80 shadow-2xs">
-          <CardContent className="p-5 flex items-center gap-4">
+        <Card className="rounded-2xl border border-border/80 shadow-2xs">
+          <CardContent className="p-5 sm:p-6 flex items-center gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <IconCheck size={20} stroke={1.8} />
             </div>
@@ -305,8 +305,8 @@ export function SubmissionReviewView({
       </div>
 
       {/* Submissions Filter Toolbar */}
-      <Card className="border border-border/80 shadow-2xs">
-        <CardContent className="p-5 flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
+      <Card className="rounded-2xl border border-border/80 shadow-2xs">
+        <CardContent className="p-5 sm:p-6 flex flex-col gap-3 sm:flex-row sm:items-center justify-between">
           <div className="w-full sm:max-w-md">
             <SearchInput
               value={search}
@@ -346,8 +346,8 @@ export function SubmissionReviewView({
           ))}
         </div>
       ) : submissions.length === 0 ? (
-        <Card className="border border-border/80">
-          <CardContent className="p-12 text-center">
+        <Card className="rounded-2xl border border-border/80 shadow-2xs">
+          <CardContent className="p-12 sm:p-12 text-center">
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-muted/20 text-muted-foreground">
               <IconUsers size={28} />
             </div>
@@ -361,8 +361,8 @@ export function SubmissionReviewView({
           </CardContent>
         </Card>
       ) : filteredSubmissions.length === 0 ? (
-        <Card className="border border-border/80">
-          <CardContent className="p-12 text-center">
+        <Card className="rounded-2xl border border-border/80 shadow-2xs">
+          <CardContent className="p-12 sm:p-12 text-center">
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-muted/20 text-muted-foreground">
               <IconFilter size={28} />
             </div>
@@ -390,9 +390,9 @@ export function SubmissionReviewView({
           {filteredSubmissions.map((sub) => (
             <Card
               key={sub.id}
-              className="border border-border/80 shadow-2xs hover:border-primary/30 transition-all"
+              className="rounded-2xl border border-border/80 shadow-2xs hover:border-primary/30 transition-all"
             >
-              <CardContent className="p-5">
+              <CardContent className="p-5 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">

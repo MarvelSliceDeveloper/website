@@ -39,7 +39,7 @@ export default function AdminInboxTicketsPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
           Inbox
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
+        <h1 className="mt-1 text-xl font-bold text-foreground">
           Mentorship Tickets
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

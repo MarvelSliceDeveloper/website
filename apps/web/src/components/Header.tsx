@@ -1,28 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  IconBell,
-  IconSettings,
-  IconLogout,
-  IconMenu2,
-  IconX,
-  IconEye,
-  IconArrowLeft,
-} from "@tabler/icons-react";
+import { IconSettings, IconLogout, IconMenu2 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
-import { timeAgo } from "@/lib/time-ago";
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-};
+import HeaderNotifications from "./HeaderNotifications";
 
 interface HeaderProps {
   inboxHref?: string;
@@ -44,75 +26,8 @@ export default function Header({
   onToggleMobileNav,
 }: HeaderProps) {
   const router = useRouter();
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const notifRef = useRef<HTMLDivElement>(null);
 
   const settingsHref = inboxHref.replace("/inbox", "/settings");
-
-  const loadNotifications = useCallback(async () => {
-    try {
-      const data = await api.get<{
-        notifications: NotificationItem[];
-        unreadCount: number;
-      }>("/api/notifications");
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    const doFetch = () => {
-      api
-        .get<{ notifications: NotificationItem[]; unreadCount: number }>(
-          "/api/notifications",
-        )
-        .then((data) => {
-          setNotifications(data.notifications || []);
-          setUnreadCount(data.unreadCount || 0);
-        })
-        .catch(() => {});
-    };
-
-    doFetch();
-    const interval = setInterval(doFetch, 120000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setNotifOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const markAllRead = async () => {
-    try {
-      await api.post("/api/notifications/read-all");
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const markOneRead = async (id: string) => {
-    try {
-      await api.patch(`/api/notifications/${id}/read`, {});
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {
-      /* ignore */
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -180,102 +95,11 @@ export default function Header({
             </>
           )}
 
-          <div ref={notifRef} className="relative">
-            <button
-              onClick={() => {
-                setNotifOpen((open) => !open);
-                if (!notifOpen) loadNotifications();
-              }}
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
-              aria-label="Notifications"
-            >
-              <IconBell size={17} stroke={1.8} />
-              {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </button>
-
-            {notifOpen && (
-              <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border border-border bg-card shadow-2xl">
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                  <p className="text-sm font-semibold text-foreground">
-                    Notifications
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllRead}
-                        className="text-[11px] text-primary hover:underline"
-                      >
-                        Mark all read
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setNotifOpen(false)}
-                      className="text-muted hover:text-foreground"
-                    >
-                      <IconX size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="max-h-72 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <p className="px-4 py-6 text-center text-sm text-muted">
-                      No notifications
-                    </p>
-                  ) : (
-                    notifications.slice(0, 5).map((item) => (
-                      <div
-                        key={item.id}
-                        className={`group flex items-start gap-3 border-b border-border/50 px-4 py-3 last:border-0 ${!item.read ? "bg-primary/5" : ""}`}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {item.title}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted">
-                            {item.message}
-                          </p>
-                          <p className="mt-0.5 text-[11px] text-muted">
-                            {timeAgo(item.createdAt)}
-                          </p>
-                        </div>
-                        {!item.read && (
-                          <button
-                            onClick={() => markOneRead(item.id)}
-                            className="mt-0.5 shrink-0 p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-colors"
-                            title="Mark as read"
-                          >
-                            <IconEye size={14} />
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-                {notifications.length > 0 && (
-                  <div className="border-t border-border px-4 py-2.5">
-                    <button
-                      onClick={() => {
-                        router.push(inboxHref);
-                        setNotifOpen(false);
-                      }}
-                      className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                    >
-                      View all notifications
-                      <IconArrowLeft size={13} className="rotate-180" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <HeaderNotifications inboxHref={inboxHref} />
 
           <button
             onClick={() => router.push(settingsHref)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 transition-colors hover:bg-violet-500/15 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
             aria-label="Settings"
           >
             <IconSettings size={17} stroke={1.8} />
@@ -283,7 +107,7 @@ export default function Header({
 
           <button
             onClick={handleSignOut}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger/10 text-danger transition-colors hover:bg-danger/15"
             aria-label="Sign out"
           >
             <IconLogout size={17} stroke={1.8} />

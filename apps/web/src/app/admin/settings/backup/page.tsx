@@ -110,7 +110,7 @@ export default function BackupPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Backup & Restore</h1>
+          <h1 className="text-xl font-bold">Backup & Restore</h1>
           <p className="text-foreground/60 mt-1">
             Create, download, and restore database backups
           </p>
