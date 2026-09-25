@@ -328,6 +328,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [examLoadFailed, setExamLoadFailed] = useState(false);
   const [serverOffsetMs, setServerOffsetMs] = useState(0);
   const [regCountdownSecs, setRegCountdownSecs] = useState(0);
 
@@ -426,8 +427,10 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
     if (!error && data) {
       setExam(data);
+      setExamLoadFailed(false);
     } else {
-      // Demo fallback
+      // Demo fallback (offline preview only — never saved to the database)
+      setExamLoadFailed(true);
       setExam({
         id: 'demo-custom-1',
         slug: slug || 'ibps-po-special-drill',
@@ -464,6 +467,11 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
   async function handleSubmit(e) {
     e.preventDefault();
+    // Never fake a success when the exam failed to load (demo/offline mode skips the DB save)
+    if (!exam || exam.id.startsWith('demo-') || examLoadFailed) {
+      alert('Cannot reach the server right now, so registration cannot be saved. Please check your connection and reload the page.');
+      return;
+    }
     if (!isRegistrationOpen()) {
       alert('Registration is not open yet! Please wait for the scheduled start time.');
       return;
@@ -537,8 +545,13 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
       if (error && error.code === '23505') {
         alert('You are already registered for this exam! Use your email and DOB to log in.');
+        setSubmitting(false);
+        return;
       } else if (error) {
         console.error('Registration insert error:', error);
+        alert(`Registration failed and was NOT saved (${error.message || error.code || 'server error'}). Please try again.`);
+        setSubmitting(false);
+        return;
       }
     }
 

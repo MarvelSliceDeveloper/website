@@ -101,6 +101,11 @@ export default function CustomExamLogin() {
 
       if (!error && data) {
         candidate = data;
+      } else if (error && error.code && error.code !== 'PGRST116') {
+        // Real server/network failure — do NOT report as "not registered"
+        setLoggingIn(false);
+        setLoginError(`Server error (${error.message || error.code}). Please check your connection and try again.`);
+        return;
       }
     } else {
       // Demo mock login validation
