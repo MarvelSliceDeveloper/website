@@ -1,0 +1,501 @@
+================================================================================
+MARVEL SLICE LMS — CUSTOM MOCK EXAM SYSTEM
+COMPREHENSIVE DEEP-DIVE LOGIC ANALYSIS DOCUMENT
+================================================================================
+Author: Antigravity AI Coding Assistant
+Target System: Marvel Slice LMS (Landing Application — `apps/landing`)
+Date: September 25, 2026
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Executive System Overview & Architecture
+2. Database Schema & Data Models
+3. Candidate Portal Lifecycle & Logic Flow
+   3.1 Phase 1: Registration (`/custom-exam/register/:slug`)
+   3.2 Phase 2: Authentication & Gate Guards (`/custom-exam/login/:slug`)
+   3.3 Phase 3: Instructions & Waiting Lobby (`/custom-exam/instructions/:slug`)
+   3.4 Phase 4: Timed Exam Execution (`CustomExamTest.jsx` - QUIZ Step)
+   3.5 Anti-Cheat & Silent Tab-Switch Tracking Engine
+   3.6 Resilience, Session Recovery & State Auto-Saving
+   3.7 Phase 5: Review, Candidate Feedback & Final Submission
+   3.8 Celebration & Fireworks Render Engine
+4. Admin Management Portal & Workflow
+   4.1 Custom Exam Creation & Editor (`CustomMockExamEditor.jsx`)
+   4.2 Question Bank & AI Question Generator (`mockExamAIService.js`)
+   4.3 Candidate Registrations Manager (`CustomMockExamRegistrations.jsx`)
+   4.4 Submissions & Attempt Reviewer (`CustomMockExamSubmissions.jsx`)
+   4.5 Analytics & Graphical Report Modals
+5. AI Integration Architecture
+6. Security, Resilience & Data Integrity Mechanisms
+7. Summary Matrix of File Responsibilities
+
+
+================================================================================
+1. EXECUTIVE SYSTEM OVERVIEW & ARCHITECTURE
+================================================================================
+The Custom Mock Exam System is a standalone, link-based competitive examination 
+portal built inside the Marvel Slice LMS project (`apps/landing`). It allows 
+administrators to create, schedule, manage, and analyze custom online mock exams 
+(e.g., IBPS PO, SBI PO, RBI Grade B, IT Campus Recruitment, Aptitude Drills) and 
+share unique link URLs with candidates.
+
+Key Operational Features:
+- Unique Shareable URLs: Each exam gets dedicated `/custom-exam/register/:slug` and 
+  `/custom-exam/login/:slug` routes.
+- Dual Operational Modes:
+  * `questions` mode: Complete timed MCQ examination with candidate profile capture,
+    question palette, section categories, timers, anti-cheat tracking, feedback, 
+    and auto-scoring.
+  * `link_only` mode: Registration-only mode for collecting candidate data before 
+    questions are attached.
+- Server-Time Synchronized Timing Guards: Prevents candidates from logging in or 
+  starting tests before scheduled start times or after login close windows.
+- Anti-Cheat Tracking: Silent background tab-switch and window-blur event logger 
+  that records timestamped audit trails without disturbing the candidate.
+- Resilient State Preservation: Double-buffered auto-saving (localStorage + 30s 
+  background Supabase DB drafts) enabling seamless recovery if browser crashes.
+- Complete Candidate Profiling: Captures identity photo (webcam or drag-and-drop), 
+  personal details, 10th %, 12th %, CGPA, address, college roll number, and degree.
+- Advanced Admin Suite: Full exam editor with AI question generation, Excel/CSV 
+  bulk import, Likert matrix feedback builder, PDF/Excel export, individual profile 
+  dossiers, and Recharts graphical analytics.
+
+
+================================================================================
+2. DATABASE SCHEMA & DATA MODELS
+================================================================================
+The database architecture uses Supabase PostgreSQL with Row Level Security (RLS) 
+enabled across 5 primary tables:
+
+1. `public.custom_mock_exams` (Exam Metadata)
+   - `id` (uuid, PK, default gen_random_uuid())
+   - `slug` (text, unique, not null) — e.g. "ibps-po-special-drill"
+   - `title` (text, not null)
+   - `category` (text, default 'General')
+   - `time_limit_mins` (integer, default 20)
+   - `total_marks` (integer, default 100)
+   - `question_count_option` (integer, default 25) — Options: 25, 50, 75, 100
+   - `registration_start_time` (timestamptz) — Candidate login open time
+   - `exam_start_time` (timestamptz) — Scheduled exam unlock time
+   - `exam_end_time` (timestamptz) — Candidate login close time
+   - `exam_mode` (text, default 'questions') — 'questions' | 'link_only'
+   - `allowed_degrees` (jsonb, default '[]') — Array of allowed degree strings
+   - `exam_categories` (jsonb, default '[]') — Array of section category names
+   - `rules_text` (text) — Custom rules override or default rules
+   - `feedback_questions` (jsonb, default '[]') — Array of feedback prompts
+   - `is_active` (boolean, default true)
+   - `created_at`, `updated_at` (timestamptz)
+
+2. `public.custom_mock_exam_questions` (MCQ Bank)
+   - `id` (uuid, PK)
+   - `custom_mock_exam_id` (uuid, FK -> custom_mock_exams.id ON DELETE CASCADE)
+   - `question_text` (text, not null)
+   - `options` (jsonb, not null) — Array of 4 option strings: ["A", "B", "C", "D"]
+   - `correct_option` (integer, default 0) — Correct index (0-3)
+   - `explanation` (text, default '') — Step-by-step solution note
+   - `marks` (integer, default 1)
+   - `category_name` (text, default 'General') — Section category tag
+   - `order_index` (integer, default 0)
+
+3. `public.custom_mock_exam_registrations` (Candidate Registrations)
+   - `id` (uuid, PK)
+   - `custom_mock_exam_id` (uuid, FK -> custom_mock_exams.id ON DELETE CASCADE)
+   - `user_name` (text, not null)
+   - `user_email` (text, not null)
+   - `user_phone` (text, not null)
+   - `user_dob` (date, not null) — Serves as candidate password
+   - `user_reg_num` (text) — College Register / Roll Number
+   - `user_department` (text, not null)
+   - `user_degree` (text)
+   - `user_year` (text, not null)
+   - `user_college` (text, not null)
+   - `user_address` (text)
+   - `user_10th_school`, `user_10th_mark` (numeric)
+   - `user_12th_school`, `user_12th_mark` (numeric)
+   - `user_cgpa` (numeric)
+   - `candidate_photo` (text) — Base64 / DataURL photo string
+   - UNIQUE CONSTRAINT: `(custom_mock_exam_id, user_email)`
+
+4. `public.custom_mock_exam_submissions` (Attempt Results & Drafts)
+   - `id` (uuid, PK)
+   - `custom_mock_exam_id` (uuid, FK -> custom_mock_exams.id ON DELETE CASCADE)
+   - `registration_id` (uuid, FK -> custom_mock_exam_registrations.id)
+   - Snapshot fields: `user_name`, `user_email`, `user_phone`, `user_dob`, 
+     `user_department`, `user_degree`, `user_address`, `user_10th_mark`, 
+     `user_12th_mark`, `user_cgpa`, `user_year`, `user_college`, `user_reg_num`, `candidate_photo`
+   - `status` (text, default 'DRAFT') — 'DRAFT' | 'SUBMITTED'
+   - `score` (numeric, default 0)
+   - `total_questions`, `correct_answers`, `wrong_answers` (integer)
+   - `answers` (jsonb, default '{}') — Object mapping `{ qId: optionIndex }`
+   - `visited_questions` (jsonb, default '{}') — Object mapping `{ qId: true }`
+   - `category_scores` (jsonb, default '{}') — Per-section breakdown object
+   - `feedback_answers` (jsonb, default '{}')
+   - `time_taken_seconds` (integer, default 0)
+   - `tab_switch_count` (integer, default 0)
+   - `tab_switch_logs` (jsonb, default '[]') — Array of tab switch audit objects
+
+5. `public.custom_mock_exam_tab_switches` (Anti-Cheat Audit Table)
+   - `id` (uuid, PK)
+   - `submission_id` (uuid, FK -> custom_mock_exam_submissions.id)
+   - `custom_mock_exam_id` (uuid, FK -> custom_mock_exams.id)
+   - `user_name`, `user_email` (text)
+   - `tab_switch_count` (integer)
+   - `switch_logs` (jsonb)
+
+
+================================================================================
+3. CANDIDATE PORTAL LIFECYCLE & LOGIC FLOW
+================================================================================
+
+3.1 Phase 1: Candidate Registration (`/custom-exam/register/:slug`)
+--------------------------------------------------------------------------------
+1. Server Time Sync:
+   The page calls Supabase RPC `get_server_time` to calculate latency-adjusted 
+   `serverOffsetMs`. Time functions evaluate `Date.now() + serverOffsetMs` to prevent 
+   candidates from manipulating their local computer clock.
+2. Registration Timing Guard:
+   If `exam.registration_start_time` is set and in the future, the registration 
+   form locks and displays an active countdown timer ("Registration Opens Soon").
+3. Identity Photo Capture:
+   - Supports Live Webcam Capture via `navigator.mediaDevices.getUserMedia` with an 
+     aspect-square video preview, circular face overlay, and HTML5 canvas snapshot.
+   - Supports File Upload / Drag-and-Drop for JPG/PNG/WEBP files (up to 5MB) using 
+     FileReader to convert images into Base64 DataURL strings.
+4. Form Fields & Degree Filter:
+   - Personal Details: First Name, Last Name, Email, Phone, DOB, Address.
+   - Educational Details: 10th School & %, 12th School & %, College Name, Register 
+     Number (auto-uppercase), Degree (filtered by `allowed_degrees`), Department, 
+     Year of Study, CGPA.
+5. Duplicate Prevention & DB Save:
+   - Form validates all mandatory inputs.
+   - Inserts registration payload into `custom_mock_exam_registrations`.
+   - If PostgreSQL returns error `23505` (unique violation on exam_id + email), 
+     alerts candidate: "You are already registered! Log in with email and DOB."
+   - Saves registration backup to `localStorage` (`custom_exam_reg_${slug}`).
+   - Displays success modal with auto-redirect to home in 4 seconds.
+
+
+3.2 Phase 2: Candidate Authentication & Gate Guards (`/custom-exam/login/:slug`)
+--------------------------------------------------------------------------------
+1. Credentials: Registered Email Address (Username) + Date of Birth (Password).
+2. Gate Controls:
+   - Gate 1 (Not Open Yet): If current server time < `registration_start_time`, 
+     the Login button is disabled with tooltip "Logins open at [Time]". Re-evaluates 
+     every 1 second without page refresh.
+   - Gate 2 (Registration Check): Queries `custom_mock_exam_registrations` matching 
+     `custom_mock_exam_id`, `user_email`, and `user_dob`. Unregistered users get 
+     "Access Denied: You are not registered for this specific exam".
+   - Gate 3 (Login Window Closed): If current server time >= `exam_end_time`, login 
+     is blocked unless candidate has an existing attempt record or active same-tab 
+     session ("Only candidates who already started this exam can rejoin").
+3. Session Storage:
+   On successful validation, candidate auth session is saved to `sessionStorage` 
+   (`custom_exam_auth_${slug}`):
+   ```json
+   {
+     "examId": "...",
+     "examSlug": "...",
+     "candidate": { ... },
+     "alreadySubmitted": false,
+     "loginTimestampMs": 1727250000000
+   }
+   ```
+   Redirects to `/custom-exam/test/:slug`.
+
+
+3.3 Phase 3: Instructions & Waiting Lobby (`CustomExamTest.jsx`)
+--------------------------------------------------------------------------------
+1. Direct Flow Integration:
+   `CustomExamInstructions.jsx` automatically redirects to `/custom-exam/test/:slug`.
+2. Pre-Exam Waiting Lobby (`WAITING_LOBBY` Step):
+   If candidate logs in before `exam_start_time`, they enter the Waiting Lobby:
+   - Shows candidate profile badge, exam title, and guidelines reminder.
+   - Displays a large countdown clock: "Exam Starts In MM:SS".
+   - When timer reaches 00:00, triggers a modal popup "Exam Started! 🎉" and 
+     navigates candidate to the Instructions screen.
+3. Instructions & Code of Conduct (`INSTRUCTIONS` Step):
+   - Displays exam rules (either custom `rules_text` or `DEFAULT_EXAM_RULES_TEXT` 
+     containing 10 anti-cheat rules from `examRules.js`).
+   - Shows candidate verified profile box and exam parameters (Duration, MCQs, Marks).
+   - Requires candidate to check TWO mandatory checkboxes:
+     1. "I have read, understood, and agree to abide by all examination instructions..."
+     2. "I agree to the Terms & Conditions and Privacy Policy."
+   - Clicking "Start Exam" initializes session timestamps, marks Question 1 visited, 
+     saves initial DB draft, and transitions to `QUIZ` step.
+
+
+3.4 Phase 4: Timed Exam Execution (`CustomExamTest.jsx` - QUIZ Step)
+--------------------------------------------------------------------------------
+1. Fullscreen Interface:
+   `document.body.style.overflow = 'hidden'` locks page scroll. Sticky header shows 
+   logo, exam title, candidate avatar, register number, and live countdown timer.
+2. Timer Color Indications:
+   - Green (`text-emerald-600`): Time remaining > 7 minutes.
+   - Amber (`text-amber-500`): Time remaining between 3.5 minutes and 7 minutes.
+   - Red Pulsing (`text-rose-600 animate-pulse`): Time remaining < 3.5 minutes.
+3. Question Section Categories:
+   Horizontal pill bar allows switching between section categories (e.g. Quantitative 
+   Aptitude, Logical Reasoning, Verbal, Technical). Clicking a section tab jumps 
+   to the first question in that section.
+4. Question Palette (3D Glossy Orbs):
+   Renders SVG 3D rounded orbs for every question, indicating 5 status states:
+   - Green Gradient (`url(#sq-bg-green)`): Answered.
+   - Red Gradient (`url(#sq-bg-red)`): Not Answered (Visited).
+   - Purple Gradient (`url(#sq-bg-purple)`): Marked for Review.
+   - Dual Green/Purple Gradient (`url(#sq-bg-dual)`): Answered & Marked for Review.
+   - Gray Gradient (`url(#sq-bg-gray)`): Not Visited.
+   Active question has a glowing, pulsing blue outline ring.
+
+
+3.5 Anti-Cheat & Silent Tab-Switch Tracking Engine
+--------------------------------------------------------------------------------
+To enforce exam integrity without alarming candidates during test-taking:
+1. Event Listeners:
+   Listens for `visibilitychange` (`document.hidden`) and window `blur` events.
+2. Event Debouncing:
+   Ignores events occurring within 800ms of each other to prevent duplicate logs 
+   from simultaneous focus/blur triggers.
+3. Audit Log Schema:
+   Each tab switch creates a log entry:
+   ```json
+   {
+     "switch_number": 1,
+     "timestamp": "2026-09-25T10:30:00.000Z",
+     "event_type": "tab_hidden",
+     "question_number": 5,
+     "question_id": "q-5",
+     "question_category": "Quantitative Aptitude",
+     "time_left_formatted": "14:20",
+     "time_left_seconds": 860,
+     "document_hidden": true,
+     "window_title": "Exam Title",
+     "referrer": "Direct"
+   }
+   ```
+4. Background Sync:
+   Updates `tabSwitchCount` and `tabSwitchLogs` in local state, `localStorage`, and 
+   Supabase DB draft seamlessly in the background.
+
+
+3.6 Resilience, Session Recovery & State Auto-Saving
+--------------------------------------------------------------------------------
+1. Immediate Local Persistence:
+   Every option selection, question navigation, review toggle, or tab switch 
+   immediately executes `saveImmediateSession()` writing state to `localStorage` 
+   key `custom_exam_test_session_${slug}`.
+2. Candidate Email Isolation:
+   To prevent account cross-contamination on shared lab computers, cached sessions 
+   store `candidateEmail`. If a different candidate logs in on the same machine, 
+   stale cached sessions belonging to other emails are ignored and cleared.
+3. 30-Second Background DB Backup:
+   A periodic `setInterval` triggers `autoSaveDraftToSupabase()` every 30 seconds while 
+   in `QUIZ` step, saving current answers, visited questions, remaining time, and 
+   tab switch logs to `custom_mock_exam_submissions` with status `DRAFT`.
+4. Crash & Refresh Recovery:
+   Upon page refresh, `initExam()` restores candidate state from `localStorage` 
+   and DB draft. Remaining time is dynamically calculated:
+   `remainingSecs = fullExamSecs - Math.floor((Date.now() - examStartedAtMs) / 1000)`
+   Candidate returns directly to the active `QUIZ` screen with all selected answers 
+   intact.
+
+
+3.7 Phase 5: Review, Candidate Feedback & Final Submission
+--------------------------------------------------------------------------------
+1. Review Marked Questions (`REVIEW_MARKED` Step):
+   If candidate clicks "Submit Test" while questions are marked for review, they 
+   are routed to a Review screen displaying all marked items, allowing option edits 
+   or unmarking before final submission.
+2. Candidate Feedback Survey (`FEEDBACK` Step):
+   Candidates complete feedback questions defined by admin. Supports 3 UI types:
+   - 5-Star Rating (interactive star icons).
+   - Text Response (comments/suggestions).
+   - Likert Matrix Table (statements table with radio columns: Strongly Agree, 
+     Agree, Disagree, Strongly Disagree, N/A).
+   Mandatory validation checks all fields before submission.
+3. Automated Scoring Algorithm:
+   - Compares candidate `userAnswers[q.id]` with `q.correct_option`.
+   - Increments total score by `q.marks` (default 1) for correct answers.
+   - Calculates overall `correct_answers` and `wrong_answers`.
+   - Computes per-category breakdown:
+     ```json
+     {
+       "Quantitative Aptitude": { "correct": 18, "wrong": 2, "unanswered": 0, "total": 20, "score": 18 }
+     }
+     ```
+4. Database Finalization:
+   Upserts final record into `custom_mock_exam_submissions` with status `SUBMITTED`, 
+   inserts tab switch record into `custom_mock_exam_tab_switches`, clears active 
+   test session from `localStorage`, and sets `submitted` cookie key.
+
+
+3.8 Celebration & Fireworks Render Engine
+--------------------------------------------------------------------------------
+Upon successful submission (`SUBMITTED` Step), `CustomExamTest.jsx` mounts a 
+full-screen HTML5 Canvas component (`FireworksCrackerCanvas`):
+- Rockets launch from random bottom coordinates with upward velocity and color trails.
+- At target apex Y coordinates, rockets burst into 45-80 particle explosions with 
+  radial angles, gravity physics, alpha decay, and particle shrink.
+- Displays summary stats: candidate name, exam title, category breakdown, total 
+  attempted, time taken, and "Exit & Close Portal" button.
+
+
+================================================================================
+4. ADMIN MANAGEMENT PORTAL & WORKFLOW
+================================================================================
+
+4.1 Custom Exam Creation & Editor (`CustomMockExamEditor.jsx`)
+--------------------------------------------------------------------------------
+Organized into a 3-tab Folder Interface (`FolderTabs`):
+
+Tab 1: Exam Parameters & Timings (`DETAILS`)
+- Title & Auto-Generated Slug (e.g. `/custom-exam/register/speed-drill-2026`).
+- Category / Department name.
+- Exam Creation Mode: `questions` vs `link_only`.
+- Question Count Selection: Preset dropdown (25, 50, 75, 100 questions).
+- Total Marks & Exam Duration in Minutes.
+- Allowed Candidate Degrees: Multiselect search dropdown with custom degree addition.
+- Timing Guards:
+  * Candidate Login Open Time (`registration_start_time`).
+  * Scheduled Exam Start Time (`exam_start_time`).
+  * Candidate Login Close Time (`exam_end_time`).
+  * Validation: Requires at least a 5-minute gap between Login Open and Exam Start.
+- Exam Rules & Guidelines Text Editor (pre-filled with `DEFAULT_EXAM_RULES_TEXT`).
+
+Tab 2: MCQ Questions Builder (`QUESTIONS`)
+- Section Categories Configuration: Add/remove section category tags (e.g., 
+  Quantitative Aptitude, Logical Reasoning, Technical Knowledge).
+- Section-Grouped Question Display: Questions grouped under section banners.
+- Mandatory Validation: Enforces that ALL questions (25, 50, 75, or 100) and all 
+  4 options per question are non-empty before saving (except in `link_only` mode).
+
+Tab 3: Candidate Feedback Questions Builder (`FEEDBACK`)
+- Configures feedback prompts presented to candidates post-exam.
+- Supports 5-Star Ratings, Text Areas, and Likert Matrix Tables (customizable column 
+  headers and row statements).
+- Enforces at least 2 mandatory feedback questions before saving.
+
+
+4.2 Question Bank & AI Question Generator (`mockExamAIService.js`)
+--------------------------------------------------------------------------------
+1. AI Question Generator (`HiSparkles` Modal):
+   - Admin specifies Topic, Difficulty (Easy/Moderate/Advanced), and Question Count.
+   - Calls `generateMockExamQuestionsAI` in `mockExamAIService.js` using Gemini AI 
+     (`aiService.js`).
+   - Automatically tops up section categories to at least 5 fallback categories 
+     (Quantitative Aptitude, Logical Reasoning, Verbal Ability, Technical, General) 
+     and divides question count evenly across sections.
+   - Includes offline question bank fallback if AI service is unconfigured.
+2. JSON / CSV Question Importer (`FiUpload` Modal):
+   - Supports pasting JSON arrays or CSV data with question statements, 4 options, 
+     correct option index, explanation, and section category name.
+   - Auto-registers new section categories found in imported data.
+
+
+4.3 Candidate Registrations Manager (`CustomMockExamRegistrations.jsx`)
+--------------------------------------------------------------------------------
+- Displays candidates registered via `/custom-exam/register/:slug`.
+- Filtering & Sorting: Filter by exam title; sort by Newest, CGPA (High → Low), 
+  Quiz Score (High → Low), Name (A → Z).
+- Candidate Profile Dossier Modal (`FiEye`): Complete pop-up view displaying 
+  candidate photo, credentials (email + DOB), institution, register number, 10th %, 
+  12th %, CGPA, address, and merged quiz results.
+- Export Capabilities: Download individual candidate PDF/Excel dossiers; bulk export 
+  all registrations to Excel (`.xlsx` via SheetJS) or PDF (`jsPDF` + `jspdf-autotable`).
+- Built-in Email Dispatch (`FiMail`): Opens email composer pre-populated with portal 
+  URL, username, DOB password, and exam title to send credentials to candidate.
+
+
+4.4 Submissions & Attempt Reviewer (`CustomMockExamSubmissions.jsx`)
+--------------------------------------------------------------------------------
+- Displays completed attempts with candidate name, email, score, accuracy, section 
+  breakdown, time taken, and tab switch count.
+- Itemized Attempt Review Modal (`FiEye`): Review candidate attempt question by 
+  question, showing statement, options, candidate's selected choice (highlighted in 
+  red/green), correct answer, and explanation note.
+- Anti-Cheat Audit Modal: Displays detailed timestamped log of candidate tab switches.
+- Reset Submission Feature (`FiRotateCcw`): Resets/deletes a candidate's submission 
+  record from `custom_mock_exam_submissions` and `custom_mock_exam_tab_switches`, 
+  allowing them to log back in and retake the test.
+- Export Reports: Summary and detailed multi-section exports to PDF and CSV.
+
+
+4.5 Analytics & Graphical Report Modals
+--------------------------------------------------------------------------------
+1. Exam Report Modal (`CustomMockExamReportModal.jsx`):
+   - Per-exam analytics dashboard rendered using Recharts.
+   - Stat Cards: Registered, Attended, Attendance %, Avg Score %, Top Score.
+   - Charts:
+     * Registration vs Attendance Funnel Bar Chart.
+     * Attempt Status Pie Chart (Attended / In Progress / Not Started).
+     * Score Distribution Histogram (0-20%, 20-40%, 40-60%, 60-80%, 80-100%).
+     * Section-wise Average Accuracy Bar Chart.
+   - PDF Report Export.
+2. Overall Report Modal (`CustomMockExamsOverallReportModal.jsx`):
+   - Cross-exam analytical comparison across all custom mock exams.
+   - Exam comparison bar chart and summary table with attendance and average score %.
+
+
+================================================================================
+5. AI INTEGRATION ARCHITECTURE
+================================================================================
+The Custom Mock Exam System integrates with Gemini AI via `mockExamAIService.js`:
+
+1. `generateMockExamQuestionsAI({ topic, count, difficulty })`:
+   Prompt engineered to output JSON arrays containing banking and competitive exam 
+   MCQs with 4 options, 0-3 answer index, and step-by-step explanations.
+   Clean JSON parser (`parseLLMJson`) strips markdown backticks and extracts JSON arrays.
+   Offline fallback question bank handles network or quota failures gracefully.
+
+2. `getQuestionHintAI({ question, options })`:
+   Generates a concise 1-2 sentence hint or formula for a candidate without revealing 
+   the correct option letter or index.
+
+3. `explainQuestionSolutionAI({ question, options, correctAnswerIndex, explanation, userQuestion })`:
+   Generates step-by-step markdown solution breakdowns and addresses student doubts.
+
+
+================================================================================
+6. SECURITY, RESILIENCE & DATA INTEGRITY MECHANISMS
+================================================================================
+1. Database Row Level Security (RLS):
+   Policies configured on `custom_mock_exams`, `custom_mock_exam_questions`, 
+   `custom_mock_exam_registrations`, and `custom_mock_exam_submissions` allow public 
+   reads/inserts where necessary and restrict modifications to admin users.
+2. Anti-Clock-Tampering Time Sync:
+   Queries Supabase server time via RPC `get_server_time` to calculate latency-corrected 
+   time offsets, preventing local system clock manipulation.
+3. Anti-Cross-Account Contamination:
+   Local test session storage validates candidate email match (`cachedEmail === ownEmail`) 
+   so multiple candidates on shared computer lab terminals cannot access each other's 
+   cached test drafts.
+4. Silent Anti-Cheat Logging:
+   Monitors visibility and focus changes in the background without modal alerts, 
+   preserving exam momentum while maintaining audit trails for administrators.
+5. Double-Buffered State Resiliency:
+   Combines synchronous `localStorage` updates with asynchronous 30-second Supabase 
+   `DRAFT` submissions to ensure zero data loss during power outages or browser crashes.
+
+
+================================================================================
+7. SUMMARY MATRIX OF FILE RESPONSIBILITIES
+================================================================================
+File Path                                                Role & Core Responsibility
+-------------------------------------------------------  -------------------------------------------------------------
+`migration_custom_mock_exam.sql`                         Base schema for custom exams, questions, registrations, submissions
+`migration_custom_mock_exam_v2.sql`                      Schema V2 adding degrees, section categories, academic marks, category scores
+`src/lib/examRules.js`                                   Shared 10 default exam rules text & fallback helper (`getExamRulesText`)
+`src/lib/mockExamAIService.js`                            AI question generation, hint generation, and solution explanation service
+`src/pages/custom-exam/CustomExamRegister.jsx`           Candidate registration page with photo capture, academics, degree filter
+`src/pages/custom-exam/CustomExamLogin.jsx`              Candidate login portal (Email + DOB) with timing gate enforcement
+`src/pages/custom-exam/CustomExamInstructions.jsx`       Instructions & rules agreement page (redirects to CustomExamTest)
+`src/pages/custom-exam/CustomExamTest.jsx`               Main exam execution engine: lobby, instructions, quiz, timer, palette, 
+                                                         anti-cheat logger, draft auto-save, feedback, scoring & celebration
+`src/pages/custom-exam/custom-exam-responsive.css`       Responsive CSS styles for custom exam layouts & question palette
+`src/admin/pages/CustomMockExamsList.jsx`                Admin custom mock exams listing page with active toggles & link copiers
+`src/admin/pages/CustomMockExamEditor.jsx`              3-tab custom exam creator/editor (parameters, questions, feedback, AI/import)
+`src/admin/pages/CustomMockExamRegistrations.jsx`       Candidate registrations viewer, profile dossier modal, PDF/Excel export, email sender
+`src/admin/pages/CustomMockExamSubmissions.jsx`         Submissions viewer, itemized question reviewer, tab-switch audit, reset attempt
+`src/admin/pages/CustomMockExamReportModal.jsx`          Per-exam Recharts graphical analytics & report modal (funnel, pie, score buckets)
+`src/admin/pages/CustomMockExamsOverallReportModal.jsx`  Overall cross-exam analytics modal comparing all custom mock exams
+================================================================================
