@@ -215,7 +215,7 @@ export async function seedUsers({
 
     // Reads first — proves DB connectivity and reports leftovers, and in
     // --dry-run mode it is the only DB call made.
-    const existing = await prisma.user.count({ where: emailWhere });
+    const existing = await prisma.user.count({ where: { email: emailWhere } });
     console.log(`Existing pool rows: ${existing}.`);
     if (dryRun) {
       console.log(
