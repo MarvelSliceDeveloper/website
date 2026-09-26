@@ -118,13 +118,16 @@ pnpm dev                      # API :4000 + Web :3000
 
 ### k6 (Load Testing)
 
-- **`apps/api/k6/`** — 4 test profiles:
+- **`apps/api/k6/`** — 5 test profiles:
   - `smoke.js` — 1 VU, 10s sanity check (health + login + /me)
   - `load.js` — ramp 0→20→50 VU across 3.5 min, p95 < 1s threshold
   - `scenarios.js` — role-based mix (3 admin, 5 instructor, 30 student)
   - `heavy.js` — ramp 0→50→100 VU over 2 min, hold 100 for 2 min, p95 < 2s threshold
-- Shared `helpers.js` for login + cookie jar auth
-- Run: `pnpm test:load:smoke`, `pnpm test:load`, `pnpm test:load:scenarios`, `pnpm test:load:heavy`
+  - `scale-5k.js` — staged ladder to `TARGET_VUS` (default 500, up to 5000), read-only student mix, account-pool auth
+- Shared `helpers.js` for login + cookie jar auth, per-VU token cache (`ensureAuth`/`authedGet`) and the load-test account pool
+- Load-test tooling: `seed-load-users.mjs` (Prisma seed/cleanup of the `k6-user-*` pool) and `run-scale.mjs` (seed → k6 → always cleanup)
+- Run: `pnpm test:load:smoke`, `pnpm test:load`, `pnpm test:load:scenarios`, `pnpm test:load:heavy`, `pnpm test:load:scale`
+- Full runbook: `docs/load-testing.md`
 
   > **Note:** At 100 concurrent VUs, the API shows degraded performance (p95 ~12s). Bottleneck suspected at login endpoint (bcrypt + DB) and Node.js event loop saturation. Investigation deferred.
 

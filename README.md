@@ -304,6 +304,7 @@ SENTRY_DSN=...
 | `pnpm test:e2e`                                            | E2E tests (Playwright)                  |
 | `pnpm test:all`                                            | All test suites                         |
 | `pnpm test:load`                                           | Load tests (k6)                         |
+| `pnpm test:load:scale`                                     | Scale test w/ seed + auto-cleanup       |
 | `pnpm format` / `pnpm format:check`                        | Prettier format                         |
 | `pnpm prisma:reset`                                        | Reset DB + seed                         |
 | `pnpm prisma:migrate`                                      | Run Prisma migrations                   |
@@ -322,6 +323,8 @@ pnpm test:integration  # API integration (Vitest)
 pnpm test:e2e          # Playwright E2E
 pnpm test:all          # everything
 pnpm test:load         # k6 load tests
+pnpm test:load:scale   # staged ladder (default 500 VU) — seeds accounts, cleans up after itself
+TARGET_VUS=5000 pnpm test:load:scale   # 5000-user run
 ```
 
 ---
