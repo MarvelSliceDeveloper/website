@@ -104,6 +104,20 @@ function requireDatabase() {
   }
 }
 
+// Tooling must never compete with the API for connections: cap this client's
+// pool at 2 instead of Prisma's default (2 x CPUs + 1).
+function toolPrismaClient() {
+  const raw = process.env.DATABASE_URL;
+  try {
+    const url = new URL(raw);
+    url.searchParams.set("connection_limit", "2");
+    url.searchParams.set("pool_timeout", "10");
+    return new PrismaClient({ datasources: { db: { url: url.toString() } } });
+  } catch {
+    return new PrismaClient();
+  }
+}
+
 async function deletePool(prisma, { dryRun = false } = {}) {
   const users = await prisma.user.findMany({
     where: { email: emailWhere },
@@ -158,7 +172,7 @@ async function deletePool(prisma, { dryRun = false } = {}) {
 
 export async function cleanupUsers({ dryRun = false } = {}) {
   requireDatabase();
-  const prisma = new PrismaClient();
+  const prisma = toolPrismaClient();
   try {
     return await deletePool(prisma, { dryRun });
   } finally {
@@ -180,7 +194,7 @@ export async function seedUsers({
     throw new Error(`Invalid --count: ${count}`);
   }
 
-  const prisma = new PrismaClient();
+  const prisma = toolPrismaClient();
   try {
     // Resolve batch -> course so enrollments match what the API creates.
     let resolvedCourseId = courseId;
