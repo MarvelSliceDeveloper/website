@@ -60,12 +60,12 @@ ENV PORT=3000
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
-# Next standalone is self-contained (includes pruned node_modules) — keep apps/web tree
-COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
+# Next standalone is self-contained (includes pruned node_modules) — keep apps/web tree.
+# COPY --chown sets ownership at copy time, avoiding a whole-tree `chown -R`.
+COPY --chown=nodejs:nodejs --from=builder /app/apps/web/.next/standalone ./
+COPY --chown=nodejs:nodejs --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --chown=nodejs:nodejs --from=builder /app/apps/web/public ./apps/web/public
 
-RUN chown -R nodejs:nodejs /app
 USER nodejs
 EXPOSE 3000
 CMD ["dumb-init", "node", "apps/web/server.js"]
