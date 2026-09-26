@@ -123,7 +123,8 @@ try {
   }
   code = await runK6(k6Args);
 } catch (err) {
-  console.error(`x ${err instanceof Error ? err.message : String(err)}`);
+  console.error("x failed:");
+  console.error(err && err.stack ? err.stack : String(err));
   code = 1;
 } finally {
   if (flags.keepData) {

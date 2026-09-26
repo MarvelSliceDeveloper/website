@@ -208,11 +208,22 @@ export async function seedUsers({
     );
 
     console.log(
-      `${dryRun ? "[dry-run] " : ""}Seeding ${n} users ` +
+      `${dryRun ? "[dry-run] " : ""}Pool ${n} users ` +
         `(${emails[0]} .. ${emails[n - 1]})` +
         `${resolvedCourseId ? ` enrolled in ${resolvedCourseId}` : ""}.`,
     );
-    if (dryRun) return { count: n, created: 0, enrolled: 0 };
+
+    // Reads first — proves DB connectivity and reports leftovers, and in
+    // --dry-run mode it is the only DB call made.
+    const existing = await prisma.user.count({ where: emailWhere });
+    console.log(`Existing pool rows: ${existing}.`);
+    if (dryRun) {
+      console.log(
+        `[dry-run] would delete ${existing} old pool users (+ their child ` +
+          `rows), then insert ${n} new ones.`,
+      );
+      return { count: n, created: 0, enrolled: 0, existing };
+    }
 
     // A leftover pool would keep its old hash and out-of-range emails would
     // survive — wipe it so the pool exactly matches this invocation.
@@ -220,6 +231,7 @@ export async function seedUsers({
 
     // One hash for the whole pool: bcrypt cost 12 x5000 in-line would take
     // minutes, and these accounts exist only for the duration of the test.
+    console.log("Hashing password (cost 12)...");
     const hash = await bcrypt.hash(password, 12);
     const data = emails.map((email) => ({
       name: `Load Test ${email.split("@")[0]}`,
@@ -235,6 +247,7 @@ export async function seedUsers({
         skipDuplicates: true,
       });
       created += res.count;
+      console.log(`  inserted ${created}/${n}`);
     }
     console.log(`Created ${created} users.`);
 
@@ -317,7 +330,8 @@ if (isMain) {
     }
     process.exit(0);
   } catch (err) {
-    console.error(`x ${firstLine(err)}`);
+    console.error("x seeding failed — full error:");
+    console.error(err && err.stack ? err.stack : String(err));
     process.exit(1);
   }
 }
