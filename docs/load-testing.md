@@ -138,7 +138,8 @@ DISABLE_RATE_LIMIT=true TARGET_VUS=5000 pnpm test:load:scale
 | Symptom                                | Cause / fix                                                       |
 | -------------------------------------- | ----------------------------------------------------------------- |
 | `setup()` — "pool is below TARGET_VUS" | Re-seed with `--count=$TARGET_VUS` (or use the wrapper)           |
-| `setup()` — seeded account login 401   | Pool not seeded, wrong DB, or `LOAD_USER_PASSWORD` mismatch       |
+| `setup()` — seeded account login 401   | Pool not seeded, wrong DB, `LOAD_USER_PASSWORD` mismatch, or      |
+|                                        | `LOAD_USER_COUNT` ≠ the seeded pool (email padding differs)       |
 | 429 responses                          | `DISABLE_RATE_LIMIT=true` not set on the API                      |
 | 401 partway through a hold             | 10-min session: lower `TOKEN_TTL_MIN` check / look for crashes    |
 | `cannot start "k6"`                    | k6 not installed on the runner; set `K6_BIN`                      |

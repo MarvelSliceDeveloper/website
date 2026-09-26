@@ -25,7 +25,12 @@ export const SEED_USERS = [
 export const LOAD_USER_PREFIX = __ENV.LOAD_USER_PREFIX || "k6-user";
 export const LOAD_USER_DOMAIN = __ENV.LOAD_USER_DOMAIN || "loadtest.local";
 export const LOAD_USER_PASSWORD = __ENV.LOAD_USER_PASSWORD || "k6load1234";
-export const LOAD_USER_COUNT = Number(__ENV.LOAD_USER_COUNT || 500);
+// Pool size must cover TARGET_VUS: sharing an account between VUs logs them
+// out mid-test. Defaults to TARGET_VUS so `TARGET_VUS=5000 k6 run ...`
+// checks the pool it actually needs (setup() fails loudly if it is short).
+export const LOAD_USER_COUNT = Number(
+  __ENV.LOAD_USER_COUNT || __ENV.TARGET_VUS || 500,
+);
 
 // Access tokens carry sessionTimeoutMin (User default 10, measured from
 // iat in auth.middleware.ts) — refresh well before that or a long run
