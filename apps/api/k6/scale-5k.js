@@ -28,6 +28,10 @@ const TARGET_VUS = Number(__ENV.TARGET_VUS || 500);
 const P95_MS = Number(__ENV.P95_MS || 1500);
 const MIN_THINK_S = Number(__ENV.MIN_THINK || 5);
 const MAX_THINK_S = Number(__ENV.MAX_THINK || 15);
+// Pause between requests inside one iteration. Without it a VU fires 7
+// back-to-back requests, so 500 VUs land ~3500 near-simultaneous hits on a
+// DB pool of 7 — that measures our burstiness, not the server.
+const PACE_S = Number(__ENV.PACE_S || 1);
 
 const step = (pct) => Math.max(1, Math.round((TARGET_VUS * pct) / 100));
 
@@ -117,6 +121,7 @@ export default function () {
   group("student reads", function () {
     const me = authedGet(http, "/api/auth/me", "me");
     check(me, { "me 200": (r) => r.status === 200 });
+    sleep(PACE_S);
 
     const enrolled = authedGet(
       http,
@@ -124,6 +129,7 @@ export default function () {
       "courses_enrolled",
     );
     check(enrolled, { "enrolled 200": (r) => r.status === 200 });
+    sleep(PACE_S);
 
     const catalogue = authedGet(
       http,
@@ -131,9 +137,11 @@ export default function () {
       "courses_catalogue",
     );
     check(catalogue, { "catalogue 200": (r) => r.status === 200 });
+    sleep(PACE_S);
 
     const sessions = authedGet(http, "/api/sessions", "sessions");
     check(sessions, { "sessions 200": (r) => r.status === 200 });
+    sleep(PACE_S);
 
     const tickets = authedGet(
       http,

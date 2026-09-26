@@ -70,6 +70,7 @@ Per-VU think time is a random `sleep` between `MIN_THINK` (5s) and `MAX_THINK`
 | `P95_MS`         | `1500`                  | Global p95 threshold                           |
 | `LOAD_USER_COUNT`| = `TARGET_VUS` (wrapper)| Pool size; must be ≥ `TARGET_VUS`              |
 | `MIN_THINK`/`MAX_THINK` | `5` / `15`        | Think-time bounds (seconds)                    |
+| `PACE_S`         | `1`                     | Pause between requests inside one iteration (burst control) |
 | `RAMP_TOP`/`HOLD`/`RAMP_DOWN` | `5m`/`5m`/`2m` | Stage durations                                |
 | `TOKEN_TTL_MIN`  | `7`                     | Access-token refresh age (session is 10 min)   |
 | `LOAD_USER_PASSWORD` | `k6load1234`        | Pool password (seed + k6 must agree)           |

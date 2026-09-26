@@ -115,19 +115,20 @@ export function ensureAuth(http, baseUrl = BASE_URL, user = loadUser()) {
 
 // Authenticated GET with one transparent re-login on 401 — covers the token
 // ageing out and the session being kicked by a later login on that email.
+// Retries only when a token was actually sent: retrying an already
+// unauthenticated request just mints a second 401.
 export function authedGet(http, path, tag, baseUrl = BASE_URL) {
-  const fetchOnce = () => {
-    const token = ensureAuth(http, baseUrl);
-    return http.get(`${baseUrl}${path}`, {
+  const fetchOnce = (token) =>
+    http.get(`${baseUrl}${path}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       tags: { name: tag },
     });
-  };
 
-  let res = fetchOnce();
-  if (res.status === 401) {
+  const token = ensureAuth(http, baseUrl);
+  const res = fetchOnce(token);
+  if (res.status === 401 && token) {
     invalidateAuth();
-    res = fetchOnce();
+    return fetchOnce(ensureAuth(http, baseUrl));
   }
   return res;
 }
