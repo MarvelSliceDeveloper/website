@@ -1,9 +1,10 @@
 # Production stack — build from repo root (monorepo pnpm workspace)
 # Usage:
-#   docker compose -f docker-compose.prod.yml build
-#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose --env-file .env.production -f docker-compose.prod.yml build
+#   docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 #
 # Secrets come from .env.production (copy .env.production.example → .env.production).
+# Note: Always pass `--env-file .env.production` so compose resolves secrets without warnings.
 
 name: lms-prod
 
@@ -45,7 +46,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4000 # pin: .env.production carries PORT=3001 (landing), must not hijack the API
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-lms_prod}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lms_prod}
       - REDIS_URL=redis://redis:6379
       - SKIP_DB_PUSH=${SKIP_DB_PUSH:-1}
     volumes:
@@ -141,9 +141,10 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: lms-postgres
+    env_file: .env.production
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-lms_prod}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
       POSTGRES_DB: ${POSTGRES_DB:-lms_prod}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -171,9 +172,10 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: lms-pgadmin
+    env_file: .env.production
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@marvelslice.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
       PGADMIN_CONFIG_SERVER_MODE: "True"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
