@@ -41,16 +41,16 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 
 # Prepare pruned prod deployment (only api + workspace deps it needs).
 # NOTE: `pnpm deploy` rebuilds node_modules from the store, so files created
-# by `prisma generate` (node_modules/.prisma) are NOT carried over — copy the
-# generated client explicitly so the runner never has to regenerate it.
+# by `prisma generate` (node_modules/.prisma) are NOT carried over.
+# We copy schema and run `prisma generate` directly in the deploy directory so
+# the query engine and client are generated precisely where @prisma/client expects them.
 RUN pnpm --filter @lms/api --prod deploy /tmp/api-deploy --legacy \
- && if [ -d /app/apps/api/node_modules/.prisma ]; then \
-      cp -r /app/apps/api/node_modules/.prisma /tmp/api-deploy/node_modules/.prisma; \
-    elif [ -d /app/node_modules/.prisma ]; then \
-      cp -r /app/node_modules/.prisma /tmp/api-deploy/node_modules/.prisma; \
-    else \
-      echo "WARN: generated Prisma client (.prisma) not found after generate"; \
-    fi
+ && cp -r /app/apps/api/prisma /tmp/api-deploy/prisma \
+ && (cd /tmp/api-deploy && ./node_modules/.bin/prisma generate) \
+ && if [ -d /tmp/api-deploy/node_modules/.pnpm ]; then \
+      find /tmp/api-deploy/node_modules/.pnpm -name ".prisma" -type d -exec cp -rf {} /tmp/api-deploy/node_modules/ \; 2>/dev/null || true; \
+    fi \
+ && node -e "require('/tmp/api-deploy/node_modules/@prisma/client')"
 
 # ─── Runner (minimal) ───
 FROM node:22-alpine AS runner
@@ -88,5 +88,7 @@ RUN mkdir -p /app/apps/api/uploads /app/apps/uploads \
  && rm -rf /root/.npm /tmp/*
 
 WORKDIR /app/apps/api
+# Verify Prisma client is resolvable from the apps/api runtime workdir
+RUN node -e "require('@prisma/client')"
 EXPOSE 4000
 ENTRYPOINT ["dumb-init", "./entrypoint.sh"]
