@@ -123,31 +123,10 @@ export const paymentService = {
     });
 
     if (user) {
-      // Existing user — backfill phone if we now have one and it's missing
-      if (normalizedPhone && !user.phone) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: { phone: normalizedPhone },
-        });
-      }
-      // Existing user — just generate a new JWT
-      const tokens = await authService.generateTokens({
-        id: user.id,
-        role: user.role,
-        email: user.email,
-        name: user.name,
-        mustChangePassword: user!.mustChangePassword,
-        sessionTimeoutMin: user.sessionTimeoutMin,
-      });
-      return {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-        accessToken: tokens.accessToken,
-      };
+      throw new AppError(
+        409,
+        "An account with this email already exists. Please log in to complete your purchase.",
+      );
     }
 
     // New user — create with dummy password
