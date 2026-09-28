@@ -31,8 +31,7 @@ import BankingAwareness from './pages/BankingAwareness';
 import CurrentAffairs from './pages/CurrentAffairs';
 import CurrentAffairsDetail from './pages/CurrentAffairsDetail';
 import MockExam from './pages/MockExam';
-import CustomRegister from './pages/CustomRegister';
-import CustomExamRegister from './pages/custom-exam/CustomExamRegister';
+import CourseRegister from './pages/CourseRegister';
 import CustomExamLogin from './pages/custom-exam/CustomExamLogin';
 import CustomExamInstructions from './pages/custom-exam/CustomExamInstructions';
 import CustomExamTest from './pages/custom-exam/CustomExamTest';
@@ -145,7 +144,8 @@ function AnimatedRoutes() {
       <Route path="/todays-affairs" element={<Navigate to="/current-affairs?filter=today" replace />} />
       <Route path="/current-affairs/:id" element={<CurrentAffairsDetail />} />
       <Route path="/mock-exam" element={<MockExam />} />
-      <Route path="/custom-register" element={<CustomRegister />} />
+      <Route path="/course-register" element={<CourseRegister />} />
+      <Route path="/custom-register" element={<Navigate to="/course-register" replace />} />
       <Route path="/custom-exam/register/:slug" element={<CustomExamRegister />} />
       <Route path="/custom-exam/login/:slug" element={<CustomExamLogin />} />
       <Route path="/custom-exam/instructions/:slug" element={<CustomExamInstructions />} />

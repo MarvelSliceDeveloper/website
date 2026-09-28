@@ -79,7 +79,7 @@ const navGroups = [
   },
   {
     label: "Registrations", icon: FiClipboard, items: [
-      { to: "/admin/custom-register", label: "Custom Register", icon: FiClipboard },
+      { to: "/admin/course-register", label: "Course Register", icon: FiClipboard },
     ],
   },
   {

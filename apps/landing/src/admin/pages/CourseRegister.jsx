@@ -14,6 +14,7 @@ const columns = [
   { header: 'Phone', accessor: 'phone', className: 'min-w-[120px]' },
   { header: 'Reg No', accessor: 'reg_no', className: 'min-w-[100px]' },
   { header: 'College', accessor: 'college_name', className: 'min-w-[160px]' },
+  { header: 'Course', accessor: 'course_title', className: 'min-w-[160px]' },
 ];
 
 const detailFields = [
@@ -21,16 +22,17 @@ const detailFields = [
   { label: 'Last Name', accessor: 'last_name' },
   { label: 'Email', accessor: 'email' },
   { label: 'Phone', accessor: 'phone' },
-  { label: 'Register Number', accessor: 'reg_no' },
   { label: 'College Name', accessor: 'college_name' },
-  { label: 'Address', accessor: 'address' },
   { label: 'College Degree', accessor: 'degree' },
   { label: 'Department', accessor: 'department' },
+  { label: 'Roll Number', accessor: 'reg_no' },
+  { label: 'Selected Course', accessor: 'course_title' },
+  { label: 'Address', accessor: 'address' },
 ];
 
-const FORM_PATH = '/custom-register';
+const FORM_PATH = '/course-register';
 
-export default function CustomRegister() {
+export default function CourseRegister() {
   const [copied, setCopied] = useState(false);
   const formUrl = `${window.location.origin}${FORM_PATH}`;
 

@@ -537,15 +537,9 @@ export async function extractDocFileText(file) {
   }
   if (name.endsWith('.pdf')) {
     const pdfjs = await import('pdfjs-dist');
-    // point worker at bundled asset (vite handles ?url)
-    try {
-      const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
-      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-    } catch {
-      // fallback CDN worker
-      pdfjs.GlobalWorkerOptions.workerSrc =
-        `https://unpkg.com/pdfjs-dist@${pdfjs.version || '4.2.67'}/build/pdf.worker.min.mjs`;
-    }
+    // Same-origin static worker (public/pdf.worker.min.mjs) - blob: and CDN
+    // workers are blocked by the site Content Security Policy.
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
     const buf = await file.arrayBuffer();
     const pdfDoc = await pdfjs.getDocument({ data: buf }).promise;
     let out = '';

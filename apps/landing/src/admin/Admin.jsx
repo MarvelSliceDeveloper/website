@@ -55,7 +55,7 @@ import NewsletterSubscribers from "./pages/NewsletterSubscribers";
 import ContactSubmissions from './pages/ContactSubmissions';
 import AboutSubmissions from './pages/AboutSubmissions';
 import ChatSubmissions from './pages/ChatSubmissions';
-import CustomRegister from './pages/CustomRegister';
+import CustomRegister from './pages/CourseRegister';
 import ChatPanel from './pages/ChatPanel';
 import BlogManager from './pages/BlogManager';
 import BlogPostEditor from './pages/BlogPostEditor';
@@ -191,7 +191,8 @@ export default function Admin() {
           <Route path="contact-submissions" element={<ContactSubmissions />} />
           <Route path="about-submissions" element={<AboutSubmissions />} />
           <Route path="chat-submissions" element={<ChatSubmissions />} />
-          <Route path="custom-register" element={<CustomRegister />} />
+          <Route path="course-register" element={<CustomRegister />} />
+          <Route path="custom-register" element={<Navigate to="/admin/course-register" replace />} />
           <Route path="pages/:slug" element={<PageEditorRedirect />} />
           <Route path="chats" element={<ChatPanel />} />
           <Route path="blog-page" element={<BlogPageEditor />} />
