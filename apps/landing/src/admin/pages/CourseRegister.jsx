@@ -14,6 +14,7 @@ const columns = [
   { header: 'Phone', accessor: 'phone', className: 'min-w-[120px]' },
   { header: 'Reg No', accessor: 'reg_no', className: 'min-w-[100px]' },
   { header: 'College', accessor: 'college_name', className: 'min-w-[160px]' },
+  { header: 'Experience', accessor: 'experience', className: 'min-w-[140px]' },
   { header: 'Course', accessor: 'course_title', className: 'min-w-[160px]' },
 ];
 
@@ -25,7 +26,7 @@ const detailFields = [
   { label: 'College Name', accessor: 'college_name' },
   { label: 'College Degree', accessor: 'degree' },
   { label: 'Department', accessor: 'department' },
-  { label: 'Roll Number', accessor: 'reg_no' },
+  { label: 'Experience (If Any)', accessor: 'experience' },
   { label: 'Selected Course', accessor: 'course_title' },
   { label: 'Address', accessor: 'address' },
 ];

@@ -1,23 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiUser, FiMail, FiPhone, FiHash, FiHome, FiMapPin, FiAward, FiGrid, FiBook, FiCheckCircle, FiLoader, FiArrowLeft } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiHome, FiMapPin, FiAward, FiGrid, FiBook, FiBriefcase, FiCheckCircle, FiLoader, FiArrowLeft } from 'react-icons/fi';
 import { supabase } from '../lib/supabaseClient';
 
 const inputCls =
   'w-full h-11 pl-10 pr-3 border border-neutral-200 rounded-lg bg-white text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all';
 
-function Label({ children }) {
+function Label({ children, optional }) {
   return (
     <span className="block text-xs font-bold text-neutral-700 mb-1.5">
-      {children} <span className="text-red-600">*</span>
+      {children} {!optional && <span className="text-red-600">*</span>}
     </span>
   );
 }
 
-function Field({ icon: Icon, label, error, children }) {
+function Field({ icon: Icon, label, error, optional, children }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label optional={optional}>{label}</Label>
       <div className="relative">
         <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
         {children}
@@ -36,7 +36,7 @@ export default function CourseRegister() {
     college_name: '',
     degree: '',
     department: '',
-    reg_no: '',
+    experience: '',
     course_id: '',
     address: '',
   });
@@ -83,7 +83,6 @@ export default function CourseRegister() {
     if (!form.college_name.trim()) e.college_name = 'College name is required.';
     if (!form.degree.trim()) e.degree = 'Degree is required.';
     if (!form.department.trim()) e.department = 'Department is required.';
-    if (!form.reg_no.trim()) e.reg_no = 'Roll number is required.';
     if (!form.course_id) e.course_id = 'Please select a course.';
     if (!form.address.trim()) e.address = 'Address is required.';
     setErrors(e);
@@ -105,7 +104,7 @@ export default function CourseRegister() {
         college_name: form.college_name.trim(),
         degree: form.degree.trim(),
         department: form.department.trim(),
-        reg_no: form.reg_no.trim(),
+        experience: form.experience.trim() || null,
         course_id: form.course_id,
         course_title: picked?.title || null,
         address: form.address.trim(),
@@ -182,8 +181,8 @@ export default function CourseRegister() {
           <Field icon={FiGrid} label="Department" error={errors.department}>
             <input value={form.department} onChange={(e) => set('department', e.target.value)} placeholder="e.g. Computer Science" className={inputCls} />
           </Field>
-          <Field icon={FiHash} label="Roll Number" error={errors.reg_no}>
-            <input value={form.reg_no} onChange={(e) => set('reg_no', e.target.value)} placeholder="e.g. 2021CS001" className={inputCls} />
+          <Field icon={FiBriefcase} label="Experience (If Any)" optional error={errors.experience}>
+            <input value={form.experience} onChange={(e) => set('experience', e.target.value)} placeholder="e.g. 2 years in web development" className={inputCls} />
           </Field>
         </div>
 
