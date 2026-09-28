@@ -78,3 +78,8 @@ export function decryptToken(encryptedData: string): string {
 
   return decrypted;
 }
+
+/**
+ * Bcrypt cost factor: 12 in production, 4 in test for fast test execution.
+ */
+export const BCRYPT_ROUNDS = process.env.NODE_ENV === "test" ? 4 : 12;

@@ -72,7 +72,7 @@ router.post(
       }
 
       try {
-        await restoreBackup(file.path);
+        await restoreBackup(file.path, file.originalname);
         return res.json({
           message: "Database restored successfully",
           ...(safetyBackup

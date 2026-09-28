@@ -258,7 +258,23 @@ if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 2);
 }
 
-app.use("/uploads", express.static(uploadsRoot));
+app.use(
+  "/uploads",
+  express.static(uploadsRoot, {
+    setHeaders: (res, filepath) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      const ext = path.extname(filepath).toLowerCase();
+      // Allow inline display for safe images and video only; force download for everything else
+      if (
+        ![".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm"].includes(
+          ext,
+        )
+      ) {
+        res.setHeader("Content-Disposition", "attachment");
+      }
+    },
+  }),
+);
 
 const publicRoot = path.resolve(__dirname, "..", "..", "..", "public");
 app.use("/images", express.static(path.join(publicRoot, "images")));
