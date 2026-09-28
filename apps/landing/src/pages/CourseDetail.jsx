@@ -567,10 +567,10 @@ export default function CourseDetail() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-8 sm:pt-4 sm:pb-10 lg:pt-6 lg:pb-12">
             <Link
               to="/courses"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-brand-orange transition-colors mb-2 cursor-pointer group"
+              className="inline-flex items-center gap-1.5 text-sm font-medium mb-2 cursor-pointer group"
             >
-              <FiBookOpen className="w-4 h-4 text-slate-400 group-hover:text-brand-orange transition-transform" />
-              <span>Back to Courses</span>
+              <FiBookOpen className="w-4 h-4 text-[#1E56C7] group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-brand-orange hover:text-orange-600 transition-colors">Back to Courses</span>
             </Link>
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
