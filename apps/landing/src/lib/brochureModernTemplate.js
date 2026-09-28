@@ -433,11 +433,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       const cw = contentW - 50; // right edge 186, arrow tip 194 - safely inside the page
       setFill(cardColors[i % 3]);
       pdf.roundedRect(x0, cursorY, cw, ch, 3, 3, 'F');
-      // small chevron glyph inside the card edge (no separate triangle shape)
-      pdf.setFontSize(14);
-      pdf.setFont('Helvetica', 'bold');
-      setText(WHITE);
-      pdf.text('>', x0 + cw - 9, cursorY + ch / 2 + 4.5, { align: 'center' });
       setFill(WHITE);
       pdf.circle(x0 + 10, cursorY + ch / 2, 8, 'F');
       drawCardIcon(i % 3, x0 + 10, cursorY + ch / 2, cardColors[i % 3]);
