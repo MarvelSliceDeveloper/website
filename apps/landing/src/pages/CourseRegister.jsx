@@ -187,22 +187,24 @@ export default function CourseRegister() {
           </Field>
         </div>
 
-        <Field icon={FiBook} label="Select Course" error={errors.course_id}>
-          <select
-            value={form.course_id}
-            onChange={(e) => set('course_id', e.target.value)}
-            className={`${inputCls} cursor-pointer ${form.course_id ? '' : 'text-neutral-400'}`}
-          >
-            <option value="">{coursesLoading ? 'Loading courses...' : 'Select a course'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.title}</option>
-            ))}
-          </select>
-        </Field>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field icon={FiBook} label="Select Course" error={errors.course_id}>
+            <select
+              value={form.course_id}
+              onChange={(e) => set('course_id', e.target.value)}
+              className={`${inputCls} cursor-pointer ${form.course_id ? '' : 'text-neutral-400'}`}
+            >
+              <option value="">{coursesLoading ? 'Loading courses...' : 'Select a course'}</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
+            </select>
+          </Field>
 
-        <Field icon={FiMapPin} label="Address" error={errors.address}>
-          <textarea value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Street, city, state, pincode" rows={2} className={`${inputCls} h-auto py-2.5 resize-none`} />
-        </Field>
+          <Field icon={FiMapPin} label="Address" error={errors.address}>
+            <input value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Street, city, state, pincode" className={inputCls} />
+          </Field>
+        </div>
 
         {submitError && (
           <p className="text-xs text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-3 py-2">{submitError}</p>
