@@ -88,10 +88,10 @@ export default function CourseHero({
         <Reveal variant="up" delay={0.05}>
           <Link
             to="/courses"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E56C7] hover:text-blue-700 transition-colors mb-3 sm:mb-4 cursor-pointer group"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold mb-3 sm:mb-4 cursor-pointer group"
           >
             <FiBookOpen className="w-4 h-4 text-[#1E56C7] group-hover:scale-110 transition-transform duration-200" />
-            <span>Back to Courses</span>
+            <span className="text-brand-orange hover:text-orange-600 transition-colors">Back to Courses</span>
           </Link>
         </Reveal>
 
