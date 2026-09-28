@@ -32,6 +32,7 @@ import CurrentAffairs from './pages/CurrentAffairs';
 import CurrentAffairsDetail from './pages/CurrentAffairsDetail';
 import MockExam from './pages/MockExam';
 import CourseRegister from './pages/CourseRegister';
+import CustomExamRegister from './pages/custom-exam/CustomExamRegister';
 import CustomExamLogin from './pages/custom-exam/CustomExamLogin';
 import CustomExamInstructions from './pages/custom-exam/CustomExamInstructions';
 import CustomExamTest from './pages/custom-exam/CustomExamTest';
