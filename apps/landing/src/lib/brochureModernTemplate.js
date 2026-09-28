@@ -868,19 +868,35 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   renderCompanyPage();
   renderOtherCourses();
 
-  // Footer contact text on every page (sits on the navy footer wave)
+  // Modern professional footer on every page (sits on the navy footer wave):
+  // bold brand lockup | contact line on the left, website + page pill on the right
   const total = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     pdf.setPage(i);
     const fy = pageH - 11;
+    // left: brand + contacts
+    pdf.setFontSize(7.5);
+    pdf.setFont('Helvetica', 'bold');
+    setText(WHITE);
+    pdf.text('MARVEL SLICE', margin, fy + 7);
+    const brandW = pdf.getTextWidth('MARVEL SLICE  ');
     pdf.setFontSize(7);
     pdf.setFont('Helvetica', 'normal');
     setText(LIGHT_TEXT);
-    pdf.text(`${phone}      ${email}`, margin, fy + 7);
-    pdf.text(website, pageW - margin, fy + 7, { align: 'right' });
-    pdf.setFontSize(6.5);
-    setText([180, 200, 235]);
-    if (i > 1) pdf.text(`Page - ${i}`, pageW - margin, fy - 3, { align: 'right' });
+    pdf.text(`|  ${phone}  |  ${email}`, margin + brandW, fy + 7, { maxWidth: 118 });
+    // right: page pill + website above it
+    const pillW = 17;
+    const pillX = pageW - margin - pillW;
+    setFill(ORANGE);
+    pdf.roundedRect(pillX, fy + 3.6, pillW, 6.4, 2, 2, 'F');
+    pdf.setFontSize(7);
+    pdf.setFont('Helvetica', 'bold');
+    setText(WHITE);
+    pdf.text(`${i} / ${total}`, pillX + pillW / 2, fy + 8.1, { align: 'center' });
+    pdf.setFontSize(7);
+    pdf.setFont('Helvetica', 'normal');
+    setText(LIGHT_TEXT);
+    pdf.text(website, pillX - 3, fy + 7.2, { align: 'right' });
   }
 
   const raw = course?.title || 'Course';
