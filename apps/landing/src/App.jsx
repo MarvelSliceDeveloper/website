@@ -31,6 +31,7 @@ import BankingAwareness from './pages/BankingAwareness';
 import CurrentAffairs from './pages/CurrentAffairs';
 import CurrentAffairsDetail from './pages/CurrentAffairsDetail';
 import MockExam from './pages/MockExam';
+import CustomRegister from './pages/CustomRegister';
 import CustomExamRegister from './pages/custom-exam/CustomExamRegister';
 import CustomExamLogin from './pages/custom-exam/CustomExamLogin';
 import CustomExamInstructions from './pages/custom-exam/CustomExamInstructions';
@@ -144,6 +145,7 @@ function AnimatedRoutes() {
       <Route path="/todays-affairs" element={<Navigate to="/current-affairs?filter=today" replace />} />
       <Route path="/current-affairs/:id" element={<CurrentAffairsDetail />} />
       <Route path="/mock-exam" element={<MockExam />} />
+      <Route path="/custom-register" element={<CustomRegister />} />
       <Route path="/custom-exam/register/:slug" element={<CustomExamRegister />} />
       <Route path="/custom-exam/login/:slug" element={<CustomExamLogin />} />
       <Route path="/custom-exam/instructions/:slug" element={<CustomExamInstructions />} />

@@ -78,6 +78,11 @@ const navGroups = [
     ],
   },
   {
+    label: "Registrations", icon: FiClipboard, items: [
+      { to: "/admin/custom-register", label: "Custom Register", icon: FiClipboard },
+    ],
+  },
+  {
     label: "Testimonials", icon: FiStar, items: [
       { to: "/admin/testimonials/new", label: "Add", icon: FiPlusCircle },
       { to: "/admin/testimonials", label: "View", icon: FiStar, catchSubRoutes: true, siblingRoutes: ["/admin/testimonials/new"] }
