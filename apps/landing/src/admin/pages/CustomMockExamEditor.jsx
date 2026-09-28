@@ -1451,7 +1451,7 @@ export default function CustomMockExamEditor() {
             saving={saving}
             onSave={handleSave}
             onDiscard={() => navigate('/admin/custom-mock-exams')}
-            submitLabel={isEditing ? 'Update Exam' : 'Submit'}
+            submitLabel={isEditing ? 'Update' : 'Submit'}
             savingLabel={isEditing ? 'Updating...' : 'Submitting...'}
           />
         </form>
