@@ -519,3 +519,152 @@ Return ONLY raw JSON, without markdown formatting.`;
 
   return data;
 }
+
+/**
+ * Extract raw text from an uploaded doc file (.txt / .docx / .pdf).
+ * Returns plain text (may be long - caller condenses via AI).
+ */
+export async function extractDocFileText(file) {
+  const name = (file?.name || '').toLowerCase();
+  if (name.endsWith('.txt')) {
+    return await file.text();
+  }
+  if (name.endsWith('.docx')) {
+    const mammoth = await import('mammoth');
+    const buf = await file.arrayBuffer();
+    const res = await mammoth.extractRawText({ arrayBuffer: buf });
+    return res?.value || '';
+  }
+  if (name.endsWith('.pdf')) {
+    const pdfjs = await import('pdfjs-dist');
+    // point worker at bundled asset (vite handles ?url)
+    try {
+      const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    } catch {
+      // fallback CDN worker
+      pdfjs.GlobalWorkerOptions.workerSrc =
+        `https://unpkg.com/pdfjs-dist@${pdfjs.version || '4.2.67'}/build/pdf.worker.min.mjs`;
+    }
+    const buf = await file.arrayBuffer();
+    const pdfDoc = await pdfjs.getDocument({ data: buf }).promise;
+    let out = '';
+    for (let p = 1; p <= pdfDoc.numPages; p++) {
+      const page = await pdfDoc.getPage(p);
+      const tc = await page.getTextContent();
+      out += `\n${tc.items.map((it) => it.str).join(' ')}`;
+    }
+    return out;
+  }
+  throw new Error('Unsupported file type. Upload .docx, .pdf or .txt');
+}
+
+/** Hard cap: brochure holds max 25-30 pages total, so doc pages are capped. */
+export const MAX_DOC_PAGES = 25;
+const MAX_LINES_PER_PAGE = 9;
+
+/**
+ * Normalize sections -> max MAX_DOC_PAGES pages.
+ * - drops empties, caps lines per page
+ * - merges tiny (<3 line) sections into the previous page
+ * - if still over cap, evenly groups consecutive sections into MAX_DOC_PAGES
+ */
+export function normalizeDocSections(sections, maxPages = MAX_DOC_PAGES) {
+  const cleaned = (sections || [])
+    .map((s) => ({
+      title: String(s?.title || '').trim().slice(0, 80),
+      lines: (s?.lines || []).map((l) => String(l).trim()).filter(Boolean).slice(0, MAX_LINES_PER_PAGE),
+    }))
+    .filter((s) => s.title && s.lines.length);
+  if (!cleaned.length) return [];
+
+  // merge tiny sections into previous page
+  const merged = [];
+  cleaned.forEach((s) => {
+    const prev = merged[merged.length - 1];
+    if (prev && s.lines.length < 3 && prev.lines.length + s.lines.length <= MAX_LINES_PER_PAGE) {
+      prev.lines = [...prev.lines, ...s.lines].slice(0, MAX_LINES_PER_PAGE);
+    } else {
+      merged.push({ ...s, lines: [...s.lines] });
+    }
+  });
+
+  if (merged.length <= maxPages) return merged;
+
+  // group consecutive sections evenly into maxPages buckets
+  const grouped = [];
+  const perBucket = merged.length / maxPages;
+  for (let i = 0; i < maxPages; i++) {
+    const slice = merged.slice(Math.floor(i * perBucket), Math.floor((i + 1) * perBucket));
+    if (!slice.length) continue;
+    const title = slice[0].title;
+    const lines = slice.flatMap((s) => s.lines).slice(0, MAX_LINES_PER_PAGE);
+    grouped.push({ title, lines });
+  }
+  return grouped;
+}
+
+/** Local fallback: split raw text into sections with one line per sentence. */
+export function splitDocToSectionsFallback(rawText, maxLinesPerSection = MAX_LINES_PER_PAGE) {
+  const text = String(rawText || '').replace(/\r/g, '\n');
+  const chunks = text.split(/\n\s*\n|(?=^#|^Module|^Chapter|^Unit|^\d+\.)/gim)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const sections = [];
+  chunks.forEach((chunk, idx) => {
+    const firstLine = chunk.split('\n')[0].slice(0, 80);
+    const title = firstLine.length < 80 && chunk.includes('\n') ? firstLine : `Module ${idx + 1}`;
+    const body = chunk.includes('\n') && firstLine.length < 80 ? chunk.slice(firstLine.length) : chunk;
+    const sentences = body
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map((s) => s.trim().replace(/^[-•\s]+/, ''))
+      .filter((s) => s.length > 20)
+      .map((s) => (s.length > 160 ? `${s.slice(0, 157).trim()}...` : s))
+      .slice(0, maxLinesPerSection);
+    if (sentences.length) sections.push({ title, lines: sentences });
+  });
+  return normalizeDocSections(sections);
+}
+
+/**
+ * AI condense: verbose doc content -> max 25 sections,
+ * each bullet a full descriptive line (up to ~20 words).
+ */
+export async function condenseDocToOneLiners(rawText, courseTitle = '') {
+  const clean = String(rawText || '').trim();
+  if (!clean) return [];
+  const clipped = clean.slice(0, 16000); // keep prompt bounded
+  try {
+    const config = await getAIConfig();
+    if (config.active_provider === 'disabled') return splitDocToSectionsFallback(clean);
+    const prompt = `You are a brochure copywriter for Marvel Slice Institute.
+Course: "${courseTitle}".
+Condense the course document below into brochure curriculum sections.
+Rules:
+- Split into logical sections (8-12 sections, NEVER more than 20).
+- TITLE RULE: copy each section title EXACTLY from the document's own headings - never invent, rephrase or renumber titles. When merging modules, use the most representative original heading.
+- Each section: 6 to 10 descriptive bullet lines (more content per section).
+- EVERY bullet: full informative line of 15-22 words (never short fragments).
+- Keep meaning, drop filler.
+- Return ONLY raw JSON: {"sections":[{"title":"...","lines":["..."]}]}
+
+DOCUMENT:
+${clipped}`;
+    const aiRes = await generateContentWithAI(prompt, { maxTokens: 2500, temperature: 0.5 });
+    let txt = (aiRes?.text || '').trim();
+    if (txt.startsWith('```json')) txt = txt.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    else if (txt.startsWith('```')) txt = txt.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    const parsed = JSON.parse(txt);
+    const sections = (parsed.sections || [])
+      .map((s) => ({
+        title: String(s.title || '').slice(0, 80),
+        lines: (s.lines || []).map((l) => String(l).trim()).filter(Boolean).slice(0, MAX_LINES_PER_PAGE),
+      }))
+      .filter((s) => s.title && s.lines.length);
+    if (sections.length) return normalizeDocSections(sections);
+    return splitDocToSectionsFallback(clean);
+  } catch (err) {
+    console.warn('AI condense failed, using local split:', err?.message || err);
+    return splitDocToSectionsFallback(clean);
+  }
+}
