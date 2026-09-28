@@ -510,17 +510,6 @@ export default function LoginPage() {
               </form>
             )}
 
-            {/* Footer Links */}
-            <div className="flex flex-col items-center gap-2 mt-5 text-xs text-slate-500 font-medium">
-              <Link
-                href="/catalogue"
-                className="text-[#0052CC] font-bold hover:underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
-              >
-                <span>Browse Course Catalogue</span>
-                <span aria-hidden="true">&rarr;</span>
-              </Link>
-            </div>
-
             {/* Demo Accounts (dev only) */}
             {process.env.NODE_ENV === "development" && (
               <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3">
