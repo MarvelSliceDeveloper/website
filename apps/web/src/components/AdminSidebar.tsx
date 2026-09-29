@@ -30,6 +30,7 @@ import {
   IconUserShare,
   IconSparkles,
   IconTag,
+  IconQrcode,
   IconX,
 } from "@tabler/icons-react";
 
@@ -532,6 +533,11 @@ export default function AdminSidebar({
           label: "Payments",
           href: "/admin/payments",
           icon: IconPackage,
+        },
+        {
+          label: "Manual UPI Orders",
+          href: "/admin/manual-orders",
+          icon: IconQrcode,
         },
         {
           label: "Approvals & Refunds",
