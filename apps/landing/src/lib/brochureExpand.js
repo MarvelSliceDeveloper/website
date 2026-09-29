@@ -103,8 +103,7 @@ export function rolesFor(title) {
 
 const LEVEL_BY_INDEX = (i, n) => (i < Math.max(1, Math.round(n * 0.25)) ? 'Beginner' : i < Math.round(n * 0.7) ? 'Intermediate' : 'Advanced');
 
-/** Default 12-step learning path (user-editable in the brochure menu). */
-export const DEFAULT_PATH_STEPS = [
+/** Default 12-step learning path (user-editable in the brochure menu). */export const DEFAULT_PATH_STEPS = [
   ['Enroll & Orientation', 'Complete admission, get LMS access and meet your mentor.'],
   ['Foundations First', 'Start from zero — setup, basics and first hands-on labs.'],
   ['Core Concepts', 'The heart of the course with daily practice and exercises.'],
@@ -182,4 +181,68 @@ export function outcomesFor(title, modules) {
     'Explain your work in interviews with architecture-level clarity',
     'Keep learning solo with docs, GitHub and community resources',
   ].slice(0, 8);
+}
+
+/**
+ * Clamp a module list to full curriculum pages (exactly 12 or 16 modules,
+ * i.e. multiples of 4) while preserving every topic in order:
+ * - fewer than 12 → split the bulkiest modules (Part A / Part B) up to 12
+ * - 13-15 → split up to 16 so no page ends ragged
+ * - more than 16 → merge the smallest adjacent pairs down to 16
+ * Labels are always renumbered Module 1..N sequentially.
+ */
+export function normalizeModuleCount(modules) {
+  let list = (modules || []).map((m) => ({
+    label: m.label,
+    title: m.title,
+    topics: [...(m.topics || [])],
+  }));
+  if (!list.length) return list;
+
+  let guard = 0;
+  while (list.length < 12 && guard++ < 20) {
+    let bi = 0;
+    for (let i = 1; i < list.length; i++) {
+      if (list[i].topics.length > list[bi].topics.length) bi = i;
+    }
+    const target = list[bi];
+    if (!target || target.topics.length < 4) break;
+    const half = Math.ceil(target.topics.length / 2);
+    list.splice(bi, 1,
+      { ...target, title: `${target.title} — Part A`, topics: target.topics.slice(0, half) },
+      { ...target, title: `${target.title} — Part B`, topics: target.topics.slice(half) },
+    );
+  }
+
+  guard = 0;
+  while (list.length > 16 && guard++ < 20) {
+    let bi = 0;
+    let best = Infinity;
+    for (let i = 0; i < list.length - 1; i++) {
+      const s = list[i].topics.length + list[i + 1].topics.length;
+      if (s < best) { best = s; bi = i; }
+    }
+    list.splice(bi, 2, {
+      label: list[bi].label,
+      title: `${list[bi].title} + ${list[bi + 1].title}`.slice(0, 90),
+      topics: [...list[bi].topics, ...list[bi + 1].topics],
+    });
+  }
+
+  guard = 0;
+  while (list.length > 12 && list.length < 16 && guard++ < 10) {
+    let bi = 0;
+    for (let i = 1; i < list.length; i++) {
+      if (list[i].topics.length > list[bi].topics.length) bi = i;
+    }
+    const target = list[bi];
+    if (!target || target.topics.length < 4) break;
+    const half = Math.ceil(target.topics.length / 2);
+    list.splice(bi, 1,
+      { ...target, title: `${target.title} — Part A`, topics: target.topics.slice(0, half) },
+      { ...target, title: `${target.title} — Part B`, topics: target.topics.slice(half) },
+    );
+  }
+
+  return list.map((m, i) => ({ ...m, label: `Module ${i + 1}` }));
 }

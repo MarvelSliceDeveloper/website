@@ -157,7 +157,7 @@ export default function CourseBrochure() {
     setOtherCourseIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else if (next.size < 13) next.add(id);
+      else next.add(id);
       return next;
     });
   }
@@ -420,7 +420,7 @@ export default function CourseBrochure() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs font-bold text-neutral-800 mb-1">Other courses (last page, {otherCourseIds.size}/13)</p>
+                <p className="text-xs font-bold text-neutral-800 mb-1">Other courses (last page, {otherCourseIds.size} selected — no limit)</p>
                 <div className="relative mb-2">
                   <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
                   <input
@@ -438,14 +438,12 @@ export default function CourseBrochure() {
                     .slice(0, 30)
                     .map((c) => {
                       const checked = otherCourseIds.has(c.id);
-                      const full = otherCourseIds.size >= 13 && !checked;
                       return (
                         <button
                           key={c.id}
                           type="button"
-                          disabled={full}
                           onClick={() => toggleOtherCourse(c.id)}
-                          className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-slate-50 disabled:opacity-40 cursor-pointer ${checked ? 'bg-orange-50/60 font-bold' : ''}`}
+                          className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-slate-50 cursor-pointer ${checked ? 'bg-orange-50/60 font-bold' : ''}`}
                         >
                           {checked ? <FiCheckSquare className="w-3.5 h-3.5 text-brand-orange shrink-0" /> : <FiSquare className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
                           <span className="truncate">{c.title}</span>

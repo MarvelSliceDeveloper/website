@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import { generateAIBrochureData } from './brochureAIService';
 import {
   toolsForTitle, rolesFor,
-  projectsFor, outcomesFor, DEFAULT_PATH_STEPS,
+  projectsFor, outcomesFor, DEFAULT_PATH_STEPS, normalizeModuleCount,
 } from './brochureExpand';
 
 /**
@@ -111,6 +111,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     })).filter((m) => m.topics.length || m.title);
     if (dbMods.length >= 2) modules = dbMods;
   }
+  // Clamp to full curriculum pages (exactly 12 or 16 modules, topics kept).
+  modules = normalizeModuleCount(modules);
 
   const otherCourses = Array.isArray(options.otherCourses)
     ? options.otherCourses.slice(0, 13)
@@ -338,7 +340,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   });
   cursorY += 30;
   // TOC box
-  const toc = ['About + Highlights', 'Who Can Apply', 'Learning Path', `Curriculum (${modules.length} modules)`, 'Skills + Tools', 'Projects + Careers', 'Contact', `Our Courses (${otherCourses.length + 1})`];
+  const toc = ['About + Highlights', 'Who Can Apply', 'Learning Path', `Curriculum (${modules.length} modules)`, 'Skills + Projects', 'Careers', 'Contact', `Our Courses (${otherCourses.length + 1})`];
   const tocH = 13 + Math.ceil(toc.length / 2) * 7;
   setFill(WHITE);
   setStroke(BORDER);
@@ -619,8 +621,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   tools.forEach((t) => drawPill(sanitize(t), GREEN, INK, true));
   cursorY = sy + 10;
 
-  // ================= PROJECTS + CAREERS (one page: projects first, then jobs) =================
-  newInnerPage();
+  // ================= PROJECTS (same page as skills) =================
   heading('Course ', 'Projects');
   para('Every project is reviewed by mentors and deployable to your portfolio.');
   const levelCols = { Beginner: GREEN, Intermediate: BLUE, Advanced: PURPLE };
@@ -656,13 +657,10 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     });
     cursorY += cardH + 4;
   }
-  cursorY += 2;
-  pdf.setFontSize(13);
-  pdf.setFont('Helvetica', 'bold');
-  setText(INK);
-  need(12);
-  pdf.text('Top Job Roles', MARGIN_X, cursorY + 4);
-  cursorY += 10;
+
+  // ================= CAREERS (top job roles + services heading, one page) =================
+  newInnerPage();
+  heading('Top ', 'Job Roles');
   roles.forEach(([role, salary, desc], i) => {
     const dl = pdf.splitTextToSize(sanitize(desc), CONTENT_W - 52).slice(0, 2);
     need(17 + dl.length * 4.4);
@@ -686,6 +684,31 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     setText(BODY);
     pdf.text(dl, MARGIN_X + 14, cursorY + 11.5);
     cursorY += 12 + dl.length * 4.4;
+  });
+  cursorY += 3;
+  pdf.setFontSize(13);
+  pdf.setFont('Helvetica', 'bold');
+  setText(INK);
+  need(12);
+  pdf.text('Career Services', MARGIN_X, cursorY + 4);
+  cursorY += 10;
+  [
+    ['Career-oriented Sessions', 'Role roadmaps and guidance from industry mentors.'],
+    ['1:1 Mentoring', 'Personal guidance at every step of your transition.'],
+    ['Mock Interviews', 'Practice with the most-asked questions by employers.'],
+    ['Job Referrals', 'Profile shortlisting with hiring partners on completion.'],
+    ['Resume + LinkedIn Review', 'ATS-friendly resume and profile that attract recruiters.'],
+    ['Hackathons & Job Fairs', 'Team builds and regular hiring events.'],
+  ].forEach(([t, d]) => {
+    const ll = pdf.splitTextToSize(`${sanitize(t)} — ${sanitize(d)}`, CONTENT_W - 7).slice(0, 2);
+    need(ll.length * 4.4 + 3);
+    setFill(ORANGE);
+    pdf.rect(MARGIN_X, cursorY - 3.2, 3, 3, 'F');
+    pdf.setFontSize(9.5);
+    pdf.setFont('Helvetica', 'normal');
+    setText(BODY);
+    pdf.text(ll, MARGIN_X + 7, cursorY);
+    cursorY += ll.length * 4.4 + 2.5;
   });
   cursorY += 2;
 

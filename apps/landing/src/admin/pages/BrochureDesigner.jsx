@@ -9,7 +9,7 @@ import {
 import { LOCAL_SYLLABUS } from '../../data/localSyllabus';
 import {
   toolsForTitle, rolesFor,
-  projectsFor, outcomesFor,
+  projectsFor, outcomesFor, normalizeModuleCount,
 } from '../../lib/brochureExpand';
 
 /**
@@ -46,8 +46,8 @@ const SECTIONS = [
   { id: 'apply', label: '3. Who Can Apply' },
   { id: 'path', label: '4. Learning Path' },
   { id: 'curriculum', label: '5. Curriculum' },
-  { id: 'skills', label: '6. Skills + Tools' },
-  { id: 'projects', label: '7. Projects + Careers' },
+  { id: 'skills', label: '6. Skills + Projects' },
+  { id: 'career', label: '7. Careers' },
   { id: 'contact', label: '8. Contact' },
   { id: 'courses', label: '9. Our Courses' },
 ];
@@ -256,6 +256,7 @@ export default function BrochureDesigner() {
   }, [live, localDoc]);
 
   // Curriculum: live DB modules win; otherwise local docx modules.
+  // Count is normalized to full pages (exactly 12 or 16 modules).
   const curriculum = useMemo(() => {
     const dbMods = asList(live?.modules)
       .map((m, i) => ({
@@ -264,13 +265,13 @@ export default function BrochureDesigner() {
         topics: asList(m.topics || m.lessons || m.content).slice(0, 10),
       }))
       .filter((m) => m.topics.length || m.title);
-    if (dbMods.length >= 2) return dbMods;
+    if (dbMods.length >= 2) return normalizeModuleCount(dbMods);
     if (localDoc) {
-      return localDoc.modules
+      return normalizeModuleCount(localDoc.modules
         .filter((m) => m.no > 0)
-        .map((m, i) => ({ label: `Module ${i + 1}`, title: m.title, topics: m.topics.slice(0, 10) }));
+        .map((m, i) => ({ label: `Module ${i + 1}`, title: m.title, topics: m.topics.slice(0, 10) })));
     }
-    return dbMods;
+    return normalizeModuleCount(dbMods);
   }, [live, localDoc]);
 
   const highlights = useMemo(() => {
@@ -755,8 +756,8 @@ export default function BrochureDesigner() {
             </section>
           ))}
 
-          {/* ══ 6. SKILLS + TOOLS ══ */}
-          <section id="bro-skills" className="brochure-page brochure-page-inner relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+          {/* ══ 6. SKILLS + PROJECTS (one page) ══ */}
+          <section id="bro-skills" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">Skills to <span style={{ color: BRAND.orange }}>Master</span></h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
             <div className="mt-3 flex flex-wrap gap-2">
@@ -775,11 +776,7 @@ export default function BrochureDesigner() {
                 </span>
               ))}
             </div>
-          </section>
-
-          {/* ══ 7. PROJECTS + CAREERS (one page: projects first, then jobs) ══ */}
-          <section id="bro-projects" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
-            <h2 className="text-2xl font-extrabold text-slate-900">
+            <h2 className="mt-5 text-2xl font-extrabold text-slate-900">
               Course <span style={{ color: BRAND.orange }}>Projects</span>
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
@@ -801,10 +798,15 @@ export default function BrochureDesigner() {
                 </div>
               ))}
             </div>
-            <h3 className="mt-4 text-xl font-extrabold text-slate-900">
+          </section>
+
+          {/* ══ 8. CAREERS (top job roles + services heading, one page) ══ */}
+          <section id="bro-career" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+            <h2 className="text-2xl font-extrabold text-slate-900">
               Top <span style={{ color: BRAND.orange }}>Job Roles</span>
-            </h3>
-            <div className="mt-2 space-y-2">
+            </h2>
+            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
+            <div className="mt-3 space-y-2">
               {roles.map(([role, salary, desc], i) => (
                 <div key={role} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                   <span
@@ -819,6 +821,29 @@ export default function BrochureDesigner() {
                   </span>
                   <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: '#ecfdf5', color: '#15803d' }}>
                     {salary}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <h3 className="mt-4 text-xl font-extrabold text-slate-900">
+              Career <span style={{ color: BRAND.orange }}>Services</span>
+            </h3>
+            <div className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
+              {[
+                [FiTarget, 'Career-oriented Sessions', 'Role roadmaps and guidance from industry mentors.'],
+                [FiUsers, '1:1 Mentoring', 'Personal guidance at every step of your transition.'],
+                [FiCode, 'Mock Interviews', 'Practice with the most-asked questions by employers.'],
+                [FiBriefcase, 'Job Referrals', 'Profile shortlisting with hiring partners on completion.'],
+                [FiAward, 'Resume + LinkedIn Review', 'ATS-friendly resume and profile that attract recruiters.'],
+                [FiZap, 'Hackathons & Job Fairs', 'Team builds and regular hiring events.'],
+              ].map(([Icon, t, d]) => (
+                <div key={t} className="flex gap-2.5">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
+                    <Icon className="w-4 h-4" style={{ color: BRAND.orange }} />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold text-slate-900">{t}</span>
+                    <span className="block text-xs text-slate-500">{d}</span>
                   </span>
                 </div>
               ))}
