@@ -56,7 +56,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
       paragraphs: [
         `The ${title} offered by Marvel Slice Institute for Software Learning and Competitive Exams is an elite, industry-oriented training initiative designed to bridge the widening gap between traditional academic curricula and modern high-scale software engineering standards. Engineered in collaboration with seasoned software architects and technical hiring leads, this program prepares ambitious learners to master cutting-edge technologies, build robust applications, and excel in competitive global engineering roles.`,
         `Throughout this intensive journey, participants move progressively from foundational computational logic and object-oriented paradigms to advanced cloud architectures, microservices design, and automated DevOps workflows. We emphasize deep conceptual clarity coupled with relentless practical application, ensuring you write production-grade, maintainable, and secure code from day one.`,
-        `With over 70% of the program dedicated to hands-on live labs, architectural coding sprints, and portfolio-ready capstone systems, you will cultivate the exact problem-solving mindset and technical dexterity demanded by top tech enterprises, innovative startups, and global consultancies.`
+        `With over 70% of the program dedicated to hands-on live labs, architectural coding sprints, and portfolio-ready project systems, you will cultivate the exact problem-solving mindset and technical dexterity demanded by top tech enterprises, innovative startups, and global consultancies.`
       ],
       keyHighlights: highlights.length > 0 ? highlights : [
         'Over 120+ Hours of Live Instructor-Led Interactive Training',
@@ -278,15 +278,15 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
       ]
     },
 
-    // Section 6: Real-World Capstone Projects
+    // Section 6: Real-World Projects
     capstones: {
-      heading: 'Production Capstone Projects & Portfolio Building',
+      heading: 'Production Projects & Portfolio Building',
       paragraphs: [
         'Theory alone is insufficient to stand out in today’s competitive tech market. At Marvel Slice Academy, you build four substantial, production-grade applications that serve as undeniable proof of your engineering capabilities during technical interviews.'
       ],
       projects: [
         {
-          title: 'Capstone 1: Enterprise Multi-Vendor Marketplace & E-Commerce Platform',
+          title: 'Project 1: Enterprise Multi-Vendor Marketplace & E-Commerce Platform',
           subheading: 'Scalable E-Commerce Ecosystem with Real-Time Inventory & Stripe Payments',
           paragraphs: [
             'A comprehensive e-commerce platform supporting multiple seller storefronts, customer carts, and automated order fulfillment. Engineered with a decoupled frontend and scalable microservices backend.',
@@ -296,7 +296,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
           portfolioImpact: 'Proves your capability to handle complex business logic, ACID transactions, and third-party financial integrations.'
         },
         {
-          title: 'Capstone 2: Real-Time Collaborative Workspace & Communications Hub',
+          title: 'Project 2: Real-Time Collaborative Workspace & Communications Hub',
           subheading: 'High-Concurrency Collaborative Document Editor & Live Chat System',
           paragraphs: [
             'A high-performance team collaboration platform featuring real-time simultaneous document editing, operational transformation, multimedia uploads, and low-latency group audio/chat channels.',
@@ -306,7 +306,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
           portfolioImpact: 'Demonstrates deep command of distributed event broadcasting, real-time synchronization, and modern full-stack TypeScript.'
         },
         {
-          title: 'Capstone 3: Cloud-Native Microservices SaaS with Automated DevOps CI/CD',
+          title: 'Project 3: Cloud-Native Microservices SaaS with Automated DevOps CI/CD',
           subheading: 'Decoupled Microservices Architecture on AWS with Automated Releases',
           paragraphs: [
             'A subscription-based SaaS application broken down into independent microservices: User Authentication, Subscription Billing, Email Dispatcher, and Analytics Ingestion.',
@@ -316,7 +316,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
           portfolioImpact: 'Validates enterprise-level cloud readiness, container orchestration, and automated DevOps capabilities.'
         },
         {
-          title: 'Capstone 4: AI-Enhanced Business Intelligence & Analytics Dashboard',
+          title: 'Project 4: AI-Enhanced Business Intelligence & Analytics Dashboard',
           subheading: 'Interactive Data Visualizer with Automated AI Report Synthesis',
           paragraphs: [
             'An executive business dashboard that ingests raw operational metrics, renders interactive charts, and leverages LLM AI APIs to automatically generate executive analytical summaries.',
@@ -364,7 +364,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
       placementBlueprint: [
         {
           step: 'Step 1: Technical Resume & Online Profile Overhaul',
-          desc: 'We transform your resume into an ATS-compliant document emphasizing your real capstone projects and optimize your LinkedIn & GitHub profiles to attract inbound recruiter inquiries.'
+          desc: 'We transform your resume into an ATS-compliant document emphasizing your real projects and optimize your LinkedIn & GitHub profiles to attract inbound recruiter inquiries.'
         },
         {
           step: 'Step 2: Algorithmic Coding & Problem-Solving Drills',
@@ -442,7 +442,7 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
         },
         {
           q: 'When does the placement assistance process start?',
-          a: 'Placement preparation starts during the final capstone phase. Resume reviews, mock technical interviews, and corporate referrals continue until you successfully secure your placement.'
+          a: 'Placement preparation starts during the final project phase. Resume reviews, mock technical interviews, and corporate referrals continue until you successfully secure your placement.'
         },
         {
           q: 'Can I balance this program with a full-time job or college degree?',
@@ -473,6 +473,10 @@ export async function generateAIBrochureData(course, siteSettings = {}) {
     const prompt = `You are the Lead Curriculum Architect at Marvel Slice Institute for Software Learning and Competitive Exams.
 Please review the course "${course.title || 'Software Course'}" (${course.subtitle || ''}).
 Generate rich, descriptive educational paragraphs and bullet points for an extensive 10+ page official course brochure.
+Conditions (follow strictly):
+- Short one-line bullets everywhere (max 12 words each).
+- NEVER use the word "capstone" - always say "project" (e.g. "Project 1", never "Capstone 1").
+- Exactly 4 portfolio projects, ordered Beginner to Advanced.
 Return a valid JSON object with:
 {
   "executiveSummary": "A rich 3-paragraph executive overview of this course and its industry significance",
@@ -502,7 +506,7 @@ Return ONLY raw JSON, without markdown formatting.`;
         }
         if (Array.isArray(parsed.capstoneHighlights) && parsed.capstoneHighlights.length >= 3) {
           data.capstones.projects = parsed.capstoneHighlights.map((p, idx) => ({
-            title: p.title || `Capstone ${idx + 1}`,
+            title: p.title || `Project ${idx + 1}`,
             subheading: p.tech || 'Enterprise Project Architecture',
             paragraphs: [p.description || 'Enterprise production system.'],
             techStack: p.tech || 'Modern Full Stack Technologies',
@@ -638,7 +642,8 @@ Rules:
 - Split into logical sections (8-12 sections, NEVER more than 20).
 - TITLE RULE: copy each section title EXACTLY from the document's own headings - never invent, rephrase or renumber titles. When merging modules, use the most representative original heading.
 - Each section: 6 to 10 descriptive bullet lines (more content per section).
-- EVERY bullet: full informative line of 15-22 words (never short fragments).
+- EVERY bullet: short single line, max 12 words (never long paragraphs).
+- NEVER use the word "capstone" anywhere - always say "project".
 - Keep meaning, drop filler.
 - Return ONLY raw JSON: {"sections":[{"title":"...","lines":["..."]}]}
 

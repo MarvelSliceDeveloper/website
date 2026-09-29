@@ -103,7 +103,23 @@ export function rolesFor(title) {
 
 const LEVEL_BY_INDEX = (i, n) => (i < Math.max(1, Math.round(n * 0.25)) ? 'Beginner' : i < Math.round(n * 0.7) ? 'Intermediate' : 'Advanced');
 
-/** Grounded projects: early modules → guided builds, later modules → capstones. */
+/** Default 12-step learning path (user-editable in the brochure menu). */
+export const DEFAULT_PATH_STEPS = [
+  ['Enroll & Orientation', 'Complete admission, get LMS access and meet your mentor.'],
+  ['Foundations First', 'Start from zero — setup, basics and first hands-on labs.'],
+  ['Core Concepts', 'The heart of the course with daily practice and exercises.'],
+  ['Tools of the Trade', 'Master the professional tools used in real jobs.'],
+  ['Mentor Check-ins', '1:1 doubt-clearing so you never stay stuck.'],
+  ['Guided Mini Projects', 'Mentor-reviewed builds that lock in every stage.'],
+  ['Advanced Topics', 'Deeper concepts taught with real scenarios and datasets.'],
+  ['Project', 'End-to-end portfolio-grade build, deployed live.'],
+  ['Deployment & Portfolio', 'Ship your work publicly with clean documentation.'],
+  ['Resume & LinkedIn', 'Profiles rewritten around the projects you shipped.'],
+  ['Mock Interviews', 'Practice rounds with the most-asked questions.'],
+  ['Certification & Referrals', 'Earn your certificate and get referred to hiring partners.'],
+];
+
+/** Grounded projects: early modules → guided builds, later modules → final projects. */
 export function projectsFor(title, modules) {
   const mods = (modules || []).filter((m) => (m.topics || []).length);
   if (!mods.length) return [];
@@ -128,8 +144,8 @@ export function projectsFor(title, modules) {
   lastTwo.forEach((m) => {
     picks.push({
       level: 'Advanced',
-      title: `${m.title} — Capstone`,
-      desc: `End-to-end capstone using ${(m.topics || []).slice(0, 3).join(', ')} with deployment.`,
+      title: `${m.title} — Project`,
+      desc: `End-to-end project using ${(m.topics || []).slice(0, 3).join(', ')} with deployment.`,
     });
   });
   // Level tags normalized to module position
@@ -139,20 +155,20 @@ export function projectsFor(title, modules) {
 export function faqsFor(title, modules) {
   const count = (modules || []).length;
   const first = modules?.[0]?.title || 'fundamentals';
-  const last = modules?.[count - 1]?.title || 'capstone';
+  const last = modules?.[count - 1]?.title || 'final project';
   return [
     ['Is this course suitable for absolute beginners?',
       `Yes. It starts from ${first} and progresses step by step across ${count} modules to ${last}.`],
     ['How are the classes conducted?',
       'Mentor-led sessions plus self-paced practice, with every topic backed by live examples and exercises.'],
     ['Will I build projects during the course?',
-      'Yes — guided builds after early modules and capstone projects covering the advanced modules, all portfolio-ready.'],
+      'Yes — guided builds after early modules and final projects covering the advanced modules, all portfolio-ready.'],
     ['What do I need before joining?',
       `${prerequisitesFor(title).join('; ')}.`],
     ['Do I get a certificate?',
       'Yes — a Marvel Slice course-completion certificate listing the modules and projects you finished.'],
     ['How does career support work?',
-      'Resume review, LinkedIn profile cleanup, mock interviews and referrals once your capstones are complete.'],
+      'Resume review, LinkedIn profile cleanup, mock interviews and referrals once your projects are complete.'],
   ];
 }
 

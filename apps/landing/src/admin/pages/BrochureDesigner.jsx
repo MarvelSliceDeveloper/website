@@ -3,12 +3,12 @@ import { supabase } from '../../lib/supabaseClient';
 import PageShell from '../components/ui/PageShell';
 import {
   FiDownload, FiBookOpen, FiCheck, FiClock, FiUsers,
-  FiAward, FiBriefcase, FiMail, FiPhone, FiGlobe, FiCpu, FiLayers,
+  FiAward, FiBriefcase, FiMail, FiPhone, FiGlobe, FiLayers,
   FiZap, FiCode, FiDatabase, FiTarget,
 } from 'react-icons/fi';
 import { LOCAL_SYLLABUS } from '../../data/localSyllabus';
 import {
-  expandTopicLine, prerequisitesFor, toolsForTitle, rolesFor,
+  toolsForTitle, rolesFor,
   projectsFor, outcomesFor,
 } from '../../lib/brochureExpand';
 
@@ -47,10 +47,9 @@ const SECTIONS = [
   { id: 'path', label: '4. Learning Path' },
   { id: 'curriculum', label: '5. Curriculum' },
   { id: 'skills', label: '6. Skills + Tools' },
-  { id: 'projects', label: '7. Projects' },
-  { id: 'career', label: '8. Careers + Support' },
-  { id: 'contact', label: '9. Contact' },
-  { id: 'courses', label: '10. Other Courses' },
+  { id: 'projects', label: '7. Projects + Careers' },
+  { id: 'contact', label: '8. Contact' },
+  { id: 'courses', label: '9. Our Courses' },
 ];
 
 function asList(v) {
@@ -269,7 +268,7 @@ export default function BrochureDesigner() {
     if (localDoc) {
       return localDoc.modules
         .filter((m) => m.no > 0)
-        .map((m) => ({ label: m.label, title: m.title, topics: m.topics.slice(0, 10) }));
+        .map((m, i) => ({ label: `Module ${i + 1}`, title: m.title, topics: m.topics.slice(0, 10) }));
     }
     return dbMods;
   }, [live, localDoc]);
@@ -302,9 +301,9 @@ export default function BrochureDesigner() {
   const projects = useMemo(() => asList(effectiveCourse?.projects), [effectiveCourse]);
   const expandedProjects = useMemo(() => {
     if (projects.length) {
-      return projects.slice(0, 6).map((p, i) => ({
+      return projects.slice(0, 4).map((p, i) => ({
         level: ['Beginner', 'Intermediate', 'Advanced'][Math.min(2, Math.floor((i / Math.max(1, projects.length)) * 3))],
-        title: p.title || 'Capstone project',
+        title: p.title || 'Project',
         desc: p.description || 'Build and deploy a portfolio-ready application.',
         tech: asList(p.technologies).join(', '),
       }));
@@ -312,7 +311,6 @@ export default function BrochureDesigner() {
     return projectsFor(title, curriculum);
   }, [projects, title, curriculum]);
   const roles = useMemo(() => rolesFor(title), [title]);
-  const prereqs = useMemo(() => prerequisitesFor(title), [title]);
   const outcomes = useMemo(() => outcomesFor(title, curriculum), [title, curriculum]);
   const totalTopics = useMemo(
     () => curriculum.reduce((n, m) => n + (m.topics || []).length, 0),
@@ -628,14 +626,6 @@ export default function BrochureDesigner() {
                 </li>
               ))}
             </ul>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Prerequisites:</span>
-              {prereqs.map((p) => (
-                <span key={p} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                  {p}
-                </span>
-              ))}
-            </div>
           </section>
 
           {/* ══ 3. WHO CAN APPLY + APPLICATION PROCESS (light theme) ══ */}
@@ -703,7 +693,7 @@ export default function BrochureDesigner() {
                 ['Mentor Check-ins', '1:1 doubt-clearing so you never stay stuck.'],
                 ['Guided Mini Projects', 'Mentor-reviewed builds that lock in every stage.'],
                 ['Advanced Topics', 'Deeper concepts taught with real scenarios and datasets.'],
-                ['Capstone Project', 'End-to-end portfolio-grade build, deployed live.'],
+                ['Project', 'End-to-end portfolio-grade build, deployed live.'],
                 ['Deployment & Portfolio', 'Ship your work publicly with clean documentation.'],
                 ['Resume & LinkedIn', 'Profiles rewritten around the projects you shipped.'],
                 ['Mock Interviews', 'Practice rounds with the most-asked questions.'],
@@ -728,8 +718,8 @@ export default function BrochureDesigner() {
             </ol>
           </section>
 
-          {/* ══ 5. CURRICULUM — 2 modules per page, one-by-one rows ══ */}
-          {chunk(curriculum, 2).map((group, gi) => (
+          {/* ══ 5. CURRICULUM — 4 modules per page, short points only ══ */}
+          {chunk(curriculum, 4).map((group, gi) => (
             <section key={gi} id={gi === 0 ? 'bro-curriculum' : `bro-curriculum-${gi + 1}`} className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
               {gi === 0 ? (
                 <>
@@ -746,19 +736,16 @@ export default function BrochureDesigner() {
                   &nbsp;
                 </p>
               )}
-              <div className="mt-3 grid grid-cols-1 gap-4">
+              <div className="mt-3 grid sm:grid-cols-2 gap-4">
                 {group.map((m, i) => (
-                  <div key={`${m.label}-${i}`} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                    <p className="text-[13px] font-extrabold" style={{ color: BRAND.orange }}>{m.label}</p>
-                    <p className="text-lg font-bold text-slate-900">{m.title}</p>
-                    <ul className="mt-1.5 space-y-1.5">
+                  <div key={`${m.label}-${i}`} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                    <p className="text-xs font-extrabold" style={{ color: BRAND.orange }}>{m.label}</p>
+                    <p className="text-[15px] font-bold text-slate-900">{m.title}</p>
+                    <ul className="mt-1 space-y-1">
                       {(m.topics || []).map((t) => (
-                        <li key={t} className="flex items-start gap-2 text-sm leading-relaxed text-slate-600">
+                        <li key={t} className="flex items-start gap-2 text-[13px] leading-relaxed text-slate-600">
                           <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND.blue }} />
-                          <span>
-                            <strong className="font-semibold text-slate-700">{t}.</strong>{' '}
-                            <span className="text-slate-500">{expandTopicLine(t)}</span>
-                          </span>
+                          <span className="font-medium text-slate-700">{t}</span>
                         </li>
                       ))}
                     </ul>
@@ -790,7 +777,7 @@ export default function BrochureDesigner() {
             </div>
           </section>
 
-          {/* ══ 7. PROJECTS (grounded in syllabus modules) ══ */}
+          {/* ══ 7. PROJECTS + CAREERS (one page: projects first, then jobs) ══ */}
           <section id="bro-projects" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">
               Course <span style={{ color: BRAND.orange }}>Projects</span>
@@ -798,7 +785,7 @@ export default function BrochureDesigner() {
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
             <p className="mt-2 text-xs text-slate-500">Every project is reviewed by mentors and deployable to your portfolio.</p>
             <div className="mt-3 grid sm:grid-cols-2 gap-3">
-              {expandedProjects.map((p) => (
+              {expandedProjects.slice(0, 4).map((p) => (
                 <div key={p.title} className="rounded-xl border border-slate-200 p-3.5">
                   <span
                     className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full text-white mb-1.5"
@@ -814,15 +801,10 @@ export default function BrochureDesigner() {
                 </div>
               ))}
             </div>
-          </section>
-
-          {/* ══ 8. CAREERS + SUPPORT ══ */}
-          <section id="bro-career" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
-            <h2 className="text-2xl font-extrabold text-slate-900">
-              Careers After <span style={{ color: BRAND.orange }}>{title}</span>
-            </h2>
-            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-3 space-y-2">
+            <h3 className="mt-4 text-xl font-extrabold text-slate-900">
+              Top <span style={{ color: BRAND.orange }}>Job Roles</span>
+            </h3>
+            <div className="mt-2 space-y-2">
               {roles.map(([role, salary, desc], i) => (
                 <div key={role} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                   <span
@@ -841,33 +823,9 @@ export default function BrochureDesigner() {
                 </div>
               ))}
             </div>
-            <h3 className="mt-4 text-xl font-extrabold text-slate-900">
-              Career <span style={{ color: BRAND.orange }}>Services</span>
-            </h3>
-            <div className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
-              {[
-                [FiTarget, 'Career-oriented Sessions', 'Role roadmaps and guidance from industry mentors.'],
-                [FiUsers, '1:1 Mentoring', 'Personal guidance at every step of your transition.'],
-                [FiCode, 'Mock Interviews', 'Practice with the most-asked questions by employers.'],
-                [FiBriefcase, 'Job Referrals', 'Profile shortlisting with hiring partners on completion.'],
-                [FiCpu, 'Resume + LinkedIn Review', 'ATS-friendly resume and profile that attract recruiters.'],
-                [FiZap, 'Hackathons & Job Fairs', 'Team builds and regular hiring events.'],
-              ].map(([Icon, t, d]) => (
-                <div key={t} className="flex gap-2.5">
-                  <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
-                    <Icon className="w-4 h-4" style={{ color: BRAND.orange }} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-slate-900">{t}</span>
-                    <span className="block text-xs text-slate-500">{d}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
           </section>
 
-          {/* ══ 9. FAQs (grounded in this syllabus) ══ */}
-          {/* ══ 9. CONTACT (content only, no bg image) ══ */}
+          {/* ══ 8. CONTACT (content only, no bg image) ══ */}
           <section id="bro-contact" className="brochure-page relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div className="p-5 sm:p-7 text-white" style={{ background: BRAND.navy }}>
               <h2 className="text-2xl font-extrabold">
@@ -891,24 +849,28 @@ export default function BrochureDesigner() {
             </div>
           </section>
 
-          {/* ══ 10. EXPLORE OUR OTHER COURSES (titles only) ══ */}
+          {/* ══ 10. EXPLORE OUR COURSES (all 14, image-style rows) ══ */}
           <section id="bro-courses" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">
-              Explore Our <span style={{ color: BRAND.orange }}>Other Courses</span>
+              Explore Our <span style={{ color: BRAND.orange }}>Courses</span>
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
             <p className="mt-2 text-xs text-slate-500">One brochure per course — pick any title from the dropdown above to preview &amp; download it.</p>
             <div className="mt-3 space-y-2">
-              {LOCAL_SYLLABUS.filter((s) => s.file !== syllabusKey).map((s, i) => {
+              {LOCAL_SYLLABUS.map((s, i) => {
                 const mods = s.modules.filter((m) => m.no > 0);
+                const isCurrent = s.file === syllabusKey;
                 return (
-                  <div key={s.file} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white/90 p-3">
-                    <span className="w-8 h-8 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: BRAND.deepNavy }}>
-                      {i + 1}
+                  <div key={s.file} className="flex items-center gap-3 rounded-lg border-l-4 border border-slate-100 bg-slate-50/80 py-2 pl-3 pr-4" style={{ borderLeftColor: BRAND.deepNavy }}>
+                    <span className="w-9 h-9 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: isCurrent ? BRAND.orange : BRAND.deepNavy }}>
+                      {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="flex-1">
-                      <span className="block text-sm font-bold text-slate-900">{prettyTitleFromFile(s.file)}</span>
-                      <span className="block text-xs text-slate-500">{mods.length} modules · {s.totalTopics} topics</span>
+                      <span className="block text-sm font-bold" style={{ color: BRAND.deepNavy }}>
+                        {prettyTitleFromFile(s.file)}
+                        {isCurrent && <span className="ml-2 text-[10px] font-extrabold uppercase tracking-wider" style={{ color: BRAND.orange }}>· Current</span>}
+                      </span>
+                      <span className="block text-xs text-slate-500">{mods.length} modules | {s.totalTopics} topics</span>
                     </span>
                   </div>
                 );
