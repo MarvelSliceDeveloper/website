@@ -354,7 +354,8 @@ export default function BrochureDesigner() {
             `#brochure-print-root #bro-curriculum div[class*="grid"] > div,` +
             `#brochure-print-root #bro-projects div[class*="grid"] > div,` +
             `#brochure-print-root #bro-career div[class*="space-y"] > div,` +
-            `#brochure-print-root #bro-career div[class*="grid"] > div{break-inside:avoid-page}` +
+            `          #brochure-print-root #bro-career div[class*="grid"] > div{break-inside:avoid-page}
+          #brochure-print-root #bro-skills div[class*="sm:grid-cols-2"]{break-inside:avoid-page}` +
             `.brochure-page:not(.allow-break){overflow:hidden !important}` +
             `</style></head><body>${node.outerHTML}` +
             `<script>window.onload=function(){setTimeout(function(){window.print()},450)};` +
@@ -881,17 +882,17 @@ export default function BrochureDesigner() {
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
             <p className="mt-2 text-xs text-slate-500">One brochure per course — pick any title from the dropdown above to preview &amp; download it.</p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 grid sm:grid-cols-2 gap-2">
               {LOCAL_SYLLABUS.map((s, i) => {
                 const mods = s.modules.filter((m) => m.no > 0);
                 const isCurrent = s.file === syllabusKey;
                 return (
-                  <div key={s.file} className="flex items-center gap-3 rounded-lg border-l-4 border border-slate-100 bg-slate-50/80 py-2 pl-3 pr-4" style={{ borderLeftColor: BRAND.deepNavy }}>
-                    <span className="w-9 h-9 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: isCurrent ? BRAND.orange : BRAND.deepNavy }}>
+                  <div key={s.file} className="flex items-center gap-3 rounded-lg border-l-4 border border-slate-100 bg-slate-50/80 py-2 pl-3 pr-4" style={{ borderLeftColor: BRAND.blue }}>
+                    <span className="w-9 h-9 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: isCurrent ? BRAND.orange : BRAND.blue }}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="flex-1">
-                      <span className="block text-sm font-bold" style={{ color: BRAND.deepNavy }}>
+                      <span className="block text-sm font-bold" style={{ color: BRAND.blue }}>
                         {prettyTitleFromFile(s.file)}
                         {isCurrent && <span className="ml-2 text-[10px] font-extrabold uppercase tracking-wider" style={{ color: BRAND.orange }}>· Current</span>}
                       </span>

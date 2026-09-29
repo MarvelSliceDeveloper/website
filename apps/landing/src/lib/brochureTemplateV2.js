@@ -621,7 +621,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   tools.forEach((t) => drawPill(sanitize(t), GREEN, INK, true));
   cursorY = sy + 10;
 
-  // ================= PROJECTS (same page as skills) =================
+  // ================= PROJECTS (same page as skills, 4 cards kept together) =================
+  need(30 + 2 * (58 + 4));
   heading('Course ', 'Projects');
   para('Every project is reviewed by mentors and deployable to your portfolio.');
   const levelCols = { Beginner: GREEN, Intermediate: BLUE, Advanced: PURPLE };
@@ -739,7 +740,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   para('Talk to our counsellor today to pick the right batch and plan for your goals.');
   para(`${website}  |  ${email}`);
 
-  // ================= OTHER COURSES (all rows, image-style numbered list) =================
+  // ================= OTHER COURSES (blue 2-column numbered rows) =================
   {
     const rows = [
       { title, duration, mode, current: true },
@@ -748,27 +749,34 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     newInnerPage();
     heading('Explore Our ', 'Courses');
     para('One brochure per course — ask our counsellor for any title below.');
-    rows.forEach((c, i) => {
-      need(15);
-      setFill(CARD);
-      pdf.roundedRect(MARGIN_X, cursorY, CONTENT_W, 12, 2, 2, 'F');
-      setFill(NAVY);
-      pdf.rect(MARGIN_X, cursorY + 1, 2.5, 10, 'F');
-      setFill(c.current ? ORANGE : NAVY);
-      pdf.circle(MARGIN_X + 11, cursorY + 6, 4.8, 'F');
-      pdf.setFontSize(8);
-      pdf.setFont('Helvetica', 'bold');
-      setText(WHITE);
-      pdf.text(String(i + 1).padStart(2, '0'), MARGIN_X + 11, cursorY + 8.5, { align: 'center' });
-      pdf.setFontSize(10.5);
-      setText(NAVY);
-      pdf.text(sanitize(c.title || `Course ${i + 1}`), MARGIN_X + 19, cursorY + 6);
-      pdf.setFontSize(8.5);
-      pdf.setFont('Helvetica', 'normal');
-      setText(BODY);
-      pdf.text(sanitize(`${c.duration || 'Flexible'} | ${c.mode || 'Online / Classroom'}`), MARGIN_X + 19, cursorY + 10.5);
-      cursorY += 15;
-    });
+    const ccGap = 6;
+    const ccW = (CONTENT_W - ccGap) / 2;
+    const rowH = 15;
+    for (let r = 0; r < rows.length; r += 2) {
+      need(rowH + 2);
+      rows.slice(r, r + 2).forEach((c, k) => {
+        const x = MARGIN_X + k * (ccW + ccGap);
+        const n = r + k + 1;
+        setFill(CARD);
+        pdf.roundedRect(x, cursorY, ccW, rowH - 2.5, 2, 2, 'F');
+        setFill(BLUE);
+        pdf.rect(x, cursorY + 1, 2.5, rowH - 4.5, 'F');
+        setFill(c.current ? ORANGE : BLUE);
+        pdf.circle(x + 8, cursorY + (rowH - 2.5) / 2, 4.8, 'F');
+        pdf.setFontSize(8);
+        pdf.setFont('Helvetica', 'bold');
+        setText(WHITE);
+        pdf.text(String(n).padStart(2, '0'), x + 8, cursorY + (rowH - 2.5) / 2 + 2.5, { align: 'center' });
+        pdf.setFontSize(10);
+        setText(BLUE);
+        pdf.text(pdf.splitTextToSize(sanitize(c.title || `Course ${n}`), ccW - 24).slice(0, 1), x + 16, cursorY + 6);
+        pdf.setFontSize(8);
+        pdf.setFont('Helvetica', 'normal');
+        setText(BODY);
+        pdf.text(pdf.splitTextToSize(sanitize(`${c.duration || 'Flexible'} | ${c.mode || 'Online / Classroom'}`), ccW - 24).slice(0, 1), x + 16, cursorY + 10.5);
+      });
+      cursorY += rowH;
+    }
   }
 
   const raw = title || 'Course';
