@@ -11,7 +11,7 @@ export function normalizeUtr(raw: string): string {
 
 /** Validate a UPI VPA like `name@okhdfc`. */
 export function validateUpiId(upiId: string): void {
-  if (!/^[\w.\-]{2,256}@[a-zA-Z]{2,}$/.test(upiId.trim())) {
+  if (!/^[\w.-]{2,256}@[a-zA-Z]{2,}$/.test(upiId.trim())) {
     throw new AppError(400, "Invalid UPI ID");
   }
 }
