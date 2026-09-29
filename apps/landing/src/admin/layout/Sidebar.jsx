@@ -75,6 +75,7 @@ const navGroups = [
         { to: "/admin/upcoming-courses", label: "View", icon: FiCalendar, catchSubRoutes: true, siblingRoutes: ["/admin/upcoming-courses/new"] }
       ]},
       { to: "/admin/courses/brochure", label: "Brochure", icon: FiFileText },
+      { to: "/admin/courses/brochure-designer", label: "Brochure Designer", icon: FiFileText },
     ],
   },
   {
