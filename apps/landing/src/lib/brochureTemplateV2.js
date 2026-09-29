@@ -86,9 +86,12 @@ async function loadImageDataUrl(url) {
 
 export async function generateModernCourseBrochurePDF(course, siteSettings = {}, options = {}) {
   const data = await generateAIBrochureData(course, siteSettings);
+  // Background: template JPGs by default, plain white on opt-out,
+  // custom uploads when provided (per-slot fallback to template art).
+  const bgStyle = options.bgStyle === 'plain' ? 'plain' : 'template';
   const [coverImg, innerImg] = await Promise.all([
-    options.coverBg || loadImageDataUrl('/brochure/bg-cover.jpg'),
-    options.innerBg || loadImageDataUrl('/brochure/bg-inner.jpg'),
+    bgStyle === 'plain' ? null : (options.customCoverBg || loadImageDataUrl('/brochure/bg-cover.jpg')),
+    bgStyle === 'plain' ? null : (options.customInnerBg || loadImageDataUrl('/brochure/bg-inner.jpg')),
   ]);
 
   // Curriculum priority: uploaded AI-condensed doc > live DB modules.
@@ -116,9 +119,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   // Full-page image replacements (no headings/overlay — image only).
   const coverImage = options.coverImage || null;
   const pathImage = options.pathImage || null;
-
-  // Background: template JPGs by default, plain white when the user opts out.
-  const bgStyle = options.bgStyle === 'plain' ? 'plain' : 'template';
 
   // Learning path comes from the user (menu step 3); defaults fill the gap.
   const pathSteps = (Array.isArray(options.pathSteps) ? options.pathSteps : [])
@@ -153,7 +153,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     );
   }
   const outcomes = outcomesFor(title, modules.map((m) => ({ title: m.title, topics: m.topics })));
-  const prereqs = prerequisitesFor(title);
   const roles = rolesFor(title);
   const projects = (asList(data.capstones?.projects).length
     ? asList(data.capstones.projects).slice(0, 6).map((p) => ({
@@ -409,22 +408,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   pdf.text('What You Will Achieve', MARGIN_X, cursorY + 4);
   cursorY += 10;
   outcomes.slice(0, 8).forEach((o) => checkBullet(o, 9));
-  cursorY += 2;
-  pdf.setFontSize(9);
-  pdf.setFont('Helvetica', 'bold');
-  setText(INK);
-  need(10);
-  pdf.text('Prerequisites:  ', MARGIN_X, cursorY);
-  let prx = MARGIN_X + pdf.getTextWidth('Prerequisites:   ');
-  pdf.setFont('Helvetica', 'normal');
-  setText(BODY);
-  prereqs.forEach((p) => {
-    const w = pdf.getTextWidth(`  ${p}   `);
-    if (prx + w > PAGE_W - MARGIN_X) { prx = MARGIN_X; cursorY += 5.5; }
-    pdf.text(`  ${p}   `, prx, cursorY);
-    prx += w;
-  });
-  cursorY += 8;
+  cursorY += 4;
 
   // ================= WHO CAN APPLY + STEPS =================
   newInnerPage();

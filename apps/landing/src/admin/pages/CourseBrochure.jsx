@@ -68,7 +68,11 @@ export default function CourseBrochure() {
   const [downloadCourseId, setDownloadCourseId] = useState('');
   const [otherCourseIds, setOtherCourseIds] = useState(new Set());
   const [otherSearch, setOtherSearch] = useState('');
-  const [bgStyle, setBgStyle] = useState('template'); // 'template' | 'plain'
+  const [bgStyle, setBgStyle] = useState('template'); // 'template' | 'plain' | 'custom'
+  const [customCoverBg, setCustomCoverBg] = useState(null);
+  const [customCoverBgName, setCustomCoverBgName] = useState('');
+  const [customInnerBg, setCustomInnerBg] = useState(null);
+  const [customInnerBgName, setCustomInnerBgName] = useState('');
 
   // Step 3: learning path is auto-shown (from uploaded doc, else defaults)
   const autoPathSteps = useMemo(() => {
@@ -179,11 +183,23 @@ export default function CourseBrochure() {
     }
   }
 
+  async function handleCustomBg(which, file) {
+    if (!file) return;
+    try {
+      const dataUrl = await readImageFile(file);
+      if (which === 'cover') { setCustomCoverBg(dataUrl); setCustomCoverBgName(file.name); }
+      else { setCustomInnerBg(dataUrl); setCustomInnerBgName(file.name); }
+    } catch (err) {
+      console.error('BG image error:', err);
+      alert('Could not read that image. Try a JPG or PNG file.');
+    }
+  }
+
   function buildBrochureOptions() {
     const others = otherCoursesPicked
       .slice(0, 13)
       .map((c) => ({ title: c.title, duration: c.duration, mode: c.mode }));
-    return { docSections, otherCourses: others, bgStyle, pathSteps: autoPathSteps, coverImage: pageImage, pathImage };
+    return { docSections, otherCourses: others, bgStyle, pathSteps: autoPathSteps, coverImage: pageImage, pathImage, customCoverBg, customInnerBg };
   }
 
   async function handleDocFile(file) {
@@ -441,14 +457,14 @@ export default function CourseBrochure() {
 
               <div className="bg-white border border-admin-200 rounded-xl p-4 sm:p-5 shadow-xs">
                 <p className="text-xs font-bold text-neutral-800 mb-1">Background (optional — change anytime)</p>
-                <p className="text-[11px] text-neutral-500 mb-3">Template art is used on every page by default. Pick plain for a clean white PDF.</p>
-                <div className="grid grid-cols-2 gap-3">
+                <p className="text-[11px] text-neutral-500 mb-3">Template art is used on every page by default. Pick plain white, or upload your own backgrounds.</p>
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setBgStyle('template')}
                     className={`rounded-xl border-2 overflow-hidden text-left transition-all cursor-pointer ${bgStyle === 'template' ? 'border-brand-orange shadow-md' : 'border-admin-200 hover:border-admin-300'}`}
                   >
-                    <img src="/brochure/bg-inner.jpg" alt="Template background" className="w-full h-28 object-cover object-top" />
+                    <img src="/brochure/bg-inner.jpg" alt="Template background" className="w-full h-20 object-cover object-top" />
                     <span className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-800">
                       <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${bgStyle === 'template' ? 'border-brand-orange' : 'border-slate-300'}`}>
                         {bgStyle === 'template' && <span className="w-2 h-2 rounded-full bg-brand-orange" />}
@@ -461,7 +477,7 @@ export default function CourseBrochure() {
                     onClick={() => setBgStyle('plain')}
                     className={`rounded-xl border-2 overflow-hidden text-left transition-all cursor-pointer ${bgStyle === 'plain' ? 'border-brand-orange shadow-md' : 'border-admin-200 hover:border-admin-300'}`}
                   >
-                    <span className="block w-full h-28 bg-white border-b border-admin-100" />
+                    <span className="block w-full h-20 bg-white border-b border-admin-100" />
                     <span className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-800">
                       <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${bgStyle === 'plain' ? 'border-brand-orange' : 'border-slate-300'}`}>
                         {bgStyle === 'plain' && <span className="w-2 h-2 rounded-full bg-brand-orange" />}
@@ -469,7 +485,52 @@ export default function CourseBrochure() {
                       Plain White
                     </span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setBgStyle('custom')}
+                    className={`rounded-xl border-2 overflow-hidden text-left transition-all cursor-pointer ${bgStyle === 'custom' ? 'border-brand-orange shadow-md' : 'border-admin-200 hover:border-admin-300'}`}
+                  >
+                    <span className="flex items-center justify-center w-full h-20 bg-slate-50 border-b border-admin-100 text-neutral-400">
+                      <FiImage className="w-6 h-6" />
+                    </span>
+                    <span className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-800">
+                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${bgStyle === 'custom' ? 'border-brand-orange' : 'border-slate-300'}`}>
+                        {bgStyle === 'custom' && <span className="w-2 h-2 rounded-full bg-brand-orange" />}
+                      </span>
+                      Upload BG
+                    </span>
+                  </button>
                 </div>
+                {bgStyle === 'custom' && (
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { label: 'Cover background', img: customCoverBg, name: customCoverBgName, which: 'cover' },
+                      { label: 'Inner pages background', img: customInnerBg, name: customInnerBgName, which: 'inner' },
+                    ].map((b) => (
+                      <div key={b.which} className="rounded-xl border border-admin-100 overflow-hidden">
+                        {b.img ? (
+                          <img src={b.img} alt={b.label} className="w-full h-24 object-cover object-top" />
+                        ) : (
+                          <span className="flex items-center justify-center w-full h-24 bg-slate-50 text-neutral-400 text-[11px] font-medium">
+                            No image — template art will be used
+                          </span>
+                        )}
+                        <div className="flex items-center gap-2 p-2.5">
+                          <label className="inline-flex h-8 px-3 items-center gap-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-neutral-700 cursor-pointer">
+                            <FiImage className="w-3.5 h-3.5" /> {b.img ? 'Change' : 'Upload'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleCustomBg(b.which, e.target.files?.[0])}
+                            />
+                          </label>
+                          <span className="text-[11px] text-neutral-500 truncate">{b.name || b.label}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="lg:col-span-2 flex justify-between">
@@ -531,7 +592,7 @@ export default function CourseBrochure() {
                     {downloadCourse ? (
                       <>
                         <span className="font-bold text-neutral-800">{downloadCourse.title}</span>
-                        {' '}• {docSections.length > 0 ? `${docSections.length} doc sections` : 'course modules'} • {otherCoursesPicked.length} other course{otherCoursesPicked.length === 1 ? '' : 's'} • {bgStyle === 'template' ? 'template BG' : 'plain white'} • {pathImage ? 'custom path image' : `${autoPathSteps.length} path steps`}{pageImage ? ' • custom cover' : ''}
+                        {' '}• {docSections.length > 0 ? `${docSections.length} doc sections` : 'course modules'} • {otherCoursesPicked.length} other course{otherCoursesPicked.length === 1 ? '' : 's'} • {bgStyle === 'template' ? 'template BG' : bgStyle === 'plain' ? 'plain white' : `custom BG (${[customCoverBg, customInnerBg].filter(Boolean).length}/2 uploaded)`} • {pathImage ? 'custom path image' : `${autoPathSteps.length} path steps`}{pageImage ? ' • custom cover' : ''}
                       </>
                     ) : 'Select a main course in step 2 to enable download.'}
                   </p>
