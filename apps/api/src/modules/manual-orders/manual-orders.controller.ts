@@ -57,16 +57,32 @@ export const manualOrdersController = {
 
   async submitPackage(req: AuthRequest, res: Response) {
     try {
-      const { transactionId, batchId, userState, userAddress, userGstin } =
-        req.body ?? {};
+      const {
+        transactionId,
+        batchId,
+        userState,
+        userAddress,
+        userGstin,
+        name,
+        email,
+        phone,
+      } = req.body ?? {};
       if (!transactionId) {
         return res.status(400).json({ error: "transactionId required" });
       }
       const order = await service.submitPackageManualOrder(
-        req.user!.userId,
+        req.user?.userId ?? null,
         req.params.id,
         transactionId,
-        { batchId, userState, userAddress, userGstin },
+        {
+          batchId,
+          userState,
+          userAddress,
+          userGstin,
+          guestName: name,
+          guestEmail: email,
+          guestPhone: phone,
+        },
       );
       return res.status(201).json({ order });
     } catch (err: unknown) {

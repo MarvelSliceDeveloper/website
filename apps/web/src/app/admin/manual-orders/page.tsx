@@ -15,6 +15,7 @@ import {
   IconX,
   IconShieldCheck,
   IconCopy,
+  IconEye,
 } from "@tabler/icons-react";
 
 interface ManualOrder {
@@ -84,6 +85,7 @@ export default function ManualOrdersPage() {
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [viewId, setViewId] = useState<string | null>(null);
 
   const ordersQuery = useApiQuery<ApiResponse>(
     ["admin", "manual-orders", tab],
@@ -92,6 +94,7 @@ export default function ManualOrdersPage() {
   );
   const orders = ordersQuery.data?.items ?? [];
   const loading = ordersQuery.isPending;
+  const viewOrder = orders.find((o) => o.id === viewId) ?? null;
 
   const settingsQuery = useApiQuery<{ settings: PaymentSettings | null }>(
     ["admin", "payment-settings"],
@@ -274,109 +277,222 @@ export default function ManualOrdersPage() {
           No {tab.toLowerCase()} manual orders found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="rounded-xl border border-border bg-card p-5 space-y-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {order.user.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {order.user.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {order.package
-                      ? `Package: ${order.package.name}`
-                      : `Course: ${order.course?.title ?? "—"}`}
-                  </p>
-                  {order.batch && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Batch: {order.batch.name}
-                    </p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
-                    {formatCurrency(order.amount)}
-                  </span>
-                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {order.plan === "FULL" ? "Full fees" : "Monthly"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card-hover/40 p-3 text-xs space-y-1">
-                <p className="text-muted-foreground flex items-center justify-between gap-2">
-                  <span>
-                    <span className="font-medium text-foreground">
-                      Transaction ID:{" "}
-                    </span>
-                    <span className="font-mono">{order.transactionId}</span>
-                  </span>
-                  <button
-                    onClick={() => copyUtr(order.transactionId)}
-                    className="flex items-center gap-1 font-semibold text-primary hover:underline shrink-0"
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
+                  <th className="py-2.5 pr-3">Student</th>
+                  <th className="py-2.5 pr-3">Item</th>
+                  <th className="py-2.5 pr-3 text-right">Amount</th>
+                  <th className="py-2.5 pr-3">Transaction ID</th>
+                  <th className="py-2.5 pr-3">Submitted</th>
+                  <th className="py-2.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {orders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="hover:bg-card-hover transition-colors"
                   >
-                    <IconCopy size={12} /> Copy
-                  </button>
+                    <td className="py-3 pr-3">
+                      <span className="font-medium text-foreground">
+                        {order.user.name}
+                      </span>
+                      <br />
+                      <span className="text-[10px] text-muted-foreground">
+                        {order.user.email}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-3">
+                      <span className="font-medium text-foreground">
+                        {order.package?.name ?? order.course?.title ?? "—"}
+                      </span>
+                      <br />
+                      <span className="text-[10px] text-muted-foreground">
+                        {order.package ? "Package" : "Course"}
+                        {order.batch ? ` · ${order.batch.name}` : ""}
+                        {" · "}
+                        {order.plan === "FULL" ? "Full fees" : "Monthly"}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-3 text-right font-medium text-foreground whitespace-nowrap">
+                      {formatCurrency(order.amount)}
+                    </td>
+                    <td className="py-3 pr-3">
+                      <span className="flex items-center gap-1.5">
+                        <span className="font-mono text-foreground">
+                          {order.transactionId}
+                        </span>
+                        <button
+                          onClick={() => copyUtr(order.transactionId)}
+                          className="flex items-center gap-1 font-semibold text-primary hover:underline shrink-0"
+                          title="Copy transaction ID"
+                        >
+                          <IconCopy size={12} />
+                        </button>
+                      </span>
+                    </td>
+                    <td className="py-3 pr-3 text-muted-foreground whitespace-nowrap">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="py-3">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setViewId(order.id)}
+                          className="rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+                          title="View details"
+                        >
+                          <IconEye size={14} />
+                        </button>
+                        {tab === "PENDING" && (
+                          <>
+                            <button
+                              onClick={() => setApproveId(order.id)}
+                              disabled={processing}
+                              className="rounded-lg border border-success/25 bg-success/10 p-1.5 text-success transition-colors hover:bg-success/20 disabled:opacity-50"
+                              title="Approve & enroll"
+                            >
+                              <IconCheck size={14} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setRejectId(order.id);
+                                setRejectReason("");
+                              }}
+                              disabled={processing}
+                              className="rounded-lg border border-danger/25 bg-danger/10 p-1.5 text-danger transition-colors hover:bg-danger/20 disabled:opacity-50"
+                              title="Reject"
+                            >
+                              <IconX size={14} />
+                            </button>
+                          </>
+                        )}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* View details popup */}
+      <FormModal
+        open={!!viewId}
+        onClose={() => setViewId(null)}
+        title="Manual order details"
+        size="md"
+        footer={
+          <button
+            onClick={() => setViewId(null)}
+            className="btn-cancel text-sm"
+          >
+            Close
+          </button>
+        }
+      >
+        {viewOrder && (
+          <div className="space-y-4 text-xs">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {viewOrder.user.name}
                 </p>
-                <p className="text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
+                  {viewOrder.user.email}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">
+                  {formatCurrency(viewOrder.amount)}
+                </span>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {viewOrder.plan === "FULL" ? "Full fees" : "Monthly"}
+                </p>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border bg-card-hover/40 p-3 space-y-1.5 text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">Item: </span>
+                {viewOrder.package?.name ?? viewOrder.course?.title ?? "—"} (
+                {viewOrder.package ? "Package" : "Course"})
+              </p>
+              {viewOrder.batch && (
+                <p>
+                  <span className="font-medium text-foreground">Batch: </span>
+                  {viewOrder.batch.name}
+                </p>
+              )}
+              <p className="flex items-center justify-between gap-2">
+                <span>
                   <span className="font-medium text-foreground">
-                    Submitted:{" "}
+                    Transaction ID:{" "}
                   </span>
-                  {formatDate(order.createdAt)}
+                  <span className="font-mono">{viewOrder.transactionId}</span>
+                </span>
+                <button
+                  onClick={() => copyUtr(viewOrder.transactionId)}
+                  className="flex items-center gap-1 font-semibold text-primary hover:underline shrink-0"
+                >
+                  <IconCopy size={12} /> Copy
+                </button>
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Submitted: </span>
+                {formatDate(viewOrder.createdAt)}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Status: </span>
+                {viewOrder.status}
+              </p>
+              {viewOrder.status === "REJECTED" && viewOrder.rejectionReason && (
+                <p>
+                  <span className="font-medium text-foreground">
+                    Rejection reason:{" "}
+                  </span>
+                  {viewOrder.rejectionReason}
                 </p>
-                {order.status === "REJECTED" && order.rejectionReason && (
-                  <p className="text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      Rejection reason:{" "}
-                    </span>
-                    {order.rejectionReason}
-                  </p>
-                )}
-                {order.status === "APPROVED" && order.reviewedAt && (
-                  <p className="text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      Approved:{" "}
-                    </span>
-                    {formatDate(order.reviewedAt)}
-                  </p>
-                )}
-              </div>
-
-              {tab === "PENDING" ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setApproveId(order.id)}
-                    disabled={processing}
-                    className="btn-primary text-xs py-2 flex items-center gap-1.5"
-                  >
-                    <IconCheck size={14} /> Approve &amp; Enroll
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRejectId(order.id);
-                      setRejectReason("");
-                    }}
-                    disabled={processing}
-                    className="btn-danger text-xs py-2 flex items-center gap-1.5"
-                  >
-                    <IconX size={14} /> Reject
-                  </button>
-                </div>
-              ) : (
-                <p className="text-[10px] text-muted-foreground">
-                  {order.status}
+              )}
+              {viewOrder.status === "APPROVED" && viewOrder.reviewedAt && (
+                <p>
+                  <span className="font-medium text-foreground">
+                    Approved:{" "}
+                  </span>
+                  {formatDate(viewOrder.reviewedAt)}
                 </p>
               )}
             </div>
-          ))}
-        </div>
-      )}
+            {tab === "PENDING" && viewOrder.status === "PENDING" && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setViewId(null);
+                    setApproveId(viewOrder.id);
+                  }}
+                  disabled={processing}
+                  className="btn-primary text-xs py-2 flex items-center gap-1.5"
+                >
+                  <IconCheck size={14} /> Approve &amp; Enroll
+                </button>
+                <button
+                  onClick={() => {
+                    setViewId(null);
+                    setRejectId(viewOrder.id);
+                    setRejectReason("");
+                  }}
+                  disabled={processing}
+                  className="btn-danger text-xs py-2 flex items-center gap-1.5"
+                >
+                  <IconX size={14} /> Reject
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </FormModal>
 
       {/* Approve confirm modal */}
       <ConfirmModal

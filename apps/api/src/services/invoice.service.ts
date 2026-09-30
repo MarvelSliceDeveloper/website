@@ -3,15 +3,14 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 /**
- * Invoice PDF generator — clean marketplace style (Udemy-like), with the
- * fields an Indian GST tax invoice needs:
- *  - Seller block: legal name, address, GSTIN, PAN, state
+ * Invoice PDF generator — clean marketplace style (Udemy-like):
+ *  - Seller block: company name + logo only
  *  - Buyer block: name, email, phone, address, place of supply, optional GSTIN
  *  - SAC code, taxable value, CGST + SGST (same state) or IGST (other state)
- *  - Amount in words, payment / transaction details, reverse-charge note
+ *  - Amount in words, payment / transaction details
  *
- * Everything about the company comes from env vars (see COMPANY_* below).
- * Any field you leave empty is simply left out of the PDF.
+ * Company name/logo come from env vars (see COMPANY_* below).
+ * COMPANY_STATE is still used silently to pick CGST+SGST vs IGST.
  *
  * Note: jsPDF's built-in fonts have no ₹ glyph, so amounts print as "Rs.".
  */
@@ -58,18 +57,15 @@ export interface InvoiceData {
 }
 
 // ── Company details (env-driven) ──────────────────────────────
+// Letterhead shows the name + logo only. COMPANY_STATE is still read
+// (silently) to decide CGST+SGST vs IGST in the tax breakup.
 const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "MarvelSlice LMS";
 const COMPANY_LEGAL_NAME = process.env.COMPANY_LEGAL_NAME || "";
-const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || "";
 const COMPANY_STATE = process.env.COMPANY_STATE || "";
-const COMPANY_GSTIN = process.env.COMPANY_GSTIN || "";
-const COMPANY_PAN = process.env.COMPANY_PAN || "";
 const COMPANY_SAC = process.env.COMPANY_SAC || "";
-const COMPANY_EMAIL = process.env.COMPANY_SUPPORT_EMAIL || "";
-const COMPANY_PHONE = process.env.COMPANY_PHONE || "";
-const COMPANY_WEBSITE = process.env.COMPANY_WEBSITE || "";
 const COMPANY_LOGO_PATH = process.env.COMPANY_LOGO_PATH || ""; // PNG/JPG
 const INVOICE_NOTE = process.env.COMPANY_INVOICE_NOTE || ""; // e.g. refund policy line
+const DISPLAY_NAME = COMPANY_NAME || COMPANY_LEGAL_NAME || "MarvelSlice LMS";
 
 type RGB = [number, number, number];
 const ACCENT: RGB = [37, 47, 87];
@@ -250,8 +246,6 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     }
   }
 
-  const isTaxInvoice = !!rate && !!COMPANY_GSTIN;
-
   // ---- Small drawing helpers ----
   const setText = (
     size: number,
@@ -292,8 +286,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
 
   let y = margin;
 
-  // ── Letterhead (left) ───────────────────────────────────────
-  const leftWidth = contentWidth * 0.52;
+  // ── Letterhead: logo + name only ──────────────────────────
   let leftY = y;
   const logo = loadLogo();
   if (logo) {
@@ -312,49 +305,18 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
       leftY = y + 14;
     } catch {
       setText(16, TEXT_DARK, "bold");
-      doc.text(COMPANY_NAME, margin, y + 5);
+      doc.text(DISPLAY_NAME, margin, y + 5);
       leftY = y + 10;
     }
   } else {
     setText(16, TEXT_DARK, "bold");
-    doc.text(COMPANY_NAME, margin, y + 5);
+    doc.text(DISPLAY_NAME, margin, y + 5);
     leftY = y + 10;
-  }
-
-  setText(8.5, TEXT_MUTED);
-  if (COMPANY_LEGAL_NAME && COMPANY_LEGAL_NAME !== COMPANY_NAME) {
-    setText(8.5, TEXT_DARK, "bold");
-    doc.text(COMPANY_LEGAL_NAME, margin, leftY);
-    setText(8.5, TEXT_MUTED);
-    leftY += 4.2;
-  }
-  if (COMPANY_ADDRESS)
-    leftY = paragraph(COMPANY_ADDRESS, margin, leftY, leftWidth, 4);
-  if (COMPANY_STATE && !COMPANY_ADDRESS.includes(COMPANY_STATE)) {
-    doc.text(COMPANY_STATE, margin, leftY);
-    leftY += 4;
-  }
-  const taxIds = [
-    COMPANY_GSTIN && `GSTIN: ${COMPANY_GSTIN}`,
-    COMPANY_PAN && `PAN: ${COMPANY_PAN}`,
-  ]
-    .filter(Boolean)
-    .join("   ");
-  if (taxIds) {
-    doc.text(taxIds, margin, leftY);
-    leftY += 4;
-  }
-  const contact = [COMPANY_EMAIL, COMPANY_PHONE, COMPANY_WEBSITE]
-    .filter(Boolean)
-    .join("   ");
-  if (contact) {
-    doc.text(contact, margin, leftY);
-    leftY += 4;
   }
 
   // ── Invoice title + meta (right) ────────────────────────────
   setText(22, ACCENT, "bold");
-  doc.text(isTaxInvoice ? "Tax Invoice" : "Invoice", right, y + 6, {
+  doc.text("Invoice", right, y + 6, {
     align: "right",
   });
 
@@ -380,6 +342,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
   y += 9;
 
   // ── Billed to (left) + Payment details (right) ──────────────
+  const leftWidth = contentWidth * 0.52;
   let billY = y;
   setText(8.5, TEXT_MUTED, "bold");
   doc.text("Billed to", margin, billY);
@@ -604,13 +567,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
       margin,
       fy + 5,
     );
-    if (COMPANY_EMAIL) {
-      doc.text(`Questions? Contact ${COMPANY_EMAIL}`, margin, fy + 9.5);
-    }
     doc.text(`Page ${p} of ${pages}`, right, fy + 5, { align: "right" });
-    doc.text(COMPANY_LEGAL_NAME || COMPANY_NAME, right, fy + 9.5, {
-      align: "right",
-    });
   }
 
   return Buffer.from(doc.output("arraybuffer"));

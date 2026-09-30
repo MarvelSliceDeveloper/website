@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import QRCode from "react-qr-code";
 import {
   IconCircleCheck,
@@ -196,7 +195,7 @@ export default function SinglePaymentPage({ pkg }: Props) {
   const [utr, setUtr] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [needsLogin, setNeedsLogin] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [formError, setFormError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedBatchId, setSelectedBatchId] = useState("");
@@ -240,12 +239,17 @@ export default function SinglePaymentPage({ pkg }: Props) {
         "/api/auth/me",
       )
       .then((me) => {
-        if (cancelled || !me?.user) return;
+        if (cancelled || !me?.user) {
+          if (!cancelled) setIsGuest(true);
+          return;
+        }
         setName(me.user.name ?? "");
         setEmail(me.user.email ?? "");
         if (me.user.phone) setPhone(cleanPhone(me.user.phone));
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setIsGuest(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -299,20 +303,14 @@ export default function SinglePaymentPage({ pkg }: Props) {
       await api.post(`/api/packages/${pkgId}/manual-order`, {
         transactionId: normalized,
         batchId: selectedBatchId || undefined,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
       });
       setSubmitted(true);
       toast.success("Payment submitted for review!");
     } catch (err: unknown) {
-      const status =
-        err && typeof err === "object" && "response" in err
-          ? (err as { response?: { status?: number } }).response?.status
-          : undefined;
-      if (status === 401) {
-        setNeedsLogin(true);
-        toast.error("Please log in to submit a UPI payment");
-      } else {
-        setFormError(friendlyError(err));
-      }
+      setFormError(friendlyError(err));
     } finally {
       setSubmitting(false);
     }
@@ -359,40 +357,27 @@ export default function SinglePaymentPage({ pkg }: Props) {
               </p>
             </div>
 
-            {needsLogin ? (
-              <div className="mt-6 space-y-3 rounded-2xl border border-[#6C5BFF]/25 bg-[#6C5BFF]/5 p-5 text-center">
-                <h4 className="text-sm font-bold text-[#1E1B3A]">
-                  Log in required
-                </h4>
-                <p className="text-xs leading-relaxed text-[#4A4666]">
-                  UPI payments with transaction-ID verification are available
-                  for logged-in students. Please log in to continue.
-                </p>
-                <Link
-                  href="/login"
-                  className="block w-full rounded-xl bg-[#6C5BFF] py-3 text-sm font-semibold text-white hover:bg-[#4B3FD6]"
-                >
-                  Log in to continue
-                </Link>
-              </div>
-            ) : submitted ? (
-              <div className="mt-6 space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 text-center">
-                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600 text-white">
+            {submitted ? (
+              <div className="mt-6 space-y-3 rounded-2xl border border-red-200 bg-red-50/70 p-6 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white">
                   <IconClock size={22} />
                 </span>
-                <h4 className="text-base font-bold text-emerald-950">
+                <h4 className="text-base font-bold text-red-950">
                   Payment submitted for review
                 </h4>
-                <p className="text-sm leading-relaxed text-emerald-800">
+                <p className="text-sm leading-relaxed text-red-800">
                   Your payment for <strong>{title}</strong> is pending admin
                   approval. You will receive an email with your invoice and
                   package access once approved.
+                  {isGuest
+                    ? " We created your student account — your login details were emailed to you."
+                    : ""}
                 </p>
-                <p className="inline-block rounded-lg bg-white px-3 py-1.5 font-mono text-xs text-emerald-700 ring-1 ring-emerald-200">
+                <p className="inline-block rounded-lg bg-white px-3 py-1.5 font-mono text-xs text-red-700 ring-1 ring-red-200">
                   Ref: {utr.trim().toUpperCase()}
                 </p>
                 {selectedBatch && (
-                  <p className="inline-block rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                  <p className="inline-block rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
                     Batch: {selectedBatch.name}
                   </p>
                 )}

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "../../middleware/auth.middleware";
+import {
+  requireAuth,
+  optionalAuth,
+  requireRole,
+} from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import { manualOrdersController } from "./manual-orders.controller";
 
@@ -30,7 +34,7 @@ manualPackageRouter.get(
 );
 manualPackageRouter.post(
   "/:id/manual-order",
-  requireAuth,
+  optionalAuth,
   manualOrdersController.submitPackage,
 );
 

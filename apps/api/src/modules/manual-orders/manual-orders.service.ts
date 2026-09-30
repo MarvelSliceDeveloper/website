@@ -3,6 +3,11 @@ import { AppError } from "../../utils/errors";
 import { paginate } from "../../utils/paginate";
 import { emailService } from "../../services/email.service";
 import { generateInvoicePdf } from "../../services/invoice.service";
+import bcrypt from "bcryptjs";
+import {
+  generateDummyPassword,
+  normalizePhone,
+} from "../payments/payment.service";
 import {
   normalizeUtr,
   validateUpiId,
@@ -239,6 +244,9 @@ export interface PackageOrderInput {
   userState?: string;
   userAddress?: string;
   userGstin?: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
 }
 
 function cleanOptionalText(v: unknown, max = 200): string | undefined {
@@ -249,7 +257,7 @@ function cleanOptionalText(v: unknown, max = 200): string | undefined {
 }
 
 export async function submitPackageManualOrder(
-  userId: string,
+  authedUserId: string | null,
   packageId: string,
   transactionIdRaw: string,
   input?: PackageOrderInput,
@@ -267,6 +275,62 @@ export async function submitPackageManualOrder(
     throw new AppError(400, "This package is not available for UPI payment");
   }
   const transactionId = normalizeUtr(transactionIdRaw);
+
+  // Guests buy first like the Razorpay flow: resolve the buyer to a user,
+  // creating an account with emailed credentials for new guests.
+  let userId: string;
+  if (authedUserId) {
+    userId = authedUserId;
+    const phone = normalizePhone(input?.guestPhone);
+    if (phone) {
+      await prisma.user.updateMany({
+        where: { id: userId, phone: null },
+        data: { phone },
+      });
+    }
+  } else {
+    const guestName = input?.guestName?.trim() ?? "";
+    const guestEmail = input?.guestEmail?.trim().toLowerCase() ?? "";
+    const guestPhone = normalizePhone(input?.guestPhone);
+    if (guestName.length < 2) throw new AppError(400, "Enter your full name");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+      throw new AppError(400, "Enter a valid email");
+    }
+    if (!guestPhone || guestPhone.length !== 10) {
+      throw new AppError(400, "Enter a 10-digit mobile number");
+    }
+    const existing = await prisma.user.findUnique({
+      where: { email: guestEmail },
+    });
+    if (existing) {
+      throw new AppError(
+        409,
+        "An account with this email already exists. Please log in to complete your purchase.",
+      );
+    }
+    const dummyPassword = generateDummyPassword();
+    const hashed = await bcrypt.hash(dummyPassword, 12);
+    const created = await prisma.user.create({
+      data: {
+        name: guestName,
+        email: guestEmail,
+        phone: guestPhone,
+        passwordHash: hashed,
+        mustChangePassword: true,
+        role: "STUDENT",
+      },
+    });
+    userId = created.id;
+    emailService
+      .sendWelcomeEmail({
+        name: guestName,
+        email: guestEmail,
+        credentials: { email: guestEmail, password: dummyPassword },
+      })
+      .catch((err: Error) =>
+        console.error("[manual-orders] guest credentials email failed:", err),
+      );
+  }
 
   const duplicate = await prisma.manualPaymentOrder.findUnique({
     where: { transactionId },
