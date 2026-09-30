@@ -1,8 +1,5 @@
 import { Router } from "express";
-import {
-  requireAuth,
-  requireRole,
-} from "../../middleware/auth.middleware";
+import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import { manualOrdersController } from "./manual-orders.controller";
 
@@ -24,6 +21,19 @@ manualStudentRouter.get(
   manualOrdersController.mine,
 );
 
+// Package (single-packet page) routes — mounted at /api/packages
+export const manualPackageRouter = Router();
+
+manualPackageRouter.get(
+  "/:id/payment-options",
+  manualOrdersController.getPackageOptions,
+);
+manualPackageRouter.post(
+  "/:id/manual-order",
+  requireAuth,
+  manualOrdersController.submitPackage,
+);
+
 // Admin routes — mounted at /api/admin
 export const manualAdminRouter = Router();
 
@@ -31,7 +41,16 @@ manualAdminRouter.use(requireAuth);
 manualAdminRouter.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 manualAdminRouter.get("/manual-orders", manualOrdersController.list);
-manualAdminRouter.patch("/manual-orders/:id/approve", manualOrdersController.approve);
-manualAdminRouter.patch("/manual-orders/:id/reject", manualOrdersController.reject);
+manualAdminRouter.patch(
+  "/manual-orders/:id/approve",
+  manualOrdersController.approve,
+);
+manualAdminRouter.patch(
+  "/manual-orders/:id/reject",
+  manualOrdersController.reject,
+);
 manualAdminRouter.get("/payment-settings", manualOrdersController.getSettings);
-manualAdminRouter.put("/payment-settings", manualOrdersController.updateSettings);
+manualAdminRouter.put(
+  "/payment-settings",
+  manualOrdersController.updateSettings,
+);

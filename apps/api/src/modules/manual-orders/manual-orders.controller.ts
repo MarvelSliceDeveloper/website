@@ -18,7 +18,9 @@ export const manualOrdersController = {
     try {
       const { plan, transactionId } = req.body;
       if (!plan || !transactionId) {
-        return res.status(400).json({ error: "plan and transactionId required" });
+        return res
+          .status(400)
+          .json({ error: "plan and transactionId required" });
       }
       const order = await service.submitManualOrder(
         req.user!.userId,
@@ -37,6 +39,36 @@ export const manualOrdersController = {
     try {
       const orders = await service.listMyOrders(req.user!.userId);
       return res.json({ items: orders });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  async getPackageOptions(req: Request, res: Response) {
+    try {
+      const result = await service.getPackagePaymentOptions(req.params.id);
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  async submitPackage(req: AuthRequest, res: Response) {
+    try {
+      const { transactionId, batchId, userState, userAddress, userGstin } =
+        req.body ?? {};
+      if (!transactionId) {
+        return res.status(400).json({ error: "transactionId required" });
+      }
+      const order = await service.submitPackageManualOrder(
+        req.user!.userId,
+        req.params.id,
+        transactionId,
+        { batchId, userState, userAddress, userGstin },
+      );
+      return res.status(201).json({ order });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

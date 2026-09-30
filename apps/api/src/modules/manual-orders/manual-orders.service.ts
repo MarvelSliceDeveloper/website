@@ -124,19 +124,24 @@ export async function submitManualOrder(
   const duplicate = await prisma.manualPaymentOrder.findUnique({
     where: { transactionId },
   });
-  if (duplicate) throw new AppError(409, "This transaction ID was already submitted");
+  if (duplicate)
+    throw new AppError(409, "This transaction ID was already submitted");
 
   const existingPending = await prisma.manualPaymentOrder.findFirst({
     where: { userId, courseId, status: "PENDING" },
   });
   if (existingPending) {
-    throw new AppError(409, "You already have a pending payment for this course");
+    throw new AppError(
+      409,
+      "You already have a pending payment for this course",
+    );
   }
 
   const paidEnrollment = await prisma.courseEnrollment.findFirst({
     where: { userId, courseId, status: "APPROVED" },
   });
-  if (paidEnrollment) throw new AppError(409, "You are already enrolled in this course");
+  if (paidEnrollment)
+    throw new AppError(409, "You are already enrolled in this course");
 
   const order = await prisma.manualPaymentOrder.create({
     data: { userId, courseId, plan, amount, transactionId, status: "PENDING" },
@@ -167,9 +172,179 @@ export async function submitManualOrder(
 export async function listMyOrders(userId: string) {
   return prisma.manualPaymentOrder.findMany({
     where: { userId },
-    include: { course: { select: { id: true, title: true } } },
+    include: {
+      course: { select: { id: true, title: true } },
+      package: { select: { id: true, name: true } },
+      batch: { select: { id: true, name: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
+}
+
+export async function getPackagePaymentOptions(packageId: string) {
+  const pkg = await prisma.coursePackage.findFirst({
+    where: { id: packageId, status: "ACTIVE" },
+    select: { id: true, name: true, price: true },
+  });
+  if (!pkg) throw new AppError(404, "Package not found");
+  const settings = await getSettings();
+  const upi = settings
+    ? {
+        upiId: settings.upiId,
+        payeeName: settings.payeeName,
+        isManualEnabled: settings.isManualEnabled,
+      }
+    : null;
+  const price = pkg.price ?? null;
+  const upiIntent =
+    upi && upi.isManualEnabled && price != null && price > 0
+      ? buildUpiIntent({
+          upiId: upi.upiId,
+          payeeName: upi.payeeName,
+          amountPaise: price,
+          note: pkg.name,
+        })
+      : null;
+  const batches = await prisma.batch.findMany({
+    where: {
+      packageId,
+      status: { in: ["UPCOMING", "ACTIVE"] },
+    },
+    include: {
+      course: { select: { id: true, title: true } },
+      _count: { select: { enrollments: true } },
+    },
+    orderBy: { startDate: "asc" },
+  });
+  return {
+    packageId: pkg.id,
+    packageName: pkg.name,
+    price,
+    upi,
+    upiIntent,
+    batches: batches.map((b) => ({
+      id: b.id,
+      name: b.name,
+      startDate: b.startDate,
+      course: b.course,
+      seatsAvailable: b.maxStudents
+        ? b.maxStudents - b._count.enrollments
+        : null,
+    })),
+  };
+}
+
+export interface PackageOrderInput {
+  batchId?: string;
+  userState?: string;
+  userAddress?: string;
+  userGstin?: string;
+}
+
+function cleanOptionalText(v: unknown, max = 200): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const t = v.trim();
+  if (!t) return undefined;
+  return t.slice(0, max);
+}
+
+export async function submitPackageManualOrder(
+  userId: string,
+  packageId: string,
+  transactionIdRaw: string,
+  input?: PackageOrderInput,
+) {
+  const settings = await getSettings();
+  if (!settings || !settings.isManualEnabled) {
+    throw new AppError(400, "Manual UPI payments are currently disabled");
+  }
+  const pkg = await prisma.coursePackage.findFirst({
+    where: { id: packageId, status: "ACTIVE" },
+    select: { id: true, name: true, price: true },
+  });
+  if (!pkg) throw new AppError(404, "Package not found");
+  if (pkg.price == null || pkg.price <= 0) {
+    throw new AppError(400, "This package is not available for UPI payment");
+  }
+  const transactionId = normalizeUtr(transactionIdRaw);
+
+  const duplicate = await prisma.manualPaymentOrder.findUnique({
+    where: { transactionId },
+  });
+  if (duplicate)
+    throw new AppError(409, "This transaction ID was already submitted");
+
+  const existingPending = await prisma.manualPaymentOrder.findFirst({
+    where: { userId, packageId, status: "PENDING" },
+  });
+  if (existingPending) {
+    throw new AppError(
+      409,
+      "You already have a pending payment for this package",
+    );
+  }
+
+  const paidEnrollment = await prisma.packageEnrollment.findFirst({
+    where: { userId, packageId, status: "APPROVED" },
+  });
+  if (paidEnrollment)
+    throw new AppError(409, "You are already enrolled in this package");
+
+  let batchId: string | null = null;
+  if (input?.batchId) {
+    const batch = await prisma.batch.findUnique({
+      where: { id: input.batchId },
+      select: { id: true, packageId: true, status: true, isActive: true },
+    });
+    if (
+      !batch ||
+      batch.packageId !== packageId ||
+      !batch.isActive ||
+      (batch.status !== "UPCOMING" && batch.status !== "ACTIVE")
+    ) {
+      throw new AppError(
+        400,
+        "Selected batch is not available for this package",
+      );
+    }
+    batchId = batch.id;
+  }
+
+  const order = await prisma.manualPaymentOrder.create({
+    data: {
+      userId,
+      packageId,
+      plan: "FULL",
+      amount: pkg.price,
+      transactionId,
+      status: "PENDING",
+      batchId,
+      userState: cleanOptionalText(input?.userState, 100),
+      userAddress: cleanOptionalText(input?.userAddress, 500),
+      userGstin: cleanOptionalText(input?.userGstin, 20)?.toUpperCase(),
+    },
+  });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true },
+  });
+  if (user) {
+    emailService
+      .sendManualOrderReceived({
+        name: user.name,
+        email: user.email,
+        courseName: pkg.name,
+        plan: "FULL",
+        amount: pkg.price,
+        transactionId,
+      })
+      .catch((err: Error) =>
+        console.error("[manual-orders] received email failed:", err),
+      );
+  }
+
+  return order;
 }
 
 export async function listManualOrders(params: {
@@ -196,6 +371,8 @@ export async function listManualOrders(params: {
       include: {
         user: { select: { id: true, name: true, email: true } },
         course: { select: { id: true, title: true } },
+        package: { select: { id: true, name: true } },
+        batch: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -208,21 +385,36 @@ export async function approveManualOrder(orderId: string, reviewerId: string) {
   const order = await prisma.manualPaymentOrder.findUnique({
     where: { id: orderId },
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, phone: true } },
       course: { select: { id: true, title: true } },
+      package: {
+        select: {
+          id: true,
+          name: true,
+          courses: { select: { courseId: true } },
+        },
+      },
+      batch: { select: { id: true, name: true, courseId: true } },
     },
   });
   if (!order) throw new AppError(404, "Manual order not found");
   if (order.status !== "PENDING") {
-    throw new AppError(400, `Cannot approve order with status: ${order.status}`);
+    throw new AppError(
+      400,
+      `Cannot approve order with status: ${order.status}`,
+    );
   }
+  const isPackageOrder = order.packageId != null;
+  const itemName = isPackageOrder
+    ? (order.package?.name ?? "package")
+    : (order.course?.title ?? "course");
 
   const result = await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.create({
       data: {
         userId: order.userId,
-        courseId: order.courseId,
-        packageId: null,
+        courseId: order.courseId ?? null,
+        packageId: order.packageId ?? null,
         amount: order.amount,
         currency: "INR",
         razorpayOrderId: `MANUAL_${order.id}`,
@@ -239,12 +431,42 @@ export async function approveManualOrder(orderId: string, reviewerId: string) {
         paymentId: payment.id,
       },
     });
+    if (isPackageOrder) {
+      const enrollment = await tx.packageEnrollment.upsert({
+        where: { paymentId: payment.id },
+        update: { status: "APPROVED", userId: order.userId },
+        create: {
+          userId: order.userId,
+          packageId: order.packageId!,
+          paymentId: payment.id,
+          status: "APPROVED",
+        },
+      });
+      const batchCourseId = order.batch?.courseId ?? null;
+      const courseIds = batchCourseId
+        ? [batchCourseId]
+        : (order.package?.courses ?? []).map((pc) => pc.courseId);
+      for (const courseId of courseIds) {
+        await tx.packageEnrollmentCourse.create({
+          data: {
+            enrollmentId: enrollment.id,
+            courseId,
+            batchId: order.batchId ?? null,
+          },
+        });
+      }
+      return { payment, updated, enrollment };
+    }
+    const cid = order.courseId;
+    if (!cid) {
+      throw new AppError(500, "Manual order is missing its course");
+    }
     const enrollment = await tx.courseEnrollment.upsert({
       where: { paymentId: payment.id },
       update: { status: "APPROVED", userId: order.userId },
       create: {
         userId: order.userId,
-        courseId: order.courseId,
+        courseId: cid,
         paymentId: payment.id,
         status: "APPROVED",
       },
@@ -258,18 +480,27 @@ export async function approveManualOrder(orderId: string, reviewerId: string) {
       invoiceNumber: `INV-${result.payment.id.slice(-8).toUpperCase()}`,
       userName: order.user.name,
       userEmail: order.user.email,
-      packageName: `${order.course.title} (${order.plan === "FULL" ? "Full fee" : "Monthly"})`,
+      userPhone: order.user.phone ?? undefined,
+      userState: order.userState ?? undefined,
+      userAddress: order.userAddress ?? undefined,
+      userGstin: order.userGstin ?? undefined,
+      packageName: `${itemName} (${order.plan === "FULL" ? "Full fee" : "Monthly"})`,
       amount: order.amount,
       discountAmount: 0,
+      taxRate: 18,
+      taxInclusive: true,
       date: new Date(),
-      paymentMethod: "UPI Manual",
+      paidOn: result.updated.reviewedAt ?? new Date(),
+      orderId: result.payment.razorpayOrderId ?? undefined,
+      paymentMethod: "UPI",
+      transactionId: order.transactionId,
       paymentStatus: "PAID",
     });
     emailService
       .sendManualOrderApproved({
         name: order.user.name,
         email: order.user.email,
-        courseName: order.course.title,
+        courseName: itemName,
         plan: order.plan,
         amount: order.amount,
         paymentId: result.payment.id,
@@ -283,21 +514,32 @@ export async function approveManualOrder(orderId: string, reviewerId: string) {
   }
 
   try {
-    const { notificationService } = await import(
-      "../notifications/notification.service"
-    );
+    const { notificationService } =
+      await import("../notifications/notification.service");
     await notificationService.create({
       userId: order.userId,
       type: "ENROLLMENT_APPROVED",
       title: "Payment approved!",
-      message: `Your ${order.plan === "FULL" ? "full-fee" : "monthly"} UPI payment for "${order.course.title}" was approved. You now have course access.`,
-      metadata: { courseId: order.courseId, paymentId: result.payment.id },
+      message: `Your ${order.plan === "FULL" ? "full-fee" : "monthly"} UPI payment for "${itemName}" was approved. You now have course access.`,
+      metadata: isPackageOrder
+        ? {
+            packageId: order.packageId ?? undefined,
+            paymentId: result.payment.id,
+          }
+        : {
+            courseId: order.courseId ?? undefined,
+            paymentId: result.payment.id,
+          },
     });
   } catch {
     // notifications are best-effort
   }
 
-  return { order: result.updated, payment: result.payment, enrollment: result.enrollment };
+  return {
+    order: result.updated,
+    payment: result.payment,
+    enrollment: result.enrollment,
+  };
 }
 
 export async function rejectManualOrder(
@@ -310,6 +552,7 @@ export async function rejectManualOrder(
     include: {
       user: { select: { id: true, name: true, email: true } },
       course: { select: { id: true, title: true } },
+      package: { select: { id: true, name: true } },
     },
   });
   if (!order) throw new AppError(404, "Manual order not found");
@@ -317,6 +560,7 @@ export async function rejectManualOrder(
     throw new AppError(400, `Cannot reject order with status: ${order.status}`);
   }
   if (!reason.trim()) throw new AppError(400, "Rejection reason required");
+  const itemName = order.package?.name ?? order.course?.title ?? "course";
 
   const updated = await prisma.manualPaymentOrder.update({
     where: { id: order.id },
@@ -332,7 +576,7 @@ export async function rejectManualOrder(
     .sendManualOrderRejected({
       name: order.user.name,
       email: order.user.email,
-      courseName: order.course.title,
+      courseName: itemName,
       reason: reason.trim(),
     })
     .catch((err: Error) =>
@@ -340,15 +584,16 @@ export async function rejectManualOrder(
     );
 
   try {
-    const { notificationService } = await import(
-      "../notifications/notification.service"
-    );
+    const { notificationService } =
+      await import("../notifications/notification.service");
     await notificationService.create({
       userId: order.userId,
       type: "ENROLLMENT_REJECTED",
       title: "Payment not approved",
-      message: `Your UPI payment for "${order.course.title}" was not approved: ${reason.trim()}`,
-      metadata: { courseId: order.courseId },
+      message: `Your UPI payment for "${itemName}" was not approved: ${reason.trim()}`,
+      metadata: order.packageId
+        ? { packageId: order.packageId }
+        : { courseId: order.courseId },
     });
   } catch {
     // best-effort

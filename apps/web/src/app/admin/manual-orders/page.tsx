@@ -20,7 +20,8 @@ import {
 interface ManualOrder {
   id: string;
   userId: string;
-  courseId: string;
+  courseId: string | null;
+  packageId: string | null;
   plan: "MONTHLY" | "FULL";
   amount: number;
   transactionId: string;
@@ -31,7 +32,9 @@ interface ManualOrder {
   paymentId: string | null;
   createdAt: string;
   user: { id: string; name: string; email: string };
-  course: { id: string; title: string };
+  course: { id: string; title: string } | null;
+  package: { id: string; name: string } | null;
+  batch: { id: string; name: string } | null;
 }
 
 type ApiResponse = {
@@ -123,7 +126,8 @@ export default function ManualOrdersPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => api.patch(`/api/admin/manual-orders/${id}/approve`),
+    mutationFn: (id: string) =>
+      api.patch(`/api/admin/manual-orders/${id}/approve`),
     onSuccess: () => {
       toast.success("Payment approved — invoice emailed to student");
       setApproveId(null);
@@ -194,8 +198,8 @@ export default function ManualOrdersPage() {
             Static UPI QR Settings
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Single global QR shown on all course checkouts. Students scan,
-            pay, then submit their transaction ID.
+            Single global QR shown on all course checkouts. Students scan, pay,
+            then submit their transaction ID.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -285,8 +289,15 @@ export default function ManualOrdersPage() {
                     {order.user.email}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Course: {order.course.title}
+                    {order.package
+                      ? `Package: ${order.package.name}`
+                      : `Course: ${order.course?.title ?? "—"}`}
                   </p>
+                  {order.batch && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Batch: {order.batch.name}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-semibold text-success">

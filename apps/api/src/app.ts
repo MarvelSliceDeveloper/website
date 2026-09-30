@@ -99,6 +99,7 @@ import {
 import { versionRouter } from "./modules/version/version.routes";
 import {
   manualStudentRouter,
+  manualPackageRouter,
   manualAdminRouter,
 } from "./modules/manual-orders/manual-orders.routes";
 import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
@@ -203,6 +204,7 @@ const csrfExemptPaths = [
   "/api/coupons/validate",
   "/api/interns/apply",
   "/api/courses/catalogue",
+  "/api/packages",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -429,6 +431,7 @@ app.use("/api/admin/refunds", refundsRouter);
 
 // ── Manual UPI orders (static QR + UTR approval) ──
 app.use("/api/courses", manualStudentRouter);
+app.use("/api/packages", manualPackageRouter);
 app.use("/api/admin", manualAdminRouter);
 
 // ── Assignment Review Queue ──

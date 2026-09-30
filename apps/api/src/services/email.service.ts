@@ -210,6 +210,14 @@ export const emailService = {
       amount: number;
       discountAmount: number;
       orderId?: string;
+      userPhone?: string;
+      userState?: string;
+      userAddress?: string;
+      userGstin?: string;
+      couponCode?: string;
+      transactionId?: string;
+      paidOn?: Date;
+      paymentMethod?: string;
     };
   }): Promise<boolean> {
     if (!isConfigured()) {
@@ -237,10 +245,22 @@ export const emailService = {
                 invoiceNumber: `INV-${user.invoice.paymentId.slice(-8).toUpperCase()}`,
                 userName: user.name,
                 userEmail: user.email,
+                userPhone: user.invoice.userPhone,
+                userState: user.invoice.userState,
+                userAddress: user.invoice.userAddress,
+                userGstin: user.invoice.userGstin,
                 packageName: user.invoice.packageName,
                 amount: user.invoice.amount,
                 discountAmount: user.invoice.discountAmount,
+                couponCode: user.invoice.couponCode,
+                taxRate: 18,
+                taxInclusive: true,
                 date: new Date(),
+                paidOn: user.invoice.paidOn,
+                orderId: user.invoice.orderId,
+                paymentMethod: user.invoice.paymentMethod,
+                transactionId: user.invoice.transactionId,
+                paymentStatus: "PAID",
               }).toString("base64"),
               name: `invoice-${user.invoice.paymentId.slice(-8)}.pdf`,
             },
@@ -270,6 +290,14 @@ export const emailService = {
       amount: number;
       discountAmount: number;
       orderId?: string;
+      userPhone?: string;
+      userState?: string;
+      userAddress?: string;
+      userGstin?: string;
+      couponCode?: string;
+      transactionId?: string;
+      paidOn?: Date;
+      paymentMethod?: string;
     };
   }): Promise<boolean> {
     if (!isConfigured()) {
@@ -284,10 +312,22 @@ export const emailService = {
             invoiceNumber: `INV-${user.invoice.paymentId.slice(-8).toUpperCase()}`,
             userName: user.name,
             userEmail: user.email,
+            userPhone: user.invoice.userPhone,
+            userState: user.invoice.userState,
+            userAddress: user.invoice.userAddress,
+            userGstin: user.invoice.userGstin,
             packageName: user.invoice.packageName,
             amount: user.invoice.amount,
             discountAmount: user.invoice.discountAmount,
+            couponCode: user.invoice.couponCode,
+            taxRate: 18,
+            taxInclusive: true,
             date: new Date(),
+            paidOn: user.invoice.paidOn,
+            orderId: user.invoice.orderId,
+            paymentMethod: user.invoice.paymentMethod,
+            transactionId: user.invoice.transactionId,
+            paymentStatus: "PAID",
           }).toString("base64"),
           name: `invoice-${user.invoice.paymentId.slice(-8)}.pdf`,
         },
@@ -316,7 +356,9 @@ export const emailService = {
     transactionId: string;
   }): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn("[email] BREVO_API_KEY not set — skipping manual order received email");
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping manual order received email",
+      );
       return false;
     }
     try {
@@ -338,7 +380,10 @@ export const emailService = {
         tags: ["manual-payment", "submitted"],
       });
     } catch (error: unknown) {
-      console.error("[email] Failed to send manual order received email:", error);
+      console.error(
+        "[email] Failed to send manual order received email:",
+        error,
+      );
       return false;
     }
   },
@@ -353,7 +398,9 @@ export const emailService = {
     invoicePdfBase64: string;
   }): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn("[email] BREVO_API_KEY not set — skipping manual order approval email");
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping manual order approval email",
+      );
       return false;
     }
     try {
@@ -382,7 +429,10 @@ export const emailService = {
         ],
       });
     } catch (error: unknown) {
-      console.error("[email] Failed to send manual order approval email:", error);
+      console.error(
+        "[email] Failed to send manual order approval email:",
+        error,
+      );
       return false;
     }
   },
@@ -394,7 +444,9 @@ export const emailService = {
     reason: string;
   }): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn("[email] BREVO_API_KEY not set — skipping manual order rejection email");
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping manual order rejection email",
+      );
       return false;
     }
     try {
@@ -413,7 +465,10 @@ export const emailService = {
         tags: ["manual-payment", "rejected"],
       });
     } catch (error: unknown) {
-      console.error("[email] Failed to send manual order rejection email:", error);
+      console.error(
+        "[email] Failed to send manual order rejection email:",
+        error,
+      );
       return false;
     }
   },

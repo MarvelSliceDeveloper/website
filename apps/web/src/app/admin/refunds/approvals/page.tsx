@@ -24,16 +24,25 @@ interface Refund {
   status: string;
   reason: string | null;
   rejectionReason: string | null;
+  metadata?: {
+    manualRefund?: boolean;
+    refundTransactionId?: string;
+  } | null;
   initiatedBy: { id: string; name: string; email: string } | null;
   createdAt: string;
   payment?: {
     id: string;
     amount: number;
     status: string;
+    razorpayOrderId: string | null;
     razorpayPaymentId: string | null;
     user?: { id: string; name: string; email: string; phone: string | null };
     package?: { id: string; name: string; price: number | null };
   };
+}
+
+function isManualRefund(refund: Refund): boolean {
+  return refund.payment?.razorpayOrderId?.startsWith("MANUAL_") ?? false;
 }
 
 type ApiResponse = {
@@ -77,6 +86,8 @@ export default function RefundApprovalsPage() {
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [refundUtr, setRefundUtr] = useState("");
+  const [refundUtrError, setRefundUtrError] = useState("");
 
   const refundsQuery = useApiQuery<ApiResponse>(
     ["admin", "refunds", "approvals", tab],
@@ -86,19 +97,49 @@ export default function RefundApprovalsPage() {
   const refunds = refundsQuery.data?.items ?? [];
   const loading = refundsQuery.isPending;
 
+  const approveRefund = refunds.find((r) => r.id === approveId) ?? null;
+  const approveIsManual = approveRefund ? isManualRefund(approveRefund) : false;
+
   const approveMutation = useMutation({
-    mutationFn: (id: string) => api.post(`/api/admin/refunds/${id}/approve`),
-    onSuccess: () => {
-      toast.success("Refund approved and processed via Razorpay");
+    mutationFn: ({ id, utr }: { id: string; utr?: string }) =>
+      api.post(
+        `/api/admin/refunds/${id}/approve`,
+        utr ? { refundTransactionId: utr } : {},
+      ),
+    onSuccess: (_, variables) => {
+      toast.success(
+        variables.utr
+          ? "Manual refund recorded with UTR"
+          : "Refund approved and processed via Razorpay",
+      );
       setApproveId(null);
+      setRefundUtr("");
+      setRefundUtrError("");
       void refundsQuery.refetch();
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
 
+  function closeApprove() {
+    setApproveId(null);
+    setRefundUtr("");
+    setRefundUtrError("");
+  }
+
   function handleApprove() {
     if (!approveId) return;
-    approveMutation.mutate(approveId);
+    if (approveIsManual) {
+      const normalized = refundUtr.trim().toUpperCase();
+      if (!/^([0-9]{12}|[A-Z0-9]{12,22})$/.test(normalized)) {
+        setRefundUtrError(
+          "Enter the 12-digit UTR of the refund you made via UPI",
+        );
+        return;
+      }
+      approveMutation.mutate({ id: approveId, utr: normalized });
+      return;
+    }
+    approveMutation.mutate({ id: approveId });
   }
 
   const rejectMutation = useMutation({
@@ -128,7 +169,7 @@ export default function RefundApprovalsPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
         title="Refund Approvals"
-        description="Review and approve refund requests submitted by admins. Approval executes the refund against Razorpay."
+        description="Review and approve refund requests. Razorpay refunds execute via API; manual UPI refunds are recorded with the refund UTR."
         breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Refunds", href: "/admin/refunds" },
@@ -205,6 +246,11 @@ export default function RefundApprovalsPage() {
                     <span className="font-mono">
                       {refund.payment?.razorpayPaymentId ?? refund.paymentId}
                     </span>
+                    {isManualRefund(refund) && (
+                      <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                        UPI
+                      </span>
+                    )}
                   </p>
                   <p className="text-muted-foreground">
                     <span className="font-medium text-foreground">
@@ -246,6 +292,11 @@ export default function RefundApprovalsPage() {
                     {refund.status === "REJECTED" && refund.rejectionReason
                       ? `Rejected: ${refund.rejectionReason}`
                       : refund.status}
+                    {refund.metadata?.refundTransactionId && (
+                      <span className="block font-mono">
+                        refund utr: {refund.metadata.refundTransactionId}
+                      </span>
+                    )}
                   </p>
                 )}
               </div>
@@ -254,18 +305,89 @@ export default function RefundApprovalsPage() {
         </div>
       )}
 
-      {/* Approve confirm modal */}
-      <ConfirmModal
-        open={!!approveId}
-        onClose={() => setApproveId(null)}
-        onConfirm={handleApprove}
-        title="Approve refund?"
-        description="Approving executes the refund against Razorpay immediately. This cannot be undone."
-        confirmLabel={processing ? "Processing..." : "Approve & Refund"}
-        confirmLoading={processing}
-        variant="primary"
-        icon={IconShieldCheck}
-      />
+      {/* Approve confirm modal — manual UPI refunds collect the refund UTR */}
+      {approveIsManual ? (
+        <FormModal
+          open={!!approveId}
+          onClose={closeApprove}
+          title="Record manual refund"
+          size="sm"
+          footer={
+            <>
+              <button
+                onClick={closeApprove}
+                className="btn-cancel text-sm"
+                disabled={processing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprove}
+                disabled={processing}
+                className="btn-primary text-sm flex items-center gap-1.5"
+              >
+                {processing ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                    Recording...
+                  </>
+                ) : (
+                  "Record & Complete"
+                )}
+              </button>
+            </>
+          }
+        >
+          <p className="text-xs text-muted-foreground">
+            Refund{" "}
+            {approveRefund
+              ? formatCurrency(approveRefund.amount, approveRefund.currency)
+              : ""}{" "}
+            from the company UPI app first, then enter its UTR below to complete
+            this refund.
+          </p>
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-foreground mb-1">
+              Refund UTR <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              value={refundUtr}
+              maxLength={22}
+              onChange={(e) => {
+                setRefundUtr(
+                  e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, "")
+                    .slice(0, 22),
+                );
+                if (refundUtrError) setRefundUtrError("");
+              }}
+              placeholder="e.g. 123456789012"
+              className="field text-xs w-full font-mono tracking-wider"
+            />
+            {refundUtrError ? (
+              <p className="mt-1 text-xs text-danger">{refundUtrError}</p>
+            ) : (
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Find this in your UPI app payment history.
+              </p>
+            )}
+          </div>
+        </FormModal>
+      ) : (
+        <ConfirmModal
+          open={!!approveId}
+          onClose={closeApprove}
+          onConfirm={handleApprove}
+          title="Approve refund?"
+          description="Approving executes the refund against Razorpay immediately. This cannot be undone."
+          confirmLabel={processing ? "Processing..." : "Approve & Refund"}
+          confirmLoading={processing}
+          variant="primary"
+          icon={IconShieldCheck}
+        />
+      )}
 
       {/* Reject modal with reason */}
       <FormModal
@@ -277,10 +399,10 @@ export default function RefundApprovalsPage() {
           <>
             <button
               onClick={() => setRejectId(null)}
-                className="btn-cancel text-sm"
-                disabled={processing}
-              >
-                Cancel
+              className="btn-cancel text-sm"
+              disabled={processing}
+            >
+              Cancel
             </button>
             <button
               onClick={handleReject}

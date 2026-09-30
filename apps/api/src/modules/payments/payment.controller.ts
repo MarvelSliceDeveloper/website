@@ -171,8 +171,7 @@ export const paymentController = {
 
   async checkEmailRegistered(req: Request, res: Response) {
     try {
-      const email =
-        typeof req.query.email === "string" ? req.query.email : "";
+      const email = typeof req.query.email === "string" ? req.query.email : "";
       const result = await paymentService.checkEmailRegistered(email);
       return res.json(result);
     } catch (err: unknown) {
@@ -213,9 +212,18 @@ export const paymentController = {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: {
-          user: { select: { name: true, email: true } },
+          user: {
+            select: {
+              name: true,
+              email: true,
+              phone: true,
+              address: true,
+              state: true,
+            },
+          },
           package: { select: { name: true } },
           course: { select: { title: true } },
+          coupon: { select: { code: true } },
         },
       });
       if (!payment) {
@@ -244,15 +252,29 @@ export const paymentController = {
 
       const { generateInvoicePdf } =
         await import("../../services/invoice.service");
+      const isManual = payment.razorpayOrderId?.startsWith("MANUAL_") ?? false;
       const pdf = generateInvoicePdf({
         invoiceNumber: `INV-${payment.id.slice(-8).toUpperCase()}`,
         userName: payment.user.name,
         userEmail: payment.user.email,
+        userPhone: payment.user.phone ?? undefined,
+        userAddress: payment.user.address ?? undefined,
+        userState: payment.user.state ?? undefined,
         packageName:
           payment.package?.name ?? payment.course?.title ?? "Course Package",
         amount: payment.amount,
         discountAmount: payment.discountAmount,
+        couponCode: payment.coupon?.code,
+        taxRate: 18,
+        taxInclusive: true,
         date: payment.createdAt,
+        paidOn:
+          payment.status === "PAID"
+            ? (payment.updatedAt ?? payment.createdAt)
+            : undefined,
+        orderId: payment.razorpayOrderId ?? undefined,
+        paymentMethod: isManual ? "UPI" : "Razorpay",
+        transactionId: payment.razorpayPaymentId ?? undefined,
         paymentStatus:
           payment.status === "PAID" ||
           payment.status === "PENDING" ||

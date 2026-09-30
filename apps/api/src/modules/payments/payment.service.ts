@@ -286,7 +286,8 @@ export const paymentService = {
       where: { razorpayOrderId },
       include: {
         package: true,
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        coupon: { select: { code: true } },
       },
     });
     if (!payment) throw new AppError(404, "Payment record not found");
@@ -321,6 +322,11 @@ export const paymentService = {
           amount: payment.amount,
           discountAmount: payment.discountAmount,
           orderId: razorpayOrderId,
+          userPhone: payment.user?.phone ?? undefined,
+          couponCode: payment.coupon?.code,
+          transactionId: razorpayPaymentId,
+          paidOn: new Date(),
+          paymentMethod: "Razorpay",
         },
       })
       .catch((err: Error) =>
@@ -446,6 +452,11 @@ export const paymentService = {
             packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
+            orderId: payment.razorpayOrderId ?? undefined,
+            userPhone: normalizedPhone,
+            transactionId: payment.razorpayPaymentId ?? undefined,
+            paidOn: new Date(),
+            paymentMethod: "Razorpay",
           },
         })
         .catch((err: Error) =>
@@ -540,6 +551,11 @@ export const paymentService = {
             packageName: payment.package!.name,
             amount: payment.amount,
             discountAmount: payment.discountAmount,
+            orderId: payment.razorpayOrderId ?? undefined,
+            userPhone: normalizedPhone,
+            transactionId: payment.razorpayPaymentId ?? undefined,
+            paidOn: new Date(),
+            paymentMethod: "Razorpay",
           },
         })
         .catch((err: Error) =>
