@@ -269,8 +269,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const address = sanitize(contact.address || siteSettings?.address || 'Marvel Slice — Institute for Software Learning, Chennai, Tamil Nadu, India');
 
   const title = sanitize(data.meta.title || course?.title || 'Professional Course');
-  const verifiedDocDuration = options.docDuration || (options.docSections && options.docSections.duration);
-  const duration = sanitize(verifiedDocDuration || course?.duration || data.meta.duration || durationForCourse(title));
+  const verifiedDocDuration = options.docDuration || (options.docSections && options.docSections.duration) || extractDurationFromDoc(course?.rawText || course?.description || '', options.docFileName || '', title);
+  const duration = sanitize(verifiedDocDuration || course?.duration || data.meta?.duration || durationForCourse(title));
   const mode = sanitize(data.meta.mode || course?.mode || 'Online / Classroom');
   const category = sanitize(data.meta.category || course?.category || 'Software Learning');
 

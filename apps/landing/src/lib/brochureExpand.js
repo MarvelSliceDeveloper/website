@@ -1241,38 +1241,55 @@ export function prettyTitleFromFile(filename = '') {
  * Prevents hallucinated or mismatched course durations.
  */
 export function extractDurationFromDoc(rawText = '', fileName = '', fallbackTitle = '') {
-  // 1. Check filename for "(3 Months)", "3 Months", "(6 Months)", "(8 Weeks)", etc.
+  const text = String(rawText || '');
   const fileStr = String(fileName || '');
-  const fileMatch = fileStr.match(/(\d+)\s*(months?|weeks?|days?)/i);
-  if (fileMatch) {
-    const num = parseInt(fileMatch[1], 10);
-    const unit = /week/i.test(fileMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
-    return `${num} ${unit}`;
+
+  // 1. Check filename specifically for duration patterns (e.g. "2 Months", "2-Months", "(2 Months)", "8 Weeks")
+  const fileDurMatch = fileStr.match(/\b(\d{1,2})\s*[-–]?\s*(months?|weeks?)\b/i);
+  if (fileDurMatch) {
+    const num = parseInt(fileDurMatch[1], 10);
+    if (num >= 1 && num <= 24) {
+      const unit = /week/i.test(fileDurMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
+      return `${num} ${unit}`;
+    }
   }
 
-  // 2. Check document text for explicit "Duration: X Months", "Course Duration: X Months", etc.
-  const text = String(rawText || '').slice(0, 8000);
-  const durMatch = text.match(/(?:course\s*)?duration\s*[:\-–]\s*([0-9]+\s*(?:months?|weeks?|days?|hours?)(?:\s*\([^\)]+\))?)/i);
+  // 2. Check full document text for explicit "Duration" labels (case-insensitive across full text)
+  // Matches: "Duration: 2 Months", "Duration - 2 Months", "Course Duration: 2 Months", "Duration : 2 months", "Duration 2 Months"
+  const durMatch = text.match(/(?:course\s*)?duration\s*[:\-–]?\s*([0-9]{1,2}\s*[-–]?\s*(?:months?|weeks?|days?|hours?)(?:\s*\([^\)]+\))?)/i);
   if (durMatch && durMatch[1]) {
-    return durMatch[1].trim();
+    let result = durMatch[1].trim();
+    result = result.replace(/^(\d+)\s*[-–]?\s*month(s)?/i, (m, n) => `${n} Month${n === '1' ? '' : 's'}`);
+    result = result.replace(/^(\d+)\s*[-–]?\s*week(s)?/i, (m, n) => `${n} Week${n === '1' ? '' : 's'}`);
+    return result;
   }
 
-  // 3. Check for standalone "X Months" or "X Weeks" in document header (first 2000 chars)
-  const headerMatch = text.slice(0, 2000).match(/\b(\d+)\s*(months?|weeks?)\b/i);
-  if (headerMatch) {
-    const num = parseInt(headerMatch[1], 10);
-    const unit = /week/i.test(headerMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
+  // 3. Search raw document text for explicit phrases like "2 Months Course", "2 Month Program", "2 Months Syllabus"
+  const phraseMatch = text.match(/\b(\d{1,2})\s*[-–]?\s*(months?|weeks?)\s*(?:course|program|training|duration|syllabus|curriculum|module|breakdown)\b/i);
+  if (phraseMatch) {
+    const num = parseInt(phraseMatch[1], 10);
+    const unit = /week/i.test(phraseMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
     return `${num} ${unit}`;
   }
 
-  // 4. Fallback to standard verified duration for course title
+  // 4. Search full raw document text for any standalone "\b(\d{1,2})\s*(months?|weeks?)\b"
+  const standaloneMatch = text.match(/\b(\d{1,2})\s*[-–]?\s*(months?|weeks?)\b/i);
+  if (standaloneMatch) {
+    const num = parseInt(standaloneMatch[1], 10);
+    if (num >= 1 && num <= 24) {
+      const unit = /week/i.test(standaloneMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
+      return `${num} ${unit}`;
+    }
+  }
+
+  // 5. Fallback to title-based duration lookup
   return durationForCourse(fallbackTitle);
 }
 
 export function durationForCourse(title = '') {
   const t = String(title).toLowerCase();
   if (/full.?stack|data.*science|aiml|machine.*learning/.test(t)) return '6 Months';
-  if (/html.*css|wordpress/.test(t)) return '2 Months';
+  if (/html.*css|wordpress|playwright|selenium|testng|automation/.test(t)) return '2 Months';
   return '3 Months';
 }
 
