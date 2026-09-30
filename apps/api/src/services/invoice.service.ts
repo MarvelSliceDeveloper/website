@@ -162,9 +162,27 @@ function amountInWords(paise: number): string {
 
 function loadLogo(): { data: string; format: "PNG" | "JPEG" } | null {
   if (!COMPANY_LOGO_PATH) return null;
+  if (/\.svg$/i.test(COMPANY_LOGO_PATH)) {
+    console.warn(
+      "[invoice] COMPANY_LOGO_PATH points to an SVG — jsPDF cannot rasterize SVG. Export it as PNG/JPG first.",
+    );
+    return null;
+  }
   try {
     const buf = readFileSync(COMPANY_LOGO_PATH);
+    if (buf.length > 500 * 1024) {
+      console.warn(
+        `[invoice] Logo is ${(buf.length / 1024).toFixed(0)}KB — keep it under 500KB (wide PNG/JPG) or every invoice PDF carries the extra weight.`,
+      );
+    }
     const isJpg = /\.jpe?g$/i.test(COMPANY_LOGO_PATH);
+    const isPng = /\.png$/i.test(COMPANY_LOGO_PATH);
+    if (!isJpg && !isPng) {
+      console.warn(
+        "[invoice] Logo must be a PNG or JPG file — skipping letterhead image.",
+      );
+      return null;
+    }
     return {
       data: `data:image/${isJpg ? "jpeg" : "png"};base64,${buf.toString("base64")}`,
       format: isJpg ? "JPEG" : "PNG",
@@ -286,33 +304,25 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
 
   let y = margin;
 
-  // ── Letterhead: logo + name only ──────────────────────────
+  // ── Letterhead: logo (if the file loads) + name, always ──
+  // Name prints regardless so a missing/unreadable logo file can never
+  // leave a blank header. Heights follow the actual drawn image size.
   let leftY = y;
+  let logoH = 0;
   const logo = loadLogo();
   if (logo) {
     try {
       const p = doc.getImageProperties(logo.data);
-      const h = 12;
-      const w = Math.min((h * p.width) / p.height, 48);
-      doc.addImage(
-        logo.data,
-        logo.format,
-        margin,
-        y - 1,
-        w,
-        (w * p.height) / p.width,
-      );
-      leftY = y + 14;
+      const w = Math.min(48, (12 * p.width) / p.height);
+      logoH = (w * p.height) / p.width;
+      doc.addImage(logo.data, logo.format, margin, y - 1, w, logoH);
     } catch {
-      setText(16, TEXT_DARK, "bold");
-      doc.text(DISPLAY_NAME, margin, y + 5);
-      leftY = y + 10;
+      logoH = 0;
     }
-  } else {
-    setText(16, TEXT_DARK, "bold");
-    doc.text(DISPLAY_NAME, margin, y + 5);
-    leftY = y + 10;
   }
+  setText(16, TEXT_DARK, "bold");
+  doc.text(DISPLAY_NAME, margin, y + logoH + 5);
+  leftY = y + logoH + 10;
 
   // ── Invoice title + meta (right) ────────────────────────────
   setText(22, ACCENT, "bold");
@@ -335,11 +345,11 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     rightY += 5;
   }
 
-  y = Math.max(leftY, rightY) + 5;
+  y = Math.max(leftY, rightY) + 4;
   doc.setDrawColor(...BORDER);
   doc.setLineWidth(0.4);
   doc.line(margin, y, right, y);
-  y += 9;
+  y += 7;
 
   // ── Billed to (left) + Payment details (right) ──────────────
   const leftWidth = contentWidth * 0.52;
@@ -397,7 +407,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     payY += 5;
   }
 
-  y = Math.max(billY, payY) + 6;
+  y = Math.max(billY, payY) + 5;
 
   // ── Line items ──────────────────────────────────────────────
   const showSac = !!COMPANY_SAC || items.some((i) => i.sac);
@@ -472,7 +482,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
 
   y =
     (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
-      .finalY + 8;
+      .finalY + 6;
 
   // ── Totals (right) + amount in words (left) ─────────────────
   const totalRows =
@@ -533,7 +543,7 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     4.6,
   );
 
-  y = Math.max(ty, wordsEnd) + 8;
+  y = Math.max(ty, wordsEnd) + 6;
 
   // ── Notes ───────────────────────────────────────────────────
   const notes: string[] = [];
