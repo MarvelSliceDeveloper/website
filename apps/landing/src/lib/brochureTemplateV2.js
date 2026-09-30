@@ -13,7 +13,7 @@ import {
   isProjectModule,
   programDimensionsFor, targetAudienceDetailedFor, prerequisitesFor,
   prettyTitleFromFile, durationForCourse,
-  extractToolsFromSyllabus, extractDurationFromDoc,
+  extractToolsFromSyllabus, extractDurationFromDoc, extractProjectsFromDoc,
 } from './brochureExpand.js';
 
 /**
@@ -288,21 +288,25 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   }
   const outcomes = outcomesFor(title, modules.map((m) => ({ title: m.title, topics: m.topics })));
   const roles = rolesFor(title);
-  const projectLevels = ['Beginner', 'Intermediate', 'Advanced', 'Advanced'];
-  const projects = (asList(data.capstones?.projects).length
-    ? asList(data.capstones.projects).slice(0, 4).map((p, i) => ({
-      level: projectLevels[i] || 'Advanced',
-      title: sanitize(p.title) || 'Project',
-      desc: sanitize((p.paragraphs || [])[0] || p.description) || 'Build and deploy a portfolio-ready application.',
-      tech: sanitize(p.techStack || p.tech || ''),
-    }))
-    : projectsFor(title, modules)).slice(0, 4);
-
   // Extract tools strictly from the syllabus modules / document (no hallucinated tools)
   const docTools = options.docTools || (options.docSections && options.docSections.tools) || [];
   const extractedTools = extractToolsFromSyllabus(modules, options.rawText || '');
   const finalTools = docTools.length ? docTools : (extractedTools.length ? extractedTools : toolsForTitle(title, (course?.projects || []).flatMap((p) => asList(p.technologies)), modules));
   const tools = finalTools.slice(0, 12);
+
+  // Extract projects strictly from document or options (no hallucinated SaaS/React projects)
+  const projectLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ADVANCED'];
+  const docProjects = options.docProjects || (options.docSections && options.docSections.projects) || extractProjectsFromDoc(options.rawText || course?.rawText || '', tools);
+  const projects = (docProjects.length
+    ? docProjects
+    : (asList(data.capstones?.projects).length
+      ? asList(data.capstones.projects).slice(0, 4).map((p, i) => ({
+        level: projectLevels[i] || 'ADVANCED',
+        title: sanitize(p.title) || 'Project',
+        desc: sanitize((p.paragraphs || [])[0] || p.description) || 'Build and deploy a portfolio-ready application.',
+        tech: sanitize(p.techStack || p.tech || ''),
+      }))
+      : projectsFor(title, modules))).slice(0, 4);
 
   const skillSource = (data.techMatrix?.categories || []).flatMap((c) => c.items || []).map(sanitize).filter(Boolean);
   const skills = (skillSource.length ? skillSource : modules.flatMap((m) => m.topics).filter((t) => t.length > 3 && t.length < 42)).slice(0, 12);

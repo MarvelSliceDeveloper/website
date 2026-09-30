@@ -59,6 +59,7 @@ export default function CourseBrochure() {
   const [docFileName, setDocFileName] = useState('');
   const [docDuration, setDocDuration] = useState('');
   const [docTools, setDocTools] = useState([]);
+  const [docProjects, setDocProjects] = useState([]);
   const [docProcessing, setDocProcessing] = useState(false);
   const [docError, setDocError] = useState('');
   const [pageImage, setPageImage] = useState(null);
@@ -205,6 +206,7 @@ export default function CourseBrochure() {
       docSections,
       docDuration,
       docTools,
+      docProjects,
       otherCourses: others,
       bgStyle,
       pathSteps: autoPathSteps,
@@ -228,6 +230,7 @@ export default function CourseBrochure() {
       setDocFileName(file.name);
       if (sections.duration) setDocDuration(sections.duration);
       if (sections.tools && sections.tools.length) setDocTools(sections.tools);
+      if (sections.projects && sections.projects.length) setDocProjects(sections.projects);
     } catch (err) {
       console.error('Doc condense error:', err);
       setDocError(err.message || 'Failed to process doc file.');

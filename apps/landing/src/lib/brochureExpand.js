@@ -1272,6 +1272,23 @@ export function extractDurationFromDoc(rawText = '', fileName = '', fallbackTitl
     return `${num} ${unit}`;
   }
 
+  // 3b. Check for max MONTH N / WEEK N headings in document text (e.g. MONTH 1 ... MONTH 2)
+  const monthMatches = [...text.matchAll(/\bMONTH\s*(\d{1,2})\b/gi)];
+  if (monthMatches.length > 0) {
+    const maxMonth = Math.max(...monthMatches.map((m) => parseInt(m[1], 10)));
+    if (maxMonth >= 1 && maxMonth <= 24) {
+      return `${maxMonth} Month${maxMonth === 1 ? '' : 's'}`;
+    }
+  }
+
+  const weekMatches = [...text.matchAll(/\bWEEK\s*(\d{1,2})\b/gi)];
+  if (weekMatches.length > 0) {
+    const maxWeek = Math.max(...weekMatches.map((m) => parseInt(m[1], 10)));
+    if (maxWeek >= 1 && maxWeek <= 52) {
+      return `${maxWeek} Week${maxWeek === 1 ? '' : 's'}`;
+    }
+  }
+
   // 4. Search full raw document text for any standalone "\b(\d{1,2})\s*(months?|weeks?)\b"
   const standaloneMatch = text.match(/\b(\d{1,2})\s*[-–]?\s*(months?|weeks?)\b/i);
   if (standaloneMatch) {
@@ -1291,6 +1308,49 @@ export function durationForCourse(title = '') {
   if (/full.?stack|data.*science|aiml|machine.*learning/.test(t)) return '6 Months';
   if (/html.*css|wordpress|playwright|selenium|testng|automation/.test(t)) return '2 Months';
   return '3 Months';
+}
+
+/**
+ * Extracts projects directly listed in the document text.
+ * Strictly prevents hallucinating pre-baked SaaS/React projects when custom projects exist in the syllabus.
+ */
+export function extractProjectsFromDoc(rawText = '', docTools = []) {
+  const text = String(rawText || '');
+  if (!text.trim()) return [];
+
+  const projects = [];
+  const regex = /\bProject\s*(\d+)\s*[:\-–]?\s*([A-Za-z0-9\s&,.\-\(\)]+?)(?=\s*Project\s*\d+|\s*📅|\s*🎯|\s*MONTH|\s*Module|\n|$)/gi;
+  const matches = [...text.matchAll(regex)];
+
+  for (const match of matches) {
+    const pNum = match[1];
+    let pName = match[2].trim().replace(/\s+/g, ' ');
+    if (pName && pName.length > 3 && pName.length < 80 && !/projects?|overview|details|statement/i.test(pName)) {
+      projects.push({ num: pNum, name: pName });
+    }
+  }
+
+  const unique = [];
+  const seen = new Set();
+  projects.forEach((p) => {
+    const key = p.name.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(p);
+    }
+  });
+
+  if (!unique.length) return [];
+
+  const toolsStr = docTools.length ? docTools.join(' - ') : 'HTML5 - CSS3 - JavaScript';
+  const levels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ADVANCED'];
+
+  return unique.slice(0, 4).map((p, idx) => ({
+    level: levels[idx % 4],
+    title: `Project ${p.num || idx + 1}: ${p.name}`,
+    desc: `Real-world practical application building ${p.name} using core concepts and hands-on skills covered in this syllabus.`,
+    tech: toolsStr,
+  }));
 }
 
 

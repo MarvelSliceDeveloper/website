@@ -4,6 +4,7 @@ import {
   pedagogyFor,
   extractToolsFromSyllabus,
   extractDurationFromDoc,
+  extractProjectsFromDoc,
   durationForCourse,
   projectsFor
 } from './brochureExpand';
@@ -728,9 +729,10 @@ export async function condenseDocToOneLiners(rawText, courseTitle = '', fileName
   const clean = String(rawText || '').trim();
   if (!clean) return [];
 
-  // Extract baseline duration and tools deterministically from document text/file
+  // Extract baseline duration, tools, and projects deterministically from document text/file
   const detectedDuration = extractDurationFromDoc(clean, fileName, courseTitle);
   const detectedTools = extractToolsFromSyllabus([], clean);
+  const detectedProjects = extractProjectsFromDoc(clean, detectedTools);
 
   const clipped = clean.slice(0, 16000); // keep prompt bounded
   try {
@@ -739,6 +741,7 @@ export async function condenseDocToOneLiners(rawText, courseTitle = '', fileName
       const fallback = splitDocToSectionsFallback(clean);
       fallback.duration = detectedDuration;
       fallback.tools = detectedTools;
+      fallback.projects = detectedProjects;
       fallback.verified = true;
       return fallback;
     }
@@ -813,6 +816,7 @@ ${clipped}`;
       const normalized = normalizeDocSections(sections);
       normalized.duration = parsedDuration;
       normalized.tools = parsedTools;
+      normalized.projects = detectedProjects;
       normalized.verified = true;
       return normalized;
     }
@@ -820,6 +824,7 @@ ${clipped}`;
     const fallback = splitDocToSectionsFallback(clean);
     fallback.duration = parsedDuration;
     fallback.tools = parsedTools;
+    fallback.projects = detectedProjects;
     fallback.verified = true;
     return fallback;
   } catch (err) {
@@ -827,6 +832,7 @@ ${clipped}`;
     const fallback = splitDocToSectionsFallback(clean);
     fallback.duration = detectedDuration;
     fallback.tools = detectedTools;
+    fallback.projects = detectedProjects;
     fallback.verified = true;
     return fallback;
   }
