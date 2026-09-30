@@ -922,43 +922,8 @@ export default function BrochureDesigner() {
           </section>
 
           {/* ══ 4. LEARNING PATH ══ */}
-          <section id="bro-path" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
-            <h2 className="text-2xl font-extrabold text-slate-900">
-              Learning <span style={{ color: BRAND.orange }}>Path</span>
-            </h2>
-            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <ol className="mt-3">
-              {[
-                ['Enroll & Orientation', 'Complete admission, get LMS access and meet your mentor.'],
-                ['Foundations First', 'Start from zero — setup, basics and first hands-on labs.'],
-                ['Core Concepts', 'The heart of the course with daily practice and exercises.'],
-                ['Tools of the Trade', 'Master the professional tools used in real jobs.'],
-                ['Mentor Check-ins', '1:1 doubt-clearing so you never stay stuck.'],
-                ['Guided Mini Projects', 'Mentor-reviewed builds that lock in every stage.'],
-                ['Advanced Topics', 'Deeper concepts taught with real scenarios and datasets.'],
-                ['Project', 'End-to-end portfolio-grade build, deployed live.'],
-                ['Deployment & Portfolio', 'Ship your work publicly with clean documentation.'],
-                ['Resume & LinkedIn', 'Profiles rewritten around the projects you shipped.'],
-                ['Mock Interviews', 'Practice rounds with the most-asked questions.'],
-                ['Certification & Referrals', 'Earn your certificate and get referred to hiring partners.'],
-              ].map(([t, d], i, arr) => (
-                <li key={t} className={`relative flex gap-3 pb-3 last:pb-0 ${i % 2 ? 'rounded-xl bg-slate-50/80 px-2 -mx-2' : ''}`}>
-                  <span className="flex flex-col items-center">
-                    <span
-                      className="w-7 h-7 rounded-full text-white text-[11px] font-extrabold flex items-center justify-center shrink-0"
-                      style={{ background: i % 3 === 0 ? BRAND.blue : i % 3 === 1 ? BRAND.orange : BRAND.green }}
-                    >
-                      {i + 1}
-                    </span>
-                    {i < arr.length - 1 && <span className="w-0.5 flex-1 bg-slate-200" />}
-                  </span>
-                  <span className="pb-1">
-                    <span className="block text-[15px] font-bold text-slate-900">{t}</span>
-                    <span className="block text-[13px] leading-relaxed text-slate-500">{d}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+          <section id="bro-path" className="brochure-page brochure-page-inner relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-0">
+            <img src="/brochure/path-default.png" alt="Learning Path — From Registration to a Successful Career" className="w-full h-full object-contain" />
           </section>
 
           {/* ══ 6. CURRICULUM — 2 modules per page, 2 columns with short description & hands-on lab ══ */}

@@ -81,6 +81,20 @@ function asList(v) {
 /** Fetch a same-origin image to data URL for jsPDF (null when unavailable). */
 async function loadImageDataUrl(url) {
   try {
+    if (typeof window === 'undefined' && typeof process !== 'undefined') {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const relPath = url.startsWith('/') ? url.slice(1) : url;
+        const fullPath = path.join(process.cwd(), 'public', relPath);
+        if (fs.existsSync(fullPath)) {
+          const buf = fs.readFileSync(fullPath);
+          const ext = path.extname(fullPath).toLowerCase().slice(1) || 'png';
+          const mime = ext === 'jpg' ? 'jpeg' : ext;
+          return `data:image/${mime};base64,${buf.toString('base64')}`;
+        }
+      } catch { /* ignore Node fs error */ }
+    }
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
@@ -100,9 +114,10 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   // Background: template images by default, plain white on opt-out,
   // custom uploads when provided (per-slot fallback to default template art).
   const bgStyle = options.bgStyle === 'plain' ? 'plain' : 'template';
-  const [coverImg, innerImg] = await Promise.all([
+  const [coverImg, innerImg, defaultPathImg] = await Promise.all([
     bgStyle === 'plain' ? null : (options.customCoverBg || loadImageDataUrl('/brochure/bg-default.png')),
     bgStyle === 'plain' ? null : (options.customInnerBg || loadImageDataUrl('/brochure/bg-default.png')),
+    loadImageDataUrl('/brochure/path-default.png'),
   ]);
 
   // Curriculum priority: uploaded AI-condensed doc > live DB modules.
@@ -236,7 +251,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
   // Full-page image replacements (no headings/overlay — image only).
   const coverImage = options.coverImage || null;
-  const pathImage = options.pathImage || null;
+  const pathImage = options.pathImage || defaultPathImg;
 
   // Learning path comes from the user (menu step 3); defaults fill the gap.
   const pathSteps = (Array.isArray(options.pathSteps) ? options.pathSteps : [])
@@ -976,11 +991,12 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   });
   cursorY += 4 * (stepCardH + stepRowGap) + 3;
 
-  // ================= LEARNING PATH (uploaded image replaces the steps page) =================
+  // ================= LEARNING PATH (uploaded or default image replaces the steps page) =================
   if (pathImage) {
     pdf.addPage();
     try {
-      pdf.addImage(pathImage, 'JPEG', 0, 0, PAGE_W, PAGE_H);
+      const fmt = typeof pathImage === 'string' && pathImage.includes('image/png') ? 'PNG' : 'JPEG';
+      pdf.addImage(pathImage, fmt, 0, 0, PAGE_W, PAGE_H);
     } catch {
       paintBg(innerImg);
     }

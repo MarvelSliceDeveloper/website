@@ -584,28 +584,10 @@ export default function CourseBrochure() {
                   <p className="text-[11px] text-neutral-500">
                     {pathImage
                       ? 'Your uploaded Image 2 replaces this page in full.'
-                      : docSections.length > 0
-                        ? 'Built automatically from your uploaded doc headings.'
-                        : 'Default path shown — upload a doc in step 1 to derive it from your syllabus.'}
+                      : 'Default learning path image (Registration to Successful Career) will be printed. Upload a custom image in Step 3 to replace it.'}
                   </p>
                 </div>
-                {pathImage ? (
-                  <img src={pathImage} alt="Learning path page" className="w-full max-h-80 object-cover object-top rounded-xl border border-admin-100" />
-                ) : (
-                <ol className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                  {autoPathSteps.map(([t, d], i) => (
-                    <li key={i} className="flex items-start gap-2.5 rounded-xl border border-admin-100 bg-slate-50/60 px-3 py-2">
-                      <span className="w-6 h-6 rounded-full bg-brand-orange text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
-                        {i + 1}
-                      </span>
-                      <span>
-                        <span className="block text-xs font-bold text-neutral-900">{t}</span>
-                        {d ? <span className="block text-[11px] text-neutral-500">{d}</span> : null}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-                )}
+                <img src={pathImage || '/brochure/path-default.png'} alt="Learning path page" className="w-full max-h-80 object-cover object-top rounded-xl border border-admin-100" />
               </div>
 
               <div className="bg-white border border-admin-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center gap-4">
