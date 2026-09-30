@@ -5,11 +5,18 @@ import {
   FiDownload, FiBookOpen, FiCheck, FiClock, FiUsers,
   FiAward, FiBriefcase, FiMail, FiPhone, FiGlobe, FiLayers,
   FiZap, FiCode, FiDatabase, FiTarget,
+  FiVideo, FiTerminal, FiHeadphones, FiPlayCircle, FiSend, FiMessageCircle,
+  FiTool,
 } from 'react-icons/fi';
 import { LOCAL_SYLLABUS } from '../../data/localSyllabus';
 import {
   toolsForTitle, rolesFor,
   projectsFor, outcomesFor, normalizeModuleCount,
+  keyHighlightsFor, pedagogyFor,
+  moduleDescriptionFor, moduleHandsOnLabFor,
+  moduleToolsFor, moduleTakeawayFor,
+  isProjectModule,
+  programDimensionsFor, targetAudienceDetailedFor, prerequisitesFor,
 } from '../../lib/brochureExpand';
 
 /**
@@ -42,13 +49,13 @@ const BRAND = {
 
 const SECTIONS = [
   { id: 'cover', label: '1. Cover' },
-  { id: 'about', label: '2. About + Highlights' },
-  { id: 'apply', label: '3. Who Can Apply' },
-  { id: 'path', label: '4. Learning Path' },
-  { id: 'curriculum', label: '5. Curriculum' },
-  { id: 'skills', label: '6. Skills + Projects' },
-  { id: 'career', label: '7. Careers' },
-  { id: 'contact', label: '8. Contact' },
+  { id: 'about', label: '2. About' },
+  { id: 'pedagogy', label: '3. Highlights & Pedagogy' },
+  { id: 'apply', label: '4. Who Can Apply' },
+  { id: 'path', label: '5. Learning Path' },
+  { id: 'curriculum', label: '6. Curriculum' },
+  { id: 'skills', label: '7. Skills + Projects' },
+  { id: 'career', label: '8. Careers & Contact' },
   { id: 'courses', label: '9. Our Courses' },
 ];
 
@@ -257,6 +264,7 @@ export default function BrochureDesigner() {
 
   // Curriculum: live DB modules win; otherwise local docx modules.
   // Count is normalized to full pages (exactly 12 or 16 modules).
+  // Standalone project modules are excluded as projects have a dedicated section.
   const curriculum = useMemo(() => {
     const dbMods = asList(live?.modules)
       .map((m, i) => ({
@@ -264,11 +272,11 @@ export default function BrochureDesigner() {
         title: m.title || m.name || `Part ${i + 1}`,
         topics: asList(m.topics || m.lessons || m.content).slice(0, 10),
       }))
-      .filter((m) => m.topics.length || m.title);
+      .filter((m) => (m.topics.length || m.title) && !isProjectModule(m));
     if (dbMods.length >= 2) return normalizeModuleCount(dbMods);
     if (localDoc) {
       return normalizeModuleCount(localDoc.modules
-        .filter((m) => m.no > 0)
+        .filter((m) => m.no > 0 && !isProjectModule(m))
         .map((m, i) => ({ label: `Module ${i + 1}`, title: m.title, topics: m.topics.slice(0, 10) })));
     }
     return normalizeModuleCount(dbMods);
@@ -301,18 +309,51 @@ export default function BrochureDesigner() {
   const tools = useMemo(() => toolsForTitle(title, toolsForCourse(effectiveCourse)), [title, effectiveCourse]);
   const projects = useMemo(() => asList(effectiveCourse?.projects), [effectiveCourse]);
   const expandedProjects = useMemo(() => {
+    const levels = ['Beginner', 'Intermediate', 'Advanced', 'Advanced'];
     if (projects.length) {
       return projects.slice(0, 4).map((p, i) => ({
-        level: ['Beginner', 'Intermediate', 'Advanced'][Math.min(2, Math.floor((i / Math.max(1, projects.length)) * 3))],
+        level: levels[i] || 'Advanced',
         title: p.title || 'Project',
         desc: p.description || 'Build and deploy a portfolio-ready application.',
         tech: asList(p.technologies).join(', '),
       }));
     }
-    return projectsFor(title, curriculum);
-  }, [projects, title, curriculum]);
+    return projectsFor(title, localDoc?.modules || live?.modules || curriculum);
+  }, [projects, title, curriculum, localDoc, live]);
   const roles = useMemo(() => rolesFor(title), [title]);
   const outcomes = useMemo(() => outcomesFor(title, curriculum), [title, curriculum]);
+  const detailedHighlights = useMemo(() => {
+    if (Array.isArray(live?.keyHighlights) && live.keyHighlights.length) {
+      return live.keyHighlights;
+    }
+    return keyHighlightsFor(title, duration, curriculum);
+  }, [live, title, duration, curriculum]);
+
+  const pedagogy = useMemo(() => {
+    if (Array.isArray(live?.pedagogy) && live.pedagogy.length >= 4) {
+      return live.pedagogy;
+    }
+    return pedagogyFor(title);
+  }, [live, title]);
+
+  const programDimensions = useMemo(() => programDimensionsFor(title), [title]);
+  const targetAudience = useMemo(
+    () => targetAudienceDetailedFor(title, curriculum.length),
+    [title, curriculum.length],
+  );
+  const prerequisites = useMemo(() => prerequisitesFor(title), [title]);
+
+  const pedagogyIconMap = {
+    instructor: FiVideo,
+    hackathons: FiTerminal,
+    support: FiHeadphones,
+    networking: FiUsers,
+    self_paced: FiPlayCircle,
+    gamified: FiAward,
+    projects: FiSend,
+    mentorship: FiMessageCircle,
+  };
+
   const totalTopics = useMemo(
     () => curriculum.reduce((n, m) => n + (m.topics || []).length, 0),
     [curriculum],
@@ -351,11 +392,12 @@ export default function BrochureDesigner() {
             `.brochure-page-inner{padding:42mm 10mm 12mm !important}` +
             `.brochure-page.allow-break{break-inside:auto;box-decoration-break:clone;-webkit-box-decoration-break:clone}` +
             `#brochure-print-root .allow-break li{break-inside:avoid-page}` +
+            `#brochure-print-root #bro-pedagogy div[class*="grid"] > div,` +
             `#brochure-print-root #bro-curriculum div[class*="grid"] > div,` +
             `#brochure-print-root #bro-projects div[class*="grid"] > div,` +
             `#brochure-print-root #bro-career div[class*="space-y"] > div,` +
-            `          #brochure-print-root #bro-career div[class*="grid"] > div{break-inside:avoid-page}
-          #brochure-print-root #bro-skills div[class*="sm:grid-cols-2"]{break-inside:avoid-page}` +
+            `#brochure-print-root #bro-career div[class*="grid"] > div{break-inside:avoid-page}` +
+            `#brochure-print-root #bro-skills div[class*="sm:grid-cols-2"]{break-inside:avoid-page}` +
             `.brochure-page:not(.allow-break){overflow:hidden !important}` +
             `</style></head><body>${node.outerHTML}` +
             `<script>window.onload=function(){setTimeout(function(){window.print()},450)};` +
@@ -428,6 +470,7 @@ export default function BrochureDesigner() {
           .brochure-page-inner { padding: 42mm 10mm 12mm !important; }
           .brochure-page.allow-break { break-inside: auto; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
           #brochure-print-root .allow-break li { break-inside: avoid-page; }
+          #brochure-print-root #bro-pedagogy div[class*="grid"] > div,
           #brochure-print-root #bro-curriculum div[class*="grid"] > div,
           #brochure-print-root #bro-projects div[class*="grid"] > div,
           #brochure-print-root #bro-career div[class*="space-y"] > div,
@@ -584,96 +627,234 @@ export default function BrochureDesigner() {
             </div>
           </section>
 
-          {/* ══ 2. ABOUT + HIGHLIGHTS ══ */}
+          {/* ══ 2. ABOUT PROGRAM ══ */}
           <section id="bro-about" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">
               About <span style={{ color: BRAND.orange }}>Program</span>
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {effectiveCourse.description || `${title} at Marvel Slice takes you from fundamentals to job-ready projects with mentor-led training.`}
+
+            {/* 1. Deep Executive Summary / Institutional Rationale */}
+            <p className="mt-3 text-xs sm:text-[13px] leading-relaxed text-slate-600">
+              {effectiveCourse.description || `${title} at Marvel Slice is an intensive, industry-aligned career accelerator engineered to bridge the divide between theoretical fundamentals and real-world production engineering.`}
+              {' '}
+              {effectiveCourse.subtitle || `Designed in collaboration with engineering leaders, the curriculum immerses learners in production-grade architectures, test-driven methodologies, and enterprise workflows, graduating candidates ready to excel in competitive technical environments.`}
             </p>
-            {effectiveCourse.subtitle && <p className="mt-2 text-sm font-semibold text-slate-800">{effectiveCourse.subtitle}</p>}
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl p-3" style={{ background: BRAND.sky }}>
+
+            {/* 2. Program Key Specifications Strip (4-column Card) */}
+            <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl p-3 border border-slate-200" style={{ background: BRAND.sky }}>
               {[
-                ['Learning Format', 'Mentor-led + self-paced'],
-                ['Duration', duration],
-                ['Mode', mode],
-                ['Certification', 'Marvel Slice'],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <p className="text-[11px] font-bold text-slate-800">{k}</p>
-                  <p className="text-xs text-slate-500">{v}</p>
+                { k: 'LEARNING FORMAT', v1: 'Mentor-led Live', v2: 'Interactive Sessions' },
+                { k: 'DURATION & PACE', v1: duration, v2: 'Daily Practice Drills' },
+                { k: 'DELIVERY MODE', v1: mode, v2: 'Hands-on Code Labs' },
+                { k: 'CREDENTIALS', v1: 'Industry Certified', v2: 'Marvel Slice Verified' },
+              ].map(({ k, v1, v2 }) => (
+                <div key={k} className="border-l first:border-l-0 pl-3 border-slate-200">
+                  <p className="text-[10px] font-extrabold text-slate-400 tracking-wider">{k}</p>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">{v1}</p>
+                  <p className="text-[11px] text-slate-500">{v2}</p>
                 </div>
               ))}
             </div>
-            <h3 className="mt-5 text-xl font-extrabold text-slate-900">
-              Key <span style={{ color: BRAND.orange }}>Highlights</span>
-            </h3>
-            <ul className="mt-2 grid sm:grid-cols-2 gap-1.5">
-              {highlights.map((h) => (
-                <li key={h} className="flex items-start gap-2 text-sm text-slate-700">
-                  <FiCheck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: BRAND.orange }} /> {h}
-                </li>
-              ))}
-            </ul>
-            <h3 className="mt-5 text-xl font-extrabold text-slate-900">
-              What You Will <span style={{ color: BRAND.orange }}>Achieve</span>
-            </h3>
-            <ul className="mt-2 grid sm:grid-cols-2 gap-1.5">
-              {outcomes.map((o) => (
-                <li key={o} className="flex items-start gap-2 text-xs text-slate-600">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND.green }} />
-                  {o}
-                </li>
-              ))}
-            </ul>
+
+            {/* 3. Core Program Pillars / Architecture (3 structured cards) */}
+            <div className="mt-4">
+              <h3 className="text-[11px] font-extrabold tracking-wider uppercase text-slate-400 mb-2">
+                Program Architecture & Focus Pillars
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {programDimensions.slice(0, 3).map((p, idx) => {
+                  const colors = [BRAND.blue, BRAND.purple, BRAND.green];
+                  const col = colors[idx] || BRAND.blue;
+                  return (
+                    <div
+                      key={p.title}
+                      className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 relative overflow-hidden flex flex-col justify-between"
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: col }} />
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider" style={{ color: col }}>
+                          PILLAR 0{idx + 1}
+                        </span>
+                        <h4 className="text-xs font-bold text-slate-900 mt-1 leading-snug">{p.title}</h4>
+                        <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{p.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. What You Will Achieve (8 Outcome Cards in 2 cols x 4 rows) */}
+            <div className="mt-4">
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
+                What You Will <span style={{ color: BRAND.orange }}>Achieve</span>
+              </h3>
+              <div className="mt-2.5 grid sm:grid-cols-2 gap-2">
+                {outcomes.slice(0, 8).map((o, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+                    <span
+                      className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
+                      style={{ background: '#10b981' }}
+                    >
+                      <FiCheck className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-xs font-medium text-slate-700 leading-snug">{o}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
-          {/* ══ 3. WHO CAN APPLY + APPLICATION PROCESS (light theme) ══ */}
+          {/* ══ 3. KEY HIGHLIGHTS & PROGRAM PEDAGOGY ══ */}
+          <section id="bro-pedagogy" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+            {/* Top Section: Key Highlights */}
+            <h2 className="text-2xl font-extrabold text-slate-900">
+              Key <span style={{ color: BRAND.orange }}>Highlights</span>
+            </h2>
+            <div className="mt-1.5 h-1 w-14 rounded" style={{ background: BRAND.orange }} />
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+              {detailedHighlights.slice(0, 20).map((h, i) => (
+                <div key={i} className="flex items-center gap-2.5 text-xs text-slate-800 font-bold">
+                  <span
+                    className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
+                    style={{ background: BRAND.orange }}
+                  >
+                    <FiCheck className="w-3.5 h-3.5" />
+                  </span>
+                  <span>{h}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="my-5 border-t border-slate-100" />
+
+            {/* Bottom Section: Program Pedagogy */}
+            <h2 className="text-2xl font-extrabold text-slate-900">
+              Program <span style={{ color: BRAND.orange }}>Pedagogy</span>
+            </h2>
+            <div className="mt-1.5 h-1 w-14 rounded" style={{ background: BRAND.orange }} />
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                {pedagogy.slice(0, 4).map((p, idx) => {
+                  const IconComp = pedagogyIconMap[p.key] || FiLayers;
+                  return (
+                    <div key={idx} className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+                      <span
+                        className="w-11 h-11 rounded-xl border-2 border-amber-500 bg-white flex items-center justify-center shrink-0"
+                        style={{ color: BRAND.orange }}
+                      >
+                        <IconComp className="w-5 h-5 text-amber-500" />
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 leading-tight">{p.title}</h4>
+                        <p className="text-xs text-slate-500 leading-snug mt-0.5">{p.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="space-y-3">
+                {pedagogy.slice(4, 8).map((p, idx) => {
+                  const IconComp = pedagogyIconMap[p.key] || FiLayers;
+                  return (
+                    <div key={idx} className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+                      <span
+                        className="w-11 h-11 rounded-xl border-2 border-amber-500 bg-white flex items-center justify-center shrink-0"
+                        style={{ color: BRAND.orange }}
+                      >
+                        <IconComp className="w-5 h-5 text-amber-500" />
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 leading-tight">{p.title}</h4>
+                        <p className="text-xs text-slate-500 leading-snug mt-0.5">{p.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* ══ 4. WHO CAN APPLY + ONBOARDING JOURNEY ══ */}
           <section id="bro-apply" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">
               Who Can <span style={{ color: BRAND.orange }}>Apply?</span>
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-3 grid sm:grid-cols-2 gap-2.5">
-              {[
-                'Students & freshers starting a software career from basics',
-                'Working professionals switching into development roles',
-                'Junior developers upskilling with structured projects',
-                'Career restarters refreshing skills with mentor support',
-                'Freelancers building client-ready project portfolios',
-                `Anyone ready to complete ${curriculum.length} modules with daily practice`,
-              ].map((t) => (
-                <div key={t} className="flex items-start gap-2.5 rounded-xl border border-orange-100 bg-white/90 p-3 shadow-sm">
-                  <span className="w-6 h-6 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: BRAND.orange }}>
+            <p className="mt-2 text-xs text-slate-600">
+              Open to passionate learners and professionals across diverse academic, analytical, and technical backgrounds.
+            </p>
+
+            {/* 1. Target Audience Profiles (6 structured cards, 2 columns) */}
+            <div className="mt-3.5 grid sm:grid-cols-2 gap-2.5">
+              {targetAudience.slice(0, 6).map((aud) => (
+                <div key={aud.title} className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/20 p-2.5">
+                  <span
+                    className="w-5 h-5 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ background: BRAND.orange }}
+                  >
                     <FiCheck className="w-3.5 h-3.5" />
                   </span>
-                  <span className="text-[13px] font-medium leading-relaxed text-slate-700">{t}</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">{aud.title}</h4>
+                    <p className="text-[11px] text-slate-500 leading-snug mt-0.5">{aud.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
+
+            {/* 2. Prerequisites & Technical Eligibility Banner (3 columns) */}
+            <div className="mt-3.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3 relative overflow-hidden">
+              <div className="absolute top-0 bottom-0 left-0 w-1" style={{ background: BRAND.blue }} />
+              <p className="text-[10px] font-extrabold tracking-wider uppercase" style={{ color: BRAND.blue }}>
+                ELIGIBILITY & TECHNICAL PREREQUISITES
+              </p>
+              <div className="mt-2 grid sm:grid-cols-3 gap-3">
+                <div className="border-l first:border-l-0 pl-2.5 border-blue-100">
+                  <p className="text-[11px] font-bold text-slate-900">Academic Eligibility</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Any degree / diploma (BE, BTech, BSc, BCA, BCom, or equivalent stream).
+                  </p>
+                </div>
+                <div className="border-l pl-2.5 border-blue-100">
+                  <p className="text-[11px] font-bold text-slate-900">Prior Coding Background</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    {prerequisites[2] || 'Zero prior programming required — starts from absolute fundamentals.'}
+                  </p>
+                </div>
+                <div className="border-l pl-2.5 border-blue-100">
+                  <p className="text-[11px] font-bold text-slate-900">System & Hardware Setup</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Laptop/PC with 8GB RAM, modern web browser, and broadband internet.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Application & Onboarding Journey (4 full-width cards) */}
             <div className="mt-4">
-              <h3 className="text-xl font-extrabold text-slate-900">
-                Application <span style={{ color: BRAND.orange }}>Process</span>
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
+                Application & <span style={{ color: BRAND.orange }}>Onboarding Journey</span>
               </h3>
-              <div className="mt-3 space-y-2">
+              <div className="mt-2.5 space-y-2">
                 {[
-                  ['1', 'SUBMIT APPLICATION', 'Tell us about yourself, your background and why you want to join.'],
-                  ['2', 'COUNSELLING & BATCH ALLOTMENT', 'Speak with a counsellor to map the curriculum to your goals.'],
-                  ['3', 'ENROLL & START LEARNING', 'Complete enrollment, get LMS access and join orientation.'],
-                ].map(([n, t, d]) => (
-                  <div key={n} className="flex items-center gap-4 rounded-xl border p-3" style={{ borderColor: '#fde68a' }}>
+                  ['01', 'SUBMIT APPLICATION & PROFILE REVIEW', 'Submit your academic details and career aspirations through our admissions form for instant evaluation.'],
+                  ['02', '1:1 CAREER COUNSELLING & ROADMAP', 'Connect with an engineering career advisor to review syllabus fit, batch timings, and learning milestones.'],
+                  ['03', 'ENROLLMENT & LMS ONBOARDING', 'Confirm your batch seat, receive your Marvel Slice student portal login credentials, and join the cohort community.'],
+                  ['04', 'ORIENTATION & MENTOR MATCH', 'Attend the live orientation session, configure your developer tooling, and start Module 1 with dedicated mentor support.'],
+                ].map(([num, st, sd]) => (
+                  <div key={num} className="flex items-center gap-3.5 rounded-xl border border-amber-200 bg-white p-2.5 shadow-xs">
                     <span
-                      className="w-9 h-9 rounded-full text-white font-extrabold flex items-center justify-center shrink-0"
+                      className="w-7 h-7 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0"
                       style={{ background: BRAND.orange }}
                     >
-                      {n}
+                      {num}
                     </span>
-                    <span>
-                      <span className="block text-sm font-extrabold text-slate-900">{t}</span>
-                      <span className="block text-xs text-slate-500">{d}</span>
-                    </span>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-slate-900">{st}</h4>
+                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">{sd}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -720,8 +901,8 @@ export default function BrochureDesigner() {
             </ol>
           </section>
 
-          {/* ══ 5. CURRICULUM — 4 modules per page, short points only ══ */}
-          {chunk(curriculum, 4).map((group, gi) => (
+          {/* ══ 6. CURRICULUM — 2 modules per page, 2 columns with short description & hands-on lab ══ */}
+          {chunk(curriculum, 2).map((group, gi) => (
             <section key={gi} id={gi === 0 ? 'bro-curriculum' : `bro-curriculum-${gi + 1}`} className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
               {gi === 0 ? (
                 <>
@@ -730,177 +911,344 @@ export default function BrochureDesigner() {
                   </h2>
                   <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
                   <p className="mt-2 text-xs text-slate-500">
-                    Reference: {localDoc?.file || 'course syllabus'} · {curriculum.length} modules · {totalTopics} topics · every topic taught with live examples + exercises
+                    Comprehensive Practical Syllabus · Part {gi + 1} of {Math.ceil(curriculum.length / 2)} · {curriculum.length} modules total
                   </p>
                 </>
               ) : (
-                <p className="text-xs font-extrabold uppercase tracking-widest" style={{ color: BRAND.orange }}>
-                  &nbsp;
-                </p>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Program <span style={{ color: BRAND.orange }}>Curriculum (contd.)</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-400">Part {gi + 1} of {Math.ceil(curriculum.length / 2)}</span>
+                </div>
               )}
-              <div className="mt-3 grid sm:grid-cols-2 gap-4">
-                {group.map((m, i) => (
-                  <div key={`${m.label}-${i}`} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                    <p className="text-xs font-extrabold" style={{ color: BRAND.orange }}>{m.label}</p>
-                    <p className="text-[15px] font-bold text-slate-900">{m.title}</p>
-                    <ul className="mt-1 space-y-1">
-                      {(m.topics || []).map((t) => (
-                        <li key={t} className="flex items-start gap-2 text-[13px] leading-relaxed text-slate-600">
-                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND.blue }} />
-                          <span className="font-medium text-slate-700">{t}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+              <div className="mt-4 grid sm:grid-cols-2 gap-5">
+                {group.map((m, i) => {
+                  const cleanTitle = (m.title || `Module ${m.label || i + 1}`)
+                    .replace(/^(?:module|chapter|unit|part|section)\s*\d+[:\-.]?\s*/i, '')
+                    .replace(/^[—–-]\s*/, '')
+                    .trim() || `Core Module`;
+                  const rawTopics = (m.topics || []).map((t) =>
+                    String(t || '')
+                      .replace(/^[-•*◦▪]\s*/, '')
+                      .replace(/^(?:module|chapter|unit|part)\s*\d+[:\-.]?\s*/i, '')
+                      .replace(/^L\d+\s*[-–]\s*/i, '')
+                      .trim()
+                  ).filter((t) => t && t.toLowerCase() !== cleanTitle.toLowerCase());
+                  const topicList = [...new Set(rawTopics)].slice(0, 9);
+
+                  return (
+                    <div key={`${m.label}-${i}`} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-xs">
+                      <div>
+                        <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-extrabold text-white mb-2" style={{ background: BRAND.orange }}>
+                          {m.label}
+                        </span>
+                        <h3 className="text-base font-bold text-slate-900 leading-snug">{cleanTitle}</h3>
+                        <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                          {moduleDescriptionFor(m, title)}
+                        </p>
+                        <ul className="mt-3 space-y-1.5 border-t border-slate-200/80 pt-2.5">
+                          {topicList.map((t) => (
+                            <li key={t} className="flex items-start gap-2 text-xs leading-relaxed text-slate-700">
+                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND.blue }} />
+                              <span className="font-medium text-slate-700">{t}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        {/* Tools & Environment */}
+                        <div className="rounded-lg border border-slate-200 bg-white p-2.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tools &amp; Environment</p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {moduleToolsFor(m).map((tl) => (
+                              <span key={tl} className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                {tl}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Key Competency */}
+                        <div className="rounded-lg border border-slate-200 bg-white p-2.5 border-l-4 border-l-amber-500">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Key Competency Gained</p>
+                          <p className="text-[11px] text-slate-700 mt-0.5 leading-snug">{moduleTakeawayFor(m)}</p>
+                        </div>
+
+                        {/* Technical Drill & Practical Lab */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs border-l-4 border-l-blue-600">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600">Technical Drill &amp; Practical Lab</p>
+                          <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{moduleHandsOnLabFor(m)}</p>
+                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                            <span className="font-bold text-slate-600">PRACTICE FOCUS:</span>
+                            <span>Hands-on coding exercises, syntax drills &amp; mentor validation</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           ))}
 
-          {/* ══ 6. SKILLS + PROJECTS (one page) ══ */}
+          {/* ══ 7. TECHNOLOGIES & TOOLS + PROJECTS (1 PAGE) ══ */}
           <section id="bro-skills" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
-            <h2 className="text-2xl font-extrabold text-slate-900">Skills to <span style={{ color: BRAND.orange }}>Master</span></h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
+              <FiTool className="w-6 h-6 text-blue-600" />
+              Technologies &amp; Tools <span style={{ color: BRAND.orange }}>You Will Master</span>
+            </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {skills.map((s) => (
-                <span key={s} className="text-xs font-semibold px-3 py-1.5 rounded-full text-white" style={{ background: BRAND.blue }}>
-                  {s}
+            <div className="mt-4 flex flex-wrap gap-2.5">
+              {[...new Set([...tools, ...skills])].slice(0, 12).map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold shadow-xs hover:bg-blue-100/70 transition-all"
+                >
+                  <FiTool className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span>{t}</span>
                 </span>
               ))}
             </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-slate-900">Tools to <span style={{ color: BRAND.orange }}>Master</span></h2>
-            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {tools.map((t) => (
-                <span key={t} className="text-xs font-semibold px-3 py-1.5 rounded-full border bg-white" style={{ borderColor: BRAND.green, color: '#3f6212' }}>
-                  {t}
-                </span>
-              ))}
-            </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-slate-900">
+
+            <div className="my-5 border-t border-slate-100" />
+
+            <h2 className="text-2xl font-extrabold text-slate-900">
               Course <span style={{ color: BRAND.orange }}>Projects</span>
             </h2>
             <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <p className="mt-2 text-xs text-slate-500">Every project is reviewed by mentors and deployable to your portfolio.</p>
-            <div className="mt-3 grid sm:grid-cols-2 gap-3">
-              {expandedProjects.slice(0, 4).map((p) => (
-                <div key={p.title} className="rounded-xl border border-slate-200 p-3.5">
-                  <span
-                    className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full text-white mb-1.5"
-                    style={{ background: p.level === 'Beginner' ? BRAND.green : p.level === 'Intermediate' ? BRAND.blue : BRAND.purple }}
+            <p className="mt-1.5 text-xs text-slate-500">Industry-grade portfolio applications built step-by-step from beginner to advanced.</p>
+            <div className="mt-4 grid sm:grid-cols-2 gap-4">
+              {expandedProjects.slice(0, 4).map((p, idx) => {
+                const borderColors = [
+                  'border-l-emerald-500',
+                  'border-l-blue-600',
+                  'border-l-purple-600',
+                  'border-l-amber-500',
+                ];
+                const badgeBgs = [
+                  BRAND.green,
+                  BRAND.blue,
+                  BRAND.purple,
+                  BRAND.orange,
+                ];
+                return (
+                  <div
+                    key={p.title + idx}
+                    className={`rounded-xl border border-slate-200 bg-slate-50/50 p-4 shadow-xs border-l-4 ${borderColors[idx] || 'border-l-blue-600'} flex flex-col justify-between`}
                   >
-                    {p.level}
-                  </span>
-                  <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <FiBriefcase className="w-4 h-4 shrink-0" style={{ color: BRAND.orange }} /> {p.title}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600 leading-relaxed">{p.desc}</p>
-                  {p.tech && <p className="mt-1.5 text-[11px] font-semibold text-slate-500">Stack: {p.tech}</p>}
-                </div>
-              ))}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full text-white"
+                          style={{ background: badgeBgs[idx] || BRAND.blue }}
+                        >
+                          {p.level}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">0{idx + 1}</span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900 leading-snug">
+                        {p.title}
+                      </p>
+                      <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">{p.desc}</p>
+                    </div>
+                    {p.tech && (
+                      <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center gap-1.5 text-[11px]">
+                        <span className="font-bold text-slate-500">STACK:</span>
+                        <span className="font-semibold text-blue-700">{p.tech}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
-          {/* ══ 8. CAREERS (top job roles + services heading, one page) ══ */}
+          {/* ══ 8. CAREERS & CONTACT US (Roles, Services, Modern Contact Cards, Company Slogan) ══ */}
           <section id="bro-career" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
-            <h2 className="text-2xl font-extrabold text-slate-900">
-              Top <span style={{ color: BRAND.orange }}>Job Roles</span>
+            {/* 1. Career Roles & Opportunities */}
+            <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
+              <FiBriefcase className="w-6 h-6 text-emerald-600" />
+              Career Roles &amp; <span style={{ color: BRAND.orange }}>Opportunities</span>
             </h2>
-            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-3 space-y-2">
-              {roles.map(([role, salary, desc], i) => (
-                <div key={role} className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
-                  <span
-                    className="w-8 h-8 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0"
-                    style={{ background: BRAND.deepNavy }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-sm font-bold text-slate-900">{role}</span>
-                    <span className="block text-xs text-slate-500">{desc}</span>
-                  </span>
-                  <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: '#ecfdf5', color: '#15803d' }}>
-                    {salary}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <h3 className="mt-4 text-xl font-extrabold text-slate-900">
-              Career <span style={{ color: BRAND.orange }}>Services</span>
-            </h3>
-            <div className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
-              {[
-                [FiTarget, 'Career-oriented Sessions', 'Role roadmaps and guidance from industry mentors.'],
-                [FiUsers, '1:1 Mentoring', 'Personal guidance at every step of your transition.'],
-                [FiCode, 'Mock Interviews', 'Practice with the most-asked questions by employers.'],
-                [FiBriefcase, 'Job Referrals', 'Profile shortlisting with hiring partners on completion.'],
-                [FiAward, 'Resume + LinkedIn Review', 'ATS-friendly resume and profile that attract recruiters.'],
-                [FiZap, 'Hackathons & Job Fairs', 'Team builds and regular hiring events.'],
-              ].map(([Icon, t, d]) => (
-                <div key={t} className="flex gap-2.5">
-                  <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
-                    <Icon className="w-4 h-4" style={{ color: BRAND.orange }} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-slate-900">{t}</span>
-                    <span className="block text-xs text-slate-500">{d}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+            <div className="mt-1.5 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
 
-          {/* ══ 8. CONTACT (content only, no bg image) ══ */}
-          <section id="bro-contact" className="brochure-page relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div className="p-5 sm:p-7 text-white" style={{ background: BRAND.navy }}>
-              <h2 className="text-2xl font-extrabold">
-                Contact <span style={{ color: BRAND.orange }}>Us</span>
-              </h2>
-              <div className="mt-4 grid sm:grid-cols-2 gap-4 text-sm">
-                <p className="flex items-center gap-2"><FiPhone className="w-4 h-4" style={{ color: BRAND.orange }} /> {contact.phone}</p>
-                <p className="flex items-center gap-2"><FiMail className="w-4 h-4" style={{ color: BRAND.orange }} /> {contact.email}</p>
-                <p className="flex items-center gap-2"><FiGlobe className="w-4 h-4" style={{ color: BRAND.orange }} /> {contact.website}</p>
-                <p className="flex items-center gap-2"><FiClock className="w-4 h-4" style={{ color: BRAND.orange }} /> Mon–Sat · 9 AM – 7 PM</p>
+            <div className="mt-3.5 flex flex-wrap gap-2">
+              {roles.slice(0, 8).map(([role]) => (
+                <span
+                  key={role}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold shadow-xs"
+                >
+                  <FiBriefcase className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{role}</span>
+                </span>
+              ))}
+            </div>
+
+            {/* 2. Career Services & Placement Assistance */}
+            <div className="mt-5">
+              <h3 className="text-lg font-extrabold text-slate-900">
+                Career Services &amp; <span style={{ color: BRAND.orange }}>Placement Assistance</span>
+              </h3>
+              <div className="mt-2.5 grid sm:grid-cols-2 gap-2">
+                {[
+                  [FiTarget, 'Career Roadmaps & Strategy', '1:1 technical career planning aligned to your profile.'],
+                  [FiCode, 'Technical Mock Interviews', 'Practice with FAANG & enterprise interview drills.'],
+                  [FiAward, 'Resume & LinkedIn Makeover', 'ATS-compliant resume & recruiter-ready profile.'],
+                  [FiBriefcase, 'Direct Hiring Referrals', 'Priority shortlisting across 150+ verified hiring partners.'],
+                  [FiUsers, '1:1 Mentor Guidance', 'Personal doubt-clearing & transition counseling.'],
+                  [FiZap, 'Hackathons & Hiring Days', 'Live collaborative team builds to demonstrate skills.'],
+                ].map(([Icon, t, d]) => (
+                  <div key={t} className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-xs">
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
+                      <Icon className="w-4 h-4" style={{ color: BRAND.orange }} />
+                    </span>
+                    <div>
+                      <span className="block text-xs font-bold text-slate-900">{t}</span>
+                      <span className="block text-[11px] text-slate-500 leading-snug">{d}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <p className="mt-3 text-xs opacity-80">{contact.address}</p>
             </div>
-            <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
-                <strong className="text-slate-800">Marvel Slice</strong> · Institute for Software Learning · {contact.website}
+
+            {/* 3. Contact Us & Admissions (Redesigned with Brand Colors - No Black!) */}
+            <div className="mt-5">
+              <h3 className="text-lg font-extrabold text-slate-900">
+                Contact <span style={{ color: BRAND.orange }}>Us &amp; Admissions Support</span>
+              </h3>
+              <div className="mt-2.5 grid sm:grid-cols-2 gap-2.5">
+                {/* Helpline */}
+                <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 relative overflow-hidden">
+                  <div className="absolute top-0 bottom-0 left-0 w-1" style={{ background: BRAND.orange }} />
+                  <p className="text-[10px] font-extrabold tracking-wider uppercase" style={{ color: BRAND.orangeDark }}>
+                    ADMISSIONS HELPLINE
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <FiPhone className="w-3.5 h-3.5" style={{ color: BRAND.orange }} />
+                    {contact.phone}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Mon–Sat · 9:00 AM – 7:00 PM IST</p>
+                </div>
+
+                {/* Email */}
+                <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 relative overflow-hidden">
+                  <div className="absolute top-0 bottom-0 left-0 w-1" style={{ background: BRAND.blue }} />
+                  <p className="text-[10px] font-extrabold tracking-wider uppercase" style={{ color: BRAND.blue }}>
+                    STUDENT SUPPORT &amp; INQUIRIES
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <FiMail className="w-3.5 h-3.5" style={{ color: BRAND.blue }} />
+                    {contact.email}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Prompt admissions response within 24 hrs</p>
+                </div>
+
+                {/* Campus */}
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 relative overflow-hidden">
+                  <div className="absolute top-0 bottom-0 left-0 w-1" style={{ background: BRAND.green }} />
+                  <p className="text-[10px] font-extrabold tracking-wider uppercase text-emerald-700">
+                    CAMPUS &amp; HEADQUARTERS
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900">
+                    Marvel Slice — Institute for Software Learning
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Chennai, Tamil Nadu, India</p>
+                </div>
+
+                {/* Online LMS */}
+                <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-3 relative overflow-hidden">
+                  <div className="absolute top-0 bottom-0 left-0 w-1" style={{ background: BRAND.purple }} />
+                  <p className="text-[10px] font-extrabold tracking-wider uppercase" style={{ color: BRAND.purple }}>
+                    STUDENT PORTAL &amp; SYLLABUS
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <FiGlobe className="w-3.5 h-3.5" style={{ color: BRAND.purple }} />
+                    {contact.website}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">24/7 Digital LMS · Interactive Code Labs</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Company Slogan Banner (At the end of Contact section) */}
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/60 p-3.5 relative overflow-hidden">
+              <div className="absolute top-0 bottom-0 left-0 w-1.5" style={{ background: BRAND.blue }} />
+              <p className="text-[10px] font-extrabold tracking-wider uppercase text-blue-600">
+                OUR CORE PHILOSOPHY &amp; PROMISE
               </p>
-              <span className="text-[11px] font-bold px-3 py-1.5 rounded-full text-white" style={{ background: BRAND.green }}>
-                <FiDatabase className="inline w-3 h-3 mr-1" /> {title} · {curriculum.length} modules · {totalTopics} topics
-              </span>
+              <p className="mt-1 text-sm font-bold italic text-slate-900">
+                &ldquo;Education should create opportunities; skills should create confidence.&rdquo;
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Marvel Slice — Institute for Software Learning · Industry Mentorship &amp; Engineering Excellence
+              </p>
             </div>
           </section>
 
-          {/* ══ 10. EXPLORE OUR COURSES (all 14, image-style rows) ══ */}
+          {/* ══ 9. EXPLORE OUR COURSES (14 Programs in 2 Columns with Matching Design Colors) ══ */}
           <section id="bro-courses" className="brochure-page brochure-page-inner allow-break relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
             <h2 className="text-2xl font-extrabold text-slate-900">
               Explore Our <span style={{ color: BRAND.orange }}>Courses</span>
             </h2>
-            <div className="mt-2 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
-            <p className="mt-2 text-xs text-slate-500">One brochure per course — pick any title from the dropdown above to preview &amp; download it.</p>
-            <div className="mt-3 grid sm:grid-cols-2 gap-2">
+            <div className="mt-1.5 h-1 w-16 rounded" style={{ background: BRAND.orange }} />
+            <p className="mt-2 text-xs text-slate-500">
+              One brochure per course — contact our academic counsellors to receive the comprehensive curriculum for any program.
+            </p>
+
+            <div className="mt-3.5 grid sm:grid-cols-2 gap-2.5">
               {LOCAL_SYLLABUS.map((s, i) => {
                 const mods = s.modules.filter((m) => m.no > 0);
                 const isCurrent = s.file === syllabusKey;
+                const badgeColors = [BRAND.blue, BRAND.orange, BRAND.green, BRAND.purple];
+                const badgeColor = badgeColors[i % 4];
+
                 return (
-                  <div key={s.file} className="flex items-center gap-3 rounded-lg border-l-4 border border-slate-100 bg-slate-50/80 py-2 pl-3 pr-4" style={{ borderLeftColor: BRAND.blue }}>
-                    <span className="w-9 h-9 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0" style={{ background: isCurrent ? BRAND.orange : BRAND.blue }}>
+                  <div
+                    key={s.file}
+                    className={`flex items-center gap-3 rounded-xl border p-2.5 transition-shadow ${
+                      isCurrent
+                        ? 'border-amber-400 bg-amber-50/40 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <span
+                      className="w-8 h-8 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-xs"
+                      style={{ background: badgeColor }}
+                    >
                       {String(i + 1).padStart(2, '0')}
                     </span>
-                    <span className="flex-1">
-                      <span className="block text-sm font-bold" style={{ color: BRAND.blue }}>
-                        {prettyTitleFromFile(s.file)}
-                        {isCurrent && <span className="ml-2 text-[10px] font-extrabold uppercase tracking-wider" style={{ color: BRAND.orange }}>· Current</span>}
-                      </span>
-                      <span className="block text-xs text-slate-500">{mods.length} modules | {s.totalTopics} topics</span>
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className={`block text-xs font-bold truncate ${isCurrent ? 'text-amber-800' : 'text-slate-900'}`}>
+                          {prettyTitleFromFile(s.file)}
+                        </span>
+                        {isCurrent && (
+                          <span
+                            className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider shrink-0"
+                            style={{ background: '#fef3c7', color: BRAND.orangeDark }}
+                          >
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        {mods.length} modules · {s.totalTopics} topics · Hands-on Labs
+                      </p>
+                      <p className="text-[10px] font-semibold mt-0.5" style={{ color: badgeColor }}>
+                        Mentor-Led · Practical Sprints · Certified
+                      </p>
+                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Bottom Admissions Helpline Bar */}
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/50 p-2.5 text-center">
+              <p className="text-xs font-bold text-slate-800">
+                Admissions &amp; Syllabus Inquiries: <span style={{ color: BRAND.blue }}>{contact.phone}</span> · {contact.email} · {contact.website}
+              </p>
             </div>
           </section>
         </div>

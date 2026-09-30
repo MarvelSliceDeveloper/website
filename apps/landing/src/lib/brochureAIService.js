@@ -1,4 +1,5 @@
 import { generateContentWithAI, getAIConfig } from './aiService';
+import { keyHighlightsFor, pedagogyFor } from './brochureExpand';
 
 /**
  * Intelligent Fallback: Generates in-depth, comprehensive course content
@@ -27,6 +28,8 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
     : [];
 
   const dbModules = Array.isArray(course.modules) ? course.modules : [];
+  const detailedHighlights = keyHighlightsFor(title, duration, dbModules);
+  const pedagogyItems = pedagogyFor(title);
 
   return {
     meta: {
@@ -49,6 +52,12 @@ export function synthesizeFlowingCourseBrochure(course, siteSettings = {}) {
         saturdayHours: siteSettings?.working_hours?.saturday || '10:00 AM - 04:00 PM',
       },
     },
+
+    // High-impact metric-driven Key Highlights (2-column layout)
+    keyHighlights: detailedHighlights,
+
+    // 8-pillar Program Pedagogy
+    pedagogy: pedagogyItems,
 
     // Section 1: Executive Overview & Introduction
     overview: {
@@ -477,10 +486,42 @@ Conditions (follow strictly):
 - Short one-line bullets everywhere (max 12 words each).
 - NEVER use the word "capstone" - always say "project" (e.g. "Project 1", never "Capstone 1").
 - Exactly 4 portfolio projects, ordered Beginner to Advanced.
+- Generate 18-20 metric-driven bullet points for "keyHighlights" (applied hours, self-paced hours, project counts, live sessions, faculty, mentors, resume/LinkedIn, hackathons, certification, incubation, EMI, guaranteed interviews).
+- Generate 8 structured pedagogy items for "pedagogy" representing the 8 pillars: Instructor-led Training, Hackathons, Dedicated Learning Management Team, Peer Networking and Group Learning, Self-paced videos, Gamified Learning, Projects and Exercises, 1:1 Personalized Learning.
 Return a valid JSON object with:
 {
   "executiveSummary": "A rich 3-paragraph executive overview of this course and its industry significance",
   "learningOutcomes": ["Outcome 1", "Outcome 2", "Outcome 3", "Outcome 4", "Outcome 5", "Outcome 6", "Outcome 7", "Outcome 8"],
+  "keyHighlights": [
+    "620+ Hrs of Applied Learning",
+    "218+ Hrs of Self-Paced Learning",
+    "50+ Industry Projects & Case Studies",
+    "Placement Assistance",
+    "24*7 Support",
+    "1:1 Mock Interview",
+    "2 Days campus immersion & hackathon sprints",
+    "Industry Certification Support",
+    "Up to Rs. 50 Lakhs startup Incubation Support*",
+    "Weekday/Weekend Batches",
+    "90+ Live Sessions Across the program",
+    "Learn from Senior Faculty & Industry Practitioners",
+    "One-on-One with Industry Mentors",
+    "Resume Preparation and LinkedIn Profile Review",
+    "Designed for Working Professionals & Freshers",
+    "No Cost EMI Option",
+    "Top 2 performers per batch will receive fellowship awards*",
+    "3 Guaranteed Job Interviews upon movement to Placement Pool"
+  ],
+  "pedagogy": [
+    { "title": "Instructor-led Training", "desc": "Get trained by top industry experts" },
+    { "title": "Hackathons", "desc": "Get a sense of how real projects are built" },
+    { "title": "Dedicated Learning Management Team", "desc": "To help you with your learning needs" },
+    { "title": "Peer Networking and Group Learning", "desc": "Improve your professional network and learn from peers" },
+    { "title": "Self-paced videos", "desc": "Learn at your own pace with world-class content" },
+    { "title": "Gamified Learning", "desc": "Get involved in group activities to solve real-world problems" },
+    { "title": "Projects and Exercises", "desc": "Get real-world experience through projects" },
+    { "title": "1:1 Personalized Learning", "desc": "Hands-on exercises, project work, quizzes, and project builds" }
+  ],
   "capstoneHighlights": [
     { "title": "Project 1 Title", "description": "Project overview paragraph", "tech": "Tech stack", "impact": "Portfolio impact paragraph" },
     { "title": "Project 2 Title", "description": "Project overview paragraph", "tech": "Tech stack", "impact": "Portfolio impact paragraph" },
@@ -503,6 +544,16 @@ Return ONLY raw JSON, without markdown formatting.`;
         }
         if (Array.isArray(parsed.learningOutcomes) && parsed.learningOutcomes.length >= 4) {
           data.outcomes.bulletPoints = parsed.learningOutcomes;
+        }
+        if (Array.isArray(parsed.keyHighlights) && parsed.keyHighlights.length >= 8) {
+          data.keyHighlights = parsed.keyHighlights.map((s) => String(s).trim()).filter(Boolean);
+        }
+        if (Array.isArray(parsed.pedagogy) && parsed.pedagogy.length >= 4) {
+          data.pedagogy = parsed.pedagogy.map((p, idx) => ({
+            key: p.key || `pedagogy_${idx}`,
+            title: p.title || 'Learning Pillar',
+            desc: p.desc || p.description || '',
+          }));
         }
         if (Array.isArray(parsed.capstoneHighlights) && parsed.capstoneHighlights.length >= 3) {
           data.capstones.projects = parsed.capstoneHighlights.map((p, idx) => ({
@@ -559,19 +610,19 @@ export async function extractDocFileText(file) {
 
 /** Hard cap: brochure holds max 25-30 pages total, so doc pages are capped. */
 export const MAX_DOC_PAGES = 25;
-const MAX_LINES_PER_PAGE = 9;
+const MAX_LINES_PER_PAGE = 14;
 
 /**
  * Normalize sections -> max MAX_DOC_PAGES pages.
  * - drops empties, caps lines per page
- * - merges tiny (<3 line) sections into the previous page
+ * - merges tiny (<2 line) sections into the previous page
  * - if still over cap, evenly groups consecutive sections into MAX_DOC_PAGES
  */
 export function normalizeDocSections(sections, maxPages = MAX_DOC_PAGES) {
   const cleaned = (sections || [])
     .map((s) => ({
       title: String(s?.title || '').trim().slice(0, 80),
-      lines: (s?.lines || []).map((l) => String(l).trim()).filter(Boolean).slice(0, MAX_LINES_PER_PAGE),
+      lines: [...new Set((s?.lines || []).map((l) => String(l).trim()).filter(Boolean))].slice(0, MAX_LINES_PER_PAGE),
     }))
     .filter((s) => s.title && s.lines.length);
   if (!cleaned.length) return [];
@@ -580,8 +631,8 @@ export function normalizeDocSections(sections, maxPages = MAX_DOC_PAGES) {
   const merged = [];
   cleaned.forEach((s) => {
     const prev = merged[merged.length - 1];
-    if (prev && s.lines.length < 3 && prev.lines.length + s.lines.length <= MAX_LINES_PER_PAGE) {
-      prev.lines = [...prev.lines, ...s.lines].slice(0, MAX_LINES_PER_PAGE);
+    if (prev && s.lines.length < 2 && prev.lines.length + s.lines.length <= MAX_LINES_PER_PAGE) {
+      prev.lines = [...new Set([...prev.lines, ...s.lines])].slice(0, MAX_LINES_PER_PAGE);
     } else {
       merged.push({ ...s, lines: [...s.lines] });
     }
@@ -595,38 +646,88 @@ export function normalizeDocSections(sections, maxPages = MAX_DOC_PAGES) {
   for (let i = 0; i < maxPages; i++) {
     const slice = merged.slice(Math.floor(i * perBucket), Math.floor((i + 1) * perBucket));
     if (!slice.length) continue;
-    const title = slice[0].title;
-    const lines = slice.flatMap((s) => s.lines).slice(0, MAX_LINES_PER_PAGE);
-    grouped.push({ title, lines });
+    const title = slice.map((s) => s.title).filter(Boolean).slice(0, 2).join(' & ');
+    const lines = [...new Set(slice.flatMap((s) => s.lines))].slice(0, MAX_LINES_PER_PAGE);
+    grouped.push({ title: title || `Module ${i + 1}`, lines });
   }
   return grouped;
 }
 
-/** Local fallback: split raw text into sections with one line per sentence. */
+/** Local fallback: accurately parses syllabus documents into real modules and topics. */
 export function splitDocToSectionsFallback(rawText, maxLinesPerSection = MAX_LINES_PER_PAGE) {
-  const text = String(rawText || '').replace(/\r/g, '\n');
-  const chunks = text.split(/\n\s*\n|(?=^#|^Module|^Chapter|^Unit|^\d+\.)/gim)
-    .map((s) => s.trim())
+  const lines = String(rawText || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((l) => l.trim())
     .filter(Boolean);
+
+  const isLevelBanner = (l) => /^L\d+\s*[-–]/i.test(l) || /^Level\s*\d+/i.test(l);
+  const isHeading = (l) => {
+    if (isLevelBanner(l)) return false;
+    return /^(?:Module|Chapter|Unit|Part|Section)\s*\d+[:\-.]?\s*/i.test(l)
+      || /^\d+[\.\)]\s+[A-Z]/i.test(l)
+      || /^#+\s+/i.test(l);
+  };
+
   const sections = [];
-  chunks.forEach((chunk, idx) => {
-    const firstLine = chunk.split('\n')[0].slice(0, 80);
-    const title = firstLine.length < 80 && chunk.includes('\n') ? firstLine : `Module ${idx + 1}`;
-    const body = chunk.includes('\n') && firstLine.length < 80 ? chunk.slice(firstLine.length) : chunk;
-    const sentences = body
-      .split(/(?<=[.!?])\s+|\n+/)
-      .map((s) => s.trim().replace(/^[-•\s]+/, ''))
-      .filter((s) => s.length > 20)
-      .map((s) => (s.length > 160 ? `${s.slice(0, 157).trim()}...` : s))
-      .slice(0, maxLinesPerSection);
-    if (sentences.length) sections.push({ title, lines: sentences });
-  });
+  let currentSection = null;
+
+  for (const line of lines) {
+    if (isLevelBanner(line)) continue;
+    if (isHeading(line)) {
+      if (currentSection && currentSection.lines.length > 0) {
+        sections.push(currentSection);
+      }
+      const rawTitle = line
+        .replace(/^#+\s*/, '')
+        .replace(/^(?:Module|Chapter|Unit|Part|Section)\s*\d+[:\-.]?\s*/i, '')
+        .replace(/^\d+[\.\)]\s+/, '')
+        .replace(/^[—–-]\s*/, '')
+        .trim();
+      currentSection = {
+        title: rawTitle || line,
+        lines: [],
+      };
+    } else if (currentSection) {
+      const topic = line
+        .replace(/^[-•*◦▪]\s*/, '')
+        .replace(/^(?:Module|Chapter|Unit|Part)\s*\d+[:\-.]?\s*/i, '')
+        .trim();
+      if (topic && topic.length >= 2 && !isLevelBanner(topic)) {
+        if (!currentSection.lines.includes(topic) && topic.toLowerCase() !== currentSection.title.toLowerCase()) {
+          currentSection.lines.push(topic);
+        }
+      }
+    }
+  }
+  if (currentSection && currentSection.lines.length > 0) {
+    sections.push(currentSection);
+  }
+
+  // Fallback if no headings matched at all
+  if (!sections.length) {
+    const chunks = String(rawText || '').split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
+    chunks.forEach((chunk, idx) => {
+      const firstLine = chunk.split('\n')[0].slice(0, 80);
+      const isShortTitle = firstLine.length < 60 && chunk.includes('\n');
+      const title = isShortTitle
+        ? firstLine.replace(/^(?:Module|Chapter|Unit|Part|Section)\s*\d+[:\-.]?\s*/i, '').replace(/^[—–-]\s*/, '').trim()
+        : `Section ${idx + 1}`;
+      const bodyLines = chunk.split('\n').slice(isShortTitle ? 1 : 0)
+        .map((l) => l.replace(/^[-•*◦▪]\s*/, '').replace(/^(?:Module|Chapter|Unit|Part)\s*\d+[:\-.]?\s*/i, '').trim())
+        .filter((l) => l.length >= 2 && !isLevelBanner(l) && l.toLowerCase() !== title.toLowerCase());
+      if (bodyLines.length) {
+        sections.push({ title: title || `Module ${idx + 1}`, lines: bodyLines.slice(0, maxLinesPerSection) });
+      }
+    });
+  }
+
   return normalizeDocSections(sections);
 }
 
 /**
- * AI condense: verbose doc content -> max 25 sections,
- * each bullet a full descriptive line (up to ~20 words).
+ * AI condense: verbose doc content -> max 16 sections,
+ * each bullet a full descriptive line (up to ~14 words).
  */
 export async function condenseDocToOneLiners(rawText, courseTitle = '') {
   const clean = String(rawText || '').trim();
@@ -635,16 +736,17 @@ export async function condenseDocToOneLiners(rawText, courseTitle = '') {
   try {
     const config = await getAIConfig();
     if (config.active_provider === 'disabled') return splitDocToSectionsFallback(clean);
-    const prompt = `You are a brochure copywriter for Marvel Slice Institute.
+    const prompt = `You are a curriculum editor for Marvel Slice Institute.
 Course: "${courseTitle}".
-Condense the course document below into brochure curriculum sections.
-Rules:
-- Split into logical sections (8-12 sections, NEVER more than 20).
-- TITLE RULE: copy each section title EXACTLY from the document's own headings - never invent, rephrase or renumber titles. When merging modules, use the most representative original heading.
-- Each section: 6 to 10 descriptive bullet lines (more content per section).
+Condense the course document below into clean brochure curriculum sections.
+Strict Rules:
+- Split into logical sections (8 to 16 sections, NEVER more than 16).
+- TITLE RULE: Use the clean subject heading directly from the document (e.g. "HTML5", "CSS3", "React Basics", "SEO Optimization"). NEVER output phantom titles like "Module 135" or "Module 184". Strip "Module X:" prefix from titles so only the subject remains.
+- BULLET RULE: Never include module heading prefixes like "Module 11:" or "Module 12:" inside bullet points. Every bullet must be an actual topic or tool.
+- DEDUPLICATION: Never repeat bullet points, and never duplicate the module title inside its own bullet points.
+- Each section: 6 to 12 concise bullet lines.
 - EVERY bullet: short single line, max 12 words (never long paragraphs).
 - NEVER use the word "capstone" anywhere - always say "project".
-- Keep meaning, drop filler.
 - Return ONLY raw JSON: {"sections":[{"title":"...","lines":["..."]}]}
 
 DOCUMENT:
@@ -655,10 +757,22 @@ ${clipped}`;
     else if (txt.startsWith('```')) txt = txt.replace(/^```\s*/, '').replace(/\s*```$/, '');
     const parsed = JSON.parse(txt);
     const sections = (parsed.sections || [])
-      .map((s) => ({
-        title: String(s.title || '').slice(0, 80),
-        lines: (s.lines || []).map((l) => String(l).trim()).filter(Boolean).slice(0, MAX_LINES_PER_PAGE),
-      }))
+      .map((s) => {
+        const title = String(s.title || '')
+          .replace(/^(?:Module|Chapter|Unit|Part|Section)\s*\d+[:\-.]?\s*/i, '')
+          .replace(/^[—–-]\s*/, '')
+          .trim()
+          .slice(0, 80);
+        const lines = (s.lines || [])
+          .map((l) => String(l)
+            .replace(/^[-•*◦▪]\s*/, '')
+            .replace(/^(?:Module|Chapter|Unit|Part)\s*\d+[:\-.]?\s*/i, '')
+            .trim()
+          )
+          .filter((l) => l && l.toLowerCase() !== title.toLowerCase())
+          .slice(0, MAX_LINES_PER_PAGE);
+        return { title, lines: [...new Set(lines)] };
+      })
       .filter((s) => s.title && s.lines.length);
     if (sections.length) return normalizeDocSections(sections);
     return splitDocToSectionsFallback(clean);
