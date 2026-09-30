@@ -1308,23 +1308,12 @@ export default function BrochureDesigner() {
               <div className="mt-3.5 flex items-start gap-5">
                 {/* Left: Contact Info */}
                 <div className="flex-1 space-y-4">
-                  {/* Center: Website */}
-                  <div className="flex items-center gap-2.5 justify-center">
-                    <FiGlobe className="w-5 h-5 text-blue-600 shrink-0" />
-                    <div>
-                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Website</span>
-                      <a href="https://marvelslice.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-700 hover:underline">
-                        www.marvelslice.com
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Below: Phone Left & Email Right */}
+                  {/* Top: Phone Left & Email Right */}
                   <div className="flex items-start justify-between gap-6">
                     <div className="flex items-center gap-2.5">
                       <FiPhone className="w-5 h-5 text-emerald-600 shrink-0" />
                       <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Helpline</span>
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Course Enquiry</span>
                         <span className="text-sm font-bold text-slate-800">
                           +91 63809 57390 / +91 80882 18609
                         </span>
@@ -1338,6 +1327,17 @@ export default function BrochureDesigner() {
                           hr@marvelslice.com
                         </a>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Below Center: Website */}
+                  <div className="flex items-center gap-2.5 justify-center">
+                    <FiGlobe className="w-5 h-5 text-blue-600 shrink-0" />
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Website</span>
+                      <a href="https://marvelslice.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-700 hover:underline">
+                        www.marvelslice.com
+                      </a>
                     </div>
                   </div>
                 </div>

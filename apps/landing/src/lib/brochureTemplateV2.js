@@ -1800,8 +1800,40 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.line(x + 3.6, y + 3.6, x + 7.0, y + 0.8);
   }
 
-  // Row 1: Center — Globe icon + "Website" heading + www.marvelslice.com
-  const webRowY = contactStartY + 11.0;
+  // Row 1: Left — Phone | Right — Email
+  const row1Y = contactStartY + 11.0;
+
+  // Left: Phone icon + "Course Enquiry" heading + phone numbers
+  const phoneX = MARGIN_X + 2.0;
+  drawPhoneIconLg(phoneX, row1Y, [4, 120, 87]);
+
+  pdf.setFontSize(6.5);
+  pdf.setFont('Helvetica', 'bold');
+  setText(MUTED);
+  pdf.text('Course Enquiry', phoneX + 10, row1Y + 2.5);
+
+  pdf.setFontSize(9.5);
+  pdf.setFont('Helvetica', 'bold');
+  setText(INK);
+  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 10, row1Y + 6.5);
+
+  // Right: Email icon + "Email" heading + email address
+  const emailX = MARGIN_X + contactAreaW / 2 + 8.0;
+  drawEmailIconLg(emailX, row1Y, ORANGE);
+
+  pdf.setFontSize(6.5);
+  pdf.setFont('Helvetica', 'bold');
+  setText(MUTED);
+  pdf.text('Email', emailX + 10, row1Y + 2.5);
+
+  pdf.setFontSize(9.5);
+  pdf.setFont('Helvetica', 'bold');
+  setText(INK);
+  pdf.text('hr@marvelslice.com', emailX + 10, row1Y + 6.5);
+  pdf.link(emailX + 10, row1Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
+
+  // Row 2: Center — Globe icon + "Website" heading + www.marvelslice.com
+  const webRowY = contactStartY + 23.0;
   const webCenterX = MARGIN_X + contactAreaW / 2 - 22;
   drawGlobeIconLg(webCenterX, webRowY, BLUE);
 
@@ -1815,38 +1847,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   setText(BLUE);
   pdf.text('www.marvelslice.com', webCenterX + 10, webRowY + 6.5);
   pdf.link(webCenterX + 10, webRowY + 1.0, 42, 7, { url: 'https://marvelslice.com' });
-
-  // Row 2: Below Left — Phone | Below Right — Email
-  const row2Y = contactStartY + 23.0;
-
-  // Left: Phone icon + "Helpline" heading + phone numbers
-  const phoneX = MARGIN_X + 2.0;
-  drawPhoneIconLg(phoneX, row2Y, [4, 120, 87]);
-
-  pdf.setFontSize(6.5);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Helpline', phoneX + 10, row2Y + 2.5);
-
-  pdf.setFontSize(9.5);
-  pdf.setFont('Helvetica', 'bold');
-  setText(INK);
-  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 10, row2Y + 6.5);
-
-  // Right: Email icon + "Email" heading + email address
-  const emailX = MARGIN_X + contactAreaW / 2 + 8.0;
-  drawEmailIconLg(emailX, row2Y, ORANGE);
-
-  pdf.setFontSize(6.5);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Email', emailX + 10, row2Y + 2.5);
-
-  pdf.setFontSize(9.5);
-  pdf.setFont('Helvetica', 'bold');
-  setText(INK);
-  pdf.text('hr@marvelslice.com', emailX + 10, row2Y + 6.5);
-  pdf.link(emailX + 10, row2Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
 
   const raw = title || 'Course';
   const clean = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
