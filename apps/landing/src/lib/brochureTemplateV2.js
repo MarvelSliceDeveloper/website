@@ -1732,7 +1732,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const numRows = Math.ceil(catalogCourses.length / 2);
   cursorY += numRows * (catCardH + catRowGap) + 4.0;
 
-  // Bottom admissions section with scannable QR code, website, email & phone (Unboxed Layout)
+  // Bottom admissions section: Phone top-left, Email top-right, QR code centered in middle, Website centered below QR code
   let qrDataUrl = '';
   try {
     qrDataUrl = await QRCode.toDataURL('https://marvelslice.com', {
@@ -1748,45 +1748,19 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const contactStartY = cursorY + 1.5;
 
   // Heading: "Admissions & Syllabus Inquiries:" — centered
-  pdf.setFontSize(11);
+  pdf.setFontSize(10.5);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
   const headingText = 'Admissions & Syllabus Inquiries:';
   const headingW = pdf.getTextWidth(headingText);
-  pdf.text(headingText, MARGIN_X + (CONTENT_W - headingW) / 2, contactStartY + 4.5);
+  pdf.text(headingText, MARGIN_X + (CONTENT_W - headingW) / 2, contactStartY + 3.5);
 
   // Subtle divider below heading
   setStroke([226, 232, 240]);
-  pdf.setLineWidth(0.4);
-  pdf.line(MARGIN_X + 15, contactStartY + 7.5, MARGIN_X + CONTENT_W - 15, contactStartY + 7.5);
+  pdf.setLineWidth(0.35);
+  pdf.line(MARGIN_X + 15, contactStartY + 5.5, MARGIN_X + CONTENT_W - 15, contactStartY + 5.5);
 
-  // Far Right Corner: Scannable QR Code (pointing to marvelslice.com)
-  const qrSize = 26.0;
-  const qrBoxX = MARGIN_X + CONTENT_W - qrSize;
-  const qrBoxY = contactStartY + 10.0;
-
-  setFill(WHITE);
-  setStroke([226, 232, 240]);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(qrBoxX, qrBoxY, qrSize, qrSize, 1.5, 1.5, 'FD');
-
-  if (qrDataUrl) {
-    try {
-      pdf.addImage(qrDataUrl, 'PNG', qrBoxX + 1.0, qrBoxY + 1.0, qrSize - 2.0, qrSize - 2.0);
-      pdf.link(qrBoxX, qrBoxY, qrSize, qrSize, { url: 'https://marvelslice.com' });
-    } catch { /* ignore */ }
-  }
-
-  // QR Label below
-  pdf.setFontSize(6);
-  pdf.setFont('Helvetica', 'bold');
-  setText(ORANGE);
-  pdf.text('SCAN FOR SITE', qrBoxX + qrSize / 2, qrBoxY + qrSize + 3.5, { align: 'center' });
-
-  // Contact area left of QR (from MARGIN_X to qrBoxX - 8)
-  const contactAreaW = qrBoxX - MARGIN_X - 8;
-
-  // Larger icon helpers (7mm bounding box)
+  // Larger icon helpers
   function drawGlobeIconLg(x, y, color) {
     setStroke(color);
     pdf.setLineWidth(0.45);
@@ -1811,53 +1785,76 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.line(x + 3.6, y + 3.6, x + 7.0, y + 0.8);
   }
 
-  // Row 1: Left — Phone | Right — Email
-  const row1Y = contactStartY + 11.0;
+  // Row 1: Top-Left — Phone | Top-Right — Email
+  const row1Y = contactStartY + 8.0;
 
-  // Left: Phone icon + "Course Enquiry" heading + phone numbers
+  // Top-Left: Phone icon + "Course Enquiry" + numbers
   const phoneX = MARGIN_X + 2.0;
   drawPhoneIconLg(phoneX, row1Y, [4, 120, 87]);
 
-  pdf.setFontSize(6.5);
+  pdf.setFontSize(6.2);
   pdf.setFont('Helvetica', 'bold');
   setText(MUTED);
-  pdf.text('Course Enquiry', phoneX + 10, row1Y + 2.5);
+  pdf.text('Course Enquiry', phoneX + 9.5, row1Y + 2.3);
 
-  pdf.setFontSize(9.5);
+  pdf.setFontSize(9.0);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 10, row1Y + 6.5);
+  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 9.5, row1Y + 6.2);
 
-  // Right: Email icon + "Email" heading + email address
-  const emailX = MARGIN_X + contactAreaW / 2 + 8.0;
+  // Top-Right: Email icon + "Email" + address
+  const emailX = MARGIN_X + CONTENT_W - 54.0;
   drawEmailIconLg(emailX, row1Y, ORANGE);
 
-  pdf.setFontSize(6.5);
+  pdf.setFontSize(6.2);
   pdf.setFont('Helvetica', 'bold');
   setText(MUTED);
-  pdf.text('Email', emailX + 10, row1Y + 2.5);
+  pdf.text('Email', emailX + 9.5, row1Y + 2.3);
+
+  pdf.setFontSize(9.0);
+  pdf.setFont('Helvetica', 'bold');
+  setText(INK);
+  pdf.text('hr@marvelslice.com', emailX + 9.5, row1Y + 6.2);
+  pdf.link(emailX + 9.5, row1Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
+
+  // Row 2: CENTERED — Scannable QR Code
+  const qrSize = 21.0;
+  const qrBoxX = MARGIN_X + (CONTENT_W - qrSize) / 2;
+  const qrBoxY = contactStartY + 17.5;
+
+  setFill(WHITE);
+  setStroke([226, 232, 240]);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(qrBoxX, qrBoxY, qrSize, qrSize, 1.5, 1.5, 'FD');
+
+  if (qrDataUrl) {
+    try {
+      pdf.addImage(qrDataUrl, 'PNG', qrBoxX + 0.8, qrBoxY + 0.8, qrSize - 1.6, qrSize - 1.6);
+      pdf.link(qrBoxX, qrBoxY, qrSize, qrSize, { url: 'https://marvelslice.com' });
+    } catch { /* ignore */ }
+  }
+
+  // QR Label below code
+  pdf.setFontSize(5.8);
+  pdf.setFont('Helvetica', 'bold');
+  setText(ORANGE);
+  pdf.text('SCAN FOR SITE', MARGIN_X + CONTENT_W / 2, qrBoxY + qrSize + 3.0, { align: 'center' });
+
+  // Row 3: CENTERED BELOW QR — Globe icon + Website
+  const webRowY = qrBoxY + qrSize + 5.5;
+  const webCenterX = MARGIN_X + (CONTENT_W / 2) - 22.0;
+  drawGlobeIconLg(webCenterX, webRowY, BLUE);
+
+  pdf.setFontSize(6.2);
+  pdf.setFont('Helvetica', 'bold');
+  setText(MUTED);
+  pdf.text('Website', webCenterX + 9.5, webRowY + 2.3);
 
   pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
-  setText(INK);
-  pdf.text('hr@marvelslice.com', emailX + 10, row1Y + 6.5);
-  pdf.link(emailX + 10, row1Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
-
-  // Row 2: Center — Globe icon + "Website" heading + www.marvelslice.com
-  const webRowY = contactStartY + 23.0;
-  const webCenterX = MARGIN_X + contactAreaW / 2 - 22;
-  drawGlobeIconLg(webCenterX, webRowY, BLUE);
-
-  pdf.setFontSize(6.5);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Website', webCenterX + 10, webRowY + 2.5);
-
-  pdf.setFontSize(10);
-  pdf.setFont('Helvetica', 'bold');
   setText(BLUE);
-  pdf.text('www.marvelslice.com', webCenterX + 10, webRowY + 6.5);
-  pdf.link(webCenterX + 10, webRowY + 1.0, 42, 7, { url: 'https://marvelslice.com' });
+  pdf.text('www.marvelslice.com', webCenterX + 9.5, webRowY + 6.2);
+  pdf.link(webCenterX + 9.5, webRowY + 1.0, 42, 7, { url: 'https://marvelslice.com' });
 
   const raw = title || 'Course';
   const clean = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');

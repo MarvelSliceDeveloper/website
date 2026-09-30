@@ -1267,55 +1267,52 @@ export default function BrochureDesigner() {
               </p>
               <div className="mt-2 mx-auto w-3/5 border-t border-slate-200" />
 
-              <div className="mt-3.5 flex items-start gap-5">
-                {/* Left: Contact Info */}
-                <div className="flex-1 space-y-4">
-                  {/* Top: Phone Left & Email Right */}
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex items-center gap-2.5">
-                      <FiPhone className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Course Enquiry</span>
-                        <span className="text-sm font-bold text-slate-800">
-                          +91 63809 57390 / +91 80882 18609
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <FiMail className="w-5 h-5 text-amber-600 shrink-0" />
-                      <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</span>
-                        <a href="mailto:hr@marvelslice.com" className="text-sm font-bold text-slate-800 hover:text-amber-700">
-                          hr@marvelslice.com
-                        </a>
-                      </div>
+              <div className="mt-3.5 space-y-4">
+                {/* Top Row: Phone Left & Email Right */}
+                <div className="flex items-start justify-between gap-6 px-2">
+                  <div className="flex items-center gap-2.5">
+                    <FiPhone className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Course Enquiry</span>
+                      <span className="text-sm font-bold text-slate-800">
+                        +91 63809 57390 / +91 80882 18609
+                      </span>
                     </div>
                   </div>
-
-                  {/* Below Center: Website */}
-                  <div className="flex items-center gap-2.5 justify-center">
-                    <FiGlobe className="w-5 h-5 text-blue-600 shrink-0" />
+                  <div className="flex items-center gap-2.5">
+                    <FiMail className="w-5 h-5 text-amber-600 shrink-0" />
                     <div>
-                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Website</span>
-                      <a href="https://marvelslice.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-700 hover:underline">
-                        www.marvelslice.com
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</span>
+                      <a href="mailto:hr@marvelslice.com" className="text-sm font-bold text-slate-800 hover:text-amber-700">
+                        hr@marvelslice.com
                       </a>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Corner: QR Code */}
-                <div className="flex flex-col items-center shrink-0">
+                {/* Middle Row: Centered QR Code */}
+                <div className="flex flex-col items-center justify-center">
                   <div className="p-1 bg-white rounded-lg border border-slate-200 shadow-xs">
                     {qrDataUrl ? (
-                      <img src={qrDataUrl} alt="QR Code - marvelslice.com" className="w-20 h-20" />
+                      <img src={qrDataUrl} alt="QR Code - marvelslice.com" className="w-16 h-16" />
                     ) : (
-                      <div className="w-20 h-20 bg-slate-100 flex items-center justify-center text-[9px] text-slate-400">
+                      <div className="w-16 h-16 bg-slate-100 flex items-center justify-center text-[9px] text-slate-400">
                         QR Code
                       </div>
                     )}
                   </div>
-                  <span className="mt-0.5 text-[10px] font-bold text-amber-600 tracking-wider">SCAN FOR SITE</span>
+                  <span className="mt-0.5 text-[9px] font-bold text-amber-600 tracking-wider">SCAN FOR SITE</span>
+                </div>
+
+                {/* Bottom Row: Centered Website */}
+                <div className="flex items-center gap-2.5 justify-center">
+                  <FiGlobe className="w-5 h-5 text-blue-600 shrink-0" />
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Website</span>
+                    <a href="https://marvelslice.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-700 hover:underline">
+                      www.marvelslice.com
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
