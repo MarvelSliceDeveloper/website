@@ -1,5 +1,7 @@
 import jsPDFRaw from 'jspdf';
 const jsPDF = jsPDFRaw?.jsPDF || jsPDFRaw?.default || jsPDFRaw;
+import { supabase } from './supabaseClient.js';
+import { LOCAL_SYLLABUS } from '../data/localSyllabus.js';
 import { generateAIBrochureData } from './brochureAIService.js';
 import {
   toolsForTitle, rolesFor,
@@ -9,6 +11,7 @@ import {
   moduleToolsFor, moduleTakeawayFor,
   isProjectModule,
   programDimensionsFor, targetAudienceDetailedFor, prerequisitesFor,
+  prettyTitleFromFile, durationForCourse,
 } from './brochureExpand.js';
 
 /**
@@ -154,9 +157,80 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   // Clamp to full curriculum pages (even count: 6 to 16 modules, topics kept).
   modules = normalizeModuleCount(modules);
 
-  const otherCourses = Array.isArray(options.otherCourses)
-    ? options.otherCourses.slice(0, 13)
-    : [];
+  // ─── Site Courses Catalog (Dynamic from DB / Site Syllabus - Never Hardcoded) ───
+  function cleanTitleKey(t = '') {
+    return t.toLowerCase().replace(/\b(course|masterclass|program|training)\b/gi, '').replace(/[^a-z0-9]/g, '').trim();
+  }
+
+  let catalogCourses = [];
+  const seenCatalog = new Set();
+
+  // 1. Caller passed otherCourses or data.allCourses
+  const incomingCourses = Array.isArray(options.otherCourses) && options.otherCourses.length > 0
+    ? options.otherCourses
+    : (Array.isArray(data.allCourses) && data.allCourses.length > 0 ? data.allCourses : []);
+
+  if (incomingCourses.length > 0) {
+    incomingCourses.forEach((c) => {
+      const cTitle = sanitize(c.title || c.name || '');
+      const key = cleanTitleKey(cTitle);
+      if (cTitle && !seenCatalog.has(key)) {
+        seenCatalog.add(key);
+        catalogCourses.push({
+          title: cTitle,
+          duration: sanitize(c.duration || durationForCourse(cTitle)),
+        });
+      }
+    });
+  }
+
+  // 2. Query live Supabase DB courses if online
+  if (catalogCourses.length < 14) {
+    try {
+      const { data: dbCourses } = await supabase
+        .from('courses')
+        .select('id, title, duration, is_published')
+        .eq('is_published', true)
+        .order('title');
+      if (dbCourses && dbCourses.length > 0) {
+        dbCourses.forEach((c) => {
+          const cTitle = sanitize(c.title || '');
+          const key = cleanTitleKey(cTitle);
+          if (cTitle && !seenCatalog.has(key)) {
+            seenCatalog.add(key);
+            catalogCourses.push({
+              title: cTitle,
+              duration: sanitize(c.duration || durationForCourse(cTitle)),
+            });
+          }
+        });
+      }
+    } catch {
+      // offline / supabase error
+    }
+  }
+
+  // 3. Supplement with full site syllabus from LOCAL_SYLLABUS
+  if (catalogCourses.length < 14) {
+    LOCAL_SYLLABUS.forEach((s) => {
+      const pTitle = prettyTitleFromFile(s.file);
+      const key = cleanTitleKey(pTitle);
+      if (!seenCatalog.has(key)) {
+        seenCatalog.add(key);
+        catalogCourses.push({
+          title: pTitle,
+          duration: durationForCourse(pTitle),
+        });
+      }
+    });
+  }
+
+  // Keep a balanced 2-column count (up to 14)
+  if (catalogCourses.length > 14) {
+    catalogCourses = catalogCourses.slice(0, 14);
+  }
+
+  const otherCourses = catalogCourses;
 
   // Full-page image replacements (no headings/overlay — image only).
   const coverImage = options.coverImage || null;
@@ -173,7 +247,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
   const contact = data.meta.contact || {};
   const phone = sanitize(contact.phone || siteSettings?.contact_phone || '+91 63809 57390');
-  const email = sanitize(contact.email || siteSettings?.contact_email || 'sales@marvelslice.com');
+  const email = sanitize(contact.email && contact.email !== 'sales@marvelslice.com' ? contact.email : 'hr@marvelslice.com');
   const website = sanitize(contact.website || 'www.marvelslice.com');
   const address = sanitize(contact.address || siteSettings?.address || 'Marvel Slice — Institute for Software Learning, Chennai, Tamil Nadu, India');
 
@@ -210,6 +284,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const tools = toolsForTitle(title, (course?.projects || []).flatMap((p) => asList(p.technologies)));
 
   const pdf = new jsPDF('p', 'mm', 'a4');
+  pdf.setLineHeightFactor(1.36);
   let cursorY = 0;
 
   const setFill = (c) => pdf.setFillColor(c[0], c[1], c[2]);
@@ -271,9 +346,10 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.setFont('Helvetica', 'normal');
     setText(BODY);
     const lines = pdf.splitTextToSize(clean, CONTENT_W);
-    need(lines.length * size * 0.46 + 3);
+    const lineH = size * 0.3528 * 1.36;
+    need(lines.length * lineH + 3);
     pdf.text(lines, MARGIN_X, cursorY);
-    cursorY += lines.length * size * 0.46 + 4;
+    cursorY += lines.length * lineH + 4.5;
   }
 
   function checkBullet(text, size = 10, maxW = CONTENT_W, x = MARGIN_X) {
@@ -282,7 +358,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.setFontSize(size);
     pdf.setFont('Helvetica', 'normal');
     const lines = pdf.splitTextToSize(clean, maxW - 9);
-    need(lines.length * size * 0.46 + 3);
+    const lineH = size * 0.3528 * 1.36;
+    need(lines.length * lineH + 3);
     setFill(ORANGE);
     pdf.circle(x + 2.6, cursorY - 1.2, 2.5, 'F');
     pdf.setFont('Helvetica', 'bold');
@@ -293,7 +370,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.setFontSize(size);
     setText(BODY);
     pdf.text(lines, x + 9, cursorY);
-    cursorY += lines.length * size * 0.46 + 2.5;
+    cursorY += lines.length * lineH + 3.2;
   }
 
   // ================= COVER (uploaded full-page image replaces everything) =================
@@ -382,7 +459,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   });
   cursorY += 23.5;
   // TOC box
-  const toc = ['About Program', 'Key Highlights & Pedagogy', 'Who Can Apply', 'Learning Path', `Curriculum (${modules.length} modules)`, 'Skills + Projects', 'Careers & Contact', 'Explore Our Courses (14)'];
+  const toc = ['About Program', 'Key Highlights & Pedagogy', 'Who Can Apply', 'Learning Path', `Curriculum (${modules.length} modules)`, 'Skills + Projects', 'Careers & Contact', `Explore Our Courses (${catalogCourses.length})`];
   const tocH = 10 + Math.ceil(toc.length / 2) * 5.8;
   setFill(WHITE);
   setStroke(BORDER);
@@ -434,7 +511,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   setText(BODY);
   const leadLines = pdf.splitTextToSize(`${aboutLead} ${aboutSub}`, CONTENT_W).slice(0, 4);
   pdf.text(leadLines, MARGIN_X, cursorY);
-  cursorY += leadLines.length * 4.0 + 3.5;
+  cursorY += leadLines.length * 4.3 + 3.5;
 
   // 2. Program Key Specifications Strip (4-column Card)
   const metaCardH = 17;
@@ -528,7 +605,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
   const outColGap = 5;
   const outCardW = (CONTENT_W - outColGap) / 2;
-  const outCardH = 16.5;
+  const outCardH = 17.0;
   const outRowGap = 2.4;
   const deepOutcomes = outcomes.slice(0, 8);
 
@@ -545,18 +622,19 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
     // Emerald checkmark icon circle
     setFill([16, 185, 129]);
-    pdf.circle(ox + 5.5, oy + 8.2, 3.2, 'F');
-    pdf.setFontSize(7.5);
-    pdf.setFont('Helvetica', 'bold');
-    setText(WHITE);
-    pdf.text('v', ox + 5.5, oy + 9.4, { align: 'center' });
+    pdf.circle(ox + 5.5, oy + outCardH / 2, 3.0, 'F');
+    setStroke(WHITE);
+    pdf.setLineWidth(0.45);
+    pdf.line(ox + 4.2, oy + outCardH / 2, ox + 5.1, oy + outCardH / 2 + 1.1);
+    pdf.line(ox + 5.1, oy + outCardH / 2 + 1.1, ox + 6.8, oy + outCardH / 2 - 1.1);
 
     // Outcome text
     pdf.setFontSize(7.4);
     pdf.setFont('Helvetica', 'normal');
     setText(BODY);
     const oLines = pdf.splitTextToSize(sanitize(o), outCardW - 14).slice(0, 3);
-    const textStartY = oy + (outCardH - (oLines.length * 3.6)) / 2 + 2.8;
+    const lineSpacing = 7.4 * 0.3528 * 1.36;
+    const textStartY = oy + (outCardH - (oLines.length - 1) * lineSpacing) / 2 + 0.8;
     pdf.text(oLines, ox + 11.5, textStartY);
   });
   cursorY += 4 * (outCardH + outRowGap) + 3;
@@ -578,7 +656,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const hlRight = keyHL.slice(halfHL);
 
   // Synchronized row-by-row rendering for 100% horizontal alignment
-  pdf.setFontSize(8.3);
+  pdf.setFontSize(8.0);
   for (let r = 0; r < halfHL; r++) {
     const itemL = hlLeft[r];
     const itemR = hlRight[r];
@@ -588,38 +666,38 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     const linesL = cleanL ? pdf.splitTextToSize(cleanL, colWHL - 9) : [];
     const linesR = cleanR ? pdf.splitTextToSize(cleanR, colWHL - 9) : [];
     const maxLines = Math.max(linesL.length || 1, linesR.length || 1);
-    const rowH = Math.max(5.3, maxLines * 3.8 + 1.4);
+    const rowH = Math.max(6.2, maxLines * 4.2 + 1.8);
 
     if (cleanL) {
       setFill(ORANGE);
-      pdf.circle(colXL + 2.5, cursorY + 2.2, 2.3, 'F');
+      pdf.circle(colXL + 2.5, cursorY + 2.5, 2.2, 'F');
       setStroke(WHITE);
-      pdf.setLineWidth(0.5);
-      pdf.line(colXL + 1.5, cursorY + 2.2, colXL + 2.2, cursorY + 3.1);
-      pdf.line(colXL + 2.2, cursorY + 3.1, colXL + 3.6, cursorY + 1.3);
+      pdf.setLineWidth(0.45);
+      pdf.line(colXL + 1.6, cursorY + 2.5, colXL + 2.3, cursorY + 3.3);
+      pdf.line(colXL + 2.3, cursorY + 3.3, colXL + 3.5, cursorY + 1.6);
 
-      pdf.setFont('Helvetica', 'bold');
-      setText(INK);
-      pdf.text(linesL, colXL + 7.5, cursorY + 3);
+      pdf.setFont('Helvetica', 'normal');
+      setText(BODY);
+      pdf.text(linesL, colXL + 7.2, cursorY + 3.4);
     }
 
     if (cleanR) {
       setFill(ORANGE);
-      pdf.circle(colXR + 2.5, cursorY + 2.2, 2.3, 'F');
+      pdf.circle(colXR + 2.5, cursorY + 2.5, 2.2, 'F');
       setStroke(WHITE);
-      pdf.setLineWidth(0.5);
-      pdf.line(colXR + 1.5, cursorY + 2.2, colXR + 2.2, cursorY + 3.1);
-      pdf.line(colXR + 2.2, cursorY + 3.1, colXR + 3.6, cursorY + 1.3);
+      pdf.setLineWidth(0.45);
+      pdf.line(colXR + 1.6, cursorY + 2.5, colXR + 2.3, cursorY + 3.3);
+      pdf.line(colXR + 2.3, cursorY + 3.3, colXR + 3.5, cursorY + 1.6);
 
-      pdf.setFont('Helvetica', 'bold');
-      setText(INK);
-      pdf.text(linesR, colXR + 7.5, cursorY + 3);
+      pdf.setFont('Helvetica', 'normal');
+      setText(BODY);
+      pdf.text(linesR, colXR + 7.2, cursorY + 3.4);
     }
 
     cursorY += rowH;
   }
 
-  cursorY += 6;
+  cursorY += 5;
 
   // 2. Program Pedagogy Header
   heading('Program ', 'Pedagogy');
@@ -686,8 +764,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   // 2 columns in line (4 rows × 2 columns = 8 cards, perfectly matching reference design)
   const gapP = 8;
   const pCardW = (CONTENT_W - gapP) / 2; // (190 - 8) / 2 = 91mm
-  const pCardH = 20.5;
-  const pedRowGap = 4.0;
+  const pCardH = 19.5;
+  const pedRowGap = 3.2;
   const startYPed = cursorY;
 
   const leftCards = pedList.slice(0, 4);
@@ -712,21 +790,21 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       pdf.roundedRect(cardX, rowY, pCardW, pCardH, 2.5, 2.5, 'FD');
 
       // Orange Vector Icon Box on left
-      drawPedagogyIcon(p.key || pTitle, cardX + 3.5, rowY + 4.25);
+      drawPedagogyIcon(p.key || pTitle, cardX + 3.5, rowY + 3.75);
 
       // Title
-      pdf.setFontSize(9.0);
+      pdf.setFontSize(8.8);
       pdf.setFont('Helvetica', 'bold');
       setText(INK);
       const titleLines = pdf.splitTextToSize(pTitle, pCardW - 20).slice(0, 2);
-      pdf.text(titleLines, cardX + 18.0, rowY + 7.5);
+      pdf.text(titleLines, cardX + 18.0, rowY + 6.8);
 
       // Description
-      pdf.setFontSize(7.4);
+      pdf.setFontSize(7.2);
       pdf.setFont('Helvetica', 'normal');
       setText(MUTED);
       const descLines = pdf.splitTextToSize(pDesc, pCardW - 20).slice(0, 2);
-      pdf.text(descLines, cardX + 18.0, rowY + 13.5);
+      pdf.text(descLines, cardX + 18.0, rowY + 12.6);
     });
   }
 
@@ -762,11 +840,11 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
     // Left amber checkmark badge
     setFill(ORANGE);
-    pdf.circle(ax + 5.5, ay + 5.5, 3.0, 'F');
-    pdf.setFontSize(7);
-    pdf.setFont('Helvetica', 'bold');
-    setText(WHITE);
-    pdf.text('v', ax + 5.5, ay + 6.6, { align: 'center' });
+    pdf.circle(ax + 5.5, ay + 5.8, 2.8, 'F');
+    setStroke(WHITE);
+    pdf.setLineWidth(0.45);
+    pdf.line(ax + 4.3, ay + 5.8, ax + 5.1, ay + 6.9);
+    pdf.line(ax + 5.1, ay + 6.9, ax + 6.7, ay + 4.8);
 
     // Persona title
     pdf.setFontSize(7.8);
@@ -899,31 +977,47 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   } else {
   newInnerPage();
   heading('Learning ', 'Path');
+
+  const cols = [BLUE, ORANGE, GREEN];
+  const totalSteps = pathSteps.length;
+  // Calculate exact step height so all steps fit on this single page without overflow
+  const availableH = 218 - cursorY;
+  const stepH = Math.min(13.8, availableH / Math.max(totalSteps, 1));
+
   pathSteps.forEach(([t, d], i) => {
-    const cols = [BLUE, ORANGE, GREEN];
-    need(17);
-    setFill(cols[i % 3]);
-    pdf.circle(MARGIN_X + 4, cursorY + 3, 4.2, 'F');
-    pdf.setFontSize(9);
+    const stepY = cursorY + i * stepH;
+    const col = cols[i % 3];
+
+    // Step Number Circle Badge
+    setFill(col);
+    pdf.circle(MARGIN_X + 4.5, stepY + 4.2, 3.2, 'F');
+    pdf.setFontSize(7.5);
     pdf.setFont('Helvetica', 'bold');
     setText(WHITE);
-    pdf.text(String(i + 1), MARGIN_X + 4, cursorY + 6, { align: 'center' });
-    pdf.setFontSize(10.5);
+    pdf.text(String(i + 1), MARGIN_X + 4.5, stepY + 5.4, { align: 'center' });
+
+    // Step Title
+    pdf.setFontSize(8.5);
+    pdf.setFont('Helvetica', 'bold');
     setText(INK);
-    pdf.text(sanitize(t), MARGIN_X + 12, cursorY + 4);
-    pdf.setFontSize(9);
+    pdf.text(sanitize(t), MARGIN_X + 11.5, stepY + 3.8);
+
+    // Step Description (1 clean line with proper spacing)
+    pdf.setFontSize(7.2);
     pdf.setFont('Helvetica', 'normal');
     setText(BODY);
-    const dl = pdf.splitTextToSize(sanitize(d), CONTENT_W - 14).slice(0, 2);
-    pdf.text(dl, MARGIN_X + 12, cursorY + 9.5);
-    const stepH = 10 + dl.length * 4.4;
-    cursorY += stepH;
-    if (i < pathSteps.length - 1) {
+    const dl = pdf.splitTextToSize(sanitize(d), CONTENT_W - 14).slice(0, 1);
+    pdf.text(dl[0] || '', MARGIN_X + 11.5, stepY + 8.4);
+
+    // Timeline connector line to next step
+    if (i < totalSteps - 1) {
       setStroke(BORDER);
-      pdf.setLineWidth(0.6);
-      pdf.line(MARGIN_X + 4, cursorY - stepH + 12, MARGIN_X + 4, cursorY + 1.5);
+      pdf.setLineWidth(0.4);
+      pdf.line(MARGIN_X + 4.5, stepY + 8.4, MARGIN_X + 4.5, stepY + stepH + 0.5);
     }
   });
+
+  cursorY += totalSteps * stepH + 4;
   } // end steps path (skipped when a full-page path image is used)
 
   // ================= CURRICULUM (2 modules/page, 2 columns with short description & hands-on lab) =================
@@ -969,17 +1063,17 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     const titleLines0 = cleanTitle0 ? pdf.splitTextToSize(cleanTitle0, colWC).slice(0, 2) : [];
     const titleLines1 = cleanTitle1 ? pdf.splitTextToSize(cleanTitle1, colWC).slice(0, 2) : [];
     const maxTitleLines = Math.max(titleLines0.length || 1, titleLines1.length || 1);
-    const titleH = maxTitleLines * 5.2 + 1.5;
+    const titleH = maxTitleLines * 5.4 + 2.0;
 
     pdf.setFontSize(8.0);
     pdf.setFont('Helvetica', 'normal');
     const descLines0 = desc0 ? pdf.splitTextToSize(sanitize(desc0), colWC).slice(0, 3) : [];
     const descLines1 = desc1 ? pdf.splitTextToSize(sanitize(desc1), colWC).slice(0, 3) : [];
     const maxDescLines = Math.max(descLines0.length || 1, descLines1.length || 1);
-    const descH = maxDescLines * 3.8 + 2.5;
+    const descH = maxDescLines * 4.2 + 2.5;
 
     const dividerY = startY + 8.5 + titleH + descH;
-    const topicsStartY = dividerY + 4.5;
+    const topicsStartY = dividerY + 5.0;
 
     // Anchor positions for lower cards (ensuring uniform horizontal alignment and zero blank voids)
     const toolsY = 153;
@@ -1021,7 +1115,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       pdf.line(colX, dividerY, colX + colWC, dividerY);
 
       // 5. Module Topics (clean & deduplicated, strictly non-colliding)
-      let curY = topicsStartY;
       const rawTopics = (m.topics || []).map((t) =>
         sanitize(t)
           .replace(/^[-•*◦▪]\s*/, '')
@@ -1029,20 +1122,24 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
           .replace(/^L\d+\s*[-–]\s*/i, '')
           .trim()
       ).filter((t) => t && t.toLowerCase() !== cleanTitle.toLowerCase());
-      const topicList = [...new Set(rawTopics)].slice(0, 9);
+      const topicList = [...new Set(rawTopics)].slice(0, 8);
+
+      const availableTopicsH = toolsY - topicsStartY - 8;
+      const baseSpacing = Math.min(10.0, Math.max(7.0, availableTopicsH / Math.max(topicList.length, 1)));
+      let curY = topicsStartY;
 
       pdf.setFontSize(8.2);
       topicList.forEach((t) => {
         const bl = pdf.splitTextToSize(sanitize(t), colWC - 7).slice(0, 2);
-        const itemH = bl.length * 3.8 + 1.4;
-        if (curY + itemH > toolsY - 2) return; // Prevent any overlap with the tools card
+        const extraH = (bl.length - 1) * 3.8;
+        if (curY + baseSpacing + extraH > toolsY - 2) return;
 
         setFill(BLUE);
-        pdf.circle(colX + 2, curY + 1.8, 1.1, 'F');
+        pdf.circle(colX + 2, curY + 2.0, 1.1, 'F');
         pdf.setFont('Helvetica', 'normal');
         setText(BODY);
-        pdf.text(bl, colX + 6.0, curY + 3.0);
-        curY += itemH;
+        pdf.text(bl, colX + 6.0, curY + 3.2);
+        curY += baseSpacing + extraH;
       });
 
       // 6. Tools & Environment Card (Y = 153mm, H = 13.5mm)
@@ -1091,7 +1188,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       pdf.setFont('Helvetica', 'normal');
       setText(BODY);
       const takeLines = pdf.splitTextToSize(sanitize(takeaway), colWC - 8).slice(0, 2);
-      pdf.text(takeLines, colX + 5.5, compY + 8.5);
+      pdf.text(takeLines, colX + 5.5, compY + 8.8);
 
       // 8. Technical Drill & Practical Lab Card (Y = 187mm, H = 35mm)
       setFill(CARD);
@@ -1111,20 +1208,20 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       setText(BODY);
       const labText = moduleHandsOnLabFor(m);
       const labLines = pdf.splitTextToSize(sanitize(labText), colWC - 9).slice(0, 4);
-      pdf.text(labLines, colX + 5.5, labY + 10.5);
+      pdf.text(labLines, colX + 5.5, labY + 10.8);
 
       // Deliverable sub-bar
       setStroke([226, 232, 240]);
       pdf.setLineWidth(0.3);
-      pdf.line(colX + 5.5, labY + 26.5, colX + colWC - 4, labY + 26.5);
+      pdf.line(colX + 5.5, labY + 27.0, colX + colWC - 4, labY + 27.0);
 
       pdf.setFontSize(6.6);
       pdf.setFont('Helvetica', 'bold');
       setText(MUTED);
-      pdf.text('PRACTICE FOCUS:', colX + 5.5, labY + 31);
+      pdf.text('PRACTICE FOCUS:', colX + 5.5, labY + 31.5);
       pdf.setFont('Helvetica', 'normal');
       setText(BODY);
-      pdf.text('Hands-on coding exercises, syntax drills & mentor validation.', colX + 28.5, labY + 31);
+      pdf.text('Hands-on coding exercises, syntax drills & mentor validation.', colX + 28.5, labY + 31.5);
     });
   }
   if (!modules.length) {
@@ -1269,14 +1366,14 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.setFont('Helvetica', 'bold');
     setText(INK);
     const titleLines = pdf.splitTextToSize(sanitize(p.title), cardW - 12).slice(0, 2);
-    pdf.text(titleLines, x + 5.5, rowY + 15.0);
+    pdf.text(titleLines, x + 5.5, rowY + 14.5);
 
     // Project Description
-    pdf.setFontSize(7.3);
+    pdf.setFontSize(7.4);
     pdf.setFont('Helvetica', 'normal');
     setText(BODY);
     const descLines = pdf.splitTextToSize(sanitize(p.desc), cardW - 12).slice(0, 3);
-    pdf.text(descLines, x + 5.5, rowY + 26.0);
+    pdf.text(descLines, x + 5.5, rowY + 25.5);
 
     // Divider for Tech Stack
     setStroke([226, 232, 240]);
@@ -1292,7 +1389,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.setFontSize(6.8);
     pdf.setFont('Helvetica', 'normal');
     setText(BLUE);
-    const techStr = p.tech || 'Core Stack • APIs • Deployment';
+    const techStr = (p.tech || 'Core Stack • APIs • Deployment').replace(/,\s*$/, '');
     pdf.text(pdf.splitTextToSize(sanitize(techStr), cardW - 24).slice(0, 1), x + 18.5, rowY + 50.5);
   });
 
@@ -1529,28 +1626,10 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   pdf.text('One brochure per course — contact our academic counsellors to receive the comprehensive curriculum for any program.', MARGIN_X, cursorY);
   cursorY += 5.5;
 
-  const catalogCourses = [
-    { title: 'Full Stack Java Development', tag: 'Enterprise Backend & Microservices' },
-    { title: 'Full Stack Web Development - MERN', tag: 'React, Node, Express & MongoDB' },
-    { title: 'Python Full Stack Development', tag: 'Django, FastAPI, SQL & Cloud APIs' },
-    { title: 'AI & Machine Learning (AIML)', tag: 'Supervised, Unsupervised & Deep Neural Nets' },
-    { title: 'Data Science & Machine Learning', tag: 'Statistical Analytics, NumPy & Pandas' },
-    { title: 'Data Analytics & Business Intelligence', tag: 'Power BI, Advanced SQL, Excel & Tableau' },
-    { title: 'Generative AI & Prompt Engineering', tag: 'LLMs, RAG Architectures & LangChain' },
-    { title: 'GenAI, Agentic AI & Robotics', tag: 'Autonomous AI Agents & Embedded Systems' },
-    { title: 'DevOps & Cloud Engineering', tag: 'Docker, Kubernetes, CI/CD & AWS' },
-    { title: 'Software Testing - Automation', tag: 'Selenium, Playwright, TestNG & CI/CD' },
-    { title: 'Software Testing - Manual QA', tag: 'SDLC, STLC, Agile Sprints & Bug Tracking' },
-    { title: 'UI/UX Design & Product Experience', tag: 'Figma, Wireframing, Prototyping & Design Systems' },
-    { title: 'Robotics & Embedded Systems', tag: 'Arduino, Raspberry Pi, Sensors & C++' },
-    { title: 'Advanced Prompt Engineering', tag: 'Chain-of-Thought, Tool Calling & Fine-Tuning' },
-  ];
-
   const catColGap = 5;
   const catCardW = (CONTENT_W - catColGap) / 2;
-  const catCardH = 17.5;
-  const catRowGap = 2.4;
-  const badgePalette = [BLUE, ORANGE, GREEN, PURPLE];
+  const catCardH = 15.0;
+  const catRowGap = 2.6;
 
   catalogCourses.forEach((c, idx) => {
     const colIdx = idx % 2;
@@ -1558,11 +1637,10 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     const cx = MARGIN_X + colIdx * (catCardW + catColGap);
     const cy = cursorY + rowIdx * (catCardH + catRowGap);
     const isCurrent = c.title.toLowerCase().includes(title.toLowerCase()) || title.toLowerCase().includes(c.title.toLowerCase());
-    const badgeColor = badgePalette[idx % 4];
 
     if (isCurrent) {
       setFill([255, 251, 235]); // amber-50
-      setStroke([245, 158, 11]); // orange
+      setStroke(ORANGE);
       pdf.setLineWidth(0.6);
     } else {
       setFill(WHITE);
@@ -1571,8 +1649,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     }
     pdf.roundedRect(cx, cy, catCardW, catCardH, 2.2, 2.2, 'FD');
 
-    // Number circle badge with matching brand color
-    setFill(badgeColor);
+    // Number circle badge - ALL ORANGE (no multiple colors)
+    setFill(ORANGE);
     pdf.circle(cx + 6.2, cy + catCardH / 2, 3.8, 'F');
     pdf.setFontSize(7.5);
     pdf.setFont('Helvetica', 'bold');
@@ -1580,46 +1658,42 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.text(String(idx + 1).padStart(2, '0'), cx + 6.2, cy + catCardH / 2 + 1.2, { align: 'center' });
 
     // Course title
-    pdf.setFontSize(7.8);
+    pdf.setFontSize(8.0);
     pdf.setFont('Helvetica', 'bold');
     if (isCurrent) {
       setText(ORANGE);
-      pdf.text(pdf.splitTextToSize(c.title, catCardW - 25)[0] || '', cx + 13.0, cy + 5.5);
+      pdf.text(pdf.splitTextToSize(c.title, catCardW - 25)[0] || '', cx + 13.0, cy + 5.8);
       // Current tag
       pdf.setFontSize(5.8);
       pdf.setFont('Helvetica', 'bold');
       setText(ORANGE);
-      pdf.text('CURRENT', cx + catCardW - 13, cy + 5.5, { align: 'right' });
+      pdf.text('CURRENT', cx + catCardW - 13, cy + 5.8, { align: 'right' });
     } else {
       setText(INK);
-      pdf.text(pdf.splitTextToSize(c.title, catCardW - 16)[0] || '', cx + 13.0, cy + 5.5);
+      pdf.text(pdf.splitTextToSize(c.title, catCardW - 16)[0] || '', cx + 13.0, cy + 5.8);
     }
 
-    // Domain / Subtitle
-    pdf.setFontSize(6.4);
+    // Duration (Only course name and duration)
+    pdf.setFontSize(6.8);
     pdf.setFont('Helvetica', 'normal');
     setText(MUTED);
-    pdf.text(pdf.splitTextToSize(c.tag, catCardW - 16)[0] || '', cx + 13.0, cy + 9.8);
-
-    // Feature pill / mode
-    pdf.setFontSize(6.0);
-    pdf.setFont('Helvetica', 'bold');
-    setText(badgeColor);
-    pdf.text('Mentor-Led  •  Live Sprints  •  Certified', cx + 13.0, cy + 14.0);
+    pdf.text(`Duration: ${c.duration || '3 - 6 Months'}`, cx + 13.0, cy + 10.8);
   });
-  cursorY += 7 * (catCardH + catRowGap) + 3.5;
+
+  const numRows = Math.ceil(catalogCourses.length / 2);
+  cursorY += numRows * (catCardH + catRowGap) + 4.0;
 
   // Bottom admissions helpline bar
-  const bottomBarH = 11.0;
+  const bottomBarH = 11.5;
   setFill(SKY);
   setStroke([191, 219, 254]);
   pdf.setLineWidth(0.35);
   pdf.roundedRect(MARGIN_X, cursorY, CONTENT_W, bottomBarH, 2, 2, 'FD');
 
-  pdf.setFontSize(7.0);
+  pdf.setFontSize(7.2);
   pdf.setFont('Helvetica', 'bold');
   setText(NAVY);
-  pdf.text('Admissions & Syllabus Inquiries: +91 63809 57390  |  sales@marvelslice.com  |  www.marvelslice.com', PAGE_W / 2, cursorY + 6.8, { align: 'center' });
+  pdf.text('Admissions & Syllabus Inquiries: +91 63809 57390  |  hr@marvelslice.com  |  www.marvelslice.com', PAGE_W / 2, cursorY + 7.2, { align: 'center' });
 
   const raw = title || 'Course';
   const clean = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');

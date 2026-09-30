@@ -741,3 +741,40 @@ export function normalizeModuleCount(modules) {
   return list.map((m, i) => ({ ...m, label: `Module ${i + 1}` }));
 }
 
+export function prettyTitleFromFile(filename = '') {
+  const base = filename.replace(/\.docx$/i, '').trim();
+  const key = base.toLowerCase();
+  const MAP = [
+    [/aiml/, 'AIML (AI & Machine Learning)'],
+    [/angular/, 'Angular Development'],
+    [/data.*science/, 'Data Science & Machine Learning'],
+    [/front.*end/, 'Front-End Development'],
+    [/generative.*ai|genai/, 'Generative AI & LLMs'],
+    [/html.*css|css.*html/, 'HTML & CSS Development'],
+    [/java.*full.?stack|full.?stack.*java/, 'Java Full Stack Development'],
+    [/python.*full.?stack|full.?stack.*python/, 'Python Full Stack Development'],
+    [/node/, 'Node.js Development'],
+    [/php/, 'PHP Development'],
+    [/python/, 'Python Development'],
+    [/react/, 'React JS Development'],
+    [/\bux\b|ui.?ux/, 'UI/UX Design Masterclass'],
+    [/wordpress/, 'WordPress Development'],
+  ];
+  for (const [re, name] of MAP) {
+    if (re.test(key)) return name;
+  }
+  return base
+    .replace(/[_(]+1\)?/g, ' ')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function durationForCourse(title = '') {
+  const t = String(title).toLowerCase();
+  if (/full.?stack|data.*science|aiml|machine.*learning/.test(t)) return '6 Months';
+  if (/html.*css|wordpress/.test(t)) return '2 Months';
+  return '3 Months';
+}
+
+

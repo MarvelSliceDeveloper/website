@@ -17,6 +17,7 @@ import {
   moduleToolsFor, moduleTakeawayFor,
   isProjectModule,
   programDimensionsFor, targetAudienceDetailedFor, prerequisitesFor,
+  durationForCourse,
 } from '../../lib/brochureExpand';
 
 /**
@@ -188,12 +189,13 @@ export default function BrochureDesigner() {
   const [siteSettings, setSiteSettings] = useState(null);
   const [live, setLive] = useState(null);
   const [liveCount, setLiveCount] = useState(null);
+  const [dbSiteCourses, setDbSiteCourses] = useState([]);
   const [enriching, setEnriching] = useState(false);
   const [syllabusKey, setSyllabusKey] = useState(
     () => LOCAL_SYLLABUS[0]?.file || '',
   );
 
-  // Best-effort site settings (contact block). Never blocks preview.
+  // Best-effort site settings & published courses. Never blocks preview.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -202,8 +204,15 @@ export default function BrochureDesigner() {
         if (!cancelled && data) setSiteSettings(data);
       } catch { /* offline defaults apply */ }
       try {
-        const { data, error } = await supabase.from('courses').select('id').limit(1);
-        if (!cancelled && !error) setLiveCount(Array.isArray(data) ? data.length : null);
+        const { data, error } = await supabase
+          .from('courses')
+          .select('id, title, duration, is_published')
+          .eq('is_published', true)
+          .order('title');
+        if (!cancelled && !error) {
+          setLiveCount(Array.isArray(data) ? data.length : null);
+          if (Array.isArray(data) && data.length > 0) setDbSiteCourses(data);
+        }
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
@@ -293,9 +302,44 @@ export default function BrochureDesigner() {
     ];
   }, [effectiveCourse]);
 
+  const siteCatalogCourses = useMemo(() => {
+    function cleanTitleKey(t = '') {
+      return t.toLowerCase().replace(/\b(course|masterclass|program|training)\b/gi, '').replace(/[^a-z0-9]/g, '').trim();
+    }
+    const list = [];
+    const seen = new Set();
+
+    if (dbSiteCourses && dbSiteCourses.length > 0) {
+      dbSiteCourses.forEach((c) => {
+        const key = cleanTitleKey(c.title || '');
+        if (c.title && !seen.has(key)) {
+          seen.add(key);
+          list.push({
+            title: c.title,
+            duration: c.duration || durationForCourse(c.title),
+          });
+        }
+      });
+    }
+
+    LOCAL_SYLLABUS.forEach((s) => {
+      const pTitle = prettyTitleFromFile(s.file);
+      const key = cleanTitleKey(pTitle);
+      if (!seen.has(key)) {
+        seen.add(key);
+        list.push({
+          title: pTitle,
+          duration: durationForCourse(pTitle),
+        });
+      }
+    });
+
+    return list.slice(0, 14);
+  }, [dbSiteCourses]);
+
   const contact = {
     phone: siteSettings?.contact_phone || '+91 63809 57390 / +91 80882 18609',
-    email: siteSettings?.contact_email || 'sales@marvelslice.com',
+    email: siteSettings?.contact_email && siteSettings?.contact_email !== 'sales@marvelslice.com' ? siteSettings.contact_email : 'hr@marvelslice.com',
     website: siteSettings?.social_links?.website || siteSettings?.website || 'www.marvelslice.com',
     address: siteSettings?.address || 'Marvel Slice — Institute for Software Learning, Chennai, Tamil Nadu, India',
   };
@@ -713,9 +757,9 @@ export default function BrochureDesigner() {
               Key <span style={{ color: BRAND.orange }}>Highlights</span>
             </h2>
             <div className="mt-1.5 h-1 w-14 rounded" style={{ background: BRAND.orange }} />
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
               {detailedHighlights.slice(0, 20).map((h, i) => (
-                <div key={i} className="flex items-center gap-2.5 text-xs text-slate-800 font-bold">
+                <div key={i} className="flex items-center gap-2.5 text-xs text-slate-700 font-normal">
                   <span
                     className="w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
                     style={{ background: BRAND.orange }}
@@ -748,7 +792,7 @@ export default function BrochureDesigner() {
                       </span>
                       <div>
                         <h4 className="text-sm font-bold text-slate-900 leading-tight">{p.title}</h4>
-                        <p className="text-xs text-slate-500 leading-snug mt-0.5">{p.desc}</p>
+                        <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{p.desc}</p>
                       </div>
                     </div>
                   );
@@ -767,7 +811,7 @@ export default function BrochureDesigner() {
                       </span>
                       <div>
                         <h4 className="text-sm font-bold text-slate-900 leading-tight">{p.title}</h4>
-                        <p className="text-xs text-slate-500 leading-snug mt-0.5">{p.desc}</p>
+                        <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{p.desc}</p>
                       </div>
                     </div>
                   );
@@ -947,9 +991,9 @@ export default function BrochureDesigner() {
                         <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
                           {moduleDescriptionFor(m, title)}
                         </p>
-                        <ul className="mt-3 space-y-1.5 border-t border-slate-200/80 pt-2.5">
+                        <ul className="mt-3 space-y-2.5 border-t border-slate-200/80 pt-2.5">
                           {topicList.map((t) => (
-                            <li key={t} className="flex items-start gap-2 text-xs leading-relaxed text-slate-700">
+                            <li key={t} className="flex items-start gap-2 text-xs leading-relaxed text-slate-700 py-0.5">
                               <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND.blue }} />
                               <span className="font-medium text-slate-700">{t}</span>
                             </li>
@@ -972,13 +1016,13 @@ export default function BrochureDesigner() {
                         {/* Key Competency */}
                         <div className="rounded-lg border border-slate-200 bg-white p-2.5 border-l-4 border-l-amber-500">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Key Competency Gained</p>
-                          <p className="text-[11px] text-slate-700 mt-0.5 leading-snug">{moduleTakeawayFor(m)}</p>
+                          <p className="text-[11px] text-slate-700 mt-0.5 leading-relaxed">{moduleTakeawayFor(m)}</p>
                         </div>
 
                         {/* Technical Drill & Practical Lab */}
                         <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs border-l-4 border-l-blue-600">
                           <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600">Technical Drill &amp; Practical Lab</p>
-                          <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{moduleHandsOnLabFor(m)}</p>
+                          <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{moduleHandsOnLabFor(m)}</p>
                           <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
                             <span className="font-bold text-slate-600">PRACTICE FOCUS:</span>
                             <span>Hands-on coding exercises, syntax drills &amp; mentor validation</span>
@@ -1197,15 +1241,12 @@ export default function BrochureDesigner() {
             </p>
 
             <div className="mt-3.5 grid sm:grid-cols-2 gap-2.5">
-              {LOCAL_SYLLABUS.map((s, i) => {
-                const mods = s.modules.filter((m) => m.no > 0);
-                const isCurrent = s.file === syllabusKey;
-                const badgeColors = [BRAND.blue, BRAND.orange, BRAND.green, BRAND.purple];
-                const badgeColor = badgeColors[i % 4];
+              {siteCatalogCourses.map((c, i) => {
+                const isCurrent = c.title.toLowerCase().includes(title.toLowerCase()) || title.toLowerCase().includes(c.title.toLowerCase());
 
                 return (
                   <div
-                    key={s.file}
+                    key={c.title}
                     className={`flex items-center gap-3 rounded-xl border p-2.5 transition-shadow ${
                       isCurrent
                         ? 'border-amber-400 bg-amber-50/40 shadow-xs'
@@ -1214,14 +1255,14 @@ export default function BrochureDesigner() {
                   >
                     <span
                       className="w-8 h-8 rounded-full text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-xs"
-                      style={{ background: badgeColor }}
+                      style={{ background: BRAND.orange }}
                     >
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
                         <span className={`block text-xs font-bold truncate ${isCurrent ? 'text-amber-800' : 'text-slate-900'}`}>
-                          {prettyTitleFromFile(s.file)}
+                          {c.title}
                         </span>
                         {isCurrent && (
                           <span
@@ -1232,11 +1273,8 @@ export default function BrochureDesigner() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                        {mods.length} modules · {s.totalTopics} topics · Hands-on Labs
-                      </p>
-                      <p className="text-[10px] font-semibold mt-0.5" style={{ color: badgeColor }}>
-                        Mentor-Led · Practical Sprints · Certified
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        <span className="font-semibold text-amber-700">Duration:</span> {c.duration}
                       </p>
                     </div>
                   </div>
