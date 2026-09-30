@@ -1721,7 +1721,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   const numRows = Math.ceil(catalogCourses.length / 2);
   cursorY += numRows * (catCardH + catRowGap) + 4.0;
 
-  // Bottom admissions section with scannable QR code, website, email & phone
+  // Bottom admissions section with scannable QR code, website, email & phone (Unboxed Layout)
   let qrDataUrl = '';
   try {
     qrDataUrl = await QRCode.toDataURL('https://marvelslice.com', {
@@ -1734,116 +1734,119 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     });
   } catch { /* ignore fallback */ }
 
-  const adCardH = 37.0;
-  const adCardY = cursorY + 1.5;
+  const contactStartY = cursorY + 1.5;
 
-  setFill(SKY);
-  setStroke([191, 219, 254]);
-  pdf.setLineWidth(0.4);
-  pdf.roundedRect(MARGIN_X, adCardY, CONTENT_W, adCardH, 2.5, 2.5, 'FD');
-
-  // Brand Orange left accent bar
-  setFill(ORANGE);
-  pdf.roundedRect(MARGIN_X, adCardY, 2.5, adCardH, 1, 1, 'F');
-
-  // Heading: "Admissions & Syllabus Inquiries:"
-  pdf.setFontSize(9.5);
+  // Heading: "Admissions & Syllabus Inquiries:" — centered
+  pdf.setFontSize(11);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('Admissions & Syllabus Inquiries:', MARGIN_X + 7, adCardY + 6.0);
+  const headingText = 'Admissions & Syllabus Inquiries:';
+  const headingW = pdf.getTextWidth(headingText);
+  pdf.text(headingText, MARGIN_X + (CONTENT_W - headingW) / 2, contactStartY + 4.5);
 
-  // Subtle horizontal divider line
-  setStroke([219, 234, 254]);
-  pdf.setLineWidth(0.3);
-  pdf.line(MARGIN_X + 7, adCardY + 8.5, MARGIN_X + CONTENT_W - 7, adCardY + 8.5);
+  // Subtle divider below heading
+  setStroke([226, 232, 240]);
+  pdf.setLineWidth(0.4);
+  pdf.line(MARGIN_X + 15, contactStartY + 7.5, MARGIN_X + CONTENT_W - 15, contactStartY + 7.5);
 
-  // Left: Scannable QR Code Box (pointing to marvelslice.com)
-  const qrBoxX = MARGIN_X + 7;
-  const qrBoxY = adCardY + 10.5;
-  const qrBoxW = 21.0;
-  const qrBoxH = 21.0;
+  // Far Right Corner: Scannable QR Code (pointing to marvelslice.com)
+  const qrSize = 26.0;
+  const qrBoxX = MARGIN_X + CONTENT_W - qrSize;
+  const qrBoxY = contactStartY + 10.0;
 
   setFill(WHITE);
-  setStroke([203, 213, 225]);
+  setStroke([226, 232, 240]);
   pdf.setLineWidth(0.3);
-  pdf.roundedRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 1.5, 1.5, 'FD');
+  pdf.roundedRect(qrBoxX, qrBoxY, qrSize, qrSize, 1.5, 1.5, 'FD');
 
   if (qrDataUrl) {
     try {
-      pdf.addImage(qrDataUrl, 'PNG', qrBoxX + 0.8, qrBoxY + 0.8, qrBoxW - 1.6, qrBoxH - 1.6);
-      pdf.link(qrBoxX, qrBoxY, qrBoxW, qrBoxH, { url: 'https://marvelslice.com' });
+      pdf.addImage(qrDataUrl, 'PNG', qrBoxX + 1.0, qrBoxY + 1.0, qrSize - 2.0, qrSize - 2.0);
+      pdf.link(qrBoxX, qrBoxY, qrSize, qrSize, { url: 'https://marvelslice.com' });
     } catch { /* ignore */ }
   }
 
-  // QR Label below code
-  pdf.setFontSize(5.5);
+  // QR Label below
+  pdf.setFontSize(6);
   pdf.setFont('Helvetica', 'bold');
   setText(ORANGE);
-  pdf.text('SCAN FOR SITE', qrBoxX + qrBoxW / 2, qrBoxY + qrBoxH + 3.0, { align: 'center' });
+  pdf.text('SCAN FOR SITE', qrBoxX + qrSize / 2, qrBoxY + qrSize + 3.5, { align: 'center' });
 
-  // Right: Contact Details (Website with web icon, Email with mail icon, Phone with phone icon)
-  const infoX = qrBoxX + qrBoxW + 7;
+  // Contact area left of QR (from MARGIN_X to qrBoxX - 8)
+  const contactAreaW = qrBoxX - MARGIN_X - 8;
 
-  // 1. Website (with globe icon)
-  const row1Y = adCardY + 11.2;
-  setFill([239, 246, 255]);
-  setStroke([191, 219, 254]);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(infoX, row1Y, 6.0, 6.0, 1.2, 1.2, 'FD');
-  drawGlobeIcon(infoX + 0.5, row1Y + 0.5, BLUE);
+  // Larger icon helpers (7mm bounding box)
+  function drawGlobeIconLg(x, y, color) {
+    setStroke(color);
+    pdf.setLineWidth(0.45);
+    pdf.circle(x + 3.5, y + 3.5, 3.2, 'S');
+    pdf.line(x + 0.3, y + 3.5, x + 6.7, y + 3.5);
+    pdf.line(x + 3.5, y + 0.3, x + 3.5, y + 6.7);
+    pdf.ellipse(x + 3.5, y + 3.5, 1.7, 3.2, 'S');
+  }
+  function drawPhoneIconLg(x, y, color) {
+    setStroke(color);
+    setFill(color);
+    pdf.setLineWidth(0.45);
+    pdf.roundedRect(x + 1.0, y + 0.3, 5.0, 6.8, 0.8, 0.8, 'S');
+    pdf.line(x + 2.4, y + 1.2, x + 4.6, y + 1.2);
+    pdf.circle(x + 3.5, y + 6.0, 0.5, 'F');
+  }
+  function drawEmailIconLg(x, y, color) {
+    setStroke(color);
+    pdf.setLineWidth(0.45);
+    pdf.roundedRect(x + 0.2, y + 0.8, 6.8, 5.2, 0.5, 0.5, 'S');
+    pdf.line(x + 0.2, y + 0.8, x + 3.6, y + 3.6);
+    pdf.line(x + 3.6, y + 3.6, x + 7.0, y + 0.8);
+  }
 
-  pdf.setFontSize(6.4);
+  // Row 1: Center — Globe icon + "Website" heading + www.marvelslice.com
+  const webRowY = contactStartY + 11.0;
+  const webCenterX = MARGIN_X + contactAreaW / 2 - 22;
+  drawGlobeIconLg(webCenterX, webRowY, BLUE);
+
+  pdf.setFontSize(6.5);
   pdf.setFont('Helvetica', 'bold');
   setText(MUTED);
-  pdf.text('OFFICIAL WEBSITE', infoX + 8.5, row1Y + 2.5);
+  pdf.text('Website', webCenterX + 10, webRowY + 2.5);
 
-  pdf.setFontSize(8.2);
+  pdf.setFontSize(10);
   pdf.setFont('Helvetica', 'bold');
   setText(BLUE);
-  pdf.text('www.marvelslice.com', infoX + 8.5, row1Y + 5.8);
-  pdf.link(infoX + 8.5, row1Y + 2.5, 45, 5, { url: 'https://marvelslice.com' });
+  pdf.text('www.marvelslice.com', webCenterX + 10, webRowY + 6.5);
+  pdf.link(webCenterX + 10, webRowY + 1.0, 42, 7, { url: 'https://marvelslice.com' });
 
-  // 2. Email (with envelope icon)
-  const row2Y = adCardY + 19.5;
-  setFill([255, 251, 235]);
-  setStroke([254, 215, 170]);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(infoX, row2Y, 6.0, 6.0, 1.2, 1.2, 'FD');
-  drawEmailIcon(infoX + 0.5, row2Y + 0.5, ORANGE);
+  // Row 2: Below Left — Phone | Below Right — Email
+  const row2Y = contactStartY + 23.0;
 
-  pdf.setFontSize(6.4);
+  // Left: Phone icon + "Helpline" heading + phone numbers
+  const phoneX = MARGIN_X + 2.0;
+  drawPhoneIconLg(phoneX, row2Y, [4, 120, 87]);
+
+  pdf.setFontSize(6.5);
   pdf.setFont('Helvetica', 'bold');
   setText(MUTED);
-  pdf.text('EMAIL INQUIRIES', infoX + 8.5, row2Y + 2.5);
+  pdf.text('Helpline', phoneX + 10, row2Y + 2.5);
 
-  pdf.setFontSize(8.2);
+  pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('hr@marvelslice.com', infoX + 8.5, row2Y + 5.8);
-  pdf.link(infoX + 8.5, row2Y + 2.5, 45, 5, { url: 'mailto:hr@marvelslice.com' });
+  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 10, row2Y + 6.5);
 
-  // 3. Phone (with phone icon)
-  const row3Y = adCardY + 27.8;
-  setFill([236, 253, 245]);
-  setStroke([167, 243, 208]);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(infoX, row3Y, 6.0, 6.0, 1.2, 1.2, 'FD');
-  drawPhoneIcon(infoX + 0.5, row3Y + 0.5, [4, 120, 87]);
+  // Right: Email icon + "Email" heading + email address
+  const emailX = MARGIN_X + contactAreaW / 2 + 8.0;
+  drawEmailIconLg(emailX, row2Y, ORANGE);
 
-  pdf.setFontSize(6.4);
+  pdf.setFontSize(6.5);
   pdf.setFont('Helvetica', 'bold');
   setText(MUTED);
-  pdf.text('ADMISSIONS HELPLINE', infoX + 8.5, row3Y + 2.5);
+  pdf.text('Email', emailX + 10, row2Y + 2.5);
 
-  pdf.setFontSize(8.2);
+  pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('+91 63809 57390   /   +91 80882 18609', infoX + 8.5, row3Y + 5.8);
-
-  pdf.setFontSize(6.6);
-  pdf.setFont('Helvetica', 'normal');
-  setText(MUTED);
-  pdf.text('(Mon - Sat, 9:00 AM - 7:00 PM IST)', infoX + 78, row3Y + 5.8);
+  pdf.text('hr@marvelslice.com', emailX + 10, row2Y + 6.5);
+  pdf.link(emailX + 10, row2Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
 
   const raw = title || 'Course';
   const clean = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
