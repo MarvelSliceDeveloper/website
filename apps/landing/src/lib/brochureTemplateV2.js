@@ -308,7 +308,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
       }))
       : projectsFor(title, modules))).slice(0, 4);
 
-  const skillSource = (data.techMatrix?.categories || []).flatMap((c) => c.items || []).map(sanitize).filter(Boolean);
+  const isDocGrounded = Boolean(options.docSections || options.docTools || options.docProjects || options.rawText);
+  const skillSource = isDocGrounded ? [] : (data.techMatrix?.categories || []).flatMap((c) => c.items || []).map(sanitize).filter(Boolean);
   const skills = (skillSource.length ? skillSource : modules.flatMap((m) => m.topics).filter((t) => t.length > 3 && t.length < 42)).slice(0, 12);
 
   const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1324,7 +1325,7 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
   let sx = MARGIN_X;
   let sy = cursorY;
-  const allTools = [...new Set([...tools, ...skills])].slice(0, 12);
+  const allTools = isDocGrounded ? tools : [...new Set([...tools, ...skills])].slice(0, 12);
   allTools.forEach((t) => {
     const clean = sanitize(t);
     if (!clean) return;
