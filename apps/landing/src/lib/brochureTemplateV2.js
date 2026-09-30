@@ -97,12 +97,12 @@ async function loadImageDataUrl(url) {
 
 export async function generateModernCourseBrochurePDF(course, siteSettings = {}, options = {}) {
   const data = await generateAIBrochureData(course, siteSettings);
-  // Background: template JPGs by default, plain white on opt-out,
-  // custom uploads when provided (per-slot fallback to template art).
+  // Background: template images by default, plain white on opt-out,
+  // custom uploads when provided (per-slot fallback to default template art).
   const bgStyle = options.bgStyle === 'plain' ? 'plain' : 'template';
   const [coverImg, innerImg] = await Promise.all([
-    bgStyle === 'plain' ? null : (options.customCoverBg || loadImageDataUrl('/brochure/bg-cover.jpg')),
-    bgStyle === 'plain' ? null : (options.customInnerBg || loadImageDataUrl('/brochure/bg-inner.jpg')),
+    bgStyle === 'plain' ? null : (options.customCoverBg || loadImageDataUrl('/brochure/bg-default.png')),
+    bgStyle === 'plain' ? null : (options.customInnerBg || loadImageDataUrl('/brochure/bg-default.png')),
   ]);
 
   // Curriculum priority: uploaded AI-condensed doc > live DB modules.
@@ -303,7 +303,8 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   function paintBg(img) {
     if (bgStyle === 'template' && img) {
       try {
-        pdf.addImage(img, 'JPEG', 0, 0, PAGE_W, PAGE_H);
+        const fmt = typeof img === 'string' && img.includes('image/png') ? 'PNG' : 'JPEG';
+        pdf.addImage(img, fmt, 0, 0, PAGE_W, PAGE_H);
         return;
       } catch { /* fall through to plain */ }
     }
