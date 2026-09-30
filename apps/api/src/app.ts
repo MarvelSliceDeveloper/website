@@ -97,6 +97,10 @@ import {
   adminInternRouter,
 } from "./modules/interns/intern.routes";
 import { versionRouter } from "./modules/version/version.routes";
+import {
+  manualStudentRouter,
+  manualAdminRouter,
+} from "./modules/manual-orders/manual-orders.routes";
 import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
 
 const logger = pino({
@@ -422,6 +426,10 @@ app.use("/api/admin/maintenance", maintenanceRouter);
 
 // ── Refunds ──
 app.use("/api/admin/refunds", refundsRouter);
+
+// ── Manual UPI orders (static QR + UTR approval) ──
+app.use("/api/courses", manualStudentRouter);
+app.use("/api/admin", manualAdminRouter);
 
 // ── Assignment Review Queue ──
 app.use("/api/admin/assignments/review", assignmentReviewRouter);

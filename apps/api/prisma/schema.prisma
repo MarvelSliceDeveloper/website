@@ -133,6 +133,7 @@ model User {
   packageEnrollments      PackageEnrollment[]
   courseEnrollments       CourseEnrollment[]
   payments                Payment[]
+  manualOrders            ManualPaymentOrder[]
   auditLogs               AuditLog[]
   graphApiLogs            GraphApiLog[]
   loginLogs               LoginLog[]
@@ -190,8 +191,10 @@ model Course {
   updatedAt                DateTime                   @updatedAt
   isCatalog                Boolean                    @default(false)
   price                    Int? // paise; null = enquiry only
+  monthlyPrice             Int? // paise; null = monthly plan unavailable (V1: same access as full)
   courseEnrollments        CourseEnrollment[]
   payments                 Payment[]
+  manualOrders             ManualPaymentOrder[]
 
   @@index([status, categoryId])
   @@index([isCatalog, status])
@@ -1131,6 +1134,50 @@ model PackageEnrollmentCourse {
   @@index([enrollmentId])
   @@index([courseId])
   @@index([batchId])
+}
+
+// === MANUAL UPI-QR PAYMENTS ===
+
+enum ManualPlan {
+  MONTHLY
+  FULL
+}
+
+enum ManualOrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaymentSettings {
+  id              String   @id @default("default")
+  upiId           String
+  payeeName       String
+  isManualEnabled Boolean  @default(false)
+  updatedById     String?
+  updatedAt       DateTime @updatedAt
+}
+
+model ManualPaymentOrder {
+  id              String            @id @default(cuid())
+  userId          String
+  courseId        String
+  plan            ManualPlan
+  amount          Int // paise snapshot at submit time
+  transactionId   String            @unique // UTR / UPI ref, stored uppercase
+  status          ManualOrderStatus @default(PENDING)
+  rejectionReason String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  paymentId       String?           @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@index([userId, courseId, status])
+  @@index([status, createdAt])
 }
 
 model CourseEnrollment {

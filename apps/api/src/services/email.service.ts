@@ -25,6 +25,9 @@ import {
   SupportTicketStatusChanged,
   CustomNotification,
   ResetPasswordEmail,
+  ManualOrderReceived,
+  ManualOrderApproved,
+  ManualOrderRejected,
 } from "@lms/email-templates";
 import { generateInvoicePdf } from "./invoice.service";
 import { uploadsRoot } from "../utils/uploads";
@@ -300,6 +303,117 @@ export const emailService = {
       });
     } catch (error: unknown) {
       console.error("[email] Failed to send invoice email:", error);
+      return false;
+    }
+  },
+
+  async sendManualOrderReceived(order: {
+    name: string;
+    email: string;
+    courseName: string;
+    plan: string;
+    amount: number;
+    transactionId: string;
+  }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping manual order received email");
+      return false;
+    }
+    try {
+      const amountStr = `₹${(order.amount / 100).toLocaleString("en-IN")}`;
+      const html = await render(
+        ManualOrderReceived({
+          userName: order.name,
+          courseName: order.courseName,
+          plan: order.plan,
+          amount: amountStr,
+          transactionId: order.transactionId,
+        }),
+      );
+      return this.sendEmail({
+        to: [{ email: order.email, name: order.name }],
+        subject: `Payment submitted — ${order.courseName}`,
+        html,
+        text: `Hi ${order.name},\n\nWe received your UPI payment submission for ${order.courseName} (${order.plan}, ${amountStr}, Transaction ID: ${order.transactionId}). Our team will verify it shortly.\n\nBest regards,\nMarvelSlice LMS Team`,
+        tags: ["manual-payment", "submitted"],
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to send manual order received email:", error);
+      return false;
+    }
+  },
+
+  async sendManualOrderApproved(order: {
+    name: string;
+    email: string;
+    courseName: string;
+    plan: string;
+    amount: number;
+    paymentId: string;
+    invoicePdfBase64: string;
+  }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping manual order approval email");
+      return false;
+    }
+    try {
+      const amountStr = `₹${(order.amount / 100).toLocaleString("en-IN")}`;
+      const invoiceNumber = `INV-${order.paymentId.slice(-8).toUpperCase()}`;
+      const html = await render(
+        ManualOrderApproved({
+          userName: order.name,
+          courseName: order.courseName,
+          plan: order.plan,
+          amount: amountStr,
+          invoiceNumber,
+        }),
+      );
+      return this.sendEmail({
+        to: [{ email: order.email, name: order.name }],
+        subject: `Payment approved — ${order.courseName}`,
+        html,
+        text: `Hi ${order.name},\n\nYour UPI payment for ${order.courseName} (${order.plan}, ${amountStr}) has been approved. Invoice ${invoiceNumber} is attached. You now have course access.\n\nBest regards,\nMarvelSlice LMS Team`,
+        tags: ["manual-payment", "invoice"],
+        attachment: [
+          {
+            content: order.invoicePdfBase64,
+            name: `invoice-${order.paymentId.slice(-8)}.pdf`,
+          },
+        ],
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to send manual order approval email:", error);
+      return false;
+    }
+  },
+
+  async sendManualOrderRejected(order: {
+    name: string;
+    email: string;
+    courseName: string;
+    reason: string;
+  }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping manual order rejection email");
+      return false;
+    }
+    try {
+      const html = await render(
+        ManualOrderRejected({
+          userName: order.name,
+          courseName: order.courseName,
+          reason: order.reason,
+        }),
+      );
+      return this.sendEmail({
+        to: [{ email: order.email, name: order.name }],
+        subject: `Payment needs attention — ${order.courseName}`,
+        html,
+        text: `Hi ${order.name},\n\nYour UPI payment submission for ${order.courseName} could not be approved: ${order.reason}\n\nPlease verify your transaction ID and submit again, or contact support.\n\nBest regards,\nMarvelSlice LMS Team`,
+        tags: ["manual-payment", "rejected"],
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to send manual order rejection email:", error);
       return false;
     }
   },

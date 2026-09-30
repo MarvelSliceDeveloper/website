@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { ManualUpiCheckout } from "./ManualUpiCheckout";
 import type { PackageDetail } from "@/lib/api-types";
 import {
   IconArrowRight,
@@ -177,6 +178,8 @@ function CourseThumbnailBanner({ pkg }: { pkg: PackageDetail }) {
 }
 
 // ── Payment Methods Logos ───────────────────────────────────────────────────
+// Kept for re-enabling Razorpay later (currently hidden — UPI QR only).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PaymentMethodsLogos() {
   return (
     <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
@@ -231,6 +234,9 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
     paymentId?: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  // Razorpay hidden for now — UPI QR is the only visible method.
+  // To re-enable: restore the toggle UI below and default back to "RAZORPAY".
+  const [payMethod] = useState<"RAZORPAY" | "UPI">("UPI");
 
   const hasPrice = pkg.price != null && pkg.price > 0;
   const originalPrice = pkg.price || 0;
@@ -685,6 +691,38 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
         {/* Course Thumbnail Hero */}
         <CourseThumbnailBanner pkg={pkg} />
 
+        {/* Payment method toggle — hidden for now (UPI QR only).
+            Razorpay option kept in code; restore this block to re-enable. */}
+        {/*
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1"}>
+          <button
+            type="button"
+            onClick={() => setPayMethod("RAZORPAY")}
+            className={`rounded-lg py-2 text-xs font-bold transition-all ${
+              payMethod === "RAZORPAY"
+                ? "bg-white text-[#175cdd] shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Razorpay
+          </button>
+          <button
+            type="button"
+            onClick={() => setPayMethod("UPI")}
+            className={`rounded-lg py-2 text-xs font-bold transition-all ${
+              payMethod === "UPI"
+                ? "bg-white text-[#175cdd] shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            UPI QR
+          </button>
+        </div>
+        */}
+
+        {payMethod === "UPI" ? (
+          <ManualUpiCheckout courseId={courseId} courseName={pkg.name} />
+        ) : (
         <form onSubmit={handleCheckout} className="space-y-4">
           <div className="space-y-3">
             <div>
@@ -818,9 +856,29 @@ export function CourseDerivedCheckoutWidget({ pkg }: Props) {
             )}
           </button>
         </form>
+        )}
 
-        {/* Payment Methods Badges */}
-        <PaymentMethodsLogos />
+        {/* Payment Methods Badges — hidden for now (UPI QR only).
+            Restore <PaymentMethodsLogos /> below to re-enable. */}
+        {/* <PaymentMethodsLogos /> */}
+        <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Payment Method
+            </span>
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#175cdd]">
+              UPI — Manual Verification
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-800 shadow-2xs">
+              <span className="text-[#175cdd]">UPI</span>
+              <span className="text-[9px] font-semibold text-slate-400">
+                (GPay/PhonePe/Paytm)
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Trust Guarantee Footnote */}
         <div className="flex items-center justify-center gap-2 text-center text-[11px] font-medium text-slate-500">
