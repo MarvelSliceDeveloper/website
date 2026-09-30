@@ -1254,9 +1254,6 @@ export default function BrochureDesigner() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        <span className="font-semibold text-amber-700">Duration:</span> {c.duration}
-                      </p>
                     </div>
                   </div>
                 );

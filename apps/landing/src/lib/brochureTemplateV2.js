@@ -1712,27 +1712,21 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     setText(WHITE);
     pdf.text(String(idx + 1).padStart(2, '0'), cx + 6.2, cy + catCardH / 2 + 1.2, { align: 'center' });
 
-    // Course title
-    pdf.setFontSize(8.0);
+    // Course title (only course name, duration removed)
+    pdf.setFontSize(8.2);
     pdf.setFont('Helvetica', 'bold');
     if (isCurrent) {
       setText(ORANGE);
-      pdf.text(pdf.splitTextToSize(c.title, catCardW - 25)[0] || '', cx + 13.0, cy + 5.8);
+      pdf.text(pdf.splitTextToSize(c.title, catCardW - 25)[0] || '', cx + 13.0, cy + 8.8);
       // Current tag
       pdf.setFontSize(5.8);
       pdf.setFont('Helvetica', 'bold');
       setText(ORANGE);
-      pdf.text('CURRENT', cx + catCardW - 13, cy + 5.8, { align: 'right' });
+      pdf.text('CURRENT', cx + catCardW - 13, cy + 8.8, { align: 'right' });
     } else {
       setText(INK);
-      pdf.text(pdf.splitTextToSize(c.title, catCardW - 16)[0] || '', cx + 13.0, cy + 5.8);
+      pdf.text(pdf.splitTextToSize(c.title, catCardW - 16)[0] || '', cx + 13.0, cy + 8.8);
     }
-
-    // Duration (Only course name and duration)
-    pdf.setFontSize(6.8);
-    pdf.setFont('Helvetica', 'normal');
-    setText(MUTED);
-    pdf.text(`Duration: ${c.duration || '3 - 6 Months'}`, cx + 13.0, cy + 10.8);
   });
 
   const numRows = Math.ceil(catalogCourses.length / 2);
