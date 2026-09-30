@@ -320,14 +320,20 @@ export async function generateFullCourseWithAI({ courseName, keyPoints = '', dur
 Create a deep, comprehensive, production-ready course specification for the website based on the following input:
 
 Course Name: "${courseName}"
-Key Points / Requirements: "${keyPoints || 'Comprehensive modern curriculum, practical hands-on labs, real-world industry capstone projects, placement preparation.'}"
+Key Points / Requirements: "${keyPoints || 'Comprehensive modern curriculum, practical hands-on labs, real-world industry projects, placement preparation.'}"
 Duration: "${duration}"
 Mode: "${mode}"
 Category: "${category}"
 
-Generate a complete JSON object matching the exact database schema below. Do NOT include image URLs or fake image links (leave image fields empty strings).
-Ensure all 4 tabs (Overview, Curriculum, Projects, Certification) are populated with in-depth paragraphs and rich accordion Q&As.
-CRITICAL REQUIREMENT FOR CURRICULUM TAB: In the 'Curriculum' tab, each Q&A item MUST contain EXACTLY 5 comprehensive, professional sentences in the 'answers' array (covering core theoretical concepts, practical implementation workflows, tools/frameworks, industry best practices, and a hands-on lab exercise).
+CRITICAL INSTRUCTION - REAL-WORLD COURSE CONDUCTED (ZERO HALLUCINATIONS):
+- This course is actively conducted by Marvel Slice for students. What is published here is an official commitment.
+- Base all syllabus topics, tools, technologies, and projects STRICTLY on the provided Course Name and Key Points.
+- STRICT TOOLS & TECHS: Use ONLY the technologies and tools explicitly relevant or listed in the requirements. Do NOT hallucinate third-party tools or frameworks that are not part of this course.
+- STRICT DURATION: The duration is strictly "${duration}".
+- NEVER use the word "capstone" - always say "project" (e.g. "Project 1").
+- Generate a complete JSON object matching the exact database schema below. Do NOT include image URLs or fake image links (leave image fields empty strings).
+- Ensure all 4 tabs (Overview, Curriculum, Projects, Certification) are populated with in-depth paragraphs and rich accordion Q&As.
+- CRITICAL REQUIREMENT FOR CURRICULUM TAB: In the 'Curriculum' tab, each Q&A item MUST contain EXACTLY 5 comprehensive, professional sentences in the 'answers' array (covering core theoretical concepts, practical implementation workflows, tools/frameworks, industry best practices, and a hands-on lab exercise).
 
 {
   "title": "${courseName}",
@@ -540,7 +546,7 @@ CRITICAL REQUIREMENT FOR CURRICULUM TAB: In the 'Curriculum' tab, each Q&A item 
 
 Return ONLY raw valid JSON, no markdown codeblocks, no commentary.`;
 
-    const aiRes = await generateContentWithAI(prompt, { maxTokens: 4000, temperature: 0.7 });
+    const aiRes = await generateContentWithAI(prompt, { maxTokens: 4000, temperature: 0.3 });
     if (aiRes?.text) {
       let cleaned = aiRes.text.trim();
       if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');

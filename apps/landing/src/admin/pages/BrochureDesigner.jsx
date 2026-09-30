@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import QRCode from 'qrcode';
 import { supabase } from '../../lib/supabaseClient';
 import PageShell from '../components/ui/PageShell';
 import {
@@ -17,7 +18,7 @@ import {
   moduleToolsFor, moduleTakeawayFor,
   isProjectModule,
   programDimensionsFor, targetAudienceDetailedFor, prerequisitesFor,
-  durationForCourse,
+  durationForCourse, extractToolsFromSyllabus,
 } from '../../lib/brochureExpand';
 
 /**
@@ -122,11 +123,12 @@ function skillsForCourse(course, modules) {
   return uniq.slice(0, 12);
 }
 
-function toolsForCourse(course) {
+function toolsForCourse(course, modules = []) {
+  const fromSyllabus = extractToolsFromSyllabus(modules);
+  if (fromSyllabus.length) return fromSyllabus.slice(0, 12);
   const techs = (course?.projects || []).flatMap((p) => asList(p.technologies));
-  const base = ['Git & GitHub', 'VS Code', 'Postman', 'Linux Basics', 'Docker Basics'];
-  const merged = [...new Set([...techs, ...base])];
-  return merged.slice(0, 12);
+  if (techs.length) return techs.slice(0, 12);
+  return toolsForTitle(course?.title || '', [], modules);
 }
 
 function prettyTitleFromFile(file) {
@@ -191,9 +193,23 @@ export default function BrochureDesigner() {
   const [liveCount, setLiveCount] = useState(null);
   const [dbSiteCourses, setDbSiteCourses] = useState([]);
   const [enriching, setEnriching] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const [syllabusKey, setSyllabusKey] = useState(
     () => LOCAL_SYLLABUS[0]?.file || '',
   );
+
+  // Generate scannable QR code for https://marvelslice.com
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL('https://marvelslice.com', {
+      margin: 1,
+      width: 256,
+      color: { dark: '#0F172A', light: '#FFFFFF' },
+    })
+      .then((url) => { if (active) setQrDataUrl(url); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   // Best-effort site settings & published courses. Never blocks preview.
   useEffect(() => {
@@ -350,7 +366,7 @@ export default function BrochureDesigner() {
   const category = effectiveCourse?.category || 'Software Learning';
 
   const skills = useMemo(() => skillsForCourse(effectiveCourse, curriculum), [effectiveCourse, curriculum]);
-  const tools = useMemo(() => toolsForTitle(title, toolsForCourse(effectiveCourse)), [title, effectiveCourse]);
+  const tools = useMemo(() => toolsForCourse(effectiveCourse, curriculum), [effectiveCourse, curriculum]);
   const projects = useMemo(() => asList(effectiveCourse?.projects), [effectiveCourse]);
   const expandedProjects = useMemo(() => {
     const levels = ['Beginner', 'Intermediate', 'Advanced', 'Advanced'];
@@ -1282,11 +1298,66 @@ export default function BrochureDesigner() {
               })}
             </div>
 
-            {/* Bottom Admissions Helpline Bar */}
-            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/50 p-2.5 text-center">
-              <p className="text-xs font-bold text-slate-800">
-                Admissions &amp; Syllabus Inquiries: <span style={{ color: BRAND.blue }}>{contact.phone}</span> · {contact.email} · {contact.website}
+            {/* Bottom Admissions & Syllabus Inquiries Section with Scannable QR Code & Contact Links */}
+            <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50/40 p-4 relative overflow-hidden border-l-4" style={{ borderLeftColor: BRAND.orange }}>
+              <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Admissions &amp; Syllabus Inquiries:
               </p>
+              <div className="mt-3 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                {/* Left: Scannable QR Code */}
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="p-1.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+                    {qrDataUrl ? (
+                      <img src={qrDataUrl} alt="QR Code - marvelslice.com" className="w-20 h-20" />
+                    ) : (
+                      <div className="w-20 h-20 bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">
+                        QR Code
+                      </div>
+                    )}
+                  </div>
+                  <span className="mt-1 text-[10px] font-bold text-amber-600 tracking-wider">SCAN TO VISIT</span>
+                </div>
+
+                {/* Right: Contact Details (Website, Email, Phone) */}
+                <div className="flex-1 space-y-2.5 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                      <FiGlobe className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Official Website</span>
+                      <a href="https://marvelslice.com" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-700 hover:underline">
+                        www.marvelslice.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <FiMail className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Inquiries</span>
+                      <a href="mailto:hr@marvelslice.com" className="font-bold text-slate-800 hover:text-amber-700">
+                        hr@marvelslice.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <FiPhone className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Admissions Helpline</span>
+                      <span className="font-bold text-slate-800">
+                        +91 63809 57390 / +91 80882 18609
+                      </span>
+                      <span className="ml-2 text-[10px] text-slate-500 font-normal">(Mon - Sat, 9:00 AM - 7:00 PM IST)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>

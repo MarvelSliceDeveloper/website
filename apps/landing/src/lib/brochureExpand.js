@@ -152,17 +152,145 @@ export function prerequisitesFor(title) {
   return base;
 }
 
+export const CANONICAL_TOOLS = [
+  // Languages & Core
+  { match: /\b(?:java\s*21|java\s*17|java\s*11|java|core\s*java|advanced\s*java)\b/i, name: 'Java' },
+  { match: /\b(?:python\s*3(?:\.\d+)?|python|core\s*python)\b/i, name: 'Python' },
+  { match: /\b(?:javascript|es6\+?|modern\s*javascript)\b/i, name: 'JavaScript' },
+  { match: /\b(?:typescript)\b/i, name: 'TypeScript' },
+  { match: /\b(?:html5)\b/i, name: 'HTML5' },
+  { match: /\b(?:html)\b/i, name: 'HTML5' },
+  { match: /\b(?:css3)\b/i, name: 'CSS3' },
+  { match: /\b(?:css)\b/i, name: 'CSS3' },
+  { match: /\b(?:php\s*8(?:\.\d+)?|php)\b/i, name: 'PHP' },
+  { match: /\b(?:sql)\b/i, name: 'SQL' },
+  { match: /\b(?:c\+\+)\b/i, name: 'C++' },
+  { match: /\b(?:c#|\.net)\b/i, name: 'C# / .NET' },
+
+  // Java & Backend Frameworks
+  { match: /\b(?:spring\s*boot\s*3|spring\s*boot)\b/i, name: 'Spring Boot' },
+  { match: /\b(?:spring\s*mvc|spring\s*security|spring\s*data|spring\s*framework)\b/i, name: 'Spring Framework' },
+  { match: /\b(?:hibernate|jpa)\b/i, name: 'Hibernate / JPA' },
+  { match: /\b(?:maven)\b/i, name: 'Maven' },
+  { match: /\b(?:gradle)\b/i, name: 'Gradle' },
+  { match: /\b(?:junit\s*5|junit)\b/i, name: 'JUnit' },
+
+  // Web Frameworks & UI
+  { match: /\b(?:react\s*19|react\s*18|react(?:\.js)?)\b/i, name: 'React JS' },
+  { match: /\b(?:next(?:\.js)?)\b/i, name: 'Next.js' },
+  { match: /\b(?:angular\s*1[789]|angular(?:\.js)?)\b/i, name: 'Angular' },
+  { match: /\b(?:vue(?:\.js)?)\b/i, name: 'Vue.js' },
+  { match: /\b(?:node(?:\.js)?)\b/i, name: 'Node.js' },
+  { match: /\b(?:express(?:\.js)?)\b/i, name: 'Express.js' },
+  { match: /\b(?:django)\b/i, name: 'Django' },
+  { match: /\b(?:flask)\b/i, name: 'Flask' },
+  { match: /\b(?:fastapi)\b/i, name: 'FastAPI' },
+  { match: /\b(?:wordpress)\b/i, name: 'WordPress' },
+  { match: /\b(?:woocommerce)\b/i, name: 'WooCommerce' },
+  { match: /\b(?:tailwind(?:\s*css)?)\b/i, name: 'Tailwind CSS' },
+  { match: /\b(?:bootstrap\s*5|bootstrap)\b/i, name: 'Bootstrap' },
+  { match: /\b(?:redux\s*toolkit|redux)\b/i, name: 'Redux' },
+  { match: /\b(?:vite)\b/i, name: 'Vite' },
+  { match: /\b(?:webpack)\b/i, name: 'Webpack' },
+
+  // AI / Data Science / ML
+  { match: /\b(?:pandas)\b/i, name: 'Pandas' },
+  { match: /\b(?:numpy)\b/i, name: 'NumPy' },
+  { match: /\b(?:scikit[-–\s]*learn|sklearn)\b/i, name: 'Scikit-Learn' },
+  { match: /\b(?:tensorflow)\b/i, name: 'TensorFlow' },
+  { match: /\b(?:pytorch)\b/i, name: 'PyTorch' },
+  { match: /\b(?:keras)\b/i, name: 'Keras' },
+  { match: /\b(?:matplotlib)\b/i, name: 'Matplotlib' },
+  { match: /\b(?:seaborn)\b/i, name: 'Seaborn' },
+  { match: /\b(?:opencv)\b/i, name: 'OpenCV' },
+  { match: /\b(?:langchain)\b/i, name: 'LangChain' },
+  { match: /\b(?:llamaindex)\b/i, name: 'LlamaIndex' },
+  { match: /\b(?:hugging\s*face)\b/i, name: 'Hugging Face' },
+  { match: /\b(?:jupyter(?:\s*notebook)?)\b/i, name: 'Jupyter Notebook' },
+  { match: /\b(?:colab|google\s*colab)\b/i, name: 'Google Colab' },
+  { match: /\b(?:nlp|natural\s*language\s*processing)\b/i, name: 'NLP' },
+  { match: /\b(?:llm|large\s*language\s*models?)\b/i, name: 'LLMs & Prompt Eng.' },
+
+  // Databases & Storage
+  { match: /\b(?:mysql(?:\s*workbench)?)\b/i, name: 'MySQL' },
+  { match: /\b(?:postgresql|postgres)\b/i, name: 'PostgreSQL' },
+  { match: /\b(?:mongodb|mongo)\b/i, name: 'MongoDB' },
+  { match: /\b(?:redis)\b/i, name: 'Redis' },
+  { match: /\b(?:sqlite)\b/i, name: 'SQLite' },
+
+  // Tools, Testing & DevOps
+  { match: /\b(?:git(?:hub)?|git)\b/i, name: 'Git & GitHub' },
+  { match: /\b(?:vs\s*code|visual\s*studio\s*code)\b/i, name: 'VS Code' },
+  { match: /\b(?:postman)\b/i, name: 'Postman' },
+  { match: /\b(?:docker)\b/i, name: 'Docker' },
+  { match: /\b(?:kubernetes|k8s)\b/i, name: 'Kubernetes' },
+  { match: /\b(?:aws|amazon\s*web\s*services)\b/i, name: 'AWS' },
+  { match: /\b(?:azure)\b/i, name: 'Microsoft Azure' },
+  { match: /\b(?:linux|ubuntu)\b/i, name: 'Linux' },
+  { match: /\b(?:selenium)\b/i, name: 'Selenium' },
+  { match: /\b(?:playwright)\b/i, name: 'Playwright' },
+  { match: /\b(?:testng)\b/i, name: 'TestNG' },
+  { match: /\b(?:jest)\b/i, name: 'Jest' },
+  { match: /\b(?:cypress)\b/i, name: 'Cypress' },
+  { match: /\b(?:figma)\b/i, name: 'Figma' },
+  { match: /\b(?:figjam)\b/i, name: 'FigJam' },
+  { match: /\b(?:miro)\b/i, name: 'Miro' },
+  { match: /\b(?:wireframing|wireframe)\b/i, name: 'Wireframing' },
+  { match: /\b(?:prototyping|prototype)\b/i, name: 'Prototyping' },
+  { match: /\b(?:design\s*systems?)\b/i, name: 'Design Systems' },
+];
+
+/**
+ * Extracts ONLY tools & technologies explicitly mentioned in syllabus modules or document text.
+ * Strictly avoids hallucinating or injecting unmentioned third-party tools.
+ */
+export function extractToolsFromSyllabus(modules = [], rawText = '') {
+  let combined = String(rawText || '');
+  if (Array.isArray(modules)) {
+    modules.forEach((m) => {
+      combined += ' ' + (m?.title || '') + ' ' + (m?.label || '') + ' ' + (m?.objective || '');
+      const topics = m?.topics || m?.lines || m?.lessons || [];
+      if (Array.isArray(topics)) combined += ' ' + topics.join(' ');
+    });
+  }
+  if (!combined.trim()) return [];
+
+  const seen = new Set();
+  const extracted = [];
+  CANONICAL_TOOLS.forEach((ct) => {
+    if (!seen.has(ct.name) && ct.match.test(combined)) {
+      seen.add(ct.name);
+      extracted.push(ct.name);
+    }
+  });
+  return extracted;
+}
+
 const DOMAIN_TOOLS = {
-  frontend: ['VS Code', 'Chrome DevTools', 'Git & GitHub', 'Figma', 'Netlify / Vercel', 'Postman'],
-  backend: ['VS Code', 'Git & GitHub', 'Postman', 'MySQL', 'Docker Basics', 'Linux Basics'],
-  data: ['Python', 'Jupyter Notebook', 'Pandas & NumPy', 'Git & GitHub', 'SQL', 'Colab / Kaggle'],
-  general: ['VS Code', 'Git & GitHub', 'Postman', 'Linux Basics', 'Docker Basics'],
+  frontend: ['HTML5', 'CSS3', 'JavaScript', 'VS Code', 'Git & GitHub', 'Chrome DevTools'],
+  backend: ['REST APIs', 'SQL Database', 'VS Code', 'Git & GitHub', 'Postman'],
+  data: ['Python', 'SQL', 'Pandas & NumPy', 'Jupyter Notebook', 'Git & GitHub'],
+  general: ['Core Programming', 'VS Code', 'Git & GitHub', 'Unit Testing'],
 };
 
-export function toolsForTitle(title, detected = []) {
+/**
+ * Returns tools for a course title.
+ * CRITICAL RULE: If modules or document text are available, uses strictly extracted tools.
+ * NEVER appends unmentioned tools (e.g. no Docker/Postman if not taught in the doc).
+ */
+export function toolsForTitle(title, detected = [], modules = [], rawText = '') {
+  const fromSyllabus = extractToolsFromSyllabus(modules, rawText);
+  const detectedList = Array.isArray(detected) ? detected.filter(Boolean) : [];
+  const mergedFromDoc = [...new Set([...detectedList, ...fromSyllabus])];
+
+  // STRICT RULE: If tools were verified from the document/syllabus, return ONLY those tools!
+  if (mergedFromDoc.length > 0) {
+    return mergedFromDoc.slice(0, 12);
+  }
+
+  // Fallback only when syllabus contains zero recognized tools
   const base = DOMAIN_TOOLS[domainOf(title)] || DOMAIN_TOOLS.general;
-  const merged = [...new Set([...(detected || []), ...base])];
-  return merged.slice(0, 12);
+  return base.slice(0, 12);
 }
 
 const DOMAIN_ROLES = {
@@ -233,26 +361,57 @@ export function keyHighlightsFor(title, duration = '6 Months', modules = []) {
   ];
 }
 
-export function moduleToolsFor(m) {
+export function moduleToolsFor(m, courseTools = []) {
   if (Array.isArray(m?.tools) && m.tools.length) return m.tools.slice(0, 4);
+
+  // 1. Check if specific tools are mentioned inside this module's title and topics
+  const modText = (m?.title || '') + ' ' + ((m?.topics || m?.lines || []).join(' '));
+  const seen = new Set();
+  const modTools = [];
+  CANONICAL_TOOLS.forEach((ct) => {
+    if (!seen.has(ct.name) && ct.match.test(modText)) {
+      seen.add(ct.name);
+      modTools.push(ct.name);
+    }
+  });
+
+  if (modTools.length >= 2) {
+    return modTools.slice(0, 4);
+  }
+
+  // 2. If 1 tool found, supplement with other course-verified tools (never unmentioned tools!)
+  if (modTools.length > 0 && Array.isArray(courseTools) && courseTools.length > 0) {
+    courseTools.forEach((t) => {
+      if (!seen.has(t) && modTools.length < 4) {
+        seen.add(t);
+        modTools.push(t);
+      }
+    });
+    return modTools.slice(0, 4);
+  }
+
+  // 3. Fallback matching cleanTitle
   const cleanTitle = String(m?.title || '')
     .replace(/^(?:module|chapter|unit|part|section)\s*\d+[:\-.]?\s*/i, '')
     .replace(/[—–-]\s*part\s*[ab]/i, '')
     .trim();
   const low = cleanTitle.toLowerCase();
-  if (/html|semantic/.test(low)) return ['VS Code', 'Chrome DevTools', 'HTML5 Validator', 'Live Server'];
-  if (/css|styling|bootstrap|tailwind|flexbox|grid/.test(low)) return ['Flexbox / Grid', 'Chrome Inspector', 'PostCSS', 'Figma'];
-  if (/javascript|js|es6/.test(low)) return ['ES6+ Engine', 'Chrome Console', 'Node.js', 'Babel'];
-  if (/react|component|hooks/.test(low)) return ['React 19', 'React DevTools', 'Vite', 'React Router'];
-  if (/ui|ux|figma|design/.test(low)) return ['Figma', 'FigJam', 'Auto Layout', 'Miro'];
-  if (/performance|optimization/.test(low)) return ['Google Lighthouse', 'Core Web Vitals', 'PageSpeed Insights', 'DevTools'];
-  if (/publish|hosting|deploy|git/.test(low)) return ['Git & GitHub', 'cPanel / FTP', 'Vercel / Netlify', 'SSL Tools'];
-  if (/seo|search/.test(low)) return ['Google Search Console', 'Schema.org', 'Robots.txt', 'Sitemap Generator'];
-  if (/photoshop|image/.test(low)) return ['Adobe Photoshop', 'Squoosh / TinyPNG', 'SVG Optimizer', 'Canva'];
-  if (/database|sql|mongo/.test(low)) return ['MySQL Workbench', 'MongoDB Compass', 'SQL Profiler', 'Docker'];
-  if (/python|backend|node|api/.test(low)) return ['Postman', 'Python / Node', 'FastAPI / Express', 'JWT'];
-  if (/ai|ml|data/.test(low)) return ['Jupyter Notebook', 'Pandas & NumPy', 'Scikit-Learn', 'Google Colab'];
-  if (/project|portfolio/.test(low)) return ['Git & GitHub', 'VS Code', 'Production Hosting', 'Lighthouse CI'];
+  if (/html|semantic/.test(low)) return ['HTML5', 'VS Code', 'Chrome DevTools', 'Live Server'];
+  if (/css|styling|bootstrap|tailwind|flexbox|grid/.test(low)) return ['CSS3', 'Flexbox / Grid', 'Responsive Design', 'VS Code'];
+  if (/javascript|js|es6/.test(low)) return ['JavaScript ES6+', 'Chrome DevTools', 'VS Code', 'Git'];
+  if (/react|component|hooks/.test(low)) return ['React JS', 'Vite', 'React Router', 'VS Code'];
+  if (/angular/.test(low)) return ['Angular', 'TypeScript', 'RxJS', 'VS Code'];
+  if (/ui|ux|figma|design/.test(low)) return ['Figma', 'FigJam', 'Auto Layout', 'Prototyping'];
+  if (/database|sql|mongo/.test(low)) return ['SQL', 'Relational Schemas', 'Database Indexing', 'Queries'];
+  if (/python|django|flask/.test(low)) return ['Python', 'Django / Flask', 'REST APIs', 'Postman'];
+  if (/java|spring/.test(low)) return ['Java', 'Spring Boot', 'Hibernate', 'Maven'];
+  if (/ai|ml|data/.test(low)) return ['Python', 'Pandas & NumPy', 'Jupyter Notebook', 'Machine Learning'];
+  if (/wordpress|woo/.test(low)) return ['WordPress', 'WooCommerce', 'PHP', 'Gutenberg'];
+
+  // If courseTools are available, pick from them
+  if (Array.isArray(courseTools) && courseTools.length >= 2) {
+    return courseTools.slice(0, 4);
+  }
   return ['VS Code', 'Git & GitHub', 'Chrome DevTools', 'Postman'];
 }
 
@@ -459,15 +618,322 @@ export const DOMAIN_PROJECTS = {
   ],
 };
 
+export const COURSE_SPECIFIC_PROJECTS = {
+  java: [
+    {
+      level: 'Beginner',
+      title: 'Core Java Console Utility & Algorithmic Processor',
+      desc: 'Build a modular CLI banking or file-processing application utilizing object-oriented principles, collections, exception handling, and JUnit testing.',
+      tech: 'Core Java • OOP • Collections • JUnit • Git',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Spring Boot RESTful Service & Relational Database Engine',
+      desc: 'Architect structured REST endpoints with Spring Data JPA / Hibernate, MySQL transactional persistence, and automated request validation.',
+      tech: 'Spring Boot • Hibernate / JPA • MySQL • Maven • Postman',
+    },
+    {
+      level: 'Advanced',
+      title: 'Enterprise Microservices Platform with Security & Caching',
+      desc: 'Design decoupled backend microservices with Spring Security, JWT authentication, centralized error handling, and high-throughput query caching.',
+      tech: 'Spring Boot • Spring Security • JWT • MySQL • Postman',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production Full Stack Java Enterprise Capstone',
+      desc: 'Deploy a full-tier enterprise system combining a modern responsive frontend with a scalable Spring Boot backend, complete with continuous deployment.',
+      tech: 'Java • Spring Boot • Modern Frontend • MySQL • Docker / Cloud',
+    },
+  ],
+  python: [
+    {
+      level: 'Beginner',
+      title: 'Python Algorithmic Engine & File Data Processor',
+      desc: 'Develop a clean modular console application utilizing Python data structures, file I/O operations, error handling, and unit test coverage.',
+      tech: 'Python 3 • OOP • Data Structures • PyTest • Git',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Database-Backed Web Service & CRUD API',
+      desc: 'Architect a relational web backend utilizing Django or Flask with database ORM models, migration management, and structured REST endpoints.',
+      tech: 'Python • Django / Flask • SQL / MySQL • Postman',
+    },
+    {
+      level: 'Advanced',
+      title: 'Scalable RESTful Backend Architecture & JWT Auth',
+      desc: 'Implement production-ready APIs featuring role-based authorization, request throttling, database query optimization, and automated testing.',
+      tech: 'Django REST Framework • PostgreSQL / MySQL • JWT • Unit Tests',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production Full Stack Python Web Platform',
+      desc: 'Build and deploy a complete production-grade web application with interactive client-side interfaces and scalable backend services.',
+      tech: 'Python • Django / FastAPI • Database • Modern UI • Cloud Hosting',
+    },
+  ],
+  html_css: [
+    {
+      level: 'Beginner',
+      title: 'Semantic Corporate Landing Page & Structure',
+      desc: 'Build an accessible multi-section corporate site utilizing semantic HTML5 elements, clean document hierarchies, and W3C validation.',
+      tech: 'HTML5 • Semantic Tags • Accessibility (WCAG) • VS Code',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Responsive Multi-Device Portfolio with Flexbox',
+      desc: 'Design modern responsive page layouts with fluid Flexbox navigation, interactive cards, media queries, and cross-browser styling.',
+      tech: 'HTML5 • CSS3 • Flexbox • Media Queries • Git',
+    },
+    {
+      level: 'Advanced',
+      title: 'Modern CSS Grid Magazine & Dashboard Layout',
+      desc: 'Architect complex two-dimensional CSS Grid layouts with custom typography, responsive design tokens, and smooth micro-interactions.',
+      tech: 'HTML5 • CSS3 • CSS Grid • Responsive Design • DevTools',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production Showcase Portal with High-Speed Optimization',
+      desc: 'Publish an audit-tested, 90+ Lighthouse score responsive web showcase deployed live with verified Git version control.',
+      tech: 'HTML5 • CSS3 • CSS Animations • Web Vitals • Live Hosting',
+    },
+  ],
+  react: [
+    {
+      level: 'Beginner',
+      title: 'Interactive Component Library & Single Page Application',
+      desc: 'Build modular, reusable React UI components with declarative props, conditional rendering, and responsive styling.',
+      tech: 'React JS • JSX • Components • CSS3 / Tailwind',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Dynamic Product Catalog with State Management & Filtering',
+      desc: 'Implement asynchronous data fetching, client-side filtering, custom state hooks, and local persistence for shopping workflows.',
+      tech: 'React JS • Custom Hooks • Fetch / Axios • Local Storage',
+    },
+    {
+      level: 'Advanced',
+      title: 'SaaS Analytics Dashboard & Metrics Visualization',
+      desc: 'Architect a single-page analytics portal with client routing, interactive charts, global state orchestration, and RESTful API integration.',
+      tech: 'React JS • Redux / Context • React Router • REST API',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production Client-Side Web Platform Capstone',
+      desc: 'Deploy a high-performance single page application built with Vite, automated unit tests, and continuous cloud deployment.',
+      tech: 'React JS • Vite • Unit Tests • Cloudflare / Vercel',
+    },
+  ],
+  angular: [
+    {
+      level: 'Beginner',
+      title: 'TypeScript Foundations & Component Dashboard',
+      desc: 'Build structured Angular components with TypeScript interfaces, two-way data binding, and built-in structural directives.',
+      tech: 'Angular • TypeScript • Directives • Components',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Reactive Data-Driven Application with Services & DI',
+      desc: 'Implement injectable Angular services, Dependency Injection, reactive RxJS observables, and client-side HTTP communications.',
+      tech: 'Angular • RxJS • Services • HTTP Client',
+    },
+    {
+      level: 'Advanced',
+      title: 'Enterprise Modular Admin Portal with Lazy Routing',
+      desc: 'Architect feature modules, route guards, reactive form validations, and asynchronous state pipelines for multi-user portals.',
+      tech: 'Angular • Route Guards • Reactive Forms • Node.js',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production Scalable Web Application Capstone',
+      desc: 'Deliver a production-ready enterprise Angular application with modular architecture, performance audits, and cloud deployment.',
+      tech: 'Angular • TypeScript • CI/CD Deployment • Production Build',
+    },
+  ],
+  node: [
+    {
+      level: 'Beginner',
+      title: 'Node.js CLI Utilities & File Streaming Engine',
+      desc: 'Develop modular console tools and asynchronous file stream processors using core Node.js modules and event emitters.',
+      tech: 'Node.js • JavaScript • File System • Git',
+    },
+    {
+      level: 'Intermediate',
+      title: 'RESTful CRUD Service & Schema Validation Engine',
+      desc: 'Design and build structured RESTful service endpoints with input validation middleware, error handling, and unit test assertions.',
+      tech: 'Node.js • Express.js • MongoDB • Postman',
+    },
+    {
+      level: 'Advanced',
+      title: 'Real-Time Communications Service & Distributed Caching',
+      desc: 'Implement low-latency WebSocket communication channels, Redis caching layers, and session authorization tokens.',
+      tech: 'Node.js • Express.js • Redis • WebSockets',
+    },
+    {
+      level: 'Advanced',
+      title: 'Enterprise Scalable Cloud Backend Capstone',
+      desc: 'End-to-end distributed backend featuring background job queues, rate limiting, Docker containerization, and AWS deployment.',
+      tech: 'Node.js • Express.js • MongoDB / Redis • Docker',
+    },
+  ],
+  php: [
+    {
+      level: 'Beginner',
+      title: 'Dynamic Server-Side Scripting Console & Utilities',
+      desc: 'Build structured procedural and object-oriented PHP scripts with form handling, session tracking, and error management.',
+      tech: 'PHP • Procedural & OOP • HTML5 • CSS3',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Database-Driven Multi-User CRUD Web Portal',
+      desc: 'Develop a persistent web application utilizing PHP PDO, MySQL database connections, prepared statements, and input sanitation.',
+      tech: 'PHP • MySQL • PDO • Form Validation',
+    },
+    {
+      level: 'Advanced',
+      title: 'RESTful API Service with Secure Token Authentication',
+      desc: 'Architect modular REST API endpoints returning structured JSON data with token-based access control and CRUD operations.',
+      tech: 'PHP • MySQL • REST API • Postman',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production E-Commerce Web Application Capstone',
+      desc: 'Deploy a full-featured e-commerce web platform with user authentication, product catalog, cart persistence, and order workflows.',
+      tech: 'PHP • MySQL • Payment Integration • Git',
+    },
+  ],
+  wordpress: [
+    {
+      level: 'Beginner',
+      title: 'Responsive Business Website Setup & Gutenberg Theming',
+      desc: 'Configure a clean WordPress installation with custom block layouts, typography systems, and mobile-friendly responsive pages.',
+      tech: 'WordPress • Gutenberg Blocks • HTML5 • CSS3',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Dynamic Content Architecture & Custom Post Types',
+      desc: 'Implement custom post types, taxonomies, child themes, and custom field logic for rich content-driven websites.',
+      tech: 'WordPress • PHP • Custom Fields • Child Themes',
+    },
+    {
+      level: 'Advanced',
+      title: 'Full WooCommerce Online Store & Payment Gateway',
+      desc: 'Build an end-to-end e-commerce store with product catalogs, dynamic cart flows, checkout gateways, and SSL configuration.',
+      tech: 'WordPress • WooCommerce • Payment Gateways • SSL',
+    },
+    {
+      level: 'Advanced',
+      title: 'High-Performance Production Web Portal & Technical SEO',
+      desc: 'Optimize a production WordPress site for Core Web Vitals, caching layers, database cleanup, and structured search visibility.',
+      tech: 'WordPress • WooCommerce • Technical SEO • Caching',
+    },
+  ],
+  ux: [
+    {
+      level: 'Beginner',
+      title: 'User Persona Research & Low-Fidelity Wireframes',
+      desc: 'Conduct empathy mapping, user interview synthesis, information architecture diagrams, and paper/digital wireframe sketches.',
+      tech: 'User Research • Information Architecture • Figma',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Interactive Component Library & Cohesive Design System',
+      desc: 'Build reusable UI component kits in Figma with auto-layout constraints, responsive variants, typography scales, and color tokens.',
+      tech: 'Figma • Auto Layout • Component Variants • Style Guide',
+    },
+    {
+      level: 'Advanced',
+      title: 'High-Fidelity Mobile Application Interactive Prototype',
+      desc: 'Create realistic touch-based user journeys with animated micro-interactions, transition states, and usability testing scorecards.',
+      tech: 'Figma • Micro-Interactions • Usability Testing • Prototypes',
+    },
+    {
+      level: 'Advanced',
+      title: 'End-to-End Enterprise SaaS Product Design Case Study',
+      desc: 'Deliver a comprehensive design case study documenting user research, iterative wireframes, developer handoff specs, and business impact.',
+      tech: 'Design Systems • Figma • Developer Handoff • Case Study',
+    },
+  ],
+  data_science: [
+    {
+      level: 'Beginner',
+      title: 'Exploratory Data Analysis (EDA) & Market Insights',
+      desc: 'Perform data wrangling, missing-value imputation, statistical analysis, and interactive visualization on real-world retail datasets.',
+      tech: 'Python • Pandas • NumPy • Matplotlib & Seaborn',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Predictive Machine Learning Classification Pipeline',
+      desc: 'Train, evaluate, and tune supervised models (Random Forest, XGBoost) with cross-validation, feature engineering, and ROC-AUC metrics.',
+      tech: 'Scikit-Learn • XGBoost • Jupyter • Feature Scaling',
+    },
+    {
+      level: 'Advanced',
+      title: 'End-to-End Deep Learning & Computer Vision System',
+      desc: 'Build and train CNN architectures for image recognition, automated data augmentation, and model checkpointing.',
+      tech: 'PyTorch / TensorFlow • OpenCV • Transfer Learning',
+    },
+    {
+      level: 'Advanced',
+      title: 'Production AI Inference & Serving System Capstone',
+      desc: 'Deploy machine learning and deep learning models behind performant REST API endpoints with containerization and cloud serving.',
+      tech: 'Python • FastAPI / Flask • Docker • Model Serving',
+    },
+  ],
+  genai: [
+    {
+      level: 'Beginner',
+      title: 'Prompt Engineering Frameworks & LLM Foundations',
+      desc: 'Experiment with systematic prompting strategies, zero-shot and few-shot reasoning, structured JSON outputs, and parameter tuning.',
+      tech: 'Python • LLMs & Prompt Eng. • Jupyter Notebook',
+    },
+    {
+      level: 'Intermediate',
+      title: 'Vector Embeddings & Semantic Document Search',
+      desc: 'Build semantic search pipelines using modern embedding models, cosine similarity rankings, and high-performance vector databases.',
+      tech: 'Python • Vector Databases • LangChain • FastAPI',
+    },
+    {
+      level: 'Advanced',
+      title: 'Enterprise Retrieval-Augmented Generation (RAG) System',
+      desc: 'Architect a production RAG pipeline with document chunking, hybrid retrieval, re-ranking, and grounded source citation generation.',
+      tech: 'LangChain • RAG • Vector DB • FastAPI',
+    },
+    {
+      level: 'Advanced',
+      title: 'Autonomous Multi-Agent AI System Capstone',
+      desc: 'Deploy an autonomous multi-agent workflow capable of reasoning, tool use, external API execution, and verified decision reporting.',
+      tech: 'LangChain / Agents • FastAPI • LLMs • Cloud Serving',
+    },
+  ],
+};
+
 /**
  * Returns exactly 4 structured projects: 1 Beginner, 1 Intermediate, 2 Advanced.
- * Extracts any syllabus project topics if present, otherwise provides grounded domain projects.
+ * Strictly tailored to the specific course's syllabus technologies.
  */
-export function projectsFor(title, modules) {
-  const d = domainOf(title);
-  const base = DOMAIN_PROJECTS[d] || DOMAIN_PROJECTS.general;
+export function projectsFor(title = '', modules = []) {
+  const lowTitle = String(title || '').toLowerCase();
 
-  // If input modules contained standalone project modules or specific project topics, extract them
+  // 1. Check if the course title matches a specific course configuration
+  let base = null;
+  if (/java/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.java;
+  else if (/wordpress/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.wordpress;
+  else if (/php/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.php;
+  else if (/angular/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.angular;
+  else if (/react/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.react;
+  else if (/node/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.node;
+  else if (/html|css/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.html_css;
+  else if (/ux|ui/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.ux;
+  else if (/generative|genai|llm/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.genai;
+  else if (/data|aiml|machine/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.data_science;
+  else if (/python/i.test(lowTitle)) base = COURSE_SPECIFIC_PROJECTS.python;
+
+  if (!base) {
+    const d = domainOf(title);
+    base = DOMAIN_PROJECTS[d] || DOMAIN_PROJECTS.general;
+  }
+
+  // 2. If input modules contained standalone project modules or specific project topics, extract them
   const projMods = (modules || []).filter(isProjectModule);
   if (projMods.length) {
     const extracted = [];
@@ -768,6 +1234,39 @@ export function prettyTitleFromFile(filename = '') {
     .replace(/_/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Extracts and strictly verifies the course duration directly from the document text or file name.
+ * Prevents hallucinated or mismatched course durations.
+ */
+export function extractDurationFromDoc(rawText = '', fileName = '', fallbackTitle = '') {
+  // 1. Check filename for "(3 Months)", "3 Months", "(6 Months)", "(8 Weeks)", etc.
+  const fileStr = String(fileName || '');
+  const fileMatch = fileStr.match(/(\d+)\s*(months?|weeks?|days?)/i);
+  if (fileMatch) {
+    const num = parseInt(fileMatch[1], 10);
+    const unit = /week/i.test(fileMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
+    return `${num} ${unit}`;
+  }
+
+  // 2. Check document text for explicit "Duration: X Months", "Course Duration: X Months", etc.
+  const text = String(rawText || '').slice(0, 8000);
+  const durMatch = text.match(/(?:course\s*)?duration\s*[:\-–]\s*([0-9]+\s*(?:months?|weeks?|days?|hours?)(?:\s*\([^\)]+\))?)/i);
+  if (durMatch && durMatch[1]) {
+    return durMatch[1].trim();
+  }
+
+  // 3. Check for standalone "X Months" or "X Weeks" in document header (first 2000 chars)
+  const headerMatch = text.slice(0, 2000).match(/\b(\d+)\s*(months?|weeks?)\b/i);
+  if (headerMatch) {
+    const num = parseInt(headerMatch[1], 10);
+    const unit = /week/i.test(headerMatch[2]) ? (num === 1 ? 'Week' : 'Weeks') : (num === 1 ? 'Month' : 'Months');
+    return `${num} ${unit}`;
+  }
+
+  // 4. Fallback to standard verified duration for course title
+  return durationForCourse(fallbackTitle);
 }
 
 export function durationForCourse(title = '') {
