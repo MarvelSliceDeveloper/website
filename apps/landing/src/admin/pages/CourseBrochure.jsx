@@ -57,6 +57,8 @@ export default function CourseBrochure() {
   // + 2 background images (cover art + inner art, defaults = template art)
   const [docSections, setDocSections] = useState([]);
   const [docFileName, setDocFileName] = useState('');
+  const [docDuration, setDocDuration] = useState('');
+  const [docTools, setDocTools] = useState([]);
   const [docProcessing, setDocProcessing] = useState(false);
   const [docError, setDocError] = useState('');
   const [pageImage, setPageImage] = useState(null);
@@ -199,7 +201,18 @@ export default function CourseBrochure() {
     const others = otherCoursesPicked
       .slice(0, 13)
       .map((c) => ({ title: c.title, duration: c.duration, mode: c.mode }));
-    return { docSections, otherCourses: others, bgStyle, pathSteps: autoPathSteps, coverImage: pageImage, pathImage, customCoverBg, customInnerBg };
+    return {
+      docSections,
+      docDuration,
+      docTools,
+      otherCourses: others,
+      bgStyle,
+      pathSteps: autoPathSteps,
+      coverImage: pageImage,
+      pathImage,
+      customCoverBg,
+      customInnerBg
+    };
   }
 
   async function handleDocFile(file) {
@@ -209,10 +222,12 @@ export default function CourseBrochure() {
     try {
       const raw = await extractDocFileText(file);
       if (!raw || !raw.trim()) throw new Error('No readable text found in file.');
-      const sections = await condenseDocToOneLiners(raw, downloadCourse?.title || '');
+      const sections = await condenseDocToOneLiners(raw, downloadCourse?.title || '', file.name);
       if (!sections.length) throw new Error('AI could not condense this file.');
       setDocSections(sections);
       setDocFileName(file.name);
+      if (sections.duration) setDocDuration(sections.duration);
+      if (sections.tools && sections.tools.length) setDocTools(sections.tools);
     } catch (err) {
       console.error('Doc condense error:', err);
       setDocError(err.message || 'Failed to process doc file.');
@@ -332,18 +347,28 @@ export default function CourseBrochure() {
               )}
               {docError && <p className="text-[11px] text-red-600 mt-3 font-medium">{docError}</p>}
               {docSections.length > 0 && !docProcessing && (
-                <div className="mt-4 text-left text-[11px] text-neutral-600 bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5">
+                <div className="mt-4 text-left text-[11px] text-neutral-600 bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 space-y-2">
                   <p className="font-bold text-emerald-700 flex items-center gap-1.5">
-                    <FiCheck className="w-3.5 h-3.5" /> {docSections.length} sections ready from {docFileName}
+                    <FiCheck className="w-3.5 h-3.5" /> {docSections.length} sections verified from {docFileName}
                   </p>
-                  <ul className="mt-1.5 space-y-0.5 max-h-28 overflow-y-auto">
+                  {docDuration && (
+                    <p className="text-[11px] font-semibold text-neutral-700">
+                      ⏱ Duration: <span className="text-emerald-700 font-bold">{docDuration}</span> (strictly verified from doc)
+                    </p>
+                  )}
+                  {docTools && docTools.length > 0 && (
+                    <p className="text-[11px] text-neutral-600">
+                      🛠 Tools &amp; Tech: <span className="font-semibold text-neutral-800">{docTools.join(', ')}</span>
+                    </p>
+                  )}
+                  <ul className="mt-1.5 space-y-0.5 max-h-28 overflow-y-auto pt-1 border-t border-emerald-100">
                     {docSections.map((s, i) => (
                       <li key={i} className="truncate">• {s.title} ({s.lines.length} lines)</li>
                     ))}
                   </ul>
                   <button
                     type="button"
-                    onClick={() => { setDocSections([]); setDocFileName(''); setDocError(''); }}
+                    onClick={() => { setDocSections([]); setDocFileName(''); setDocDuration(''); setDocTools([]); setDocError(''); }}
                     className="mt-2 text-[11px] font-semibold text-neutral-500 hover:text-neutral-800 cursor-pointer"
                   >
                     Remove file
