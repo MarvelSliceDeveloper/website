@@ -10,6 +10,8 @@ import {
   IconClock,
   IconCopy,
   IconQrcode,
+  IconSparkles,
+  IconTicket,
 } from "@tabler/icons-react";
 
 interface PaymentOptions {
@@ -34,6 +36,17 @@ function formatInr(paise: number): string {
   return `₹${Math.round(paise / 100).toLocaleString("en-IN")}`;
 }
 
+interface CouponValidation {
+  couponId: string;
+  code: string;
+  title: string;
+  discountType: string;
+  discountValue: number;
+  originalAmountPaise: number;
+  discountAmountPaise: number;
+  finalAmountPaise: number;
+}
+
 export function ManualUpiCheckout({ courseId, courseName }: Props) {
   const [data, setData] = useState<PaymentOptions | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
@@ -43,6 +56,11 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] =
+    useState<CouponValidation | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +96,45 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
     }
   };
 
+  const handlePlanChange = (next: "FULL" | "MONTHLY") => {
+    setPlan(next);
+    setCouponApplied(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    setCouponLoading(true);
+    setCouponError("");
+    setCouponApplied(null);
+    try {
+      const result = await api.post<CouponValidation>("/api/coupons/validate", {
+        code,
+        courseId,
+        plan,
+      });
+      setCouponApplied(result);
+      setCouponCode(result.code);
+      toast.success(`Coupon applied — you saved ${formatInr(result.discountAmountPaise)}!`);
+    } catch (err: unknown) {
+      setCouponError(getErrorMessage(err));
+      setCouponApplied(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponApplied(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalized = utr.trim().toUpperCase();
@@ -90,9 +147,14 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
       await api.post(`/api/courses/catalogue/${courseId}/manual-order`, {
         plan,
         transactionId: normalized,
+        ...(couponApplied ? { couponCode: couponApplied.code } : {}),
       });
       setSubmitted(true);
-      toast.success("Payment submitted for review!");
+      toast.success(
+        couponApplied
+          ? `Payment submitted for review! Coupon saved you ${formatInr(couponApplied.discountAmountPaise)}.`
+          : "Payment submitted for review!",
+      );
     } catch (err: unknown) {
       const status =
         err && typeof err === "object" && "response" in err
@@ -158,8 +220,14 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
           Payment submitted for review
         </h4>
         <p className="text-[11px] leading-relaxed text-emerald-800">
-          Your {plan === "FULL" ? "full-fee" : "monthly"} payment for{" "}
-          <strong>{courseName}</strong> is pending admin approval. You will
+          Your {plan === "FULL" ? "full-fee" : "monthly"} payment
+          {couponApplied ? (
+            <>
+              {" "}of <strong>{formatInr(couponApplied.finalAmountPaise)}</strong> (coupon{" "}
+              {couponApplied.code} applied)
+            </>
+          ) : null}{" "}
+          for <strong>{courseName}</strong> is pending admin approval. You will
           receive an email with your invoice and course access once approved.
         </p>
         <p className="font-mono text-[11px] text-emerald-700">
@@ -175,8 +243,20 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
       { key: "MONTHLY", amount: data.monthlyPrice },
     ] as Array<{ key: "FULL" | "MONTHLY"; amount: number | null }>
   ).filter((p) => p.amount != null);
-  const activeAmount = plan === "FULL" ? data.fullPrice : data.monthlyPrice;
-  const upiIntent = data.options?.[plan]?.upiIntent ?? null;
+  const baseAmount = plan === "FULL" ? data.fullPrice : data.monthlyPrice;
+  const finalAmount = couponApplied
+    ? couponApplied.finalAmountPaise
+    : (baseAmount ?? 0);
+  const serverIntent = data.options?.[plan]?.upiIntent ?? null;
+  const discountedIntent =
+    couponApplied && data.upi
+      ? `upi://pay?pa=${encodeURIComponent(data.upi.upiId)}` +
+        `&pn=${encodeURIComponent(data.upi.payeeName)}` +
+        `&am=${(couponApplied.finalAmountPaise / 100).toFixed(2)}&cu=INR` +
+        `&tn=${encodeURIComponent(courseName.slice(0, 80))}`
+      : null;
+  const upiIntent = discountedIntent ?? serverIntent;
+  const activeAmount = couponApplied ? couponApplied.finalAmountPaise : baseAmount;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -188,7 +268,7 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
             <button
               key={p.key}
               type="button"
-              onClick={() => setPlan(p.key)}
+              onClick={() => handlePlanChange(p.key)}
               className={`rounded-xl border p-3 text-left transition-all ${
                 isSelected
                   ? "border-[#175cdd] bg-[#175cdd]/5 shadow-sm ring-2 ring-[#175cdd]/15"
@@ -218,6 +298,70 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
         })}
       </div>
 
+      {/* Coupon */}
+      {couponApplied ? (
+        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white">
+              <IconSparkles size={15} />
+            </span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black tracking-wider text-emerald-800">
+                  {couponApplied.code}
+                </span>
+                <span className="rounded-full bg-emerald-200/70 px-1.5 py-0.2 text-[10px] font-bold text-emerald-800">
+                  APPLIED
+                </span>
+              </div>
+              <p className="text-[11px] font-medium text-emerald-700">
+                You saved {formatInr(couponApplied.discountAmountPaise)} with
+                this coupon!
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleRemoveCoupon}
+            className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 transition-colors hover:bg-white hover:text-red-600"
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <IconTicket size={14} className="text-[#f59e0b]" />
+            Have a Promo or Coupon Code?
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter coupon (e.g. MSLMS10)"
+              value={couponCode}
+              onChange={(e) =>
+                setCouponCode(e.target.value.toUpperCase())
+              }
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())
+              }
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-slate-900 outline-none transition-all placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:border-[#175cdd] focus:bg-white focus:ring-2 focus:ring-[#175cdd]/15"
+            />
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              disabled={couponLoading || !couponCode.trim()}
+              className="rounded-xl bg-[#175cdd] px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#134cb5] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {couponLoading ? "Applying..." : "Apply"}
+            </button>
+          </div>
+          {couponError && (
+            <p className="text-[11px] font-medium text-red-600">{couponError}</p>
+          )}
+        </div>
+      )}
+
       {/* QR */}
       {upiIntent && activeAmount != null ? (
         <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4">
@@ -244,9 +388,20 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
                 {copied === "upi" ? "Copied!" : "Copy"}
               </button>
             </div>
+            {couponApplied && baseAmount != null && (
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                <span>
+                  <span className="text-slate-400 line-through">
+                    {formatInr(baseAmount)}
+                  </span>{" "}
+                  Coupon {couponApplied.code}
+                </span>
+                <span>−{formatInr(couponApplied.discountAmountPaise)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-slate-200">
               <span className="font-bold text-slate-800">
-                {formatInr(activeAmount)}{" "}
+                {formatInr(activeAmount ?? 0)}{" "}
                 <span className="font-medium text-slate-500">
                   to {data.upi.payeeName}
                 </span>
@@ -254,7 +409,7 @@ export function ManualUpiCheckout({ courseId, courseName }: Props) {
               <button
                 type="button"
                 onClick={() =>
-                  copyText(String(Math.round(activeAmount / 100)), "amt")
+                  copyText(String(Math.round((activeAmount ?? 0) / 100)), "amt")
                 }
                 className="flex items-center gap-1 font-semibold text-[#175cdd] hover:underline"
               >

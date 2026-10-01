@@ -14,11 +14,7 @@ import {
 import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
 import { useAIGenerate } from "@/lib/use-ai-generate";
-import {
-  SUGGESTED_CATEGORIES,
-  SUGGESTED_TAGS,
-  SUGGESTED_COURSE_TITLES,
-} from "@/lib/suggestions";
+import { SUGGESTED_CATEGORIES, SUGGESTED_TAGS } from "@/lib/suggestions";
 import type { Course, CourseFormData } from "./types";
 
 function plainTextToHtml(text: string): string {
@@ -129,10 +125,6 @@ export default function CourseDetailsTab({
     );
   };
 
-  const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
-    ["admin", "content", "titles"],
-    "/api/admin/content/titles",
-  );
   const categoriesQuery = useApiQuery<{ categories: { name: string }[] }>(
     ["admin", "content", "categories"],
     "/api/admin/content/categories",
@@ -142,14 +134,10 @@ export default function CourseDetailsTab({
     "/api/admin/content/tags",
   );
 
-  const dbTitles = titlesQuery.data?.titles.map((t) => t.name) ?? [];
   const dbCategories =
     categoriesQuery.data?.categories.map((c) => c.name) ?? [];
   const dbTags = tagsQuery.data?.tags.map((t) => t.name) ?? [];
 
-  const titleOptions = dbTitles.length
-    ? dbTitles
-    : (SUGGESTED_COURSE_TITLES as readonly string[]);
   const categoryOptions = dbCategories.length
     ? dbCategories
     : (SUGGESTED_CATEGORIES as readonly string[]);
@@ -322,37 +310,6 @@ export default function CourseDetailsTab({
         Course Details
       </h2>
 
-      {/* Catalogue toggle */}
-      <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.isCatalog}
-            onChange={(e) => setForm((p) => ({ ...p, isCatalog: e.target.checked }))}
-            className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-          />
-          <span className="text-sm font-semibold text-foreground">Show in catalogue (public)</span>
-        </label>
-        {form.isCatalog && (
-          <div className="flex items-center gap-2 sm:ml-auto">
-            <span className="text-sm text-muted-foreground">Price ₹</span>
-            <input
-              type="number"
-              min={0}
-              step={10}
-              value={form.price}
-              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
-              placeholder="e.g. 1999"
-              className="field w-32"
-            />
-            <span className="text-xs text-muted-foreground">empty = enquiry only</span>
-          </div>
-        )}
-      </div>
-      {form.isCatalog && (
-        <p className="text-xs text-muted-foreground -mt-2">When checked, this course appears at <code>/catalogue</code> landing grid if published. Set price to allow direct pay.</p>
-      )}
-
       {/* AI draft row */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-500/5 p-3">
         <IconSparkles size={16} className="shrink-0 text-violet-500" />
@@ -404,33 +361,7 @@ export default function CourseDetailsTab({
           }
           placeholder="e.g. Python for Data Analysis Beginners"
           className="field w-full"
-          list="course-title-suggestions-edit"
         />
-        <datalist id="course-title-suggestions-edit">
-          {titleOptions.map((t) => (
-            <option key={t} value={t} />
-          ))}
-        </datalist>
-        {titleOptions.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {titleOptions.slice(0, 8).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() =>
-                  setForm((p: CourseFormData) => ({ ...p, title: t }))
-                }
-                className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
-                  form.title === t
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        )}
         <p className="mt-1 text-[11px] text-muted-foreground">
           Top AI bar fills title + details together; &quot;Generate title&quot;
           creates just the title from your topic/description.

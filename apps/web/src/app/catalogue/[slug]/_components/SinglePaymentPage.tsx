@@ -10,6 +10,8 @@ import {
   IconDeviceMobile,
   IconLock,
   IconQrcode,
+  IconSparkles,
+  IconTicket,
 } from "@tabler/icons-react";
 import BrandLogo from "@/components/BrandLogo";
 import { api } from "@/lib/api";
@@ -24,6 +26,17 @@ interface PackageBatchOption {
   startDate: string;
   course: { id: string; title: string } | null;
   seatsAvailable: number | null;
+}
+
+interface CouponValidation {
+  couponId: string;
+  code: string;
+  title: string;
+  discountType: string;
+  discountValue: number;
+  originalAmountPaise: number;
+  discountAmountPaise: number;
+  finalAmountPaise: number;
 }
 
 interface PackagePaymentOptions {
@@ -200,13 +213,20 @@ export default function SinglePaymentPage({ pkg }: Props) {
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedBatchId, setSelectedBatchId] = useState("");
   const [batchError, setBatchError] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] =
+    useState<CouponValidation | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const batches = data?.batches ?? [];
   const selectedBatch = batches.find((b) => b.id === selectedBatchId) ?? null;
 
-  // Amount shown in the QR: server-built intent amount when available,
-  // otherwise the package price snapshot.
-  const totalPaise = data?.price ?? basePrice ?? 0;
+  // Amount shown in the QR: discounted total when a coupon is applied,
+  // otherwise the server price snapshot.
+  const totalPaise = couponApplied
+    ? couponApplied.finalAmountPaise
+    : (data?.price ?? basePrice ?? 0);
   // GST-inclusive breakup: list prices include 18% GST, so the net payable
   // splits 82% base value / 18% GST. gst = net - base keeps the sum exact.
   const baseValuePaise = Math.round((totalPaise * 82) / 100);
@@ -293,6 +313,39 @@ export default function SinglePaymentPage({ pkg }: Props) {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    setCouponLoading(true);
+    setCouponError("");
+    setCouponApplied(null);
+    try {
+      const result = await api.post<CouponValidation>("/api/coupons/validate", {
+        code,
+        packageId: pkgId,
+      });
+      setCouponApplied(result);
+      setCouponCode(result.code);
+      toast.success(
+        `Coupon applied — you saved ${formatINR(result.discountAmountPaise)}!`,
+      );
+    } catch (err: unknown) {
+      setCouponError(getErrorMessage(err));
+      setCouponApplied(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponApplied(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid()) return;
@@ -306,9 +359,14 @@ export default function SinglePaymentPage({ pkg }: Props) {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
+        ...(couponApplied ? { couponCode: couponApplied.code } : {}),
       });
       setSubmitted(true);
-      toast.success("Payment submitted for review!");
+      toast.success(
+        couponApplied
+          ? `Payment submitted for review! Coupon saved you ${formatINR(couponApplied.discountAmountPaise)}.`
+          : "Payment submitted for review!",
+      );
     } catch (err: unknown) {
       setFormError(friendlyError(err));
     } finally {
@@ -317,7 +375,15 @@ export default function SinglePaymentPage({ pkg }: Props) {
   };
 
   const upiEnabled = data?.upi?.isManualEnabled === true;
-  const upiIntent = data?.upiIntent ?? null;
+  const serverIntent = data?.upiIntent ?? null;
+  const discountedIntent =
+    couponApplied && data?.upi
+      ? `upi://pay?pa=${encodeURIComponent(data.upi.upiId)}` +
+        `&pn=${encodeURIComponent(data.upi.payeeName)}` +
+        `&am=${(couponApplied.finalAmountPaise / 100).toFixed(2)}&cu=INR` +
+        `&tn=${encodeURIComponent(title.slice(0, 80))}`
+      : null;
+  const upiIntent = discountedIntent ?? serverIntent;
 
   return (
     <div className="min-h-screen bg-[#EEF0FF] px-4 py-10 md:py-14">
@@ -366,7 +432,7 @@ export default function SinglePaymentPage({ pkg }: Props) {
                   Payment submitted for review
                 </h4>
                 <p className="text-sm leading-relaxed text-red-800">
-                  Your payment for <strong>{title}</strong> is pending admin
+                  Your payment{couponApplied ? <> of <strong>{formatINR(couponApplied.finalAmountPaise)}</strong> (coupon {couponApplied.code} applied)</> : null} for <strong>{title}</strong> is pending admin
                   approval. You will receive an email with your invoice and
                   package access once approved.
                   {isGuest
@@ -491,6 +557,74 @@ export default function SinglePaymentPage({ pkg }: Props) {
                   </div>
                 )}
 
+                {/* Coupon */}
+                <div className="mt-6">
+                  {couponApplied ? (
+                    <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                          <IconSparkles size={15} />
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-black tracking-wider text-emerald-800">
+                              {couponApplied.code}
+                            </span>
+                            <span className="rounded-full bg-emerald-200/70 px-1.5 py-0.2 text-[10px] font-bold text-emerald-800">
+                              APPLIED
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-medium text-emerald-700">
+                            You saved{" "}
+                            {formatINR(couponApplied.discountAmountPaise)} with
+                            this coupon!
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 transition-colors hover:bg-white hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-1.5 text-xs font-medium text-[#4A4666]">
+                        <IconTicket size={14} className="text-[#f59e0b]" />
+                        Have a Promo or Coupon Code?
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter coupon (e.g. MSLMS10)"
+                          value={couponCode}
+                          onChange={(e) =>
+                            setCouponCode(e.target.value.toUpperCase())
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Enter" &&
+                            (e.preventDefault(), handleApplyCoupon())
+                          }
+                          className="w-full rounded-xl border border-[#E4E1FB] bg-[#FAFAFF] px-3.5 py-2.5 font-mono text-xs uppercase tracking-wider text-[#1E1B3A] outline-none transition placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-[#B4B0D6] focus:border-[#6C5BFF] focus:bg-white focus:ring-2 focus:ring-[#6C5BFF]/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponCode.trim()}
+                          className="shrink-0 rounded-xl bg-[#1E1B4A] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#2d2760] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {couponLoading ? "Applying..." : "Apply"}
+                        </button>
+                      </div>
+                      {couponError && (
+                        <p className="text-xs text-red-600">{couponError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Step 2 */}
                 <div className="mt-8 flex items-center gap-2.5">
                   <StepBadge n={2} />
@@ -602,6 +736,14 @@ export default function SinglePaymentPage({ pkg }: Props) {
                   <span>GST (18%, included)</span>
                   <span className="tabular-nums">{formatINR(gstPaise)}</span>
                 </div>
+                {couponApplied && (
+                  <div className="flex justify-between font-semibold text-emerald-300">
+                    <span>Coupon {couponApplied.code}</span>
+                    <span className="tabular-nums">
+                      −{formatINR(couponApplied.discountAmountPaise)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6">

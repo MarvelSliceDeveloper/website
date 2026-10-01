@@ -109,6 +109,7 @@ export async function submitManualOrder(
   courseId: string,
   planInput: string,
   transactionIdRaw: string,
+  couponCodeRaw?: string,
 ) {
   const plan = toPlan(planInput);
   const settings = await getSettings();
@@ -120,9 +121,23 @@ export async function submitManualOrder(
     select: { id: true, title: true, price: true, monthlyPrice: true },
   });
   if (!course) throw new AppError(404, "Course not found");
-  const amount = plan === "FULL" ? course.price : course.monthlyPrice;
-  if (amount == null) {
+  const baseAmount = plan === "FULL" ? course.price : course.monthlyPrice;
+  if (baseAmount == null) {
     throw new AppError(400, `This plan is not available for this course`);
+  }
+  let amount = baseAmount;
+  let couponCode: string | null = null;
+  let discountAmount = 0;
+  const cleanCoupon = couponCodeRaw?.trim().toUpperCase();
+  if (cleanCoupon) {
+    const { couponService } = await import("../coupons/coupon.service");
+    const validated = await couponService.validateCoupon(
+      cleanCoupon,
+      baseAmount,
+    );
+    amount = validated.finalAmountPaise;
+    couponCode = validated.code;
+    discountAmount = validated.discountAmountPaise;
   }
   const transactionId = normalizeUtr(transactionIdRaw);
 
@@ -149,7 +164,16 @@ export async function submitManualOrder(
     throw new AppError(409, "You are already enrolled in this course");
 
   const order = await prisma.manualPaymentOrder.create({
-    data: { userId, courseId, plan, amount, transactionId, status: "PENDING" },
+    data: {
+      userId,
+      courseId,
+      plan,
+      amount,
+      couponCode,
+      discountAmount,
+      transactionId,
+      status: "PENDING",
+    },
   });
 
   const user = await prisma.user.findUnique({
@@ -247,6 +271,7 @@ export interface PackageOrderInput {
   guestName?: string;
   guestEmail?: string;
   guestPhone?: string;
+  couponCode?: string;
 }
 
 function cleanOptionalText(v: unknown, max = 200): string | undefined {
@@ -273,6 +298,20 @@ export async function submitPackageManualOrder(
   if (!pkg) throw new AppError(404, "Package not found");
   if (pkg.price == null || pkg.price <= 0) {
     throw new AppError(400, "This package is not available for UPI payment");
+  }
+  let amount = pkg.price;
+  let couponCode: string | null = null;
+  let discountAmount = 0;
+  const cleanCoupon = input?.couponCode?.trim().toUpperCase();
+  if (cleanCoupon) {
+    const { couponService } = await import("../coupons/coupon.service");
+    const validated = await couponService.validateCoupon(
+      cleanCoupon,
+      pkg.price,
+    );
+    amount = validated.finalAmountPaise;
+    couponCode = validated.code;
+    discountAmount = validated.discountAmountPaise;
   }
   const transactionId = normalizeUtr(transactionIdRaw);
 
@@ -379,7 +418,9 @@ export async function submitPackageManualOrder(
       userId,
       packageId,
       plan: "FULL",
-      amount: pkg.price,
+      amount,
+      couponCode,
+      discountAmount,
       transactionId,
       status: "PENDING",
       batchId,
@@ -400,7 +441,7 @@ export async function submitPackageManualOrder(
         email: user.email,
         courseName: pkg.name,
         plan: "FULL",
-        amount: pkg.price,
+        amount,
         transactionId,
       })
       .catch((err: Error) =>

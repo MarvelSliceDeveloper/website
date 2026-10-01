@@ -1166,7 +1166,9 @@ model ManualPaymentOrder {
   courseId        String?
   packageId       String?
   plan            ManualPlan
-  amount          Int // paise snapshot at submit time
+  amount          Int // paise snapshot at submit time (discounted final amount when coupon applied)
+  couponCode      String?
+  discountAmount  Int               @default(0) // paise
   transactionId   String            @unique // UTR / UPI ref, stored uppercase
   status          ManualOrderStatus @default(PENDING)
   rejectionReason String?

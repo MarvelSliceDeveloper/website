@@ -16,7 +16,7 @@ export const manualOrdersController = {
 
   async submit(req: AuthRequest, res: Response) {
     try {
-      const { plan, transactionId } = req.body;
+      const { plan, transactionId, couponCode } = req.body;
       if (!plan || !transactionId) {
         return res
           .status(400)
@@ -27,6 +27,7 @@ export const manualOrdersController = {
         req.params.id,
         plan,
         transactionId,
+        typeof couponCode === "string" ? couponCode : undefined,
       );
       return res.status(201).json({ order });
     } catch (err: unknown) {
@@ -66,6 +67,7 @@ export const manualOrdersController = {
         name,
         email,
         phone,
+        couponCode,
       } = req.body ?? {};
       if (!transactionId) {
         return res.status(400).json({ error: "transactionId required" });
@@ -82,6 +84,7 @@ export const manualOrdersController = {
           guestName: name,
           guestEmail: email,
           guestPhone: phone,
+          couponCode: typeof couponCode === "string" ? couponCode : undefined,
         },
       );
       return res.status(201).json({ order });

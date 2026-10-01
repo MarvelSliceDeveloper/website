@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -160,6 +161,35 @@ function amountInWords(paise: number): string {
   );
 }
 
+function resolveLogoPath(): string | null {
+  if (!COMPANY_LOGO_PATH) return null;
+  const normalized = COMPANY_LOGO_PATH.replace(/\\/g, "/");
+  const candidates: string[] = [normalized];
+  if (!isAbsolute(normalized)) {
+    candidates.push(join(process.cwd(), normalized));
+    let dir = process.cwd();
+    for (let i = 0; i < 5; i++) {
+      dir = dirname(dir);
+      candidates.push(join(dir, normalized));
+      candidates.push(join(dir, "public", basename(normalized)));
+    }
+    candidates.push(join("/app", normalized));
+    candidates.push(join("/app/public", basename(normalized)));
+  }
+  for (const c of candidates) {
+    try {
+      readFileSync(c);
+      return c;
+    } catch {
+      continue;
+    }
+  }
+  console.warn(
+    `[invoice] Logo not found at COMPANY_LOGO_PATH="${COMPANY_LOGO_PATH}" (tried ${candidates[0]}). Place a PNG/JPG there or fix the path.`,
+  );
+  return null;
+}
+
 function loadLogo(): { data: string; format: "PNG" | "JPEG" } | null {
   if (!COMPANY_LOGO_PATH) return null;
   if (/\.svg$/i.test(COMPANY_LOGO_PATH)) {
@@ -168,8 +198,10 @@ function loadLogo(): { data: string; format: "PNG" | "JPEG" } | null {
     );
     return null;
   }
+  const resolved = resolveLogoPath();
+  if (!resolved) return null;
   try {
-    const buf = readFileSync(COMPANY_LOGO_PATH);
+    const buf = readFileSync(resolved);
     if (buf.length > 500 * 1024) {
       console.warn(
         `[invoice] Logo is ${(buf.length / 1024).toFixed(0)}KB — keep it under 500KB (wide PNG/JPG) or every invoice PDF carries the extra weight.`,
@@ -304,25 +336,35 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
 
   let y = margin;
 
-  // ── Letterhead: logo (if the file loads) + name, always ──
+  // ── Letterhead: logo left + name beside it, name always ──
   // Name prints regardless so a missing/unreadable logo file can never
-  // leave a blank header. Heights follow the actual drawn image size.
+  // leave a blank header. Side-by-side keeps wide and square marks legible.
+  const LOGO_H = 14;
+  const LOGO_W_MAX = 52;
   let leftY = y;
+  let logoW = 0;
   let logoH = 0;
   const logo = loadLogo();
   if (logo) {
     try {
       const p = doc.getImageProperties(logo.data);
-      const w = Math.min(48, (12 * p.width) / p.height);
-      logoH = (w * p.height) / p.width;
-      doc.addImage(logo.data, logo.format, margin, y - 1, w, logoH);
+      const aspect = p.width / p.height;
+      logoW = Math.min(LOGO_W_MAX, LOGO_H * aspect);
+      logoH = logoW / aspect;
+      doc.addImage(logo.data, logo.format, margin, y - 1, logoW, logoH);
     } catch {
+      logoW = 0;
       logoH = 0;
     }
   }
   setText(16, TEXT_DARK, "bold");
-  doc.text(DISPLAY_NAME, margin, y + logoH + 5);
-  leftY = y + logoH + 10;
+  if (logoW > 0) {
+    doc.text(DISPLAY_NAME, margin + logoW + 4, y + logoH / 2 + 3);
+    leftY = y + Math.max(logoH, 10) + 5;
+  } else {
+    doc.text(DISPLAY_NAME, margin, y + 5);
+    leftY = y + 10;
+  }
 
   // ── Invoice title + meta (right) ────────────────────────────
   setText(22, ACCENT, "bold");
