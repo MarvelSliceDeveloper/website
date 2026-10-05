@@ -1752,11 +1752,18 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
 
   const contactStartY = Math.max(cursorY + 2.0, 211.0);
 
-  // Heading: "Admissions & Syllabus Inquiries:" — left-aligned
-  pdf.setFontSize(10.5);
+  // Heading: "Admissions Enquiry" with orange accent bar (matching Canva mockup)
+  pdf.setFontSize(14.0);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('Admissions & Syllabus Inquiries:', MARGIN_X + 2.0, contactStartY + 3.5);
+  pdf.text('Admissions ', MARGIN_X + 2.0, contactStartY + 5.0);
+  const admWidth = pdf.getTextWidth('Admissions ');
+  setText(ORANGE);
+  pdf.text('Enquiry', MARGIN_X + 2.0 + admWidth, contactStartY + 5.0);
+
+  // Short orange pill bar under heading
+  setFill(ORANGE);
+  pdf.roundedRect(MARGIN_X + 2.0, contactStartY + 7.5, 20.0, 2.2, 1.1, 1.1, 'F');
 
   // Larger icon helpers
   function drawGlobeIconLg(x, y, color) {
@@ -1769,7 +1776,6 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   }
   function drawPhoneIconLg(x, y, color) {
     setStroke(color);
-    setFill(color);
     pdf.setLineWidth(0.45);
     pdf.roundedRect(x + 1.0, y + 0.3, 5.0, 6.8, 0.8, 0.8, 'S');
     pdf.line(x + 2.4, y + 1.2, x + 4.6, y + 1.2);
@@ -1783,42 +1789,30 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
     pdf.line(x + 3.6, y + 3.6, x + 7.0, y + 0.8);
   }
 
-  // Row 1: Top-Left — Phone | Top-Right — Email
-  const row1Y = contactStartY + 8.0;
+  // Row 1: Top-Left — Phone | Top-Right — Email (clean inline without header labels)
+  const row1Y = contactStartY + 16.5;
 
-  // Top-Left: Phone icon + "Course Enquiry" + numbers
+  // Phone: Green icon + phone numbers
   const phoneX = MARGIN_X + 2.0;
-  drawPhoneIconLg(phoneX, row1Y, [4, 120, 87]);
-
-  pdf.setFontSize(6.2);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Course Enquiry', phoneX + 9.5, row1Y + 2.3);
-
-  pdf.setFontSize(9.0);
+  drawPhoneIconLg(phoneX, row1Y, [34, 197, 94]);
+  pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('+91 63809 57390  /  +91 80882 18609', phoneX + 9.5, row1Y + 6.2);
+  pdf.text('+91 63809 57390 / +91 80882 18609', phoneX + 8.5, row1Y + 4.8);
 
-  // Top-Right: Email icon + "Email" + address
-  const emailX = MARGIN_X + CONTENT_W - 54.0;
+  // Email: Orange icon + email address
+  const emailX = MARGIN_X + CONTENT_W - 52.0;
   drawEmailIconLg(emailX, row1Y, ORANGE);
-
-  pdf.setFontSize(6.2);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Email', emailX + 9.5, row1Y + 2.3);
-
-  pdf.setFontSize(9.0);
+  pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
   setText(INK);
-  pdf.text('hr@marvelslice.com', emailX + 9.5, row1Y + 6.2);
-  pdf.link(emailX + 9.5, row1Y + 1.0, 36, 7, { url: 'mailto:hr@marvelslice.com' });
+  pdf.text('hr@marvelslice.com', emailX + 8.5, row1Y + 4.8);
+  pdf.link(emailX + 8.5, row1Y + 1.0, 40, 6, { url: 'mailto:hr@marvelslice.com' });
 
-  // Row 2: CENTERED — Scannable QR Code (shifted 10px down to contactStartY + 21.0)
+  // Row 2: CENTERED — Scannable QR Code
   const qrSize = 21.0;
   const qrBoxX = MARGIN_X + (CONTENT_W - qrSize) / 2;
-  const qrBoxY = contactStartY + 21.0;
+  const qrBoxY = contactStartY + 27.5;
 
   setFill(WHITE);
   setStroke([226, 232, 240]);
@@ -1835,34 +1829,27 @@ export async function generateModernCourseBrochurePDF(course, siteSettings = {},
   // QR Label below code
   pdf.setFontSize(5.8);
   pdf.setFont('Helvetica', 'bold');
-  setText(ORANGE);
-  pdf.text('SCAN FOR SITE', MARGIN_X + CONTENT_W / 2, qrBoxY + qrSize + 3.0, { align: 'center' });
+  setText([79, 70, 229]);
+  pdf.text('SCAN FOR SITE', MARGIN_X + CONTENT_W / 2, qrBoxY + qrSize + 3.2, { align: 'center' });
 
-  // Row 3: CENTERED BELOW QR — Globe icon + Website (perfectly centered relative to QR code)
-  const webRowY = qrBoxY + qrSize + 5.5;
+  // Row 3: CENTERED BELOW QR — Globe icon + Website inline (perfectly centered relative to QR code)
+  const webRowY = qrBoxY + qrSize + 6.0;
   pdf.setFontSize(9.5);
   pdf.setFont('Helvetica', 'bold');
   const webTextStr = 'www.marvelslice.com';
   const webTextWidth = pdf.getTextWidth(webTextStr);
   const iconWidth = 7.0;
-  const iconGap = 2.5;
+  const iconGap = 2.0;
   const totalWebWidth = iconWidth + iconGap + webTextWidth;
 
   const pageCenterX = MARGIN_X + CONTENT_W / 2;
   const webStartX = pageCenterX - (totalWebWidth / 2);
 
-  drawGlobeIconLg(webStartX, webRowY, BLUE);
+  drawGlobeIconLg(webStartX, webRowY - 1.2, BLUE);
 
-  pdf.setFontSize(6.2);
-  pdf.setFont('Helvetica', 'bold');
-  setText(MUTED);
-  pdf.text('Website', webStartX + iconWidth + iconGap, webRowY + 2.3);
-
-  pdf.setFontSize(9.5);
-  pdf.setFont('Helvetica', 'bold');
   setText(BLUE);
-  pdf.text(webTextStr, webStartX + iconWidth + iconGap, webRowY + 6.2);
-  pdf.link(webStartX, webRowY, totalWebWidth, 7, { url: 'https://marvelslice.com' });
+  pdf.text(webTextStr, webStartX + iconWidth + iconGap, webRowY + 3.8);
+  pdf.link(webStartX, webRowY, totalWebWidth, 6, { url: 'https://marvelslice.com' });
 
   const raw = title || 'Course';
   const clean = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
