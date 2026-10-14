@@ -17,6 +17,7 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
+import ScheduleSessionForm from "./_components/ScheduleSessionForm";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -54,6 +55,9 @@ export default function AdminSessionsPage() {
 
   // Edit modal state
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  // Schedule popup state
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [schedulePending, setSchedulePending] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
@@ -208,11 +212,12 @@ export default function AdminSessionsPage() {
         description={`${sessions.length} total sessions`}
         breadcrumbs={[{ label: "Sessions", href: "/admin/sessions" }]}
         action={
-          <Link href="/admin/sessions/new">
-            <Button leftIcon={<IconPlus size={16} />}>
-              Schedule Session
-            </Button>
-          </Link>
+          <Button
+            leftIcon={<IconPlus size={16} />}
+            onClick={() => setScheduleOpen(true)}
+          >
+            Schedule Session
+          </Button>
         }
       />
 
@@ -225,9 +230,13 @@ export default function AdminSessionsPage() {
           title="No sessions yet"
           description="Schedule a live session for a batch."
           action={
-            <Link href="/admin/sessions/new" className="mt-4 inline-flex">
-              <Button leftIcon={<IconPlus size={16} />}>Schedule Session</Button>
-            </Link>
+            <Button
+              leftIcon={<IconPlus size={16} />}
+              onClick={() => setScheduleOpen(true)}
+              className="mt-4"
+            >
+              Schedule Session
+            </Button>
           }
         />
       ) : (
@@ -380,6 +389,45 @@ export default function AdminSessionsPage() {
           )}
         </div>
       )}
+
+      {/* Schedule Session Popup */}
+      <FormModal
+        open={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        title="Schedule Session"
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => setScheduleOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="schedule-session-form"
+              size="sm"
+              loading={schedulePending}
+            >
+              Schedule Session
+            </Button>
+          </>
+        }
+      >
+        <ScheduleSessionForm
+          formId="schedule-session-form"
+          hideActions
+          onPendingChange={setSchedulePending}
+          onSuccess={() => {
+            setScheduleOpen(false);
+            void sessionsQuery.refetch();
+          }}
+          onCancel={() => setScheduleOpen(false)}
+        />
+      </FormModal>
 
       {/* Edit Modal */}
       <FormModal
