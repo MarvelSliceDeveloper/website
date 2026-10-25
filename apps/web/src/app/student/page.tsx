@@ -329,11 +329,10 @@ function usePortalData() {
     "/api/student/results",
   );
 
-  const isLoading =
-    summaryQuery.isPending ||
-    overdueQuery.isPending ||
-    continueQuery.isPending ||
-    resultsQuery.isPending;
+  // summaryQuery gates the initial skeleton so the dashboard shell,
+  // courses, and sessions render in ~100ms, while overdue assignments and results
+  // stream in progressively.
+  const isLoading = summaryQuery.isPending;
 
   const data = useMemo<PortalData | null>(() => {
     if (summaryQuery.isPending) return null;
@@ -753,7 +752,8 @@ function StudentPortalContent() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (user.onboardingComplete !== onboardingComplete) {
       // Don't flip an optimistic true back to false due to stale cache
-      if (onboardingComplete === true && user.onboardingComplete === false) return;
+      if (onboardingComplete === true && user.onboardingComplete === false)
+        return;
       setOnboardingComplete(user.onboardingComplete);
     }
   }, [meQuery.data, onboardingComplete]);
@@ -1064,7 +1064,10 @@ function StudentPortalContent() {
       onBack={goBack}
       studentName={studentName}
       studentEmail={studentEmail}
-      fullWidth={currentView.view === "COURSE_CONTENT" || currentView.view === "COURSE_DETAIL"}
+      fullWidth={
+        currentView.view === "COURSE_CONTENT" ||
+        currentView.view === "COURSE_DETAIL"
+      }
       hideMobileNav={currentView.view === "COURSE_CONTENT"}
     >
       {/* View transition wrapper */}
