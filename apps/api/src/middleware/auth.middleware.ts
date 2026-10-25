@@ -118,6 +118,22 @@ function sessionExpired(
   return false;
 }
 
+// In-memory throttle for updating session lastActiveAt in DB: at most once per 60 seconds per session
+const sessionActivityThrottle = new Map<string, number>();
+
+// Clean up stale throttle entries every 10 minutes (keys older than 1 hour)
+setInterval(
+  () => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    for (const [sid, timestamp] of sessionActivityThrottle.entries()) {
+      if (timestamp < oneHourAgo) {
+        sessionActivityThrottle.delete(sid);
+      }
+    }
+  },
+  10 * 60 * 1000,
+).unref();
+
 // Verify JWT from Authorization header or cookie, attach user to request
 export const requireAuth = async (
   req: AuthRequest,
@@ -148,8 +164,11 @@ export const requireAuth = async (
       return res.status(401).json({ error: "Invalid token payload" });
     }
 
-    // Enforce per-user session timeout
-    if (sessionExpired(payload)) {
+    const tokenPayload = jwt.decode(token) as
+      (jwt.JwtPayload & { sessionId?: string }) | null;
+
+    // Fallback session timeout for tokens without a database session record (e.g. mock/test tokens)
+    if (!tokenPayload?.sessionId && sessionExpired(payload)) {
       return res.status(401).json({ error: "Session expired" });
     }
 
@@ -160,37 +179,51 @@ export const requireAuth = async (
       sessionTimeoutMin: payload.sessionTimeoutMin,
     };
 
-    // Single-session enforcement for ALL roles — validates sessionId against AdminSession table
-    // Token issued before this feature (no sessionId) is allowed through for grace period
-    {
-      const tokenPayload = jwt.decode(token) as
-        (jwt.JwtPayload & { sessionId?: string }) | null;
-      if (tokenPayload?.sessionId) {
-        try {
-          const session = await prisma.adminSession.findUnique({
-            where: { id: tokenPayload.sessionId },
-            select: { active: true },
+    // Single-session enforcement & true idle timeout for ALL roles — validates sessionId against AdminSession table
+    if (tokenPayload?.sessionId) {
+      try {
+        const session = await prisma.adminSession.findUnique({
+          where: { id: tokenPayload.sessionId },
+          select: { active: true, lastActiveAt: true },
+        });
+
+        if (!session || !session.active) {
+          return res.status(401).json({
+            error:
+              "Session has been terminated. You have been logged in from another device.",
           });
-          if (!session || !session.active) {
-            return res.status(401).json({
-              error:
-                "Session has been terminated. You have been logged in from another device.",
-            });
-          }
-          // Update lastActiveAt periodically (once per minute)
-          const now = Math.floor(Date.now() / 60000);
-          const lastUpdate = Math.floor((payload.iat || 0) / 60);
-          if (now > lastUpdate) {
+        }
+
+        // Enforce true idle timeout: only expires if user has been inactive longer than sessionTimeoutMin
+        if (payload.sessionTimeoutMin && session.lastActiveAt) {
+          const idleMinutes =
+            (Date.now() - new Date(session.lastActiveAt).getTime()) / 60000;
+          if (idleMinutes > payload.sessionTimeoutMin) {
             prisma.adminSession
               .update({
                 where: { id: tokenPayload.sessionId },
-                data: { lastActiveAt: new Date() },
+                data: { active: false },
               })
               .catch(() => {});
+            return res.status(401).json({ error: "Session expired" });
           }
-        } catch {
-          // If session check fails, allow request through (degraded mode)
         }
+
+        // Update lastActiveAt periodically (throttled to at most once per 60 seconds in memory)
+        const nowMs = Date.now();
+        const lastThrottled =
+          sessionActivityThrottle.get(tokenPayload.sessionId) || 0;
+        if (nowMs - lastThrottled > 60_000) {
+          sessionActivityThrottle.set(tokenPayload.sessionId, nowMs);
+          prisma.adminSession
+            .update({
+              where: { id: tokenPayload.sessionId },
+              data: { lastActiveAt: new Date() },
+            })
+            .catch(() => {});
+        }
+      } catch {
+        // If session check fails, allow request through (degraded mode)
       }
     }
 

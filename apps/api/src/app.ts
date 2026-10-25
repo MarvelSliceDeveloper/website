@@ -258,7 +258,11 @@ app.use(express.json());
 // Behind 1-2 reverse proxies (host Apache -> Docker nginx -> api) trust
 // both hops so req.protocol / req.ip reflect the original client, not
 // the loopback nginx. `2` covers Apache + nginx; `true` would also work.
-if (process.env.NODE_ENV === "production") {
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.TRUST_PROXY === "true" ||
+  process.env.TRUST_PROXY === "2"
+) {
   app.set("trust proxy", 2);
 }
 
