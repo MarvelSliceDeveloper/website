@@ -604,16 +604,6 @@ export default function InstructorDashboardPage() {
                   `${Math.round(Number(val))}%`,
               },
               xaxis: {
-                max: 100,
-                title: {
-                  text: "Fill rate (%)",
-                  style: { color: "var(--muted)", fontSize: "11px" },
-                },
-                labels: {
-                  style: { colors: "var(--muted)", fontSize: "11px" },
-                },
-              },
-              yaxis: {
                 categories: enrollmentFill.map((batch) => {
                   const label =
                     batch.name.length > 22
@@ -623,7 +613,19 @@ export default function InstructorDashboardPage() {
                     ? `${label} · ${batch.enrolled}/${batch.capacity}`
                     : label;
                 }),
+                max: 100,
+                title: {
+                  text: "Fill rate (%)",
+                  style: { color: "var(--muted)", fontSize: "11px" },
+                },
                 labels: {
+                  rotate: 0,
+                  style: { colors: "var(--muted)", fontSize: "11px" },
+                },
+              },
+              yaxis: {
+                labels: {
+                  maxWidth: 190,
                   style: { colors: "var(--muted)", fontSize: "11px" },
                 },
               },
