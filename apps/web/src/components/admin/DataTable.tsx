@@ -22,6 +22,7 @@ interface DataTableProps<T> {
   data: T[];
   loading?: boolean;
   emptyState?: ReactNode;
+  toolbar?: ReactNode;
   page?: number;
   pageSize?: number;
   totalItems?: number;
@@ -36,6 +37,7 @@ export default function DataTable<T>({
   data,
   loading = false,
   emptyState,
+  toolbar,
   page = 1,
   pageSize = 10,
   totalItems,
@@ -187,9 +189,16 @@ export default function DataTable<T>({
     </tbody>
   );
 
+  const toolbarRow = toolbar ? (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/5 px-4 py-3">
+      {toolbar}
+    </div>
+  ) : null;
+
   if (loading) {
     return (
       <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+        {toolbarRow}
         <div className="overflow-x-auto min-w-[600px]">
           <table className="w-full">
             {renderTableHeader()}
@@ -218,6 +227,7 @@ export default function DataTable<T>({
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+        {toolbarRow}
         <div className="px-4 py-12 text-center text-sm text-muted-foreground">
           {emptyState ?? "No records found"}
         </div>
@@ -227,6 +237,7 @@ export default function DataTable<T>({
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+      {toolbarRow}
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">
