@@ -203,6 +203,23 @@ async function main() {
 
   console.log("✅ Courses created");
 
+  // ─── Manual UPI payments (static QR + monthly/full plans) ──────────────────
+  await prisma.paymentSettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      upiId: "marvelslice@okhdfc",
+      payeeName: "MarvelSlice LMS",
+      isManualEnabled: true,
+    },
+  });
+  await prisma.course.update({
+    where: { slug: "python-for-data-science" },
+    data: { isCatalog: true, price: 499900, monthlyPrice: 99900 },
+  });
+  console.log("✅ Manual UPI payment settings seeded");
+
   // ─── Categories ─────────────────────────────────────────────────────────────
   const categoryDefinitions = [
     {

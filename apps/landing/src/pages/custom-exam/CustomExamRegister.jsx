@@ -308,7 +308,7 @@ const fieldInputCls =
   'w-full h-11 pl-10 pr-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium';
 // Plain variants (no left icon) — used by the Educational Details section
 const fieldPlainCls =
-  'w-full h-11 px-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium';
+  'w-full h-11 px-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none';
 const fieldPlainSelectCls =
   'w-full h-11 px-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15 transition-all font-medium appearance-none cursor-pointer';
 
@@ -755,12 +755,6 @@ export default function CustomExamRegister() {  const { slug } = useParams();
 
                   {/* SECTION BELOW PHOTO: EDUCATIONAL DETAILS */}
                   <div className="space-y-4">
-                    <SectionHead
-                      tint="amber"
-                      icon={<FiAward className="w-5 h-5" />}
-                      title="Educational Details"
-                      subtitle="Enter your academic information"
-                    />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
 
                       {/* 10th School Name & Mark */}
@@ -780,10 +774,8 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       <Field label="10th Mark (%)" error={formErrors.user10thMark}>
                         <div className="relative">
                           <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="100"
+                            type="text"
+                            inputMode="decimal"
                             value={user10thMark}
                             onChange={e => setUser10thMark(e.target.value)}
                             placeholder="e.g. 88.5"
@@ -810,10 +802,8 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       <Field label="12th / Diploma Mark (%)" error={formErrors.user12thMark}>
                         <div className="relative">
                           <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="100"
+                            type="text"
+                            inputMode="decimal"
                             value={user12thMark}
                             onChange={e => setUser12thMark(e.target.value)}
                             placeholder="e.g. 92.0"
@@ -922,10 +912,8 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                       <Field label="Current College CGPA" error={formErrors.cgpa}>
                         <div className="relative">
                           <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="10"
+                            type="text"
+                            inputMode="decimal"
                             value={userCgpa}
                             onChange={e => setUserCgpa(e.target.value)}
                             placeholder="e.g. 7.5"
@@ -1011,7 +999,7 @@ export default function CustomExamRegister() {  const { slug } = useParams();
                 onClick={handleCloseSuccess}
                 className="w-full py-3 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-sm rounded-2xl shadow-md transition-all cursor-pointer active:scale-[0.99]"
               >
-                Close
+                Ok
               </button>
               <p className="text-[11px] text-slate-400 font-medium mt-2">
                 Redirecting to home page in {redirectSecs}s…

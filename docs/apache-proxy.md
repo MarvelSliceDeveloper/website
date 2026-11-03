@@ -46,10 +46,54 @@ Internet :80/:443 -> Host Apache (Webuzo) -> 127.0.0.1:8080 (Docker lms-nginx) -
 </VirtualHost>
 ```
 
-Enable proxy modules:
+Enable proxy modules (WebSocket support is REQUIRED for `wss://marvelslice.com/realtime/v1/websocket`):
+
 ```bash
-a2enmod proxy proxy_http headers alias  # Debian/Ubuntu
+a2enmod proxy proxy_http proxy_wstunnel rewrite headers alias  # Debian/Ubuntu
 systemctl restart apache2   # or httpd
+```
+
+## WebSocket support (REQUIRED for Supabase Realtime)
+
+Plain `ProxyPass / http://127.0.0.1:8080/` uses `mod_proxy_http` only, which
+drops the `Upgrade: websocket` handshake. The browser then fails with
+`wss://marvelslice.com/realtime/v1/websocket` errors even though nginx is
+correct. Add a `ws://` tunnel rule BEFORE the plain `ProxyPass` lines, in
+every `:443` (and `:80` if used) vhost that serves `marvelslice.com`:
+
+```apache
+<VirtualHost *:443>
+    ServerName marvelslice.com
+    ServerAlias www.marvelslice.com
+    SSLEngine on
+    SSLCertificateFile /usr/local/webuzo/certs/marvelslice.com/fullchain.pem
+    SSLCertificateKeyFile /usr/local/webuzo/certs/marvelslice.com/privkey.pem
+
+    ProxyPreserveHost On
+    RewriteEngine On
+    # WebSocket upgrade for Supabase Realtime (must come first)
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/realtime/v1/(.*) ws://127.0.0.1:8080/realtime/v1/$1 [P,L]
+    # Optional: LMS socket.io (lms.marvelslice.com vhost only)
+    # RewriteCond %{HTTP:Upgrade} websocket [NC]
+    # RewriteCond %{HTTP:Connection} upgrade [NC]
+    # RewriteRule ^/socket.io/(.*) ws://127.0.0.1:8081/socket.io/$1 [P,L]
+
+    Alias /.well-known/acme-challenge/ /opt/lms/certbot-webroot/.well-known/acme-challenge/
+    ProxyPass /.well-known/acme-challenge/ !
+    ProxyPass / http://127.0.0.1:8080/
+    ProxyPassReverse / http://127.0.0.1:8080/
+    RequestHeader set X-Forwarded-Proto "https"
+</VirtualHost>
+```
+
+Verify on the server:
+
+```bash
+apachectl -M | grep -E 'proxy_wstunnel|rewrite'  # both must be listed
+curl -i -H "apikey: $ANON_KEY" https://marvelslice.com/rest/v1/courses?select=id\&limit=1
+# expect 200/206, not 404 from the SPA fallback
 ```
 
 ## .htaccess alternative (Webuzo / cPanel style)
@@ -80,6 +124,7 @@ RewriteRule ^(.*)$ http://127.0.0.1:8080/$1 [P,L]
 ```
 
 With the correct `Host`, nginx routes correctly:
+
 - `marvelslice.com` → `landing` block
 - `lms.marvelslice.com` → `web` block
 
@@ -90,6 +135,7 @@ and point the subdomain `.htaccess` at `http://127.0.0.1:8081/` (no Host needed)
 ## Docker side
 
 `docker-compose.prod.yml:14` now:
+
 ```yaml
 ports:
   - "127.0.0.1:8080:80"

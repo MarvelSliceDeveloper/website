@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useState, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import {
-  IconRefresh,
   IconUsers,
   IconCheck,
   IconX,
@@ -12,25 +11,29 @@ import {
   IconTrash,
   IconCalendar,
   IconVideo,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
 import { api } from "@/lib/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import DataTable from "@/components/admin/DataTable";
+import type { DataTableColumn } from "@/components/admin/DataTable";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 
-
 type Session = {
   id: string;
-  joinUrl: string;
+  title?: string | null;
+  joinUrl: string | null;
   scheduledAt: string;
+  scheduledEndAt?: string | null;
   endedAt: string | null;
   createdFrom: string;
   createdBy: string;
@@ -40,8 +43,10 @@ type Session = {
     id: string;
     name: string;
     course: { id: string; title: string } | null;
+    package?: { id: string; name: string } | null;
   } | null;
   recording: { id: string } | null;
+  _count?: { attendance: number };
 };
 
 type AttendanceRecord = {
@@ -53,6 +58,26 @@ type AttendanceRecord = {
     email: string;
   };
 };
+
+function isSessionUpcoming(session: Session, now: Date) {
+  return !session.endedAt && new Date(session.scheduledAt) >= now;
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatTime(value: string) {
+  return new Date(value).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function InstructorSessionsPage() {
   usePageTitle("Sessions");
@@ -71,8 +96,20 @@ export default function InstructorSessionsPage() {
 
 function SessionsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const statusFilter = searchParams.get("status");
   const confirmDelete = useConfirmDialog();
+
+  const [search, setSearch] = useState("");
+
+  const setStatusFilter = (value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set("status", value);
+    else params.delete("status");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   // Shares the cache key with the instructor dashboard's ["instructor","sessions"].
   const sessionsQuery = useApiQuery<{ sessions?: Session[] }>(
@@ -129,33 +166,23 @@ function SessionsPageContent() {
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
 
-  const syncMutation = useMutation({
-    mutationFn: (sessionId: string) =>
-      api.post(`/api/recordings/${sessionId}/sync`),
-    onSuccess: () => {
-      toast.success(
-        "Recording synced successfully! The video is now available for students.",
-      );
-      void sessionsQuery.refetch();
-    },
-    onError: (err: unknown) => toast.error(getErrorMessage(err)),
-  });
-
   const openEditModal = (session: Session) => {
     setEditingSession(session);
     setForm({
       courseId: session.batch?.course?.id || "",
       batchId: session.batchId,
       moduleId: session.moduleId || "",
-      title: session.joinUrl.includes("fallback")
-        ? "Live Session"
-        : "Scheduled Session",
+      title: session.title || "Live Session",
       startDateTime: new Date(session.scheduledAt).toISOString().slice(0, 16),
-      endDateTime: new Date(new Date(session.scheduledAt).getTime() + 3600000)
+      endDateTime: new Date(
+        session.scheduledEndAt
+          ? new Date(session.scheduledEndAt).getTime()
+          : new Date(session.scheduledAt).getTime() + 3600000,
+      )
         .toISOString()
         .slice(0, 16),
       customJoinUrl:
-        session.createdFrom === "LMS_CUSTOM" ? session.joinUrl : "",
+        session.createdFrom === "LMS_CUSTOM" ? (session.joinUrl ?? "") : "",
     });
     setShowEditModal(true);
   };
@@ -185,10 +212,6 @@ function SessionsPageContent() {
     deleteMutation.mutate(sessionId);
   };
 
-  const handleSyncRecording = (sessionId: string) => {
-    syncMutation.mutate(sessionId);
-  };
-
   const handleViewAttendance = async (session: Session) => {
     setSelectedSession(session);
     setLoadingAttendance(true);
@@ -206,112 +229,272 @@ function SessionsPageContent() {
   };
 
   const now = new Date();
-  let filteredSessions = sessions;
 
-  if (statusFilter === "UPCOMING") {
-    filteredSessions = sessions.filter(
-      (s) => !s.endedAt && new Date(s.scheduledAt) >= now,
-    );
-  } else if (statusFilter === "PAST") {
-    filteredSessions = sessions.filter(
-      (s) => s.endedAt || new Date(s.scheduledAt) < now,
-    );
-  }
+  // Counts and rows are memoized so the table's data reference stays stable
+  // between renders (DataTable keeps its own page state and resets on new data).
+  const totals = useMemo(() => {
+    const reference = new Date();
+    const upcoming = sessions.filter((s) =>
+      isSessionUpcoming(s, reference),
+    ).length;
+    return { upcoming, past: sessions.length - upcoming };
+  }, [sessions]);
 
-  const upcoming = filteredSessions.filter(
-    (s) => !s.endedAt && new Date(s.scheduledAt) >= now,
-  );
-  const past = filteredSessions.filter(
-    (s) => s.endedAt || new Date(s.scheduledAt) < now,
-  );
+  const rows = useMemo(() => {
+    const reference = new Date();
+    let list = sessions;
+
+    if (statusFilter === "UPCOMING") {
+      list = sessions.filter((s) => isSessionUpcoming(s, reference));
+    } else if (statusFilter === "PAST") {
+      list = sessions.filter((s) => !isSessionUpcoming(s, reference));
+    }
+
+    const term = search.trim().toLowerCase();
+    if (term) {
+      list = list.filter((session) =>
+        [
+          session.title,
+          session.batch?.name,
+          session.batch?.course?.title,
+          session.batch?.package?.name,
+          session.createdFrom,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(term)),
+      );
+    }
+
+    // Upcoming first (soonest at the top), then past sessions (most recent first).
+    return [...list].sort((a, b) => {
+      const aUpcoming = isSessionUpcoming(a, reference);
+      const bUpcoming = isSessionUpcoming(b, reference);
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+      const aTime = new Date(a.scheduledAt).getTime();
+      const bTime = new Date(b.scheduledAt).getTime();
+      return aUpcoming ? aTime - bTime : bTime - aTime;
+    });
+  }, [sessions, statusFilter, search]);
+
+  const columns: DataTableColumn<Session>[] = [
+    {
+      key: "title",
+      label: "Session",
+      render: (_, session) => (
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+              isSessionUpcoming(session, now)
+                ? "bg-primary/10 text-primary border-primary/20"
+                : "bg-muted/15 text-muted-foreground border-border"
+            }`}
+          >
+            {isSessionUpcoming(session, now) ? (
+              <IconCalendar size={18} stroke={1.8} />
+            ) : (
+              <IconVideo size={18} stroke={1.8} />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-foreground">
+              {session.title || "Live Session"}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {session.createdFrom}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "course",
+      label: "Course",
+      render: (_, session) => (
+        <span className="text-sm text-foreground">
+          {session.batch?.course?.title ??
+            session.batch?.package?.name ??
+            "—"}
+        </span>
+      ),
+    },
+    {
+      key: "batch",
+      label: "Batch",
+      render: (_, session) => (
+        <span className="text-sm text-muted-foreground">
+          {session.batch?.name || "General"}
+        </span>
+      ),
+    },
+    {
+      key: "scheduledAt",
+      label: "Schedule",
+      render: (_, session) => (
+        <div className="whitespace-nowrap">
+          <p className="text-sm font-medium text-foreground">
+            {formatDate(session.scheduledAt)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatTime(session.scheduledAt)}
+            {session.scheduledEndAt
+              ? ` – ${formatTime(session.scheduledEndAt)}`
+              : ""}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (_, session) => (
+        <Badge
+          variant={isSessionUpcoming(session, now) ? "success" : "secondary"}
+          size="sm"
+          dot
+        >
+          {isSessionUpcoming(session, now) ? "Upcoming" : "Past"}
+        </Badge>
+      ),
+    },
+    {
+      key: "attendance",
+      label: "Attendance",
+      render: (_, session) => (
+        <button
+          type="button"
+          onClick={() => handleViewAttendance(session)}
+          className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary-hover hover:underline"
+          title="View attendance"
+        >
+          <IconUsers size={14} />
+          {session._count?.attendance ?? 0}
+        </button>
+      ),
+    },
+    {
+      key: "id",
+      label: "Actions",
+      render: (_, session) => (
+        <div className="flex items-center gap-1.5">
+          <a
+            href={session.joinUrl ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary shadow-2xs transition-all duration-150 hover:bg-primary/15"
+            title={isSessionUpcoming(session, now) ? "Start class" : "View meeting link"}
+          >
+            <IconExternalLink size={13} />
+            {isSessionUpcoming(session, now) ? "Start" : "Link"}
+          </a>
+          <button
+            type="button"
+            onClick={() => openEditModal(session)}
+            className="cursor-pointer rounded-lg border border-border p-1.5 text-muted-foreground shadow-2xs transition-all duration-150 hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
+            title="Edit session"
+            aria-label="Edit session"
+          >
+            <IconEdit size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDeleteSession(session.id)}
+            disabled={
+              deleteMutation.isPending &&
+              deleteMutation.variables === session.id
+            }
+            className="cursor-pointer rounded-lg border border-danger/30 p-1.5 text-danger shadow-2xs transition-all duration-150 hover:bg-danger/10 disabled:opacity-40"
+            title="Cancel session"
+            aria-label="Cancel session"
+          >
+            <IconTrash size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 motion-reduce:animate-none">
       <AdminPageHeader
         title="My Sessions"
         breadcrumbs={[{ label: "Sessions", href: "/instructor/sessions" }]}
         role="Instructor"
-        description="Manage your live classes and review student attendance."
+        description={
+          loading
+            ? "Manage your live classes and review student attendance."
+            : `${totals.upcoming} upcoming · ${totals.past} past · manage your live classes and review student attendance.`
+        }
       />
 
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-44 rounded-lg" />
-          ))}
-        </div>
-      ) : sessions.length === 0 ? (
-        <Card className="p-12 text-center flex flex-col items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/20 text-muted-foreground mb-3 border border-border">
-            <IconVideo size={26} stroke={1.8} />
-          </div>
-          <p className="text-base font-bold text-foreground">
-            No sessions assigned
-          </p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-            You do not have any live sessions scheduled yet. Check back once sessions are added.
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {/* Upcoming */}
-          {upcoming.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <span className="live-pulse h-2 w-2 rounded-full bg-emerald-500" />
-                Upcoming Live Classes ({upcoming.length})
-              </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {upcoming.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming
-                    deleting={
-                      deleteMutation.isPending &&
-                      deleteMutation.variables === session.id
-                    }
-                    onViewAttendance={handleViewAttendance}
-                    onEdit={openEditModal}
-                    onDelete={handleDeleteSession}
-                  />
-                ))}
-              </div>
+      <DataTable
+        columns={columns}
+        data={rows}
+        loading={loading}
+        pageSize={10}
+        headerVariant="blue"
+        toolbar={
+          <>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="session-status-filter"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Status
+              </label>
+              <select
+                id="session-status-filter"
+                value={
+                  statusFilter === "UPCOMING" || statusFilter === "PAST"
+                    ? statusFilter
+                    : "ALL"
+                }
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value === "ALL" ? null : e.target.value,
+                  )
+                }
+                className="h-9 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground outline-none transition-colors focus:border-primary"
+              >
+                <option value="ALL">All ({sessions.length})</option>
+                <option value="UPCOMING">Upcoming ({totals.upcoming})</option>
+                <option value="PAST">Past ({totals.past})</option>
+              </select>
             </div>
-          )}
 
-          {/* Past */}
-          {past.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-muted-foreground/60" />
-                Past Sessions ({past.length})
-              </h2>
-              <div className="space-y-3">
-                {past.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    upcoming={false}
-                    syncing={
-                      syncMutation.isPending &&
-                      syncMutation.variables === session.id
-                    }
-                    deleting={
-                      deleteMutation.isPending &&
-                      deleteMutation.variables === session.id
-                    }
-                    onSyncRecording={handleSyncRecording}
-                    onViewAttendance={handleViewAttendance}
-                    onEdit={openEditModal}
-                    onDelete={handleDeleteSession}
-                  />
-                ))}
-              </div>
+            <div className="w-full max-w-xs">
+              <SearchInput
+                placeholder="Search session, course or batch..."
+                value={search}
+                onChange={setSearch}
+              />
             </div>
-          )}
-        </div>
-      )}
+          </>
+        }
+        emptyState={
+          <EmptyState
+            variant="glass"
+            icon={IconVideo}
+            title={
+              search.trim()
+                ? "No matching sessions"
+                : statusFilter === "UPCOMING"
+                  ? "No upcoming sessions"
+                  : statusFilter === "PAST"
+                    ? "No past sessions"
+                    : "No sessions assigned"
+            }
+            description={
+              search.trim()
+                ? "No sessions match your search. Try a different keyword."
+                : statusFilter === "UPCOMING"
+                  ? "You don't have any live classes scheduled ahead. Check back once sessions are added."
+                  : statusFilter === "PAST"
+                    ? "None of your sessions have completed yet."
+                    : "You do not have any live sessions scheduled yet. Check back once sessions are added."
+            }
+          />
+        }
+      />
 
       {/* Edit Modal */}
       {showEditModal && (
@@ -364,11 +547,11 @@ function SessionsPageContent() {
               <div className="flex justify-end gap-2 pt-2 border-t border-border">
                 <Button
                   type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setShowEditModal(false)}
-                  >
-                    Cancel
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
                 </Button>
                 <Button
                   type="submit"
@@ -394,8 +577,10 @@ function SessionsPageContent() {
                   Session Attendance
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {selectedSession.batch?.course?.title ?? "Course"} ·{" "}
-                  {selectedSession.batch?.name ?? "Batch"}
+                  {selectedSession.batch?.course?.title ??
+                    selectedSession.batch?.package?.name ??
+                    "Course"}{" "}
+                  · {selectedSession.batch?.name ?? "Batch"}
                 </p>
               </div>
               <button
@@ -464,111 +649,3 @@ function SessionsPageContent() {
     </div>
   );
 }
-
-function SessionCard({
-  session,
-  upcoming,
-  syncing,
-  deleting,
-  onSyncRecording,
-  onViewAttendance,
-  onEdit,
-  onDelete,
-}: {
-  session: Session;
-  upcoming: boolean;
-  syncing?: boolean;
-  deleting?: boolean;
-  onSyncRecording?: (id: string) => void;
-  onViewAttendance: (session: Session) => void;
-  onEdit: (session: Session) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <Card hoverable className="p-5 flex flex-col gap-4 justify-between">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3.5 min-w-0 flex-1">
-          <div
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-lg border ${
-              upcoming
-                ? "bg-primary/10 text-primary border-primary/20"
-                : "bg-muted/15 text-muted-foreground border-border"
-            }`}
-          >
-            {upcoming ? (
-              <IconCalendar size={20} stroke={1.8} />
-            ) : (
-              <IconVideo size={20} stroke={1.8} />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-foreground truncate">
-              {new Date(session.scheduledAt).toLocaleString("en-IN", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-            <p className="text-xs font-semibold text-foreground/80 mt-0.5 truncate">
-              {session.batch?.course?.title || "Course Session"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              Batch: {session.batch?.name || "General"}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <Badge variant="outline" size="sm">
-                {session.createdFrom}
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        {/* Action icons */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => onEdit(session)}
-            className="p-1.5 rounded-lg border border-border hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-all duration-150 shadow-2xs hover:border-primary/40 cursor-pointer"
-            title="Edit Session"
-          >
-            <IconEdit size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(session.id)}
-            disabled={deleting}
-            className="p-1.5 rounded-lg border border-danger/30 hover:bg-danger/10 text-danger transition-all duration-150 disabled:opacity-40 shadow-2xs cursor-pointer"
-            title="Cancel Session"
-          >
-            <IconTrash size={16} />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
-        <a
-          href={session.joinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center font-semibold transition-all duration-150 select-none cursor-pointer bg-primary text-white hover:bg-primary-hover shadow-2xs hover:shadow active:scale-[0.99] h-8 px-3.5 text-xs rounded-lg flex-1"
-        >
-          {upcoming ? "Start Class →" : "View Link"}
-        </a>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => onViewAttendance(session)}
-          className="flex-1 text-xs"
-          leftIcon={<IconUsers size={14} />}
-        >
-          Attendance
-        </Button>
-      </div>
-    </Card>
-  );
-}
-

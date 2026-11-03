@@ -9,8 +9,6 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import type { DashboardChartData } from "@/lib/api-types";
-import { buildReportPdf } from "@/lib/report-pdf";
-import { exportReportCsv, exportReportXlsx } from "@/lib/report-export";
 import type { ReportScope } from "@/lib/report-pdf";
 
 interface ReportExportDropdownProps {
@@ -52,6 +50,7 @@ export default function ReportExportDropdown({
     setOpen(false);
     try {
       if (kind === "pdf") {
+        const { buildReportPdf } = await import("@/lib/report-pdf");
         await buildReportPdf({
           data,
           scope,
@@ -60,8 +59,10 @@ export default function ReportExportDropdown({
           generatedDate,
         });
       } else if (kind === "csv") {
+        const { exportReportCsv } = await import("@/lib/report-export");
         exportReportCsv({ data, scope, timeRange, periodLabel, generatedDate });
       } else {
+        const { exportReportXlsx } = await import("@/lib/report-export");
         await exportReportXlsx({
           data,
           scope,

@@ -35,6 +35,21 @@ else
     || npx prisma@5.22.0 db push --skip-generate || echo "WARN: prisma db push failed — continuing to start API"
 fi
 
+# ── Ensure Prisma Client is generated and resolvable ──
+if ! node -e "require('@prisma/client')" >/dev/null 2>&1; then
+  echo "Prisma client not found or unresolvable, generating..."
+  if [ -f "/app/node_modules/.bin/prisma" ]; then
+    /app/node_modules/.bin/prisma generate --schema=/app/apps/api/prisma/schema.prisma || true
+  elif [ -f "./node_modules/.bin/prisma" ]; then
+    ./node_modules/.bin/prisma generate --schema=/app/apps/api/prisma/schema.prisma || true
+  else
+    npx prisma@5.22.0 generate --schema=/app/apps/api/prisma/schema.prisma || true
+  fi
+  if [ "$(id -u)" = "0" ]; then
+    chown -R nodejs:nodejs /app/node_modules/.prisma /app/node_modules/.pnpm 2>/dev/null || true
+  fi
+fi
+
 echo "Starting API server..."
 # Drop privileges to nodejs if we started as root, otherwise exec directly
 if [ "$(id -u)" = "0" ]; then

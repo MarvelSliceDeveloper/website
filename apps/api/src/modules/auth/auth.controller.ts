@@ -22,6 +22,7 @@ import {
   ForgotPasswordSchema,
   ResetPasswordSchema,
 } from "@lms/config";
+import { BCRYPT_ROUNDS } from "../../utils/encryption";
 
 /**
  * Parses a JWT expiry string (e.g. "7d", "15m", "1h") into milliseconds.
@@ -475,7 +476,7 @@ export const authController = {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
       await prisma.user.update({
         where: { id: req.user.userId },
         data: { passwordHash: hashedPassword, mustChangePassword: false },
@@ -534,7 +535,7 @@ export const authController = {
         });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
       await prisma.user.update({
         where: { id: req.user.userId },
         data: { passwordHash: hashedPassword, mustChangePassword: false },
@@ -638,7 +639,7 @@ export const authController = {
         return res.status(400).json({ error: "User not found" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
       await prisma.user.update({
         where: { id: user.id },
         data: { passwordHash: hashedPassword, mustChangePassword: false },

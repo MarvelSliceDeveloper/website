@@ -16,6 +16,7 @@ import { AppError } from "../../utils/errors";
 import { UserRole } from "@lms/types";
 import { emailService } from "../../services/email.service";
 import { RegisterSchema, LoginSchema } from "@lms/config";
+import { BCRYPT_ROUNDS } from "../../utils/encryption";
 
 const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
 
@@ -44,7 +45,7 @@ export const authService = {
 
     if (existingUser) throw new AppError(409, "Email already registered");
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const user = await prisma.user.create({
       data: {

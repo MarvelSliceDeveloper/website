@@ -1539,7 +1539,7 @@ export default function CustomExamTest() {
               onClick={handleClosePortal}
               className="px-8 py-2.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer inline-flex items-center justify-center"
             >
-              Exit & Close Portal
+              Exit
             </button>
           </div>
         </div>

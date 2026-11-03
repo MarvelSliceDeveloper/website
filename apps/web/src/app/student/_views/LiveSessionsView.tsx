@@ -4,6 +4,13 @@ import { useState, useMemo } from "react";
 import type { LiveSession } from "@/lib/api-types";
 import { api } from "@/lib/api";
 import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/Dialog";
 
 function downloadIcs(event: {
   title: string;
@@ -80,6 +87,7 @@ function getTimeGroup(scheduledAt: string): string {
 
 export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   const [filter, setFilter] = useState<Filter>("ALL");
+  const [selected, setSelected] = useState<LiveSession | null>(null);
 
   // ✅ Group using real time — not stale server status
   const liveNow = sessions.filter((s) => getComputedStatus(s) === "LIVE");
@@ -172,21 +180,196 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
                 key={session.id}
                 session={session}
                 status={getComputedStatus(session)}
+                onSelect={() => setSelected(session)}
               />
             ))}
           </div>
         ))
       )}
+
+      {/* ── Session detail popup ── */}
+      <SessionDetailDialog
+        session={selected}
+        status={selected ? getComputedStatus(selected) : "UPCOMING"}
+        onClose={() => setSelected(null)}
+      />
     </div>
+  );
+}
+
+function formatCountdown(targetIso: string): string {
+  const diff = new Date(targetIso).getTime() - Date.now();
+  if (diff <= 0) return "Starting now";
+  const mins = Math.floor(diff / 60_000);
+  const days = Math.floor(mins / 1440);
+  const hours = Math.floor((mins % 1440) / 60);
+  const remMins = mins % 60;
+  if (days > 0) return `Starts in ${days}d ${hours}h`;
+  if (hours > 0) return `Starts in ${hours}h ${remMins}m`;
+  if (mins >= 60) return `Starts in ${Math.floor(mins / 60)}h ${mins % 60}m`;
+  return `Starts in ${mins}m`;
+}
+
+function SessionDetailDialog({
+  session,
+  status,
+  onClose,
+}: {
+  session: LiveSession | null;
+  status: ComputedStatus;
+  onClose: () => void;
+}) {
+  const [joining, setJoining] = useState(false);
+  const presence = useLiveSessionPresence();
+
+  if (!session) return null;
+
+  const isLive = status === "LIVE";
+  const isPast = status === "PAST";
+  const start = new Date(session.scheduledAt);
+  const end = new Date(session.endDateTime);
+  const durationMins = Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / 60_000),
+  );
+
+  const handleJoin = async () => {
+    if (!session.joinUrl) return;
+    setJoining(true);
+    try {
+      await api.post(`/api/attendance/${session.id}/join`);
+      presence.start(session.id);
+    } catch (err) {
+      console.error("Failed to log attendance:", err);
+    } finally {
+      setJoining(false);
+      window.open(session.joinUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  return (
+    <Dialog open={!!session} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex flex-wrap items-center gap-2 pr-8">
+            {isLive ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-danger">
+                <span className="live-pulse h-2 w-2 rounded-full bg-danger" />
+                Live Now
+              </span>
+            ) : isPast ? (
+              <span className="inline-flex items-center rounded-full bg-muted/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Ended
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-accent">
+                Scheduled
+              </span>
+            )}
+            {session.recordingSyncingIn && (
+              <span className="rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[11px] text-warning">
+                Recording syncing in {session.recordingSyncingIn}
+              </span>
+            )}
+          </div>
+          <DialogTitle className="mt-2">{session.title}</DialogTitle>
+          <DialogDescription>
+            {session.courseTitle} &middot; {session.batchLabel}
+          </DialogDescription>
+        </DialogHeader>
+
+        <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-muted/10 p-4 text-sm">
+          <div className="min-w-0">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Instructor
+            </dt>
+            <dd className="mt-0.5 truncate font-semibold text-foreground">
+              {session.instructor}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Duration
+            </dt>
+            <dd className="mt-0.5 font-semibold text-foreground">
+              {durationMins > 0 ? `${durationMins} min` : "—"}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Starts
+            </dt>
+            <dd className="mt-0.5 font-semibold text-foreground">
+              {start.toLocaleString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Ends
+            </dt>
+            <dd className="mt-0.5 font-semibold text-foreground">
+              {end.toLocaleString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </dd>
+          </div>
+        </dl>
+
+        {!isPast && !isLive && (
+          <p className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-center text-xs font-semibold text-accent">
+            {formatCountdown(session.scheduledAt)}
+          </p>
+        )}
+
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          {status === "UPCOMING" && (
+            <button
+              className="btn-secondary text-sm"
+              onClick={() =>
+                downloadIcs({
+                  title: session.title,
+                  start: session.scheduledAt,
+                  end: session.endDateTime,
+                  joinUrl: session.joinUrl,
+                })
+              }
+            >
+              Add to Calendar
+            </button>
+          )}
+          {isLive && session.joinUrl && (
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="btn-primary flex items-center justify-center gap-1.5 text-sm"
+            >
+              {joining ? "Joining..." : "Join on Teams"}
+            </button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function SessionCard({
   session,
   status,
+  onSelect,
 }: {
   session: LiveSession;
   status: ComputedStatus;
+  onSelect: () => void;
 }) {
   const isLive = status === "LIVE";
   const isPast = status === "PAST";
@@ -233,7 +416,17 @@ function SessionCard({
 
   return (
     <div
-      className={`glass-card p-5 border-l-4 transition-all ${borderColor} ${isLive ? "bg-danger/5" : ""}`}
+      role="button"
+      tabIndex={0}
+      title="View session details"
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`glass-card p-5 border-l-4 transition-all cursor-pointer hover:shadow-md hover:-translate-y-px ${borderColor} ${isLive ? "bg-danger/5" : ""}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 flex items-start gap-4">
@@ -280,7 +473,10 @@ function SessionCard({
         <div className="flex flex-shrink-0 items-center gap-2 pl-0 sm:pl-4">
           {isLive && session.joinUrl && (
             <button
-              onClick={handleJoin}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleJoin();
+              }}
               disabled={joining}
               className="btn-primary flex items-center gap-1.5 text-sm"
             >
@@ -297,14 +493,15 @@ function SessionCard({
           {status === "UPCOMING" && (
             <button
               className="btn-secondary text-sm"
-              onClick={() =>
+              onClick={(e) => {
+                e.stopPropagation();
                 downloadIcs({
                   title: session.title,
                   start: session.scheduledAt,
                   end: session.endDateTime,
                   joinUrl: session.joinUrl,
-                })
-              }
+                });
+              }}
             >
               Add to Calendar
             </button>

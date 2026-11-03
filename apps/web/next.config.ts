@@ -5,6 +5,17 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    optimizePackageImports: [
+      "@tabler/icons-react",
+      "@fullcalendar/core",
+      "@fullcalendar/daygrid",
+      "@fullcalendar/timegrid",
+      "@fullcalendar/react",
+      "apexcharts",
+      "react-apexcharts",
+    ],
+  },
   turbopack: {
     root: path.resolve(process.cwd(), "../.."),
   },
@@ -22,14 +33,14 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* https://i.ytimg.com https://img.youtube.com https://*.ytimg.com https://cdn.plyr.io; font-src 'self' data: https:; connect-src 'self' https: ws: wss: http://localhost:* http://127.0.0.1:*; frame-src 'self' https://*.razorpay.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.loom.com https://loom.com https://cdn.plyr.io https://www.google.com https://maps.google.com https://*.google.com; child-src 'self' https://*.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.loom.com https://www.google.com https://maps.google.com https://*.google.com blob:; media-src 'self' https://cdn.plyr.io https: blob:; form-action 'self'",
+              "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.youtube.com https://s.ytimg.com https://cdn.jsdelivr.net https://cdn.plyr.io https://player.vimeo.com; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* https://i.ytimg.com https://img.youtube.com https://*.ytimg.com https://cdn.plyr.io; font-src 'self' data: https:; connect-src 'self' https: ws: wss: http://localhost:* http://127.0.0.1:*; frame-src 'self' https://*.razorpay.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.loom.com https://loom.com https://cdn.plyr.io https://www.google.com https://maps.google.com https://*.google.com; child-src 'self' https://*.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://*.loom.com https://www.google.com https://maps.google.com https://*.google.com blob:; media-src 'self' https://cdn.plyr.io https: blob:; form-action 'self'",
           },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
             value:
-              "camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\" \"https://player.vimeo.com\" \"https://*.loom.com\")",
+              'camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self "https://www.youtube.com" "https://www.youtube-nocookie.com" "https://player.vimeo.com" "https://*.loom.com")',
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },

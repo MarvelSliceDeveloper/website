@@ -154,13 +154,31 @@ export function deleteBackup(filename: string): void {
   fs.unlinkSync(filepath);
 }
 
+export function isCustomDump(filepath: string, originalName?: string): boolean {
+  if (originalName?.endsWith(".dump") || filepath.endsWith(".dump")) {
+    return true;
+  }
+  try {
+    const fd = fs.openSync(filepath, "r");
+    const buffer = Buffer.alloc(5);
+    fs.readSync(fd, buffer, 0, 5, 0);
+    fs.closeSync(fd);
+    return buffer.toString("ascii") === "PGDMP";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Restore from a backup file (`.dump` via pg_restore, `.sql` via psql).
  * Accepts an absolute temp path from multer — no path traversal surface.
  */
-export async function restoreBackup(filepath: string): Promise<void> {
+export async function restoreBackup(
+  filepath: string,
+  originalName?: string,
+): Promise<void> {
   const { host, port, database, user, password } = getDbUrl();
-  const isCustom = filepath.endsWith(".dump");
+  const isCustom = isCustomDump(filepath, originalName);
   const env = { ...process.env, PGPASSWORD: password };
 
   try {

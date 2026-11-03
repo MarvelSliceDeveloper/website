@@ -27,6 +27,10 @@ interface Refund {
   reason: string | null;
   rejectionReason: string | null;
   razorpayRefundId: string | null;
+  metadata?: {
+    manualRefund?: boolean;
+    refundTransactionId?: string;
+  } | null;
   initiatedBy: { id: string; name: string; email: string } | null;
   approvedBy: { id: string; name: string; email: string } | null;
   createdAt: string;
@@ -45,6 +49,7 @@ interface LookupResult {
   payment: {
     paymentId: string;
     razorpayPaymentId: string | null;
+    isManual: boolean;
     amount: number;
     status: string;
     refundedTotal: number;
@@ -250,12 +255,12 @@ export default function AdminRefundsPage() {
           <>
             <button
               onClick={resetForm}
-                className="btn-cancel text-sm"
-                disabled={
-                  createRefundMutation.isPending || lookupMutation.isPending
-                }
-              >
-                Cancel
+              className="btn-cancel text-sm"
+              disabled={
+                createRefundMutation.isPending || lookupMutation.isPending
+              }
+            >
+              Cancel
             </button>
             {lookupResult ? (
               <button
@@ -295,11 +300,11 @@ export default function AdminRefundsPage() {
       >
         <div>
           <label className="block text-xs font-medium text-foreground mb-1">
-            Razorpay Payment ID <span className="text-danger">*</span>
+            Razorpay Payment ID / UTR <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            placeholder="e.g. pay_N6y0gXz9dZf1qL"
+            placeholder="e.g. pay_N6y0gXz9dZf1qL or 12-digit UTR"
             value={formPaymentId}
             onChange={(e) => {
               setFormPaymentId(e.target.value);
@@ -309,8 +314,9 @@ export default function AdminRefundsPage() {
             className="field text-xs w-full"
           />
           <p className="text-[10px] text-muted-foreground mt-1">
-            Enter the Razorpay payment ID. We&apos;ll verify the payment and
-            show the payer&apos;s details before you continue.
+            Enter the Razorpay payment ID — or the UTR for manual UPI payments.
+            We&apos;ll verify the payment and show the payer&apos;s details
+            before you continue.
           </p>
         </div>
 
@@ -337,6 +343,12 @@ export default function AdminRefundsPage() {
                 {lookupResult.payment.status}
               </span>
             </div>
+            {lookupResult.payment.isManual && (
+              <p className="rounded-lg border border-primary/25 bg-primary/5 px-2.5 py-1.5 text-[11px] text-primary">
+                Manual UPI payment (verified by UTR). Refund it from the company
+                UPI app — the superadmin enters the refund UTR on approval.
+              </p>
+            )}
 
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -425,8 +437,10 @@ export default function AdminRefundsPage() {
             <div className="flex items-start gap-2 rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-[11px] text-warning">
               <IconShieldCheck size={14} className="mt-0.5 shrink-0" />
               <span>
-                This request will be sent to the superadmin for approval. The
-                Razorpay refund is executed only after approval.
+                This request will be sent to the superadmin for approval.{" "}
+                {lookupResult.payment.isManual
+                  ? "Manual UPI refunds are paid from the company UPI app, not via Razorpay."
+                  : "The Razorpay refund is executed only after approval."}
               </span>
             </div>
           </>
@@ -497,6 +511,11 @@ export default function AdminRefundsPage() {
                         {refund.razorpayRefundId && (
                           <span className="block text-[10px] text-muted-foreground">
                             rzp: {refund.razorpayRefundId}
+                          </span>
+                        )}
+                        {refund.metadata?.refundTransactionId && (
+                          <span className="block text-[10px] text-muted-foreground">
+                            utr: {refund.metadata.refundTransactionId}
                           </span>
                         )}
                       </td>

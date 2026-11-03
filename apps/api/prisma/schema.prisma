@@ -133,6 +133,7 @@ model User {
   packageEnrollments      PackageEnrollment[]
   courseEnrollments       CourseEnrollment[]
   payments                Payment[]
+  manualOrders            ManualPaymentOrder[]
   auditLogs               AuditLog[]
   graphApiLogs            GraphApiLog[]
   loginLogs               LoginLog[]
@@ -190,8 +191,10 @@ model Course {
   updatedAt                DateTime                   @updatedAt
   isCatalog                Boolean                    @default(false)
   price                    Int? // paise; null = enquiry only
+  monthlyPrice             Int? // paise; null = monthly plan unavailable (V1: same access as full)
   courseEnrollments        CourseEnrollment[]
   payments                 Payment[]
+  manualOrders             ManualPaymentOrder[]
 
   @@index([status, categoryId])
   @@index([isCatalog, status])
@@ -277,6 +280,7 @@ model Batch {
   sessions                     LiveSession[]
   assignments                  Assignment[]
   packageEnrollmentCourses     PackageEnrollmentCourse[]
+  manualOrders                 ManualPaymentOrder[]
   courseVisibility             BatchCourseVisibility[]
   certificates                 Certificate[]
   extensions                   BatchAssignmentExtension[]
@@ -978,6 +982,7 @@ model CoursePackage {
   batches     Batch[]
   payments    Payment[]
   certificates Certificate[]
+  manualOrders ManualPaymentOrder[]
 }
 
 model PackageCourse {
@@ -1131,6 +1136,60 @@ model PackageEnrollmentCourse {
   @@index([enrollmentId])
   @@index([courseId])
   @@index([batchId])
+}
+
+// === MANUAL UPI-QR PAYMENTS ===
+
+enum ManualPlan {
+  MONTHLY
+  FULL
+}
+
+enum ManualOrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaymentSettings {
+  id              String   @id @default("default")
+  upiId           String
+  payeeName       String
+  isManualEnabled Boolean  @default(false)
+  updatedById     String?
+  updatedAt       DateTime @updatedAt
+}
+
+model ManualPaymentOrder {
+  id              String            @id @default(cuid())
+  userId          String
+  courseId        String?
+  packageId       String?
+  plan            ManualPlan
+  amount          Int // paise snapshot at submit time (discounted final amount when coupon applied)
+  couponCode      String?
+  discountAmount  Int               @default(0) // paise
+  transactionId   String            @unique // UTR / UPI ref, stored uppercase
+  status          ManualOrderStatus @default(PENDING)
+  rejectionReason String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  paymentId       String?           @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user    User          @relation(fields: [userId], references: [id])
+  course  Course?       @relation(fields: [courseId], references: [id])
+  package CoursePackage? @relation(fields: [packageId], references: [id])
+  batch   Batch?        @relation(fields: [batchId], references: [id])
+  batchId String?
+  userState   String? // buyer's state at submit time (GST place of supply)
+  userAddress String? // buyer's billing address snapshot
+  userGstin   String? // buyer's GSTIN (B2B only)
+
+  @@index([userId, courseId, status])
+  @@index([userId, packageId, status])
+  @@index([status, createdAt])
 }
 
 model CourseEnrollment {

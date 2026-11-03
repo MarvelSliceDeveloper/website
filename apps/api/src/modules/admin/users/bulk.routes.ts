@@ -57,6 +57,12 @@ router.post(
       let skipped = 0;
       const errors: string[] = [];
 
+      const bcryptRounds = process.env.NODE_ENV === "test" ? 4 : 12;
+      const defaultPasswordHash = await bcrypt.hash(
+        "changeme123",
+        bcryptRounds,
+      );
+
       for (const row of rows) {
         try {
           const existing = await prisma.user.findUnique({
@@ -67,12 +73,12 @@ router.post(
             continue;
           }
 
-          const passwordHash = await bcrypt.hash("changeme123", 12);
           await prisma.user.create({
             data: {
               name: row.name,
               email: row.email.toLowerCase(),
-              passwordHash,
+              passwordHash: defaultPasswordHash,
+              mustChangePassword: true,
               role: row.role as UserRole,
             },
           });

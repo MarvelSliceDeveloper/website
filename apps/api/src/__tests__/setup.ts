@@ -10,8 +10,9 @@ process.env.NODE_ENV = "test";
 // have a broken .env or be running without one. Provide safe defaults so
 // `app.ts` (CSRF/JWT) and `prisma.ts` don't throw "missing env var" /
 // "must provide a nonempty URL" before the real tests even start.
-// Real secrets (Brevo, etc.) are intentionally NOT stubbed — tests that
-// need them should mock the service, not the env var.
+// Prevent live email delivery during tests
+delete process.env.BREVO_API_KEY;
+
 process.env.DATABASE_URL ??=
   "postgresql://lms_test:test@localhost:5432/lms_test";
 process.env.REDIS_URL ??= "redis://localhost:6379";

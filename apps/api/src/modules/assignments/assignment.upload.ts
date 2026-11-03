@@ -52,15 +52,36 @@ const answerMimeTypes = new Set([
   "text/plain",
 ]);
 
+export const ALLOWED_ANSWER_EXTENSIONS = new Set([
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".doc",
+  ".docx",
+  ".zip",
+  ".txt",
+]);
+
 const answerStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, assignmentUploadsDir),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || ".bin";
+    const rawExt = path.extname(file.originalname).toLowerCase();
+    const ext = ALLOWED_ANSWER_EXTENSIONS.has(rawExt) ? rawExt : ".bin";
     cb(null, `answer_${crypto.randomUUID()}${ext}`);
   },
 });
 
 const answerFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!ALLOWED_ANSWER_EXTENSIONS.has(ext)) {
+    return cb(
+      new Error(
+        "File extension not allowed. Accepted extensions: .pdf, .jpg, .jpeg, .png, .webp, .doc, .docx, .zip, .txt",
+      ),
+    );
+  }
   if (!answerMimeTypes.has(file.mimetype)) {
     return cb(
       new Error(

@@ -10,11 +10,22 @@ import { UserRole } from "@lms/types";
 import { paginate } from "../../../utils/paginate";
 import { AppError, handleControllerError } from "../../../utils/errors";
 import { getRazorpayInstance } from "../../payments/payment.service";
+import { normalizeUtr } from "../../manual-orders/manual-orders.validation";
 
 const router = Router();
 
 router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
+
+/**
+ * Manual UPI payments create normal PAID Payment records whose
+ * razorpayOrderId is `MANUAL_<orderId>` and whose razorpayPaymentId holds
+ * the student's UTR. They appear in recent payments and reports like any
+ * other payment — only the refund execution differs (no Razorpay API).
+ */
+function isManualPayment(payment: { razorpayOrderId: string | null }): boolean {
+  return payment.razorpayOrderId?.startsWith("MANUAL_") ?? false;
+}
 
 /** Refund detail include shared by list/detail responses */
 function refundInclude() {
@@ -64,6 +75,7 @@ function buildPaymentInfo(payment: {
   id: string;
   amount: number;
   status: string;
+  razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
   createdAt: Date;
   refunds: { amount: number; status: string }[];
@@ -74,7 +86,9 @@ function buildPaymentInfo(payment: {
   const refundedTotal = activeRefunds.reduce((sum, r) => sum + r.amount, 0);
   return {
     paymentId: payment.id,
+    razorpayOrderId: payment.razorpayOrderId,
     razorpayPaymentId: payment.razorpayPaymentId,
+    isManual: isManualPayment(payment),
     amount: payment.amount,
     status: payment.status,
     refundedTotal,
@@ -113,15 +127,19 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * Verify a Razorpay payment ID before issuing a refund. Returns the payer's
- * name, contact details, package, amount, and remaining refundable balance so
- * the admin can confirm the right person before the refund is requested.
+ * Verify a payment before issuing a refund — accepts a Razorpay payment ID
+ * or, for manual UPI payments, the student's UTR. Returns the payer's
+ * name, contact details, package, amount, and remaining refundable balance
+ * so the admin can confirm the right person before the refund is requested.
  */
 router.post("/lookup", async (req: AuthRequest, res: Response) => {
   try {
     const { razorpayPaymentId, paymentId } = req.body ?? {};
     if (!razorpayPaymentId && !paymentId) {
-      throw new AppError(400, "razorpayPaymentId is required");
+      throw new AppError(
+        400,
+        "razorpayPaymentId (or UTR for UPI payments) is required",
+      );
     }
 
     const payment = await resolvePayment({ razorpayPaymentId, paymentId });
@@ -149,7 +167,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const { razorpayPaymentId, paymentId, amount, reason } = req.body ?? {};
 
     if (!razorpayPaymentId && !paymentId) {
-      throw new AppError(400, "razorpayPaymentId is required");
+      throw new AppError(
+        400,
+        "razorpayPaymentId (or UTR for UPI payments) is required",
+      );
     }
     if (typeof amount !== "number" || amount <= 0) {
       throw new AppError(400, "amount must be a positive number (in paise)");
@@ -224,9 +245,11 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * Superadmin approves a pending refund request and executes the refund
- * against Razorpay. On success the refund is marked COMPLETED with the
- * Razorpay refund ID; if Razorpay rejects it, the refund is marked FAILED.
+ * Superadmin approves a pending refund request. Razorpay payments are
+ * refunded via the Razorpay API. Manual UPI payments have no gateway to
+ * call — the superadmin refunds from the company UPI app first, then
+ * approves here with the refund's UTR (`refundTransactionId`), which is
+ * stored on the refund record.
  */
 router.post(
   "/:id/approve",
@@ -249,6 +272,31 @@ router.post(
         approvedById: req.user!.userId,
         approvedAt: new Date(),
       };
+
+      if (isManualPayment(existing.payment)) {
+        const { refundTransactionId } = req.body ?? {};
+        if (!refundTransactionId || typeof refundTransactionId !== "string") {
+          throw new AppError(
+            400,
+            "refundTransactionId is required — enter the UTR of the refund you made via UPI",
+          );
+        }
+        const normalized = normalizeUtr(refundTransactionId);
+        const processed = await prisma.refund.update({
+          where: { id: existing.id },
+          data: {
+            ...approver,
+            status: "COMPLETED",
+            metadata: {
+              ...((existing.metadata as Record<string, unknown>) ?? {}),
+              manualRefund: true,
+              refundTransactionId: normalized,
+            },
+          },
+          include: refundInclude(),
+        });
+        return res.json(processed);
+      }
 
       if (!existing.payment.razorpayPaymentId) {
         const failed = await prisma.refund.update({

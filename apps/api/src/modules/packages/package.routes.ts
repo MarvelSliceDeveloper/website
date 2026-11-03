@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { packageController } from "./package.controller";
 import { requireAuth, requireRole } from "../../middleware/auth.middleware";
+import { cacheMiddleware } from "../../middleware/cache.middleware";
 import { UserRole } from "@lms/types";
 
 const router = Router();
@@ -103,7 +104,15 @@ export const packageEnrollmentRouter = enrollmentRouter;
 export const publicPackageRouter = Router();
 
 // GET /api/packages/public — public catalogue of ACTIVE packages with prices
-publicPackageRouter.get("/public", packageController.getPublicCatalogue);
+publicPackageRouter.get(
+  "/public",
+  cacheMiddleware({ maxAge: 120, staleWhileRevalidate: true }),
+  packageController.getPublicCatalogue,
+);
 
 // GET /api/packages/public/:slug — single ACTIVE package with full detail
-publicPackageRouter.get("/public/:slug", packageController.getPublicPackage);
+publicPackageRouter.get(
+  "/public/:slug",
+  cacheMiddleware({ maxAge: 120, staleWhileRevalidate: true }),
+  packageController.getPublicPackage,
+);

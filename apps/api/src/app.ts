@@ -97,6 +97,11 @@ import {
   adminInternRouter,
 } from "./modules/interns/intern.routes";
 import { versionRouter } from "./modules/version/version.routes";
+import {
+  manualStudentRouter,
+  manualPackageRouter,
+  manualAdminRouter,
+} from "./modules/manual-orders/manual-orders.routes";
 import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
 
 const logger = pino({
@@ -199,6 +204,7 @@ const csrfExemptPaths = [
   "/api/coupons/validate",
   "/api/interns/apply",
   "/api/courses/catalogue",
+  "/api/packages",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -254,11 +260,31 @@ app.use(express.json());
 // Behind 1-2 reverse proxies (host Apache -> Docker nginx -> api) trust
 // both hops so req.protocol / req.ip reflect the original client, not
 // the loopback nginx. `2` covers Apache + nginx; `true` would also work.
-if (process.env.NODE_ENV === "production") {
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.TRUST_PROXY === "true" ||
+  process.env.TRUST_PROXY === "2"
+) {
   app.set("trust proxy", 2);
 }
 
-app.use("/uploads", express.static(uploadsRoot));
+app.use(
+  "/uploads",
+  express.static(uploadsRoot, {
+    setHeaders: (res, filepath) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      const ext = path.extname(filepath).toLowerCase();
+      // Allow inline display for safe images and video only; force download for everything else
+      if (
+        ![".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm"].includes(
+          ext,
+        )
+      ) {
+        res.setHeader("Content-Disposition", "attachment");
+      }
+    },
+  }),
+);
 
 const publicRoot = path.resolve(__dirname, "..", "..", "..", "public");
 app.use("/images", express.static(path.join(publicRoot, "images")));
@@ -406,6 +432,11 @@ app.use("/api/admin/maintenance", maintenanceRouter);
 
 // ── Refunds ──
 app.use("/api/admin/refunds", refundsRouter);
+
+// ── Manual UPI orders (static QR + UTR approval) ──
+app.use("/api/courses", manualStudentRouter);
+app.use("/api/packages", manualPackageRouter);
+app.use("/api/admin", manualAdminRouter);
 
 // ── Assignment Review Queue ──
 app.use("/api/admin/assignments/review", assignmentReviewRouter);

@@ -13,6 +13,7 @@ import CourseEditor from './pages/CourseEditor';
 import CourseWizard from './pages/CourseWizard';
 import CourseReports from './pages/CourseReports';
 import CourseBrochure from './pages/CourseBrochure';
+import BrochureDesigner from './pages/BrochureDesigner';
 import AlumniCompaniesManager from './pages/AlumniCompaniesManager';
 import TagsList from './pages/TagsList';
 import TagAdd from './pages/TagAdd';
@@ -55,6 +56,7 @@ import NewsletterSubscribers from "./pages/NewsletterSubscribers";
 import ContactSubmissions from './pages/ContactSubmissions';
 import AboutSubmissions from './pages/AboutSubmissions';
 import ChatSubmissions from './pages/ChatSubmissions';
+import CustomRegister from './pages/CourseRegister';
 import ChatPanel from './pages/ChatPanel';
 import BlogManager from './pages/BlogManager';
 import BlogPostEditor from './pages/BlogPostEditor';
@@ -140,6 +142,7 @@ export default function Admin() {
           <Route path="courses/wizard" element={<CourseWizard />} />
           <Route path="courses/reports" element={<CourseReports />} />
           <Route path="courses/brochure" element={<CourseBrochure />} />
+          <Route path="courses/brochure-designer" element={<BrochureDesigner />} />
           <Route path="courses/:id" element={<CourseEditor />} />
           <Route path="alumni" element={<AlumniCompaniesManager />} />
           <Route path="tags" element={<TagsList />} />
@@ -190,6 +193,8 @@ export default function Admin() {
           <Route path="contact-submissions" element={<ContactSubmissions />} />
           <Route path="about-submissions" element={<AboutSubmissions />} />
           <Route path="chat-submissions" element={<ChatSubmissions />} />
+          <Route path="course-register" element={<CustomRegister />} />
+          <Route path="custom-register" element={<Navigate to="/admin/course-register" replace />} />
           <Route path="pages/:slug" element={<PageEditorRedirect />} />
           <Route path="chats" element={<ChatPanel />} />
           <Route path="blog-page" element={<BlogPageEditor />} />

@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { prisma } from "../../../utils/prisma";
 import { ensureUploadsDir } from "../../../utils/uploads";
+import { cacheMiddleware } from "../../../middleware/cache.middleware";
 import {
   requireAuth,
   requireSuperAdmin,
@@ -57,21 +58,27 @@ function parseBranding(value: string): BrandingConfig {
   }
 }
 
-// Public endpoint — no auth required
-publicRouter.get("/", async (_req, res: Response) => {
-  try {
-    const setting = await prisma.systemSetting.findUnique({
-      where: { key: BRAND_KEY },
-    });
-    const config = setting ? parseBranding(setting.value) : parseBranding("{}");
-    return res.json({ data: config });
-  } catch (error: unknown) {
-    return res.status(500).json({
-      error:
-        error instanceof Error ? error.message : "Failed to fetch branding",
-    });
-  }
-});
+// Public endpoint — no auth required, cached with ETag
+publicRouter.get(
+  "/",
+  cacheMiddleware({ maxAge: 600, staleWhileRevalidate: true }),
+  async (_req, res: Response) => {
+    try {
+      const setting = await prisma.systemSetting.findUnique({
+        where: { key: BRAND_KEY },
+      });
+      const config = setting
+        ? parseBranding(setting.value)
+        : parseBranding("{}");
+      return res.json({ data: config });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch branding",
+      });
+    }
+  },
+);
 
 // ── Admin routes (require auth) ──
 router.use(requireAuth);
