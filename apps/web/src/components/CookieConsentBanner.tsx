@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { IconCookie } from "@tabler/icons-react";
 
 const CONSENT_KEY = "lms-cookie-consent";
 
+// Routes where the banner should not be shown (e.g. the LMS login page).
+const HIDDEN_ROUTES = ["/login"];
+
 export default function CookieConsentBanner() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+
+  const isHiddenRoute = HIDDEN_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem(CONSENT_KEY);
@@ -27,7 +36,7 @@ export default function CookieConsentBanner() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (isHiddenRoute || !visible) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-border bg-card/95 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-xl">
